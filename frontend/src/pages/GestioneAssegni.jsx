@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 
 const STATI_ASSEGNO = {
-  vuoto: { label: "Vuoto", color: "#9e9e9e" },
+  vuoto: { label: "Valido", color: "#4caf50" },
   compilato: { label: "Compilato", color: "#2196f3" },
   emesso: { label: "Emesso", color: "#ff9800" },
-  incassato: { label: "Incassato", color: "#4caf50" },
+  incassato: { label: "Incassato", color: "#9c27b0" },
   annullato: { label: "Annullato", color: "#f44336" },
-  scaduto: { label: "Scaduto", color: "#795548" }
 };
 
 export default function GestioneAssegni() {
@@ -22,9 +21,16 @@ export default function GestioneAssegni() {
   const [generateForm, setGenerateForm] = useState({ numero_primo: '', quantita: 10 });
   const [generating, setGenerating] = useState(false);
   
-  // Edit modal
-  const [selectedAssegno, setSelectedAssegno] = useState(null);
+  // Edit inline
+  const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+  
+  // Fatture per collegamento
+  const [fatture, setFatture] = useState([]);
+  const [loadingFatture, setLoadingFatture] = useState(false);
+  const [selectedFatture, setSelectedFatture] = useState([]); // Max 4 fatture
+  const [showFattureModal, setShowFattureModal] = useState(false);
+  const [editingAssegnoForFatture, setEditingAssegnoForFatture] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -48,6 +54,27 @@ export default function GestioneAssegni() {
       console.error('Error loading assegni:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Carica fatture non pagate per collegamento
+  const loadFatture = async (beneficiario = '') => {
+    setLoadingFatture(true);
+    try {
+      // Carica fatture non pagate, filtrate per fornitore se specificato
+      const params = new URLSearchParams();
+      params.append('status', 'imported'); // Solo non pagate
+      if (beneficiario) {
+        params.append('fornitore', beneficiario);
+      }
+      const res = await api.get(`/api/invoices?${params}&limit=100`);
+      const items = res.data.items || res.data || [];
+      setFatture(items.filter(f => f.status !== 'paid'));
+    } catch (error) {
+      console.error('Error loading fatture:', error);
+      setFatture([]);
+    } finally {
+      setLoadingFatture(false);
     }
   };
 
@@ -82,41 +109,99 @@ export default function GestioneAssegni() {
     }
   };
 
-  const handleUpdateAssegno = async () => {
-    if (!selectedAssegno) return;
+  // Inizia modifica inline
+  const startEdit = (assegno) => {
+    setEditingId(assegno.id);
+    setEditForm({
+      beneficiario: assegno.beneficiario || '',
+      importo: assegno.importo || '',
+      data_fattura: assegno.data_fattura || '',
+      numero_fattura: assegno.numero_fattura || '',
+      note: assegno.note || '',
+      fatture_collegate: assegno.fatture_collegate || []
+    });
+  };
+
+  // Salva modifica inline
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
     
     try {
-      await api.put(`/api/assegni/${selectedAssegno.id}`, editForm);
-      setSelectedAssegno(null);
+      await api.put(`/api/assegni/${editingId}`, {
+        ...editForm,
+        stato: editForm.importo && editForm.beneficiario ? 'compilato' : 'vuoto'
+      });
+      setEditingId(null);
       loadData();
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     }
   };
 
-  const handleEmetti = async (assegno) => {
-    try {
-      await api.post(`/api/assegni/${assegno.id}/emetti`);
-      loadData();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
+  // Annulla modifica
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  // Apri modal per collegare fatture
+  const openFattureModal = (assegno) => {
+    setEditingAssegnoForFatture(assegno);
+    setSelectedFatture(assegno.fatture_collegate || []);
+    loadFatture(assegno.beneficiario);
+    setShowFattureModal(true);
+  };
+
+  // Toggle selezione fattura (max 4)
+  const toggleFattura = (fattura) => {
+    const exists = selectedFatture.find(f => f.id === fattura.id);
+    if (exists) {
+      setSelectedFatture(selectedFatture.filter(f => f.id !== fattura.id));
+    } else if (selectedFatture.length < 4) {
+      setSelectedFatture([...selectedFatture, {
+        id: fattura.id,
+        numero: fattura.invoice_number || fattura.numero_fattura,
+        importo: parseFloat(fattura.total_amount || fattura.importo_totale || 0),
+        data: fattura.invoice_date || fattura.data_fattura,
+        fornitore: fattura.supplier_name || fattura.cedente_denominazione
+      }]);
+    } else {
+      alert('Puoi collegare massimo 4 fatture per assegno');
     }
   };
 
-  const handleIncassa = async (assegno) => {
-    try {
-      await api.post(`/api/assegni/${assegno.id}/incassa`);
-      loadData();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    }
-  };
-
-  const handleAnnulla = async (assegno) => {
-    if (!window.confirm('Sei sicuro di voler annullare questo assegno?')) return;
+  // Salva fatture collegate all'assegno
+  const saveFattureCollegate = async () => {
+    if (!editingAssegnoForFatture) return;
+    
+    const totaleImporto = selectedFatture.reduce((sum, f) => sum + (f.importo || 0), 0);
+    const numeriFacture = selectedFatture.map(f => f.numero).join(', ');
+    const beneficiario = selectedFatture[0]?.fornitore || '';
     
     try {
-      await api.post(`/api/assegni/${assegno.id}/annulla`);
+      await api.put(`/api/assegni/${editingAssegnoForFatture.id}`, {
+        fatture_collegate: selectedFatture,
+        importo: totaleImporto,
+        numero_fattura: numeriFacture,
+        beneficiario: beneficiario,
+        note: `Fatture: ${numeriFacture}`,
+        stato: selectedFatture.length > 0 ? 'compilato' : 'vuoto'
+      });
+      
+      setShowFattureModal(false);
+      setEditingAssegnoForFatture(null);
+      setSelectedFatture([]);
+      loadData();
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleDelete = async (assegno) => {
+    if (!window.confirm('Eliminare questo assegno?')) return;
+    
+    try {
+      await api.delete(`/api/assegni/${assegno.id}`);
       loadData();
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
@@ -128,220 +213,342 @@ export default function GestioneAssegni() {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value);
   };
 
-  const openEditModal = (assegno) => {
-    setSelectedAssegno(assegno);
-    setEditForm({
-      importo: assegno.importo || '',
-      beneficiario: assegno.beneficiario || '',
-      causale: assegno.causale || '',
-      data_emissione: assegno.data_emissione || '',
-      note: assegno.note || ''
+  // Raggruppa assegni per carnet (primi 10 cifre del numero)
+  const groupByCarnet = () => {
+    const groups = {};
+    assegni.forEach(a => {
+      const prefix = a.numero?.split('-')[0] || 'Senza Carnet';
+      if (!groups[prefix]) groups[prefix] = [];
+      groups[prefix].push(a);
     });
+    return groups;
   };
 
+  const carnets = groupByCarnet();
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1 style={{ marginBottom: 20 }}>📝 Gestione Assegni</h1>
-      <p style={{ color: '#666', marginBottom: 20 }}>
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+      <h1 style={{ marginBottom: 5, color: '#1a365d' }}>📝 Gestione Assegni</h1>
+      <p style={{ color: '#666', marginBottom: 25 }}>
         Genera, collega e controlla i tuoi assegni in un'unica schermata
       </p>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 15, marginBottom: 20 }}>
-        <div style={{ background: '#f5f5f5', padding: 15, borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: '#666' }}>Totale</div>
-          <div style={{ fontSize: 28, fontWeight: 'bold' }}>{stats.totale || 0}</div>
-        </div>
-        {Object.entries(STATI_ASSEGNO).map(([stato, { label, color }]) => (
-          <div 
-            key={stato}
-            style={{ 
-              background: `${color}20`, 
-              padding: 15, 
-              borderRadius: 8,
-              borderLeft: `4px solid ${color}`,
-              cursor: 'pointer'
-            }}
-            onClick={() => setFilterStato(filterStato === stato ? '' : stato)}
-          >
-            <div style={{ fontSize: 12, color: '#666' }}>{label}</div>
-            <div style={{ fontSize: 24, fontWeight: 'bold', color }}>
-              {stats.per_stato?.[stato]?.count || 0}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Actions Bar */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input
-          type="text"
-          placeholder="🔍 Cerca per numero o beneficiario..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 4, border: '1px solid #ddd', minWidth: 250 }}
-        />
-        <select 
-          value={filterStato} 
-          onChange={(e) => setFilterStato(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: 4, border: '1px solid #ddd' }}
+      {/* Action Bar */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 25, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button
+          onClick={() => setShowGenerate(true)}
+          data-testid="genera-assegni-btn"
+          style={{
+            padding: '10px 20px',
+            background: '#4caf50',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
         >
-          <option value="">Tutti gli stati</option>
-          {Object.entries(STATI_ASSEGNO).map(([code, { label }]) => (
-            <option key={code} value={code}>{label}</option>
-          ))}
-        </select>
-        
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-          <button
-            onClick={() => setShowGenerate(true)}
-            style={{
-              padding: '8px 16px',
-              background: '#4caf50',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-              cursor: 'pointer'
-            }}
-          >
-            ➕ Genera Assegni
-          </button>
-          <button
-            onClick={handleClearEmpty}
-            style={{
-              padding: '8px 16px',
-              background: '#f44336',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-              cursor: 'pointer'
-            }}
-          >
-            🗑️ Svuota vuoti
-          </button>
-        </div>
+          ➕ Genera 10 Assegni
+        </button>
+        <button
+          onClick={handleClearEmpty}
+          data-testid="svuota-btn"
+          style={{
+            padding: '10px 20px',
+            background: 'transparent',
+            color: '#666',
+            border: '1px solid #ddd',
+            borderRadius: 8,
+            cursor: 'pointer'
+          }}
+        >
+          Svuota assegni generati
+        </button>
       </div>
 
       {/* Assegni Table */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40 }}>Caricamento...</div>
+      ) : assegni.length === 0 ? (
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 12, 
+          padding: 60, 
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <h3 style={{ color: '#666', marginBottom: 10 }}>Nessun assegno presente</h3>
+          <p style={{ color: '#999' }}>Genera i primi 10 assegni per iniziare</p>
+        </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
-                <th style={{ padding: 12, textAlign: 'left' }}>Numero</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Stato</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>Beneficiario</th>
-                <th style={{ padding: 12, textAlign: 'right' }}>Importo</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Data Emissione</th>
-                <th style={{ padding: 12, textAlign: 'left' }}>Causale</th>
-                <th style={{ padding: 12, textAlign: 'center' }}>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {assegni.map((assegno, idx) => (
-                <tr key={assegno.id} style={{ 
-                  borderBottom: '1px solid #eee',
-                  background: idx % 2 === 0 ? 'white' : '#fafafa'
-                }}>
-                  <td style={{ padding: 12, fontFamily: 'monospace', fontWeight: 'bold' }}>
-                    {assegno.numero}
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'center' }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: 12,
-                      fontSize: 11,
-                      fontWeight: 'bold',
-                      background: STATI_ASSEGNO[assegno.stato]?.color || '#9e9e9e',
-                      color: 'white'
-                    }}>
-                      {STATI_ASSEGNO[assegno.stato]?.label || assegno.stato}
-                    </span>
-                  </td>
-                  <td style={{ padding: 12 }}>{assegno.beneficiario || '-'}</td>
-                  <td style={{ padding: 12, textAlign: 'right', fontWeight: 'bold' }}>
-                    {formatCurrency(assegno.importo)}
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'center', fontSize: 12 }}>
-                    {assegno.data_emissione ? new Date(assegno.data_emissione).toLocaleDateString('it-IT') : '-'}
-                  </td>
-                  <td style={{ padding: 12, fontSize: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {assegno.causale || '-'}
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
-                      <button
-                        onClick={() => openEditModal(assegno)}
-                        style={{ padding: '4px 8px', cursor: 'pointer' }}
-                        title="Modifica"
-                      >
-                        ✏️
-                      </button>
-                      {assegno.stato === 'compilato' && (
-                        <button
-                          onClick={() => handleEmetti(assegno)}
-                          style={{ padding: '4px 8px', cursor: 'pointer', background: '#ff9800', color: 'white', border: 'none', borderRadius: 4 }}
-                          title="Emetti"
-                        >
-                          📤
-                        </button>
-                      )}
-                      {assegno.stato === 'emesso' && (
-                        <button
-                          onClick={() => handleIncassa(assegno)}
-                          style={{ padding: '4px 8px', cursor: 'pointer', background: '#4caf50', color: 'white', border: 'none', borderRadius: 4 }}
-                          title="Segna incassato"
-                        >
-                          ✓
-                        </button>
-                      )}
-                      {['vuoto', 'compilato', 'emesso'].includes(assegno.stato) && (
-                        <button
-                          onClick={() => handleAnnulla(assegno)}
-                          style={{ padding: '4px 8px', cursor: 'pointer', background: '#f44336', color: 'white', border: 'none', borderRadius: 4 }}
-                          title="Annulla"
-                        >
-                          ✗
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 12, 
+          overflow: 'hidden',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{ padding: 20, borderBottom: '1px solid #eee' }}>
+            <h3 style={{ margin: 0 }}>Lista Assegni ({assegni.length})</h3>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>N. Assegno</th>
+                  <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Stato</th>
+                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Beneficiario</th>
+                  <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Importo Assegno</th>
+                  <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Data Fattura</th>
+                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>N. Fattura</th>
+                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Note</th>
+                  <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Azioni</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {assegni.length === 0 && (
-            <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>
-              <p>Nessun assegno presente</p>
-              <p style={{ fontSize: 12 }}>Genera i primi assegni per iniziare</p>
-            </div>
-          )}
+              </thead>
+              <tbody>
+                {Object.entries(carnets).map(([carnetId, carnetAssegni]) => (
+                  <React.Fragment key={carnetId}>
+                    {/* Carnet Header */}
+                    <tr style={{ background: '#f0f9ff' }}>
+                      <td colSpan={7} style={{ padding: '10px 12px' }}>
+                        <strong>📁 Carnet {Object.keys(carnets).indexOf(carnetId) + 1}</strong>
+                        <span style={{ color: '#666', marginLeft: 10 }}>
+                          (Assegni {carnetAssegni.length})
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                        <button
+                          onClick={() => window.print()}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#2196f3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 12
+                          }}
+                        >
+                          🖨️ Stampa Carnet
+                        </button>
+                      </td>
+                    </tr>
+
+                    {/* Assegni del carnet */}
+                    {carnetAssegni.map((assegno, idx) => (
+                      <tr 
+                        key={assegno.id} 
+                        style={{ 
+                          borderBottom: '1px solid #eee',
+                          background: idx % 2 === 0 ? 'white' : '#fafafa'
+                        }}
+                      >
+                        {/* Numero Assegno */}
+                        <td style={{ padding: 12 }}>
+                          <div style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#1a365d' }}>
+                            {assegno.numero}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#666' }}>🖨️</div>
+                        </td>
+
+                        {/* Stato */}
+                        <td style={{ padding: 12, textAlign: 'center' }}>
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: 12,
+                            fontSize: 11,
+                            fontWeight: 'bold',
+                            background: STATI_ASSEGNO[assegno.stato]?.color || '#9e9e9e',
+                            color: 'white'
+                          }}>
+                            {STATI_ASSEGNO[assegno.stato]?.label || assegno.stato}
+                          </span>
+                        </td>
+
+                        {/* Beneficiario */}
+                        <td style={{ padding: 12 }}>
+                          {editingId === assegno.id ? (
+                            <input
+                              type="text"
+                              value={editForm.beneficiario}
+                              onChange={(e) => setEditForm({ ...editForm, beneficiario: e.target.value })}
+                              placeholder="Beneficiario"
+                              style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd', width: '100%' }}
+                            />
+                          ) : (
+                            assegno.beneficiario || '-'
+                          )}
+                        </td>
+
+                        {/* Importo */}
+                        <td style={{ padding: 12, textAlign: 'right' }}>
+                          {editingId === assegno.id ? (
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editForm.importo}
+                              onChange={(e) => setEditForm({ ...editForm, importo: parseFloat(e.target.value) || '' })}
+                              placeholder="0.00"
+                              style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd', width: 100, textAlign: 'right' }}
+                            />
+                          ) : (
+                            <span style={{ fontWeight: 'bold' }}>
+                              {formatCurrency(assegno.importo)}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Data Fattura */}
+                        <td style={{ padding: 12, textAlign: 'center' }}>
+                          {editingId === assegno.id ? (
+                            <input
+                              type="date"
+                              value={editForm.data_fattura}
+                              onChange={(e) => setEditForm({ ...editForm, data_fattura: e.target.value })}
+                              style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }}
+                            />
+                          ) : (
+                            assegno.data_fattura ? new Date(assegno.data_fattura).toLocaleDateString('it-IT') : '-'
+                          )}
+                        </td>
+
+                        {/* N. Fattura */}
+                        <td style={{ padding: 12 }}>
+                          {editingId === assegno.id ? (
+                            <input
+                              type="text"
+                              value={editForm.numero_fattura}
+                              onChange={(e) => setEditForm({ ...editForm, numero_fattura: e.target.value })}
+                              placeholder="N. Fattura"
+                              style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd', width: '100%' }}
+                            />
+                          ) : (
+                            <div>
+                              {assegno.numero_fattura || '-'}
+                              {assegno.fatture_collegate?.length > 1 && (
+                                <div style={{ fontSize: 10, color: '#2196f3' }}>
+                                  ({assegno.fatture_collegate.length} fatture)
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Note */}
+                        <td style={{ padding: 12, maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {editingId === assegno.id ? (
+                            <input
+                              type="text"
+                              value={editForm.note}
+                              onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
+                              placeholder="Note (es. Fattura 2/3263 -"
+                              style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd', width: '100%' }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: 12, color: '#666' }}>
+                              {assegno.note || '-'}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Azioni */}
+                        <td style={{ padding: 12, textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: 5, justifyContent: 'center' }}>
+                            {editingId === assegno.id ? (
+                              <>
+                                <button
+                                  onClick={handleSaveEdit}
+                                  data-testid={`save-${assegno.id}`}
+                                  style={{
+                                    padding: '6px 12px',
+                                    background: '#4caf50',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 4,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  onClick={cancelEdit}
+                                  style={{
+                                    padding: '6px 12px',
+                                    background: '#9e9e9e',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 4,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => startEdit(assegno)}
+                                  data-testid={`edit-${assegno.id}`}
+                                  style={{ padding: '6px 10px', cursor: 'pointer', background: 'none', border: 'none' }}
+                                  title="Modifica"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => openFattureModal(assegno)}
+                                  data-testid={`fatture-${assegno.id}`}
+                                  style={{
+                                    padding: '6px 10px',
+                                    cursor: 'pointer',
+                                    background: '#e3f2fd',
+                                    border: 'none',
+                                    borderRadius: 4
+                                  }}
+                                  title="Collega Fatture (max 4)"
+                                >
+                                  📄
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(assegno)}
+                                  data-testid={`delete-${assegno.id}`}
+                                  style={{
+                                    padding: '6px 10px',
+                                    cursor: 'pointer',
+                                    background: '#ffebee',
+                                    border: 'none',
+                                    borderRadius: 4,
+                                    color: '#c62828'
+                                  }}
+                                  title="Elimina"
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* Generate Modal */}
       {showGenerate && (
         <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }} onClick={() => setShowGenerate(false)}>
           <div style={{
-            background: 'white',
-            borderRadius: 8,
-            padding: 24,
-            maxWidth: 400,
-            width: '90%'
+            background: 'white', borderRadius: 12, padding: 24, maxWidth: 400, width: '90%'
           }} onClick={e => e.stopPropagation()}>
-            <h2>➕ Genera Assegni</h2>
+            <h2 style={{ marginTop: 0 }}>➕ Genera 10 Assegni Progressivi</h2>
             <p style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>
-              Inserisci il numero del primo assegno nel formato PREFISSO-NUMERO (es. 0208769182-11)
+              Inserisci il numero del primo assegno nel formato PREFISSO-NUMERO
             </p>
             
             <div style={{ marginBottom: 15 }}>
@@ -353,131 +560,162 @@ export default function GestioneAssegni() {
                 value={generateForm.numero_primo}
                 onChange={(e) => setGenerateForm({ ...generateForm, numero_primo: e.target.value })}
                 placeholder="0208769182-11"
-                style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd', fontFamily: 'monospace' }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>
-                Quantità
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={generateForm.quantita}
-                onChange={(e) => setGenerateForm({ ...generateForm, quantita: parseInt(e.target.value) || 10 })}
-                style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd' }}
+                data-testid="numero-primo-input"
+                style={{ padding: 12, width: '100%', borderRadius: 8, border: '1px solid #ddd', fontFamily: 'monospace' }}
               />
             </div>
             
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setShowGenerate(false)}
-                style={{ padding: '10px 20px', background: '#9e9e9e', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                style={{ padding: '10px 20px', background: '#9e9e9e', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}
               >
                 Annulla
               </button>
               <button
                 onClick={handleGenerate}
                 disabled={generating}
-                style={{ padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                data-testid="genera-salva-btn"
+                style={{ padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}
               >
-                {generating ? 'Generazione...' : 'Genera'}
+                {generating ? 'Generazione...' : 'Genera e Salva'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Modal */}
-      {selectedAssegno && (
+      {/* Modal Collega Fatture */}
+      {showFattureModal && (
         <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }} onClick={() => setSelectedAssegno(null)}>
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }} onClick={() => setShowFattureModal(false)}>
           <div style={{
-            background: 'white',
-            borderRadius: 8,
-            padding: 24,
-            maxWidth: 500,
-            width: '90%'
+            background: 'white', borderRadius: 12, padding: 24, maxWidth: 700, width: '95%', maxHeight: '80vh', overflow: 'auto'
           }} onClick={e => e.stopPropagation()}>
-            <h2>✏️ Modifica Assegno</h2>
-            <p style={{ fontFamily: 'monospace', fontSize: 18, marginBottom: 20 }}>
-              {selectedAssegno.numero}
+            <h2 style={{ marginTop: 0 }}>📄 Collega Fatture all'Assegno</h2>
+            <p style={{ color: '#666', fontSize: 14, marginBottom: 10 }}>
+              Assegno: <strong>{editingAssegnoForFatture?.numero}</strong>
             </p>
-            
-            <div style={{ display: 'grid', gap: 15 }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>Importo (€)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editForm.importo}
-                  onChange={(e) => setEditForm({ ...editForm, importo: parseFloat(e.target.value) || '' })}
-                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd' }}
-                />
+            <p style={{ color: '#2196f3', fontSize: 13, marginBottom: 20 }}>
+              💡 Puoi collegare fino a <strong>4 fatture</strong> a un singolo assegno. 
+              Seleziona fatture dello stesso fornitore per pagare più fatture insieme.
+            </p>
+
+            {/* Fatture Selezionate */}
+            {selectedFatture.length > 0 && (
+              <div style={{ 
+                background: '#e8f5e9', 
+                padding: 15, 
+                borderRadius: 8, 
+                marginBottom: 20 
+              }}>
+                <strong>Fatture Selezionate ({selectedFatture.length}/4):</strong>
+                <div style={{ marginTop: 10 }}>
+                  {selectedFatture.map(f => (
+                    <div key={f.id} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      padding: '5px 0',
+                      borderBottom: '1px solid #c8e6c9'
+                    }}>
+                      <span>{f.numero} - {f.fornitore}</span>
+                      <span style={{ fontWeight: 'bold' }}>{formatCurrency(f.importo)}</span>
+                    </div>
+                  ))}
+                  <div style={{ 
+                    marginTop: 10, 
+                    paddingTop: 10, 
+                    borderTop: '2px solid #4caf50',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontWeight: 'bold',
+                    fontSize: 16
+                  }}>
+                    <span>TOTALE ASSEGNO:</span>
+                    <span style={{ color: '#2e7d32' }}>
+                      {formatCurrency(selectedFatture.reduce((sum, f) => sum + (f.importo || 0), 0))}
+                    </span>
+                  </div>
+                </div>
               </div>
+            )}
+
+            {/* Lista Fatture Disponibili */}
+            <div style={{ marginBottom: 15 }}>
+              <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>
+                Fatture Disponibili (non pagate)
+              </label>
               
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>Beneficiario</label>
-                <input
-                  type="text"
-                  value={editForm.beneficiario}
-                  onChange={(e) => setEditForm({ ...editForm, beneficiario: e.target.value })}
-                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd' }}
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>Data Emissione</label>
-                <input
-                  type="date"
-                  value={editForm.data_emissione}
-                  onChange={(e) => setEditForm({ ...editForm, data_emissione: e.target.value })}
-                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd' }}
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>Causale</label>
-                <textarea
-                  value={editForm.causale}
-                  onChange={(e) => setEditForm({ ...editForm, causale: e.target.value })}
-                  rows={2}
-                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd', resize: 'vertical' }}
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>Note</label>
-                <textarea
-                  value={editForm.note}
-                  onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
-                  rows={2}
-                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd', resize: 'vertical' }}
-                />
-              </div>
+              {loadingFatture ? (
+                <div style={{ padding: 20, textAlign: 'center' }}>Caricamento...</div>
+              ) : fatture.length === 0 ? (
+                <div style={{ padding: 20, textAlign: 'center', color: '#666', background: '#f5f5f5', borderRadius: 8 }}>
+                  Nessuna fattura non pagata disponibile
+                </div>
+              ) : (
+                <div style={{ maxHeight: 300, overflow: 'auto', border: '1px solid #ddd', borderRadius: 8 }}>
+                  {fatture.map(f => {
+                    const isSelected = selectedFatture.find(sf => sf.id === f.id);
+                    const fornitore = f.supplier_name || f.cedente_denominazione || 'N/A';
+                    
+                    return (
+                      <div
+                        key={f.id}
+                        onClick={() => toggleFattura(f)}
+                        style={{
+                          padding: 12,
+                          borderBottom: '1px solid #eee',
+                          cursor: 'pointer',
+                          background: isSelected ? '#e3f2fd' : 'white',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>
+                            {isSelected ? '✓ ' : '○ '}
+                            {f.invoice_number || f.numero_fattura || 'N/A'}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#666' }}>
+                            {fornitore} - {(f.invoice_date || f.data_fattura || '').slice(0, 10)}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 'bold', color: '#1a365d' }}>
+                          {formatCurrency(parseFloat(f.total_amount || f.importo_totale || 0))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setSelectedAssegno(null)}
-                style={{ padding: '10px 20px', background: '#9e9e9e', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                onClick={() => { setShowFattureModal(false); setSelectedFatture([]); }}
+                style={{ padding: '10px 20px', background: '#9e9e9e', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}
               >
                 Annulla
               </button>
               <button
-                onClick={handleUpdateAssegno}
-                style={{ padding: '10px 20px', background: '#2196f3', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                onClick={saveFattureCollegate}
+                disabled={selectedFatture.length === 0}
+                data-testid="salva-fatture-btn"
+                style={{ 
+                  padding: '10px 20px', 
+                  background: selectedFatture.length > 0 ? '#4caf50' : '#9e9e9e', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  cursor: selectedFatture.length > 0 ? 'pointer' : 'not-allowed',
+                  fontWeight: 'bold'
+                }}
               >
-                Salva
+                ✓ Collega {selectedFatture.length} Fattur{selectedFatture.length === 1 ? 'a' : 'e'}
               </button>
             </div>
           </div>
