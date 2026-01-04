@@ -705,6 +705,19 @@ async def import_bank_statement(
             "tipo": movement["tipo"],
             "riconciliato": movement.get("riconciliato", False)
         })
+        
+        # Salva nella collection estratto_conto per il confronto
+        await db[COLLECTION_ESTRATTO_CONTO].insert_one({
+            "id": movement["id"],
+            "data": movement["data"],
+            "descrizione": movement["descrizione"],
+            "importo": movement["importo"],
+            "tipo": movement["tipo"],
+            "categoria": movement.get("categoria"),
+            "statement_id": statement_id,
+            "source": "estratto_conto_import",
+            "created_at": now
+        })
     
     # Summary message
     if results["reconciled"] > 0:
