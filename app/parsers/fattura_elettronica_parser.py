@@ -12,6 +12,36 @@ import re
 logger = logging.getLogger(__name__)
 
 
+def clean_xml_namespaces(xml_content: str) -> str:
+    """
+    Rimuove completamente tutti i namespace e prefissi dall'XML.
+    Risolve l'errore "unbound prefix".
+    """
+    # Rimuovi BOM
+    if xml_content.startswith('\ufeff'):
+        xml_content = xml_content[1:]
+    
+    # Rimuovi caratteri nulli e whitespace iniziale
+    xml_content = xml_content.replace('\x00', '').strip()
+    
+    # Rimuovi tutte le dichiarazioni xmlns (anche con prefisso)
+    xml_content = re.sub(r'\s+xmlns(:[a-zA-Z0-9_-]+)?="[^"]*"', '', xml_content)
+    xml_content = re.sub(r"\s+xmlns(:[a-zA-Z0-9_-]+)?='[^']*'", '', xml_content)
+    
+    # Rimuovi xsi:... attributes
+    xml_content = re.sub(r'\s+xsi:[a-zA-Z]+="[^"]*"', '', xml_content)
+    xml_content = re.sub(r"\s+xsi:[a-zA-Z]+='[^']*'", '', xml_content)
+    
+    # Rimuovi prefissi dai tag: <p:TagName> -> <TagName>
+    xml_content = re.sub(r'<([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)', r'<\2', xml_content)
+    xml_content = re.sub(r'</([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)', r'</\2', xml_content)
+    
+    # Rimuovi prefissi dagli attributi
+    xml_content = re.sub(r'\s+[a-zA-Z0-9_-]+:([a-zA-Z0-9_-]+)=', r' \1=', xml_content)
+    
+    return xml_content
+
+
 def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
     """
     Parse una fattura elettronica XML italiana.
