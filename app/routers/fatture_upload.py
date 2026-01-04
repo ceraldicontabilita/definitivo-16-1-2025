@@ -1,6 +1,6 @@
 """
 Fatture XML Upload Router - Gestione upload fatture elettroniche.
-Refactored from public_api.py
+Supporta upload singolo XML, multiplo XML e file ZIP.
 """
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from typing import Dict, Any, List
@@ -8,6 +8,8 @@ from datetime import datetime, timedelta
 import uuid
 import logging
 import traceback
+import zipfile
+import io
 
 from app.database import Database, Collections
 from app.parsers.fattura_elettronica_parser import parse_fattura_xml
