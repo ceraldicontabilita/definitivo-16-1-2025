@@ -287,6 +287,21 @@ export function QuickEntryPanel({ onDataSaved }) {
             >
               {savingCorrisp ? '⏳ Salvataggio...' : '💾 Salva Corrispettivo'}
             </button>
+            
+            {/* Sync XML status */}
+            {syncStatus && syncStatus.da_sincronizzare > 0 && (
+              <div style={{ marginTop: 10, padding: 10, background: 'rgba(255,255,255,0.2)', borderRadius: 8, fontSize: 12 }}>
+                <div>📦 XML da sincronizzare: <strong>{syncStatus.da_sincronizzare}</strong></div>
+                <button 
+                  onClick={handleSyncCorrispettivi}
+                  disabled={syncing}
+                  style={{ ...buttonStyle('#065f46', syncing), marginTop: 8, fontSize: 12 }}
+                  data-testid="sync-corrispettivi-btn"
+                >
+                  {syncing ? '⏳ Sincronizzando...' : '🔄 Sincronizza XML'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
