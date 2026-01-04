@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import api from "../api";
 
 export default function ImportExport() {
@@ -7,19 +7,182 @@ export default function ImportExport() {
   const [activeTab, setActiveTab] = useState("import");
   const [importResults, setImportResults] = useState(null);
   
-  // File refs
+  // Progress tracking
+  const [uploadProgress, setUploadProgress] = useState({
+    active: false,
+    current: 0,
+    total: 0,
+    filename: "",
+    duplicates: 0,
+    imported: 0,
+    errors: []
+  });
+  
+  // File refs for other imports
   const versamentoFileRef = useRef(null);
   const posFileRef = useRef(null);
   const corrispettiviFileRef = useRef(null);
   const f24FileRef = useRef(null);
   const pagheFileRef = useRef(null);
+  
+  // Fatture XML/ZIP upload ref
+  const fattureXmlRef = useRef(null);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage({ type: "", text: "" }), 5000);
+    setTimeout(() => setMessage({ type: "", text: "" }), 8000);
   };
 
-  // ========== IMPORT FUNCTIONS ==========
+  // ========== FATTURE XML/ZIP IMPORT ==========
+  
+  const extractZipContents = async (file) => {
+    // Use JSZip to extract contents
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(file);
+    const xmlFiles = [];
+    
+    for (const [filename, zipEntry] of Object.entries(zip.files)) {
+      if (filename.toLowerCase().endsWith('.xml') && !zipEntry.dir) {
+        const content = await zipEntry.async('blob');
+        xmlFiles.push(new File([content], filename, { type: 'application/xml' }));
+      }
+      // Handle nested ZIPs
+      if (filename.toLowerCase().endsWith('.zip') && !zipEntry.dir) {
+        const nestedBlob = await zipEntry.async('blob');
+        const nestedFile = new File([nestedBlob], filename, { type: 'application/zip' });
+        const nestedXmls = await extractZipContents(nestedFile);
+        xmlFiles.push(...nestedXmls);
+      }
+    }
+    
+    return xmlFiles;
+  };
+
+  const handleFattureXmlImport = async () => {
+    const files = fattureXmlRef.current?.files;
+    if (!files || files.length === 0) {
+      showMessage("error", "Seleziona file XML o ZIP contenenti fatture");
+      return;
+    }
+
+    setLoading(true);
+    setUploadProgress({
+      active: true,
+      current: 0,
+      total: 0,
+      filename: "Preparazione...",
+      duplicates: 0,
+      imported: 0,
+      errors: []
+    });
+
+    try {
+      // Collect all XML files (from direct XMLs and extracted from ZIPs)
+      let allXmlFiles = [];
+      
+      for (const file of files) {
+        if (file.name.toLowerCase().endsWith('.zip')) {
+          const extractedXmls = await extractZipContents(file);
+          allXmlFiles.push(...extractedXmls);
+        } else if (file.name.toLowerCase().endsWith('.xml')) {
+          allXmlFiles.push(file);
+        }
+      }
+
+      if (allXmlFiles.length === 0) {
+        showMessage("error", "Nessun file XML trovato nei file selezionati");
+        setUploadProgress(prev => ({ ...prev, active: false }));
+        setLoading(false);
+        return;
+      }
+
+      setUploadProgress(prev => ({
+        ...prev,
+        total: allXmlFiles.length,
+        filename: `Trovati ${allXmlFiles.length} file XML`
+      }));
+
+      // Process each XML file
+      let imported = 0;
+      let duplicates = 0;
+      let errors = [];
+
+      for (let i = 0; i < allXmlFiles.length; i++) {
+        const xmlFile = allXmlFiles[i];
+        
+        setUploadProgress(prev => ({
+          ...prev,
+          current: i + 1,
+          filename: xmlFile.name
+        }));
+
+        const formData = new FormData();
+        formData.append("file", xmlFile);
+        formData.append("check_duplicates", "true");
+
+        try {
+          const res = await api.post("/api/fatture/upload-xml", formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+          });
+
+          if (res.data.success) {
+            if (res.data.duplicate) {
+              duplicates++;
+            } else {
+              imported++;
+            }
+          } else {
+            errors.push({ file: xmlFile.name, error: res.data.error || "Errore sconosciuto" });
+          }
+        } catch (e) {
+          const errorMsg = e.response?.data?.detail || e.message;
+          // Check if it's a duplicate error
+          if (errorMsg.toLowerCase().includes('duplicat') || errorMsg.toLowerCase().includes('esiste già')) {
+            duplicates++;
+          } else {
+            errors.push({ file: xmlFile.name, error: errorMsg });
+          }
+        }
+
+        setUploadProgress(prev => ({
+          ...prev,
+          imported,
+          duplicates,
+          errors: [...errors]
+        }));
+
+        // Small delay to prevent overwhelming the server
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      // Final results
+      setImportResults({
+        type: "fatture_xml",
+        total_files: allXmlFiles.length,
+        imported,
+        duplicates,
+        errors: errors.length,
+        error_details: errors
+      });
+
+      if (errors.length === 0) {
+        showMessage("success", `Importate ${imported} fatture. ${duplicates} duplicati ignorati.`);
+      } else {
+        showMessage("error", `Importate ${imported} fatture. ${duplicates} duplicati. ${errors.length} errori.`);
+      }
+
+      fattureXmlRef.current.value = "";
+    } catch (e) {
+      showMessage("error", "Errore durante l'import: " + e.message);
+    } finally {
+      setLoading(false);
+      setTimeout(() => {
+        setUploadProgress(prev => ({ ...prev, active: false }));
+      }, 2000);
+    }
+  };
+
+  // ========== OTHER IMPORT FUNCTIONS ==========
   
   const handleImportVersamenti = async () => {
     const file = versamentoFileRef.current?.files[0];
@@ -140,31 +303,26 @@ export default function ImportExport() {
     }
   };
 
-  // ========== EXPORT FUNCTIONS ==========
+  // ========== EXPORT FUNCTIONS (Solo Excel) ==========
   
-  const handleExport = async (dataType, format = "xlsx") => {
+  const handleExport = async (dataType) => {
     setLoading(true);
     try {
       const res = await api.get(`/api/exports/${dataType}`, {
-        params: { format },
-        responseType: format === "xlsx" ? "blob" : "json"
+        params: { format: "xlsx" },
+        responseType: "blob"
       });
       
-      if (format === "xlsx") {
-        const blob = new Blob([res.data], { 
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
-        });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${dataType}_export.xlsx`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        showMessage("success", `Export ${dataType} completato!`);
-      } else {
-        console.log("Export data:", res.data);
-        showMessage("success", `Export JSON completato - vedi console`);
-      }
+      const blob = new Blob([res.data], { 
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${dataType}_export_${new Date().toISOString().slice(0,10)}.xlsx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      showMessage("success", `Export ${dataType} completato!`);
     } catch (e) {
       showMessage("error", "Errore export: " + (e.response?.data?.detail || e.message));
     } finally {
@@ -228,8 +386,14 @@ export default function ImportExport() {
     { type: "cash", label: "Prima Nota Cassa", icon: "💵" },
     { type: "bank", label: "Prima Nota Banca", icon: "🏦" },
     { type: "salari", label: "Prima Nota Salari", icon: "💰" },
-    { type: "haccp", label: "HACCP Temperature", icon: "🌡️" }
+    { type: "haccp", label: "HACCP Temperature", icon: "🌡️" },
+    { type: "riconciliazione", label: "Riconciliazione Bancaria", icon: "🔄" }
   ];
+
+  // Progress bar percentage
+  const progressPercent = uploadProgress.total > 0 
+    ? Math.round((uploadProgress.current / uploadProgress.total) * 100) 
+    : 0;
 
   return (
     <div style={{ padding: "clamp(12px, 3vw, 20px)" }}>
@@ -239,7 +403,7 @@ export default function ImportExport() {
           📥 Import / Export Dati
         </h1>
         <p style={{ color: "#666", margin: "8px 0 0 0" }}>
-          Gestione centralizzata import ed export dati Prima Nota
+          Gestione centralizzata import ed export dati
         </p>
       </div>
 
@@ -261,6 +425,7 @@ export default function ImportExport() {
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         <button
           onClick={() => setActiveTab("import")}
+          data-testid="tab-import"
           style={{
             padding: "12px 24px",
             background: activeTab === "import" ? "#3b82f6" : "#e5e7eb",
@@ -275,6 +440,7 @@ export default function ImportExport() {
         </button>
         <button
           onClick={() => setActiveTab("export")}
+          data-testid="tab-export"
           style={{
             padding: "12px 24px",
             background: activeTab === "export" ? "#10b981" : "#e5e7eb",
@@ -291,66 +457,173 @@ export default function ImportExport() {
 
       {/* Import Section */}
       {activeTab === "import" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
-          {imports.map((imp) => (
-            <div 
-              key={imp.id} 
-              style={{ 
-                background: "white", 
-                borderRadius: 12, 
-                padding: 20,
-                border: "1px solid #e5e7eb",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <span style={{ fontSize: 28 }}>{imp.icon}</span>
-                <div>
-                  <div style={{ fontWeight: "bold", fontSize: 16 }}>{imp.label}</div>
-                  <div style={{ fontSize: 12, color: "#666" }}>{imp.desc}</div>
+        <>
+          {/* Fatture XML/ZIP Import Card - Main Feature */}
+          <div style={{ 
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", 
+            borderRadius: 16, 
+            padding: 25,
+            marginBottom: 25,
+            color: "white"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 15, marginBottom: 15 }}>
+              <span style={{ fontSize: 40 }}>📄</span>
+              <div>
+                <div style={{ fontWeight: "bold", fontSize: 20 }}>Import Fatture XML</div>
+                <div style={{ fontSize: 13, opacity: 0.9 }}>
+                  Importa file XML singoli, multipli o ZIP contenenti XML (anche ZIP annidati)
                 </div>
               </div>
-              
-              <input
-                type="file"
-                ref={imp.ref}
-                accept={imp.accept}
-                style={{ 
-                  width: "100%", 
-                  padding: 10, 
-                  border: "2px dashed #d1d5db",
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  background: "#f9fafb"
-                }}
-                data-testid={`import-${imp.id}-file`}
-              />
-              
-              <button
-                onClick={imp.handler}
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  background: loading ? "#9ca3af" : "#3b82f6",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  fontWeight: "bold",
-                  cursor: loading ? "wait" : "pointer"
-                }}
-                data-testid={`import-${imp.id}-btn`}
-              >
-                {loading ? "⏳ Importazione..." : `📥 Importa ${imp.label}`}
-              </button>
             </div>
-          ))}
-        </div>
+            
+            <div style={{ 
+              background: "rgba(255,255,255,0.15)", 
+              borderRadius: 12, 
+              padding: 15,
+              marginBottom: 15
+            }}>
+              <div style={{ marginBottom: 10, fontSize: 13 }}>
+                <strong>Formati supportati:</strong>
+                <ul style={{ margin: "5px 0 0 20px", paddingLeft: 0 }}>
+                  <li>File XML singoli o multipli</li>
+                  <li>File ZIP contenenti XML</li>
+                  <li>ZIP multipli contenenti XML</li>
+                  <li>ZIP annidati (ZIP dentro ZIP)</li>
+                </ul>
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.9 }}>
+                ⚠️ I duplicati vengono rilevati automaticamente e ignorati
+              </div>
+            </div>
+
+            <input
+              type="file"
+              ref={fattureXmlRef}
+              accept=".xml,.zip"
+              multiple
+              style={{ 
+                width: "100%", 
+                padding: 12, 
+                border: "2px dashed rgba(255,255,255,0.5)",
+                borderRadius: 8,
+                marginBottom: 15,
+                background: "rgba(255,255,255,0.1)",
+                color: "white"
+              }}
+              data-testid="import-fatture-xml-file"
+            />
+            
+            {/* Progress Bar */}
+            {uploadProgress.active && (
+              <div style={{ marginBottom: 15 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 13 }}>
+                  <span>{uploadProgress.filename}</span>
+                  <span>{uploadProgress.current} / {uploadProgress.total} ({progressPercent}%)</span>
+                </div>
+                <div style={{ 
+                  height: 10, 
+                  background: "rgba(255,255,255,0.2)", 
+                  borderRadius: 5,
+                  overflow: "hidden"
+                }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${progressPercent}%`,
+                    background: "#4ade80",
+                    transition: "width 0.3s ease",
+                    borderRadius: 5
+                  }} />
+                </div>
+                <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 12 }}>
+                  <span>✅ Importate: {uploadProgress.imported}</span>
+                  <span>⚠️ Duplicati: {uploadProgress.duplicates}</span>
+                  <span>❌ Errori: {uploadProgress.errors.length}</span>
+                </div>
+              </div>
+            )}
+            
+            <button
+              onClick={handleFattureXmlImport}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "14px 20px",
+                background: loading ? "rgba(255,255,255,0.3)" : "white",
+                color: loading ? "white" : "#764ba2",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: "bold",
+                fontSize: 16,
+                cursor: loading ? "wait" : "pointer"
+              }}
+              data-testid="import-fatture-xml-btn"
+            >
+              {loading ? "⏳ Importazione in corso..." : "📥 Importa Fatture XML/ZIP"}
+            </button>
+          </div>
+
+          {/* Other Imports Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            {imports.map((imp) => (
+              <div 
+                key={imp.id} 
+                style={{ 
+                  background: "white", 
+                  borderRadius: 12, 
+                  padding: 20,
+                  border: "1px solid #e5e7eb",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontSize: 28 }}>{imp.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: 16 }}>{imp.label}</div>
+                    <div style={{ fontSize: 12, color: "#666" }}>{imp.desc}</div>
+                  </div>
+                </div>
+                
+                <input
+                  type="file"
+                  ref={imp.ref}
+                  accept={imp.accept}
+                  style={{ 
+                    width: "100%", 
+                    padding: 10, 
+                    border: "2px dashed #d1d5db",
+                    borderRadius: 8,
+                    marginBottom: 10,
+                    background: "#f9fafb"
+                  }}
+                  data-testid={`import-${imp.id}-file`}
+                />
+                
+                <button
+                  onClick={imp.handler}
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 20px",
+                    background: loading ? "#9ca3af" : "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    fontWeight: "bold",
+                    cursor: loading ? "wait" : "pointer"
+                  }}
+                  data-testid={`import-${imp.id}-btn`}
+                >
+                  {loading ? "⏳ Importazione..." : `📥 Importa ${imp.label}`}
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Export Section */}
+      {/* Export Section - Solo Excel */}
       {activeTab === "export" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 15 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 15 }}>
           {exports.map((exp) => (
             <div 
               key={exp.type} 
@@ -362,41 +635,25 @@ export default function ImportExport() {
                 textAlign: "center"
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 10 }}>{exp.icon}</div>
-              <div style={{ fontWeight: "bold", marginBottom: 15 }}>{exp.label}</div>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-                <button
-                  onClick={() => handleExport(exp.type, "xlsx")}
-                  disabled={loading}
-                  style={{
-                    padding: "10px 16px",
-                    background: "#10b981",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    fontWeight: "bold"
-                  }}
-                  data-testid={`export-${exp.type}-xlsx`}
-                >
-                  📊 Excel
-                </button>
-                <button
-                  onClick={() => handleExport(exp.type, "json")}
-                  disabled={loading}
-                  style={{
-                    padding: "10px 16px",
-                    background: "#6b7280",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 6,
-                    cursor: "pointer"
-                  }}
-                  data-testid={`export-${exp.type}-json`}
-                >
-                  { } JSON
-                </button>
-              </div>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>{exp.icon}</div>
+              <div style={{ fontWeight: "bold", marginBottom: 15, fontSize: 14 }}>{exp.label}</div>
+              <button
+                onClick={() => handleExport(exp.type)}
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "12px 16px",
+                  background: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontWeight: "bold"
+                }}
+                data-testid={`export-${exp.type}`}
+              >
+                📊 Export Excel
+              </button>
             </div>
           ))}
         </div>
@@ -411,31 +668,74 @@ export default function ImportExport() {
           padding: 20,
           border: "1px solid #e2e8f0"
         }}>
-          <h3 style={{ margin: "0 0 15px 0" }}>📋 Risultato Importazione</h3>
-          <pre style={{ 
-            background: "#1e293b", 
-            color: "#e2e8f0", 
-            padding: 15, 
-            borderRadius: 8,
-            overflow: "auto",
-            fontSize: 12
-          }}>
-            {JSON.stringify(importResults, null, 2)}
-          </pre>
-          <button
-            onClick={() => setImportResults(null)}
-            style={{
-              marginTop: 10,
-              padding: "8px 16px",
-              background: "#ef4444",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer"
-            }}
-          >
-            ✕ Chiudi
-          </button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 15 }}>
+            <h3 style={{ margin: 0 }}>📋 Risultato Importazione</h3>
+            <button
+              onClick={() => setImportResults(null)}
+              style={{
+                padding: "8px 16px",
+                background: "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer"
+              }}
+            >
+              ✕ Chiudi
+            </button>
+          </div>
+          
+          {importResults.type === "fatture_xml" ? (
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 15, marginBottom: 15 }}>
+                <div style={{ background: "#e0f2fe", padding: 15, borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: "bold", color: "#0284c7" }}>{importResults.total_files}</div>
+                  <div style={{ fontSize: 12, color: "#0369a1" }}>File Processati</div>
+                </div>
+                <div style={{ background: "#dcfce7", padding: 15, borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: "bold", color: "#16a34a" }}>{importResults.imported}</div>
+                  <div style={{ fontSize: 12, color: "#15803d" }}>Importate</div>
+                </div>
+                <div style={{ background: "#fef3c7", padding: 15, borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: "bold", color: "#d97706" }}>{importResults.duplicates}</div>
+                  <div style={{ fontSize: 12, color: "#b45309" }}>Duplicati</div>
+                </div>
+                <div style={{ background: "#fee2e2", padding: 15, borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 24, fontWeight: "bold", color: "#dc2626" }}>{importResults.errors}</div>
+                  <div style={{ fontSize: 12, color: "#b91c1c" }}>Errori</div>
+                </div>
+              </div>
+              
+              {importResults.error_details?.length > 0 && (
+                <div style={{ background: "#fef2f2", padding: 15, borderRadius: 8 }}>
+                  <strong style={{ color: "#dc2626" }}>Dettagli Errori:</strong>
+                  <ul style={{ margin: "10px 0 0 0", paddingLeft: 20 }}>
+                    {importResults.error_details.slice(0, 10).map((err, idx) => (
+                      <li key={idx} style={{ fontSize: 12, color: "#991b1b", marginBottom: 5 }}>
+                        <strong>{err.file}:</strong> {err.error}
+                      </li>
+                    ))}
+                    {importResults.error_details.length > 10 && (
+                      <li style={{ fontSize: 12, color: "#666" }}>
+                        ...e altri {importResults.error_details.length - 10} errori
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <pre style={{ 
+              background: "#1e293b", 
+              color: "#e2e8f0", 
+              padding: 15, 
+              borderRadius: 8,
+              overflow: "auto",
+              fontSize: 12
+            }}>
+              {JSON.stringify(importResults, null, 2)}
+            </pre>
+          )}
         </div>
       )}
     </div>
