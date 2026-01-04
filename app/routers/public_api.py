@@ -1738,6 +1738,60 @@ async def ricalcola_iva_corrispettivi() -> Dict[str, Any]:
     }
 
 
+@router.get("/corrispettivi/totals")
+async def get_corrispettivi_totals() -> Dict[str, Any]:
+    """
+    Totali corrispettivi con IVA.
+    Calcola: totale generale, IVA totale, imponibile totale.
+    """
+    db = Database.get_db()
+    
+    pipeline = [
+        {
+            "$group": {
+                "_id": None,
+                "totale_generale": {"$sum": "$totale"},
+                "totale_contanti": {"$sum": "$pagato_contanti"},
+                "totale_elettronico": {"$sum": "$pagato_elettronico"},
+                "totale_iva": {"$sum": "$totale_iva"},
+                "totale_imponibile": {"$sum": "$totale_imponibile"},
+                "count": {"$sum": 1}
+            }
+        }
+    ]
+    
+    result = await db["corrispettivi"].aggregate(pipeline).to_list(1)
+    
+    if result:
+        r = result[0]
+        totale = float(r.get("totale_generale", 0) or 0)
+        iva_db = float(r.get("totale_iva", 0) or 0)
+        
+        # Se IVA nel DB è 0, calcola con scorporo 10%
+        if iva_db == 0 and totale > 0:
+            iva_db = totale - (totale / 1.10)
+        
+        return {
+            "totale_generale": round(totale, 2),
+            "totale_contanti": round(float(r.get("totale_contanti", 0) or 0), 2),
+            "totale_elettronico": round(float(r.get("totale_elettronico", 0) or 0), 2),
+            "totale_iva": round(iva_db, 2),
+            "totale_imponibile": round(totale / 1.10 if totale > 0 else 0, 2),
+            "aliquota_iva": 10.0,
+            "count": r.get("count", 0)
+        }
+    
+    return {
+        "totale_generale": 0,
+        "totale_contanti": 0,
+        "totale_elettronico": 0,
+        "totale_iva": 0,
+        "totale_imponibile": 0,
+        "aliquota_iva": 10.0,
+        "count": 0
+    }
+
+
 @router.post("/corrispettivi/upload-xml")
 async def upload_corrispettivo_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
