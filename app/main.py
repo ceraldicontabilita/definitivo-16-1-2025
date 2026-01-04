@@ -146,6 +146,7 @@ app.include_router(assegni_extended.router, prefix="/api/assegni", tags=["Assegn
 app.include_router(finanziaria.router, prefix="/api/finanziaria", tags=["Finanziaria"])
 app.include_router(comparatore.router, prefix="/api/comparatore", tags=["Comparatore Prezzi"])
 app.include_router(prima_nota.router, prefix="/api/prima-nota", tags=["Prima Nota"])
+app.include_router(prima_nota_automation.router, prefix="/api/prima-nota-auto", tags=["Prima Nota Automation"])
 app.include_router(dipendenti.router, prefix="/api/dipendenti", tags=["Dipendenti"])
 app.include_router(haccp_completo.router, prefix="/api/haccp-completo", tags=["HACCP Completo"])
 
