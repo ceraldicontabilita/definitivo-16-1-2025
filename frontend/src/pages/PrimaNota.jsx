@@ -44,6 +44,7 @@ export default function PrimaNota() {
   // Modal
   const [showNewMovement, setShowNewMovement] = useState(false);
   const [newMovement, setNewMovement] = useState(DEFAULT_MOVEMENT);
+  const [editingMovement, setEditingMovement] = useState(null);
   
   // Refs
   const cassaFileRef = useRef(null);
