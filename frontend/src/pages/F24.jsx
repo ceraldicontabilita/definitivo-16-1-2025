@@ -20,8 +20,26 @@ export default function F24() {
   async function loadF24() {
     try {
       setLoading(true);
-      const r = await api.get("/api/f24");
-      setF24List(Array.isArray(r.data) ? r.data : r.data?.items || []);
+      // Load from both old and new endpoints
+      const [oldRes, newRes] = await Promise.all([
+        api.get("/api/f24").catch(() => ({ data: [] })),
+        api.get("/api/f24/f24/all").catch(() => ({ data: { f24s: [] } }))
+      ]);
+      
+      const oldList = Array.isArray(oldRes.data) ? oldRes.data : oldRes.data?.items || [];
+      const newList = newRes.data?.f24s || [];
+      
+      // Combine and dedupe by id
+      const combined = [...oldList, ...newList.map(f => ({
+        ...f,
+        tipo: "F24 Contributi",
+        importo: f.saldo_finale,
+        scadenza: f.data_scadenza,
+        descrizione: `ERARIO: ${f.tributi_erario?.length || 0}, INPS: ${f.tributi_inps?.length || 0}`,
+        source: "pdf_upload"
+      }))];
+      
+      setF24List(combined);
     } catch (e) {
       console.error("Error loading F24:", e);
     } finally {
