@@ -20,8 +20,23 @@
 - ✅ Lista notifiche con filtro "solo non lette"
 - ✅ Cards severità: alta (rosso), media (arancione), bassa (verde)
 - ✅ Bottoni: "Segna come letta", "Segna tutte lette"
+- ✅ **Scheduler integrato**: check anomalie + invio email alle 01:00 AM
+- ✅ **Badge notifiche** nella sidebar (HACCP) e alert in Dashboard
 - ✅ Collection: `haccp_notifiche`
 - File: `/app/frontend/src/pages/HACCPNotifiche.jsx`
+
+### Invio Report HACCP via Email (04/01/2026) - NEW
+- ✅ Endpoint: `POST /api/haccp-completo/email/send-report`
+- ✅ Bottone **"Invia via Email"** (verde) in Analytics HACCP
+- ✅ Email HTML con riepilogo conformità, statistiche, grafici
+- ✅ Invio automatico email per anomalie critiche (temperatura > 8°C frigo, > -15°C congel)
+
+### Dashboard Migliorata (04/01/2026) - NEW
+- ✅ Banner **Alert HACCP** rosso con link "Visualizza Alert"
+- ✅ Sezione **Azioni Rapide**: Import/Export, Analytics HACCP, Controllo Mensile, F24
+- ✅ KPI Cards: Fatture, Fornitori, Magazzino, HACCP, Dipendenti, Riconciliazione
+- ✅ Aggiornamento automatico notifiche ogni 60 secondi
+- File: `/app/frontend/src/pages/Dashboard.jsx`, `/app/frontend/src/App.jsx`
 
 ### Bug Fix: Ricerca Prodotti (04/01/2026) - FIXED
 - ✅ Aggiunto `best_price` e `best_supplier` alla funzione `search_products_predictive`
