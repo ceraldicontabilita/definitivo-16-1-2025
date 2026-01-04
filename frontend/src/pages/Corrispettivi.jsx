@@ -398,7 +398,7 @@ export default function Corrispettivi() {
         </div>
         
         {/* Barra di Progresso */}
-        {uploading && <ProgressBar progress={uploadProgress} />}
+        {uploading && <UploadProgressBar progress={uploadProgress} />}
         
         {err && (
           <div className="small" style={{ marginTop: 10, color: "#c00", padding: 10, background: "#ffebee", borderRadius: 4 }} data-testid="corrispettivi-error">
