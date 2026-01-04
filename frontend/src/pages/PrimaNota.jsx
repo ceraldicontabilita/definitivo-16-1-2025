@@ -41,6 +41,12 @@ export default function PrimaNota() {
   const [filterDataA, setFilterDataA] = useState('');
   const [filterTipo, setFilterTipo] = useState('');
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(100);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [previousMonthBalance, setPreviousMonthBalance] = useState(0);
+  
   // Modal
   const [showNewMovement, setShowNewMovement] = useState(false);
   const [newMovement, setNewMovement] = useState(DEFAULT_MOVEMENT);
@@ -55,12 +61,6 @@ export default function PrimaNota() {
     loadData();
     loadAutoStats();
   }, [filterDataDa, filterDataA, filterTipo, selectedMonth, activeTab]);
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(100);
-  const [selectedMonth, setSelectedMonth] = useState('');
-  const [previousMonthBalance, setPreviousMonthBalance] = useState(0);
 
   // Data loading
   const loadData = async () => {
