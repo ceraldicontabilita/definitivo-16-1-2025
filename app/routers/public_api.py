@@ -1111,6 +1111,14 @@ async def upload_corrispettivi_xml_bulk(files: List[UploadFile] = File(...)) -> 
     return results
 
 
+@router.delete("/corrispettivi/all")
+async def delete_all_corrispettivi() -> Dict[str, Any]:
+    """Elimina tutti i corrispettivi (usa con cautela!)."""
+    db = Database.get_db()
+    result = await db["corrispettivi"].delete_many({})
+    return {"success": True, "deleted_count": result.deleted_count}
+
+
 @router.delete("/corrispettivi/{corrispettivo_id}")
 async def delete_corrispettivo(corrispettivo_id: str) -> Dict[str, Any]:
     """Elimina un corrispettivo."""
@@ -1119,14 +1127,6 @@ async def delete_corrispettivo(corrispettivo_id: str) -> Dict[str, Any]:
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Corrispettivo non trovato")
     return {"success": True, "deleted_id": corrispettivo_id}
-
-
-@router.delete("/corrispettivi/all")
-async def delete_all_corrispettivi() -> Dict[str, Any]:
-    """Elimina tutti i corrispettivi (usa con cautela!)."""
-    db = Database.get_db()
-    result = await db["corrispettivi"].delete_many({})
-    return {"success": True, "deleted_count": result.deleted_count}
 
 
 # Endpoint generico per upload legacy (portal/upload)
