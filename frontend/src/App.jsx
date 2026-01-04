@@ -14,6 +14,7 @@ const NAV = [
   { to: "/ordini-fornitori", label: "📝 Ordini Fornitori" },
   { to: "/gestione-assegni", label: "📝 Gestione Assegni" },
   { to: "/haccp", label: "🍽️ HACCP" },
+  { to: "/dipendenti", label: "👥 Dipendenti" },
   { to: "/f24", label: "📋 F24 / Tributi" },
   { to: "/paghe", label: "💰 Paghe / Salari" },
   { to: "/finanziaria", label: "📈 Finanziaria" },
