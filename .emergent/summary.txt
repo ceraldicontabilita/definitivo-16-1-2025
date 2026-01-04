@@ -1,175 +1,158 @@
 <analysis>**original_problem_statement:**
-L'utente sta costruendo un'applicazione ERP e ha richiesto una serie di funzionalità e correzioni.
-
-Le richieste iniziali del fork precedente erano:
-1.  **Correzione **: Risolvere una regressione critica che impedisce il caricamento dei dati.
-2.  **Implementazione Bilancio**: Creare una nuova sezione per lo Stato Patrimoniale e il Conto Economico.
-
-Durante questa sessione, l'utente ha interrotto il piano iniziale e ha richiesto in sequenza:
-1.  **Miglioramento Pagina Fatture**: Aggiungere colonna Metodo Pagamento, un bottone Paga che aggiorni lo stato e registri il movimento in , e la possibilità di visualizzare il dettaglio della fattura.
-2.  **Filtri Aggiuntivi**:
-    *   Nella pagina , aggiungere filtri per fornitore, data, importo, numero e metodo di pagamento.
-    *   Nella pagina , visualizzare di default l'anno corrente e aggiungere un menu a tendina per selezionare gli anni precedenti.
-3.  **Associazione Automatica Assegni**: Nella pagina , implementare una logica per associare automaticamente gli assegni non pagati alle fatture corrispondenti, gestendo sia match di importo esatto sia match multipli (N assegni per 1 fattura).
-4.  **Correzione Bug e Dati**:
-    *   Risolvere un errore 400 durante il pagamento delle fatture.
-    *   Correggere il conteggio totale delle fatture (mostrava 1438 invece del valore atteso di 1326; dopo la pulizia dei duplicati ora è 1328).
-    *   Risolvere un bug per cui il filtro per anno nella pagina  non funzionava.
-    *   Fixare la funzionalità di importazione dalla pagina  utilizzando un file Excel fornito.
-    *   Assicurarsi che la data visualizzata nelle fatture sia la Data Documento.
-5.  **Refactoring del Codice**: Eseguire una pulizia e riorganizzazione completa della codebase del backend.
-6.  **Fix Magazzino e Inventario**: Rendere funzionante la pagina  e il bottone Inventario nella pagina .
-7.  **Ricerca Esatta Prodotti**: Modificare la pagina  per permettere una ricerca con match esatto invece che simile.
-8.  **Valutazione n8n.io**: Analizzare la piattaforma n8n.io per capire se può essere utile per l'applicazione (richiesta poi abbandonata dall'utente).
+L'utente ha interrotto il piano originale del fork precedente per dare priorità a una serie di nuove richieste urgenti:
+1.  **Funzionalità di Upload**: Implementare in tutte le pagine l'upload massivo tramite file ZIP, con barre di progresso e gestione atomica dei duplicati (saltare senza interrompere). Questa funzionalità è stata richiesta specificamente per la pagina .
+2.  **Pagina **:
+    *   Aggiungere dati mancanti (POS Automatico).
+    *   In caso di conflitto, i dati dei  XML devono sovrascrivere quelli inseriti da Excel.
+    *   Sostituire la colonna Stato con Saldo Cassa.
+    *   Popolare correttamente i dati di Versamenti.
+    *   Risolvere un bug critico per cui i dati di POS, Versamenti e Corrispettivi non corrispondevano a quelli presenti in  (es. per il giorno 02/01/2025).
+    *   Aggiungere una funzione di quadratura per confrontare i totali POS dalla banca, dalla cassa e dagli XML.
+    *   Aggiungere la navigazione tra mesi (precedente/successivo) nella vista di dettaglio.
+3.  **Pagina **:
+    *   Correggere un bug per cui le operazioni VOSTRA DISPOSIZIONE venivano classificate come entrate invece che uscite.
+    *   Migliorare il riconoscimento delle operazioni POS (INC.POS, INCAS. TRAMITE P.O.S).
+    *   Aumentare la lunghezza del campo descrizione per evitare di troncare informazioni importanti.
+4.  **Flusso Dati IVA**: L'importo IVA estratto dai  XML deve alimentare le pagine  e .
+5.  **Pagina **: Risolvere un errore che impediva il caricamento dei dati.
+6.  **Pagina **: Aggiungere colonne mancanti in tabella (Data Fattura, N. Fattura, Note).
+7.  **Filtro Anno**: Aggiungere un selettore di anno nelle pagine  e , e considerare un filtro globale in .
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione è stata oggetto di un intenso sviluppo e refactoring.
+L'agente ha implementato la maggior parte delle nuove richieste dell'utente.
 - **Backend**:
-    - La struttura del codice è stata completamente riorganizzata: file duplicati e inutilizzati sono stati rimossi, e la cartella  è stata eliminata a favore di .
-    - Sono stati aggiunti nuovi endpoint per supportare le nuove funzionalità: importazione fornitori da Excel (), auto-associazione assegni (), pagamento fatture e registrazione in Prima Nota (, ), e filtri per anno (, ).
-    - È stato corretto un bug critico in cui un router obsoleto () intercettava le chiamate a , impedendo al filtro per anno di funzionare.
-    - Sono stati eliminati 104 record di fatture duplicate dal database, portando il conteggio per il 2025 a 1328.
+    - Creato un nuovo endpoint  per gestire l'upload di file ZIP, con estrazione degli XML e gestione dei duplicati.
+    - Risolto un conflitto di routing critico in  tra  e  che causava un errore di autenticazione sulla pagina IVA.
+    - Aumentato il limite di documenti recuperabili dall'API  per correggere il caricamento incompleto dei dati annuali in .
+    - Modificato il parser degli estratti conto () per classificare correttamente VOSTRA DISPOSIZIONE come uscita e per aumentare la lunghezza del campo descrizione.
+    - L'endpoint di  è stato aggiornato per includere i totali IVA a debito e a credito.
 - **Frontend**:
-    - **Fatture**: La pagina è stata potenziata con un selettore di anno, un pannello filtri completo, e un flusso di pagamento funzionante che apre un modale, permette di pagare e aggiorna lo stato in Pagato, registrando il movimento in Prima Nota.
-    - **Prima Nota**: La pagina ora ha un selettore di anno funzionante.
-    - **Gestione Assegni**: È stato aggiunto un bottone Auto-Associa Fatture che esegue la logica di matching nel backend.
-    - **Fornitori**: La pagina ora supporta l'importazione da file Excel e il bottone Inventario apre un modale con i dettagli dei prodotti acquistati da quel fornitore.
-    - **Magazzino**: La pagina è ora funzionante e visualizza l'inventario (attualmente vuoto).
-    - **Ricerca Prodotti**: È stata aggiunta una checkbox Ricerca Esatta per modificare la logica di ricerca.
+    - **Upload**: Creato un componente riutilizzabile . Le pagine  e  sono state aggiornate con un bottone per l'upload di ZIP e una barra di progresso.
+    - **Controllo Mensile**: La pagina è stata quasi completamente riscritta. Ora aggrega e confronta dati da tre fonti diverse ( XML, , ), mostrando una quadratura tra POS Auto (XML), POS Manuale (Cassa) e POS Banca. È stata aggiunta la navigazione tra i mesi.
+    - **Pagine Varie**: Le pagine  e  ora hanno un selettore di anno. La pagina  è stata verificata e le colonne richieste erano già presenti.
 
 **Last working item**:
-- **Last item agent was working**: Implementazione della funzionalità Ricerca Esatta nella pagina . L'agente ha modificato il backend (, ) per supportare un parametro  e ha aggiunto una checkbox alla UI in . Dopo aver corretto un errore di sintassi JSX, ha verificato con uno screenshot che la pagina si carica correttamente con il nuovo toggle.
+- **Last item agent was working**: L'agente stava lavorando su un gruppo di richieste dell'utente riguardanti la riconciliazione bancaria e la pagina .
+    1.  Migliorare la logica di parsing degli estratti conto per classificare correttamente le uscite (VOSTRA DISPOSIZIONE).
+    2.  Aumentare il numero di caratteri visualizzati nella colonna descrizione della pagina .
+    3.  Aggiungere la logica di quadratura dei POS nella pagina , confrontando i dati da XML, Prima Nota Cassa e Prima Nota Banca.
 - **Status**: IN PROGRESS
-- **Agent Testing Done**: Y
-- **Which testing method agent to use?**: frontend testing agent. L'agente di test deve verificare che: 1. La ricerca senza il toggle funzioni come prima. 2. La ricerca con il toggle Ricerca Esatta attivo restituisca solo prodotti che contengono esattamente la stringa di ricerca.
+- **Agent Testing Done**: Y (L'agente ha verificato tramite screenshot e  che le modifiche all'interfaccia e agli endpoint sono state applicate).
+- **Which testing method agent to use?**: frontend testing agent. Il test deve verificare:
+    1.  **Pagina **: Caricando un estratto conto, verificare che le operazioni con descrizione VOSTRA DISPOSIZIONE siano classificate come Uscita e che le operazioni INC.POS siano correttamente identificate. Verificare che la colonna Descrizione mostri il testo completo senza troncamenti.
+    2.  **Pagina **: Verificare che il nuovo KPI POS Banca e la relativa colonna in tabella vengano popolati dopo aver caricato un estratto conto contenente operazioni POS. La colonna Diff. tra POS XML e POS Banca deve calcolare correttamente la differenza.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
 - **Issue 1: Regressione Critica: Dati non caricati in Prima Nota (P0)**
-    - **Description**: La pagina  non carica i dati (mostra saldi a €0,00). Questo era il problema principale del fork precedente ma **non è mai stato affrontato** perché l'utente ha dato priorità ad altre richieste.
-    - **Attempted fixes**: Nessuno in questa sessione.
-    - **Next debug checklist**:
-        1.  **Frontend ():** Ispezionare la console del browser per errori JS e la tab Network per verificare le chiamate API (, , ). Controllare lo stato delle chiamate e le risposte.
-        2.  **Backend ():** Se le API vengono chiamate ma restituiscono dati vuoti, controllare i log del backend per errori durante l'esecuzione delle query.
-    - **Why fix this issue and what will be achieved with the fix?**: È la funzionalità contabile principale dell'app. Attualmente è inutilizzabile.
+    - **Description**: La pagina  mostra saldi a €0,00 e non carica i movimenti. Questo era il problema principale del fork precedente ed è stato **completamente ignorato** in questa sessione.
     - **Status**: NOT STARTED
-    - **Is recurring issue?**: Y (dal fork precedente)
+    - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: both
-    - **Blocked on other issue**: No. Questo è un bloccante critico per la contabilità.
 - **Issue 2: Discrepanza Conteggio Fatture (P2)**
-    - **Description**: L'utente afferma che le fatture del 2025 sono 1326. Dopo la pulizia dei duplicati, il database ne contiene 1328.
-    - **Attempted fixes**: Rimozione di 104 fatture duplicate identificate da  e .
-    - **Next debug checklist**: Eseguire una query per trovare potenziali duplicati basati su altri criteri (es. stesso fornitore, numero e importo, ma  diverso).
-    - **Why fix this issue and what will be achieved with the fix?**: Allineare i dati dell'applicazione con le aspettative dell'utente.
-    - **Status**: IN PROGRESS
+    - **Description**: L'utente segnala che le fatture per il 2025 dovrebbero essere 1326, ma il database ne contiene 1328. Anche questo problema proviene dal fork precedente e non è stato affrontato.
+    - **Status**: NOT STARTED
     - **Is recurring issue?**: N
     - **Should Test frontend/backend/both after fix?**: backend
-    - **Blocked on other issue**: No.
+- **Issue 3: Riconoscimento POS in Riconciliazione (P1)**
+    - **Description**: La logica per trovare e abbinare le operazioni POS (INC.POS, INCAS. TRAMITE P.O.S) dall'estratto conto bancario non è stata completamente verificata. L'agente ha aggiunto il codice per cercarle, ma manca un test end-to-end.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: both
 
 **In progress Task List**:
-- **Task 1: Verifica Funzionalità Ricerca Esatta (P1)**
-    - **Where to resume**: La UI è pronta. Bisogna testare end-to-end che la ricerca con e senza il flag Ricerca Esatta produca i risultati corretti.
-    - **What will be achieved with this?**: Completa una richiesta esplicita dell'utente per migliorare la ricerca prodotti.
+- **Task 1: Verifica Funzionalità Riconciliazione e Controllo Mensile (P0)**
+    - **Where to resume**: L'agente ha implementato le modifiche al backend e al frontend. Il prossimo passo è eseguire un test completo, che richiede il caricamento di un estratto conto contenente le operazioni specifiche (VOSTRA DISPOSIZIONE, INC.POS) per validare la nuova logica.
+    - **What will be achieved with this?**: Correggerà la classificazione errata delle transazioni, migliorerà la precisione della riconciliazione bancaria e fornirà una visione completa dei flussi POS.
     - **Status**: USER VERIFICATION PENDING
-    - **Should Test frontend/backend/both after fix?**: frontend
-    - **Blocked on something**: No.
+    - **Should Test frontend/backend/both after fix?**: both
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P0) Implementare Modulo Bilancio**: L'utente ha richiesto la creazione di una nuova sezione per il Bilancio (Stato Patrimoniale, Conto Economico). È stato creato il file  ma è vuoto.
-    - **(P1) Associazione Automatica Dati Fornitore**: L'utente ha richiesto che all'aggiunta di un fornitore, questo venga automaticamente associato a fatture, magazzino e prima nota. Questa è una logica di business complessa da progettare.
+    - **(P0) Filtro Anno Globale**: Implementare un selettore di anno nella  che influenzi i dati visualizzati in tutte le pagine dell'applicazione.
+    - **(P1) Implementare Modulo Bilancio**: Creare la sezione per lo Stato Patrimoniale e il Conto Economico. Il file  è ancora vuoto.
 - **Future Tasks**:
-    - **(P2) Popolare Magazzino da Fatture XML**: Logica per estrarre prodotti dagli XML delle fatture e aggiornare l'inventario nel magazzino.
-    - **(P2) Mapping Prodotti Web**: Sviluppare un sistema per mappare descrizioni dei prodotti a nomi commerciali.
+    - **(P1) Associazione Automatica Dati Fornitore**: Progettare la logica per associare automaticamente un nuovo fornitore a fatture e movimenti esistenti.
+    - **(P2) Popolare Magazzino da Fatture XML**: Estrarre i prodotti dalle fatture d'acquisto per aggiornare l'inventario.
+    - **(P2) Mapping Prodotti Web**: Sviluppare un sistema per mappare le descrizioni dei prodotti.
 
 **Completed work in this session**
-- **Refactoring Completo Backend**: Puliti file obsoleti, codice morto e duplicato; riorganizzata la struttura delle cartelle.
-- **Fix Filtro Fatture per Anno**: Debuggato e risolto un problema critico di routing in cui un endpoint obsoleto () intercettava le richieste, impedendo il funzionamento del filtro.
-- **Funzionalità Pagamento Fatture**: Implementato il flusso completo: selezione metodo, pulsante Paga, aggiornamento stato a Pagato, e creazione del movimento corrispondente in .
-- **Import Fornitori da Excel**: Creata e testata la funzionalità di importazione massiva di fornitori da un file .
-- **Inventario per Fornitore**: La pagina Fornitori ora ha un pulsante Inventario che apre un modale con tutti i prodotti acquistati da quel fornitore.
-- **Fix Pagina Magazzino**: La pagina  è stata resa funzionante rimuovendo la dipendenza dall'autenticazione.
-- **Auto-Associazione Assegni**: Implementata la logica e la UI per associare automaticamente gli assegni alle fatture.
-- **Deduplicazione Fatture**: Rimosse 104 fatture duplicate dal DB per l'anno 2025.
-- **Aggiornamento PRD.md**: Il file è stato aggiornato con le nuove specifiche e la mappa concettuale.
+- **Refactoring Funzionalità di Upload**: Implementato upload di file ZIP con barra di progresso e gestione dei duplicati per  e .
+- **Correzione Bug Critico Pagina **: Risolto un conflitto di routing API che impediva il caricamento dei dati.
+- **Rifacimento Pagina **: La pagina è stata trasformata in uno strumento di riconciliazione completo che aggrega dati da ,  e , risolvendo un bug di caricamento dati e aggiungendo la navigazione tra mesi.
+- **Aggiornamento Pagina **: La pagina ora integra i dati sull'IVA a debito e a credito.
+- **Fix Pagina **: Corretta la classificazione delle operazioni VOSTRA DISPOSIZIONE e aumentata la lunghezza del campo descrizione.
+- **Creazione Documentazione**: Creato il file  per documentare le logiche di business implementate.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1: Regressione Critica in **: Come menzionato sopra, il problema più critico del fork precedente non è stato risolto. L'agente è stato deviato dalle continue nuove richieste dell'utente e non ha mai ripreso in mano il fix.
+- **Issue 1: Regressione Critica in **: Il problema più importante del fork precedente (pagina  non funzionante) non è stato risolto. L'agente è stato costantemente dirottato dalle nuove e urgenti richieste dell'utente.
+- **Issue 2: Discrepanza Conteggio Fatture**: Problema secondario ereditato dal fork precedente e non ancora affrontato.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork**: La pagina  non caricava i dati.
-- **Recurrence count**: 1
+- **Recurrence count**: 2
 - **Status**: NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **API Endpoint Shadowing**: Debug e risoluzione di un problema complesso in cui un router FastAPI registrato prima () intercettava le chiamate destinate a un altro router (), causando un comportamento anomalo (filtri ignorati).
-- **Refactoring Codebase**: Eliminazione di codice morto, file duplicati e riorganizzazione della struttura delle cartelle del backend per migliorare la manutenibilità.
-- **Data Deduplication**: Utilizzo di script per identificare e rimuovere record duplicati dal database MongoDB.
-- **Complex UI State Management**: Gestione di modali, filtri e stati dipendenti in React (es. modale inventario, flusso di pagamento fatture).
-
-**key DB schema**
-- Nessuna modifica allo schema. Le collection , , , ,  sono state usate intensivamente.
-
-**changes in tech stack**
-- Nessuno.
+- **Precedenza dei Router FastAPI**: È stato risolto un bug critico causato dall'ordine di registrazione dei router in . Un router con un percorso generico e autenticazione () veniva registrato prima di uno più specifico, intercettando la chiamata e causando un errore 401. La soluzione è stata invertire l'ordine di registrazione.
+- **Aggregazione Dati Multi-sorgente nel Frontend**: La pagina  è stata pesantemente modificata per effettuare chiamate multiple a diverse API (, , ) e aggregare i dati lato client per costruire un report complesso e una logica di quadratura.
+- **Limiti delle Query API**: È stato diagnosticato e risolto un errore  causato da una richiesta dal frontend che superava il limite massimo di documenti () definito nel modello Pydantic del backend. Il limite è stato aumentato per consentire il caricamento di un intero anno di dati.
 
 **All files of reference**
--  (File chiave del debug sul filtro anno)
+- 
+- 
+- 
+- 
 - 
 - 
 -  (Contiene la regressione irrisolta)
-- 
-- 
-- 
-- 
-- 
-- 
-- 
-- 
+-  (Nuovo documento con logiche di calcolo)
+-  (Aggiornato)
 
 **Critical Info for New Agent**
-- **PRIORITÀ ASSOLUTA**: Il problema originale del fork, la regressione sulla pagina , è stato completamente ignorato e deve essere risolto come prima cosa. L'utente si è concentrato su altro, ma questa è una funzionalità core non funzionante.
-- L'utente cambia frequentemente priorità. È importante gestire le sue richieste, ma anche ricordargli dei bug critici pendenti come quello della Prima Nota.
-- Il bug del filtro delle fatture era causato da un endpoint shadow in  che intercettava la chiamata. Tieni presente questa architettura se si verificano altri problemi di routing inaspettati.
-- Il refactoring ha pulito molto codice. Fai riferimento alla nuova struttura (, , etc.) ed evita di creare file al di fuori di essa.
+- **PRIORITÀ ASSOLUTA (TECNICA)**: La regressione sulla pagina  è il problema tecnico più grave e in sospeso. Sebbene l'utente non lo abbia menzionato di recente, è una funzionalità core dell'ERP che è completamente rotta. È fondamentale trovare un modo per dare priorità a questa correzione.
+- **Gestione Utente**: L'utente è molto attivo e cambia priorità frequentemente con richieste urgenti. È importante essere flessibili e affrontare le sue necessità, ma anche comunicare proattivamente lo stato dei bug critici pendenti (come quello della ) per non accumulare debito tecnico.
+- **Complessità di **: Questa pagina è diventata il componente frontend più complesso, poiché aggrega dati da più API. Qualsiasi modifica futura a questa pagina o alle API da cui dipende (, ) richiede test di regressione approfonditi.
 
 **documents and test reports created in this job**
--  (Aggiornato con la mappa concettuale e le nuove feature)
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **10.** L'utente chiede di sistemare diversi problemi: le fatture del 2025 sono 1326, il file PRD.md non viene aggiornato, la pagina Magazzino e il bottone Inventario non funzionano. Chiede anche di analizzare n8n.io. (IN PROGRESS)
-- **9.** L'utente fornisce una priorità per il refactoring: P0, P1, P2. (COMPLETED)
-- **8.** L'utente risponde al piano di refactoring approvandolo. (COMPLETED)
-- **7.** L'utente ignora la proposta su n8n.io e chiede di fare il refactoring dell'app. (COMPLETED)
-- **6.** L'utente chiede cosa deve fare per usare n8n.io. (COMPLETED)
-- **5.** L'utente segnala un errore 400 sulla pagina Fatture, un conteggio errato delle fatture e la mancanza di un filtro per anno. (COMPLETED)
-- **4.** L'utente chiede di associare automaticamente gli assegni alle fatture, anche in caso di pagamenti multipli. (COMPLETED)
-- **3.** L'utente chiede di aggiungere filtri alla pagina Fatture e un selettore di anno alla pagina Prima Nota. (COMPLETED)
-- **2.** L'utente chiede di modificare la tabella Fatture per aggiungere un flusso di pagamento. (COMPLETED)
-- **1.** L'utente approva il piano iniziale proposto dall'agente. (IGNORED BY AGENT)
+- **10. (LATEST)** **Richiesta Multipla**: Aggiungere navigazione tra mesi in , correggere errore di caricamento in , e aggiungere colonne mancanti in .
+- **9. Immagine + Richiesta**: Segnalazione di bug in  (classificazione errata di VOSTRA DISPOSIZIONE, POS non trovati, descrizione troncata) e richiesta di aggiungere la quadratura dei POS in .
+- **8. Domanda**: Chiede una spiegazione dettagliata del funzionamento dei flussi  e .
+- **7. Richiesta**: Implementare il flusso dati dall'IVA dei  XML verso le pagine  e  e aggiungere un filtro per anno.
+- **6. Bug Report**: Segnalazione di un grave bug in  dove i dati giornalieri (es. 02/01/2025) non corrispondevano a quelli presenti in .
+- **5. Approvazione implicita**: L'utente approva il piano di fix per il bug di  fornendo dettagli sul problema.
+- **4. Risposta a spiegazione**: L'utente risponde alla spiegazione dei flussi, chiedendo ulteriori implementazioni.
+- **3. Risposta dell'agente**: L'agente fornisce la spiegazione dettagliata richiesta sui flussi  e .
+- **2. Risposta dell'agente**: L'agente termina un task precedente e riassume il lavoro completato.
+- **1. Richiesta iniziale del ciclo**: L'utente chiede di implementare l'upload di ZIP per i  e di sistemare la pagina .
 
 **Project Health Check:**
 - **Broken**:
-    - : Pagina critica per la contabilità, attualmente non funzionante (non carica i dati).
+    - : Pagina critica per la contabilità, non funzionante (non carica i dati). Questo è un problema grave ereditato e ignorato.
 - **Mocked**:
     - Nessuno.
 
 **3rd Party Integrations**
-- Nessuna. La valutazione di n8n.io è stata richiesta e poi annullata dall'utente.
+- Nessuna.
 
 **Testing status**
 - **Testing agent used after significant changes**: NO
 - **Troubleshoot agent used after agent stuck in loop**: NO
 - **Test files created**: Nessuno
-- **Known regressions**:  non carica i dati.
+- **Known regressions**: La pagina  non carica i dati, una regressione critica dal fork precedente.
 
 **Credentials to test flow:**
 - Nessuna.
 
 **What agent forgot to execute**
-- **L'incarico principale del fork precedente**: Risolvere la regressione critica sulla pagina . L'agente è stato completamente dirottato dalle nuove richieste dell'utente e non ha mai affrontato il problema originale, che rimane il bug più importante da risolvere.</analysis>
+- **Correzione della regressione **: L'incarico principale e più critico del fork precedente è stato completamente ignorato. L'agente è stato dirottato dalle nuove richieste dell'utente e non ha mai affrontato il problema originale, che rimane il bug più importante dell'intera applicazione.
+- **Discrepanza Conteggio Fatture**: Anche questo problema minore, ereditato dal fork precedente, non è stato affrontato.</analysis>
