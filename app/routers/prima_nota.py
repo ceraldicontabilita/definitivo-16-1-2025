@@ -130,6 +130,7 @@ async def create_prima_nota_cassa(
         "fornitore_piva": data.get("fornitore_piva"),
         "fattura_id": data.get("fattura_id"),
         "note": data.get("note"),
+        "source": data.get("source"),  # manual_entry, excel_import, etc.
         "created_at": datetime.utcnow().isoformat()
     }
     
