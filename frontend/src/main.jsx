@@ -11,6 +11,7 @@ import PrimaNotaCassa from "./pages/PrimaNotaCassa.jsx";
 import PrimaNotaBanca from "./pages/PrimaNotaBanca.jsx";
 import Riconciliazione from "./pages/Riconciliazione.jsx";
 import Magazzino from "./pages/Magazzino.jsx";
+import RicercaProdotti from "./pages/RicercaProdotti.jsx";
 import HACCP from "./pages/HACCP.jsx";
 import F24 from "./pages/F24.jsx";
 import Paghe from "./pages/Paghe.jsx";
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
       { path: "prima-nota-banca", element: <PrimaNotaBanca /> },
       { path: "riconciliazione", element: <Riconciliazione /> },
       { path: "magazzino", element: <Magazzino /> },
+      { path: "ricerca-prodotti", element: <RicercaProdotti /> },
       { path: "haccp", element: <HACCP /> },
       { path: "f24", element: <F24 /> },
       { path: "paghe", element: <Paghe /> },
