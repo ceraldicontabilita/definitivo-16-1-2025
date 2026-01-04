@@ -1050,3 +1050,4 @@ async def delete_all_invoices(
         "message": f"Deleted {result.deleted_count} invoices",
         "deleted_count": result.deleted_count
     }
+# Forced reload Sun Jan  4 18:08:32 UTC 2026
