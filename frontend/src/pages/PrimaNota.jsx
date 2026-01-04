@@ -483,6 +483,7 @@ export default function PrimaNota() {
         loading={loading}
         formatCurrency={formatCurrency}
         onDeleteMovement={handleDeleteMovement}
+        onEditMovement={handleEditMovement}
       />
 
       {/* New Movement Modal */}
