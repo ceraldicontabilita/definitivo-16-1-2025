@@ -2,6 +2,25 @@
 
 ## Aggiornamento 04/01/2026 - Nuove Funzionalità
 
+### Analytics HACCP (04/01/2026) - NEW
+- ✅ Nuova pagina `/haccp/analytics` con statistiche mensili e annuali
+- ✅ Dashboard riepilogativa: rilevazioni totali, conformità globale %, anomalie
+- ✅ Cards per: Frigoriferi, Congelatori, Sanificazioni
+- ✅ Dettaglio temperature: media, min, max, conformi/non conformi
+- ✅ Sezione Anomalie con lista dettagliata
+- ✅ Vista Annuale con tabella mese per mese
+- ✅ Endpoint: `GET /api/haccp-completo/analytics/mensile`, `/analytics/annuale`
+- File: `/app/frontend/src/pages/HACCPAnalytics.jsx`
+
+### Refactoring GestioneDipendenti.jsx (04/01/2026) - NEW
+- ✅ Riduzione da **625 righe** a **231 righe** nel file principale
+- ✅ Estratti 4 componenti modulari:
+  - `DipendenteTable.jsx` (103 righe) - Tabella dipendenti
+  - `DipendenteDetailModal.jsx` (232 righe) - Modale dettaglio/edit
+  - `DipendenteNewModal.jsx` (100 righe) - Modale nuovo dipendente
+  - `constants.js` (27 righe) - Costanti MANSIONI, TIPI_CONTRATTO
+- Directory: `/app/frontend/src/components/dipendenti/`
+
 ### Scheduler HACCP Auto-popolazione (04/01/2026)
 - ✅ **Scheduler APScheduler** avviato con l'applicazione
 - ✅ Task automatico alle **01:00 AM (CET)** ogni giorno
