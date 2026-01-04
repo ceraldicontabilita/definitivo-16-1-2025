@@ -140,6 +140,7 @@ app.include_router(magazzino_products.router, prefix="/api/magazzino", tags=["Ma
 app.include_router(orders_extended.router, prefix="/api/orders", tags=["Orders Extended"])
 app.include_router(assegni_extended.router, prefix="/api/assegni", tags=["Assegni Extended"])
 app.include_router(finanziaria.router, prefix="/api/finanziaria", tags=["Finanziaria"])
+app.include_router(comparatore.router, prefix="/api/comparatore", tags=["Comparatore Prezzi"])
 
 # app.include_router(fattura24.router, prefix="/api/fattura24", tags=["Fattura24"])
 app.include_router(exports.router, prefix="/api/export", tags=["Exports Alias"])
