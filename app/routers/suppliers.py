@@ -407,3 +407,134 @@ async def delete_supplier(supplier_id: str, force: bool = Query(False)) -> Dict[
     await db[Collections.SUPPLIERS].delete_one({"_id": supplier["_id"]})
     
     return {"message": "Fornitore eliminato"}
+
+
+@router.post("/import-excel")
+async def import_suppliers_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Importa fornitori da file Excel (.xls, .xlsx).
+    
+    Colonne attese: Denominazione, Partita Iva, Codice Fiscale, Email, PEC, 
+                   Telefono, Indirizzo, CAP, Comune, Provincia, Nazione
+    """
+    import pandas as pd
+    
+    if not file.filename.endswith(('.xls', '.xlsx')):
+        raise HTTPException(status_code=400, detail="File deve essere .xls o .xlsx")
+    
+    db = Database.get_db()
+    
+    try:
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Mapping colonne (flessibile)
+        col_mapping = {
+            'denominazione': ['Denominazione', 'denominazione', 'Ragione Sociale', 'Nome'],
+            'partita_iva': ['Partita Iva', 'partita_iva', 'P.IVA', 'Partita IVA'],
+            'codice_fiscale': ['Codice Fiscale', 'codice_fiscale', 'CF'],
+            'email': ['Email', 'email', 'E-mail'],
+            'pec': ['PEC', 'pec'],
+            'telefono': ['Telefono', 'telefono', 'Tel'],
+            'indirizzo': ['Indirizzo', 'indirizzo'],
+            'cap': ['CAP', 'cap'],
+            'comune': ['Comune', 'comune', 'Città'],
+            'provincia': ['Provincia', 'provincia', 'Prov'],
+            'nazione': ['Nazione', 'nazione', 'ID Paese', 'Paese'],
+            'numero_civico': ['Numero civico', 'numero_civico', 'Civico'],
+        }
+        
+        def find_col(options):
+            for opt in options:
+                if opt in df.columns:
+                    return opt
+            return None
+        
+        imported = 0
+        updated = 0
+        errors = []
+        
+        for idx, row in df.iterrows():
+            try:
+                # Estrai dati
+                denom_col = find_col(col_mapping['denominazione'])
+                piva_col = find_col(col_mapping['partita_iva'])
+                
+                denominazione = str(row.get(denom_col, '')).strip() if denom_col else ''
+                partita_iva = str(row.get(piva_col, '')).strip() if piva_col else ''
+                
+                if not denominazione and not partita_iva:
+                    continue  # Riga vuota
+                
+                # Pulisci partita IVA
+                partita_iva = partita_iva.replace(' ', '').replace('.', '')
+                if partita_iva.lower() == 'nan':
+                    partita_iva = ''
+                
+                # Costruisci indirizzo completo
+                indirizzo_parts = []
+                indirizzo_col = find_col(col_mapping['indirizzo'])
+                num_col = find_col(col_mapping['numero_civico'])
+                if indirizzo_col and pd.notna(row.get(indirizzo_col)):
+                    indirizzo_parts.append(str(row.get(indirizzo_col)))
+                if num_col and pd.notna(row.get(num_col)):
+                    indirizzo_parts.append(str(row.get(num_col)))
+                
+                supplier_data = {
+                    "denominazione": denominazione.strip('"'),  # Rimuovi virgolette
+                    "partita_iva": partita_iva,
+                    "codice_fiscale": str(row.get(find_col(col_mapping['codice_fiscale']), '') or '').strip() if find_col(col_mapping['codice_fiscale']) else '',
+                    "email": str(row.get(find_col(col_mapping['email']), '') or '').strip() if find_col(col_mapping['email']) else '',
+                    "pec": str(row.get(find_col(col_mapping['pec']), '') or '').strip() if find_col(col_mapping['pec']) else '',
+                    "telefono": str(row.get(find_col(col_mapping['telefono']), '') or '').strip() if find_col(col_mapping['telefono']) else '',
+                    "indirizzo": ', '.join(indirizzo_parts),
+                    "cap": str(row.get(find_col(col_mapping['cap']), '') or '').strip() if find_col(col_mapping['cap']) else '',
+                    "comune": str(row.get(find_col(col_mapping['comune']), '') or '').strip() if find_col(col_mapping['comune']) else '',
+                    "provincia": str(row.get(find_col(col_mapping['provincia']), '') or '').strip() if find_col(col_mapping['provincia']) else '',
+                    "nazione": str(row.get(find_col(col_mapping['nazione']), 'IT') or 'IT').strip() if find_col(col_mapping['nazione']) else 'IT',
+                    "attivo": True,
+                    "metodo_pagamento": "bonifico",  # Default
+                    "updated_at": datetime.utcnow().isoformat()
+                }
+                
+                # Pulisci valori 'nan'
+                for k, v in supplier_data.items():
+                    if str(v).lower() == 'nan' or v == 'None':
+                        supplier_data[k] = ''
+                
+                # Verifica se esiste già (per partita IVA o denominazione)
+                existing = None
+                if partita_iva:
+                    existing = await db[Collections.SUPPLIERS].find_one({"partita_iva": partita_iva})
+                if not existing and denominazione:
+                    existing = await db[Collections.SUPPLIERS].find_one({"denominazione": denominazione})
+                
+                if existing:
+                    # Aggiorna solo i campi non vuoti
+                    update_data = {k: v for k, v in supplier_data.items() if v}
+                    await db[Collections.SUPPLIERS].update_one(
+                        {"_id": existing["_id"]},
+                        {"$set": update_data}
+                    )
+                    updated += 1
+                else:
+                    # Crea nuovo
+                    supplier_data["id"] = str(uuid.uuid4())
+                    supplier_data["created_at"] = datetime.utcnow().isoformat()
+                    await db[Collections.SUPPLIERS].insert_one(supplier_data)
+                    imported += 1
+                    
+            except Exception as e:
+                errors.append(f"Riga {idx + 2}: {str(e)}")
+        
+        return {
+            "success": True,
+            "imported": imported,
+            "updated": updated,
+            "errors": errors[:10] if errors else [],
+            "total_processed": imported + updated
+        }
+        
+    except Exception as e:
+        logger.error(f"Import fornitori fallito: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore import: {str(e)}")
