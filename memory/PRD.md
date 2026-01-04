@@ -95,9 +95,15 @@ UI aggiunta in `HACCPDashboard.jsx` con sezione "Stampa Report PDF per Ispezioni
 | components/prima-nota/PrimaNotaNewMovementModal.jsx | 146 | Modal nuovo movimento |
 | components/prima-nota/PrimaNotaSummaryCards.jsx | 59 | Card riepilogo |
 
+## UI Alert F24 (Completato 04/01/2026)
+- Dashboard con statistiche (Totale F24, Pagati, Da Pagare, Alert Attivi)
+- Sezione Alert con severity (critical/high/medium/low) colorata
+- Endpoint pubblici: `/api/f24-public/alerts`, `/api/f24-public/dashboard`
+- Pulsante "Segna Pagato" per ogni alert
+- Lista F24 con stato e azioni
+
 ## Prossimi Miglioramenti
-- [ ] UI Alert F24
-- [ ] Email service
+- [ ] Email service (configurare SMTP)
 - [ ] Generazione contratti dipendenti
 
 ---
