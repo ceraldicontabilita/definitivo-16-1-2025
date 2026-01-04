@@ -292,19 +292,30 @@ async def auto_populate_warehouse_from_invoice(db, invoice_data: Dict[str, Any],
     return result
 
 
-async def get_product_catalog(db, category: Optional[str] = None, search: Optional[str] = None, days: int = 30) -> List[Dict[str, Any]]:
+async def get_product_catalog(db, category: Optional[str] = None, search: Optional[str] = None, days: int = 30, exact: bool = False) -> List[Dict[str, Any]]:
     """
     Restituisce catalogo prodotti con miglior prezzo ultimi N giorni.
+    
+    Args:
+        exact: Se True, cerca match esatto invece di simili
     """
     query = {}
     if category:
         query["categoria"] = category
     if search:
-        search_normalized = normalize_product_name(search)
-        query["$or"] = [
-            {"nome": {"$regex": search, "$options": "i"}},
-            {"nome_normalizzato": {"$regex": search_normalized, "$options": "i"}}
-        ]
+        if exact:
+            # Match esatto (case insensitive)
+            query["$or"] = [
+                {"nome": {"$regex": f"^{re.escape(search)}$", "$options": "i"}},
+                {"nome_normalizzato": normalize_product_name(search)}
+            ]
+        else:
+            # Match parziale (simili)
+            search_normalized = normalize_product_name(search)
+            query["$or"] = [
+                {"nome": {"$regex": search, "$options": "i"}},
+                {"nome_normalizzato": {"$regex": search_normalized, "$options": "i"}}
+            ]
     
     products = await db["warehouse_inventory"].find(query, {"_id": 0}).to_list(10000)
     
