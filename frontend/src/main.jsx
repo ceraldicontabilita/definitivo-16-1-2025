@@ -16,6 +16,7 @@ import RicercaProdotti from "./pages/RicercaProdotti.jsx";
 import HACCP from "./pages/HACCP.jsx";
 import HACCPDashboard from "./pages/HACCPDashboard.jsx";
 import HACCPTemperatureFrigo from "./pages/HACCPTemperatureFrigo.jsx";
+import HACCPTemperaturaCongelatori from "./pages/HACCPTemperaturaCongelatori.jsx";
 import HACCPSanificazioni from "./pages/HACCPSanificazioni.jsx";
 import HACCPEquipaggiamenti from "./pages/HACCPEquipaggiamenti.jsx";
 import HACCPScadenzario from "./pages/HACCPScadenzario.jsx";
