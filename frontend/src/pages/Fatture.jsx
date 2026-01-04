@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import api from "../api";
 import { formatDateIT } from "../lib/utils";
+import { UploadProgressBar } from "../components/UploadProgressBar";
 
 export default function Fatture() {
   const currentYear = new Date().getFullYear();
