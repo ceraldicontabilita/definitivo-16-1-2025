@@ -1685,6 +1685,7 @@ async def upload_corrispettivo_xml(file: UploadFile = File(...)) -> Dict[str, An
     """
     Upload e parse di un singolo corrispettivo XML.
     Controllo duplicati basato su: P.IVA + data + matricola + numero
+    Registra automaticamente il pagamento elettronico nella Prima Nota Banca.
     """
     if not file.filename.lower().endswith('.xml'):
         raise HTTPException(status_code=400, detail="Il file deve essere in formato XML")
@@ -1756,10 +1757,42 @@ async def upload_corrispettivo_xml(file: UploadFile = File(...)) -> Dict[str, An
         await db["corrispettivi"].insert_one(corrispettivo)
         corrispettivo.pop("_id", None)
         
+        # === REGISTRAZIONE AUTOMATICA PAGAMENTO ELETTRONICO IN PRIMA NOTA BANCA ===
+        bank_movement_id = None
+        pagato_elettronico = float(parsed.get("pagato_elettronico", 0) or 0)
+        
+        if pagato_elettronico > 0:
+            bank_movement = {
+                "id": str(uuid.uuid4()),
+                "date": parsed.get("data", datetime.utcnow().isoformat()[:10]),
+                "type": "entrata",
+                "amount": pagato_elettronico,
+                "description": f"Incasso POS RT {parsed.get('matricola_rt', '')} del {parsed.get('data', '')}",
+                "category": "POS",
+                "reference": f"COR-{corrispettivo['id'][:8]}",
+                "source": "corrispettivi_auto",
+                "corrispettivo_id": corrispettivo['id'],
+                "reconciled": True,
+                "reconciled_with": corrispettivo['id'],
+                "reconciled_type": "corrispettivo",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            await db["bank_statements"].insert_one(bank_movement)
+            bank_movement_id = bank_movement["id"]
+            
+            # Aggiorna corrispettivo con riferimento al movimento bancario
+            await db["corrispettivi"].update_one(
+                {"id": corrispettivo['id']},
+                {"$set": {"bank_movement_id": bank_movement_id}}
+            )
+        
         return {
             "success": True,
             "message": f"Corrispettivo del {parsed.get('data')} importato - Contanti: €{corrispettivo['pagato_contanti']:.2f}, Elettronico: €{corrispettivo['pagato_elettronico']:.2f}",
-            "corrispettivo": corrispettivo
+            "corrispettivo": corrispettivo,
+            "bank_movement_created": bank_movement_id is not None,
+            "bank_movement_id": bank_movement_id
         }
         
     except HTTPException:
