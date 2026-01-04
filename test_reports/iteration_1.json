@@ -1,0 +1,53 @@
+{
+  "summary": "Completed e2e testing of Corrispettivi and Fatture XML upload features. All 13 backend API tests passed. Frontend UI tests passed for both pages including navigation, form interactions, and detail views.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_corrispettivi_fatture.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend logs show XML parsing errors for corrispettivi with 'unbound prefix' - this is expected when users upload malformed XML files. The error handling is working correctly.",
+    "The Fatture page shows 'Nota Credito' badge for TD04 document type - this is correct Italian invoice terminology."
+  ],
+  "updated_files": [
+    "/app/tests/test_corrispettivi_fatture.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (all UI elements and interactions working)"
+  },
+  "seed_data_creation": "Test data created during backend tests with TEST_ prefix for corrispettivi and fatture uploads",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Corrispettivi and Fatture features are working correctly. Backend APIs tested: GET /api/corrispettivi, GET /api/invoices, POST /api/corrispettivi/upload-xml, POST /api/corrispettivi/upload-xml-bulk, POST /api/fatture/upload-xml, POST /api/fatture/upload-xml-bulk, DELETE endpoints. Duplicate detection working with 409 status code. Frontend pages load correctly with all buttons functional. Manual invoice creation form works. Invoice detail view works.",
+  "features_tested": {
+    "corrispettivi": {
+      "page_loads": "PASS - /corrispettivi loads correctly",
+      "single_xml_upload": "PASS - /api/corrispettivi/upload-xml works",
+      "bulk_xml_upload": "PASS - /api/corrispettivi/upload-xml-bulk works",
+      "duplicate_detection": "PASS - Returns 409 for duplicates",
+      "get_list": "PASS - /api/corrispettivi returns list",
+      "delete": "PASS - DELETE /api/corrispettivi/{id} works"
+    },
+    "fatture": {
+      "page_loads": "PASS - /fatture loads correctly",
+      "single_xml_upload": "PASS - /api/fatture/upload-xml works",
+      "bulk_xml_upload": "PASS - /api/fatture/upload-xml-bulk works",
+      "duplicate_detection": "PASS - Returns 409 for duplicates",
+      "get_list": "PASS - /api/invoices returns list",
+      "delete": "PASS - DELETE /api/invoices/{id} works",
+      "manual_creation": "PASS - POST /api/invoices works",
+      "detail_view": "PASS - Invoice detail modal works"
+    },
+    "navigation": "PASS - All sidebar navigation links work correctly"
+  }
+}
