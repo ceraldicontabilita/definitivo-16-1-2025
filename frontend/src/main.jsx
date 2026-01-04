@@ -35,6 +35,7 @@ import OrdiniFornitori from "./pages/OrdiniFornitori.jsx";
 import Fornitori from "./pages/Fornitori.jsx";
 import GestioneDipendenti from "./pages/GestioneDipendenti.jsx";
 import ControlloMensile from "./pages/ControlloMensile.jsx";
+import ImportExport from "./pages/ImportExport.jsx";
 
 const router = createBrowserRouter([
   {
