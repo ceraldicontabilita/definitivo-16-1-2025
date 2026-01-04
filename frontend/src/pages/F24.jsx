@@ -23,7 +23,7 @@ export default function F24() {
       // Load from both old and new endpoints
       const [oldRes, newRes] = await Promise.all([
         api.get("/api/f24").catch(() => ({ data: [] })),
-        api.get("/api/f24/all").catch(() => ({ data: { f24s: [] } }))
+        api.get("/api/f24-public/models").catch(() => ({ data: { f24s: [] } }))
       ]);
       
       const oldList = Array.isArray(oldRes.data) ? oldRes.data : oldRes.data?.items || [];
