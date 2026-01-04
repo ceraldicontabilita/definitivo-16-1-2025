@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../api";
+import { formatDateIT, formatEuro } from "../lib/utils";
 
 export default function RicercaProdotti() {
   const [products, setProducts] = useState([]);
