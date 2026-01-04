@@ -1,5 +1,33 @@
 # ERP Azienda Semplice - PRD
 
+## Aggiornamento 04/01/2026 - Nuove Funzionalità
+
+### Scheduler HACCP Auto-popolazione (04/01/2026)
+- ✅ **Scheduler APScheduler** avviato con l'applicazione
+- ✅ Task automatico alle **01:00 AM (CET)** ogni giorno
+- ✅ Auto-popola: Temperature Frigoriferi, Congelatori, Sanificazioni
+- ✅ Endpoint trigger manuale: `POST /api/haccp-completo/scheduler/trigger-now`
+- ✅ Endpoint status: `GET /api/haccp-completo/scheduler/status`
+- File: `/app/app/scheduler.py`
+
+### Prima Nota - Modifica/Elimina (04/01/2026)
+- ✅ Bottoni **Modifica** e **Elimina** per ogni movimento
+- ✅ Modale modifica con supporto edit/create
+- ✅ Colonna Fornitore e Saldo progressivo
+- ✅ Endpoint PUT: `/api/prima-nota/cassa/{id}`, `/api/prima-nota/banca/{id}`
+- File: `/app/frontend/src/components/prima-nota/PrimaNotaMovementsTable.jsx`
+
+### F24 - Modifica/Elimina/Sovrascrivi (04/01/2026)
+- ✅ Bottoni **Paga**, **Modifica**, **Elimina** per ogni F24
+- ✅ Modale modifica F24 (contribuente, scadenza, banca, note, pagato)
+- ✅ Checkbox **Sovrascrivi F24 esistenti** con stessa scadenza/importo
+- ✅ Endpoint PUT: `/api/f24-public/models/{id}`
+- ✅ Endpoint DELETE: `/api/f24-public/models/{id}`
+- ✅ Endpoint POST: `/api/f24-public/upload-overwrite?overwrite=true`
+- File: `/app/frontend/src/pages/F24.jsx`, `/app/app/routers/f24_public.py`
+
+---
+
 ## Refactoring Completato ✅
 
 ### Risultato Finale
