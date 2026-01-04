@@ -533,6 +533,12 @@ async def reconcile_movement(db, movement: Dict[str, Any], tolerance: float = 0.
             {"id": match["id"]},
             {"$set": {
                 "riconciliato": True,
+                "data_riconciliazione": datetime.utcnow().isoformat()
+            }}
+        )
+        return match
+    
+    return None
 
 
 # Collection per estratto conto
