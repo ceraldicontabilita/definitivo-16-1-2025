@@ -102,7 +102,7 @@ export default function ControlloMensile() {
 
       // Carica dati in parallelo da tutte le fonti
       const [cassaRes, corrispRes] = await Promise.all([
-        api.get(`/api/prima-nota/cassa?${params}&limit=2500`).catch(() => ({ data: { movimenti: [] } })),
+        api.get(`/api/prima-nota/cassa?${params}&limit=5000`).catch(() => ({ data: { movimenti: [] } })),
         api.get(`/api/corrispettivi?data_da=${startDate}&data_a=${endDate}`).catch(() => ({ data: [] }))
       ]);
 
