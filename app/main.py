@@ -104,7 +104,7 @@ app.include_router(suppliers.router, prefix="/api/suppliers", tags=["Suppliers"]
 app.include_router(warehouse.router, prefix="/api/warehouse", tags=["Warehouse"])
 app.include_router(accounting.router, prefix="/api/accounting", tags=["Accounting"])
 app.include_router(haccp.router, prefix="/api/haccp", tags=["HACCP"])
-app.include_router(employees.router, prefix="/api/employees", tags=["Employees"])
+# app.include_router(employees.router, prefix="/api/employees", tags=["Employees"])  # Disabled - using employees_payroll instead
 app.include_router(cash.router, prefix="/api/cash", tags=["Cash Register"])
 app.include_router(bank.router, prefix="/api/bank", tags=["Bank"])
 # app.include_router(invoices_advanced.router, prefix="/api/invoices", tags=["Invoices Advanced"])
