@@ -75,6 +75,19 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-04 (Sessione 6 - Vista Mobile Prima Nota)
+- **NUOVA Vista Mobile Prima Nota**: Interfaccia semplificata per smartphone
+  - Header con saldi rapidi (Entrate, Uscite, Saldo)
+  - Card grosse selezionabili:
+    - 💳 POS (con 3 campi per i terminali)
+    - 🏦 Versamento (verso banca)
+    - 💵 Incasso/Corrispettivo (cassa)
+    - 📥 Entrata (altra)
+    - 📤 Uscita (altra)
+  - Campi importo GRANDI per digitazione facile
+  - Bottoni salvataggio colorati per tipo
+  - Desktop mantiene tutte le funzionalità complete
+
 ### 2026-01-04 (Sessione 5 - Vista Mobile Fatture)
 - **NUOVA Vista Mobile Fatture**: Interfaccia semplificata per smartphone
   - Lista fatture leggibile e cliccabile (espande dettagli)
