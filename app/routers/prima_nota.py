@@ -139,6 +139,43 @@ async def create_prima_nota_cassa(
     return {"message": "Movimento cassa creato", "id": movimento["id"]}
 
 
+@router.put("/cassa/{movimento_id}")
+async def update_prima_nota_cassa(
+    movimento_id: str,
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, str]:
+    """Modifica movimento prima nota cassa."""
+    db = Database.get_db()
+    
+    update_data = {"updated_at": datetime.utcnow().isoformat()}
+    
+    # Campi modificabili
+    if "data" in data:
+        update_data["data"] = data["data"]
+    if "tipo" in data:
+        update_data["tipo"] = data["tipo"]
+    if "importo" in data:
+        update_data["importo"] = float(data["importo"])
+    if "descrizione" in data:
+        update_data["descrizione"] = data["descrizione"]
+    if "categoria" in data:
+        update_data["categoria"] = data["categoria"]
+    if "riferimento" in data:
+        update_data["riferimento"] = data["riferimento"]
+    if "note" in data:
+        update_data["note"] = data["note"]
+    
+    result = await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
+        {"id": movimento_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Movimento non trovato")
+    
+    return {"message": "Movimento aggiornato", "id": movimento_id}
+
+
 @router.delete("/cassa/{movimento_id}")
 async def delete_prima_nota_cassa(movimento_id: str) -> Dict[str, str]:
     """Elimina movimento prima nota cassa."""
