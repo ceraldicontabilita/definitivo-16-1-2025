@@ -1,0 +1,95 @@
+{
+  "summary": "Testing completed for new ERP features: HACCP Scheduler, Prima Nota Edit/Delete buttons, F24 Edit/Delete/Overwrite. All 12 backend tests passed. Frontend UI verified with all buttons visible and functional.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_new_erp_features.py",
+    "/app/test_reports/pytest/pytest_new_features.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_new_erp_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": "None required - public APIs",
+  "seed_data_creation": "Test data created and cleaned up during pytest run",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New ERP features fully tested. Key endpoints: GET/POST /api/haccp-completo/scheduler/status and /trigger-now, PUT/DELETE /api/prima-nota/cassa/{id}, PUT/DELETE /api/prima-nota/banca/{id}, PUT/DELETE /api/f24-public/models/{id}. Frontend data-testids: edit-movement-{id}, delete-movement-{id}, edit-f24-{id}, delete-f24-{id}, pay-f24-{id}, overwrite-checkbox",
+  "features_tested": {
+    "HACCP Scheduler Status": {
+      "status": "✅ PASS",
+      "endpoint": "GET /api/haccp-completo/scheduler/status",
+      "details": "Returns running=true with job 'haccp_auto_populate' scheduled for 01:00 CET daily"
+    },
+    "HACCP Scheduler Trigger": {
+      "status": "✅ PASS",
+      "endpoint": "POST /api/haccp-completo/scheduler/trigger-now",
+      "details": "Successfully triggers auto-population of HACCP data (frigoriferi, congelatori, sanificazioni)"
+    },
+    "Prima Nota Cassa PUT": {
+      "status": "✅ PASS",
+      "endpoint": "PUT /api/prima-nota/cassa/{id}",
+      "details": "Updates movement fields (importo, descrizione, categoria, note) correctly"
+    },
+    "Prima Nota Cassa DELETE": {
+      "status": "✅ PASS",
+      "endpoint": "DELETE /api/prima-nota/cassa/{id}",
+      "details": "Deletes movement and returns 404 on subsequent delete"
+    },
+    "Prima Nota Banca PUT": {
+      "status": "✅ PASS",
+      "endpoint": "PUT /api/prima-nota/banca/{id}",
+      "details": "Updates banca movement fields correctly"
+    },
+    "Prima Nota Banca DELETE": {
+      "status": "✅ PASS",
+      "endpoint": "DELETE /api/prima-nota/banca/{id}",
+      "details": "Deletes banca movement and returns 404 on subsequent delete"
+    },
+    "F24 PUT": {
+      "status": "✅ PASS",
+      "endpoint": "PUT /api/f24-public/models/{id}",
+      "details": "Updates F24 fields (note, banca, contribuente, data_scadenza, pagato)"
+    },
+    "F24 DELETE": {
+      "status": "✅ PASS",
+      "endpoint": "DELETE /api/f24-public/models/{id}",
+      "details": "Deletes F24 and returns 404 on non-existent"
+    },
+    "Frontend Prima Nota Buttons": {
+      "status": "✅ PASS",
+      "details": "Modifica and Elimina buttons visible in AZIONI column for each movement (100+ buttons found)"
+    },
+    "Frontend F24 Buttons": {
+      "status": "✅ PASS",
+      "details": "Paga, Modifica, Elimina buttons visible for each F24 record (6 records with 3 buttons each)"
+    },
+    "Frontend F24 Overwrite Checkbox": {
+      "status": "✅ PASS",
+      "details": "Checkbox 'Sovrascrivi F24 esistenti con stessa scadenza/importo' visible with data-testid='overwrite-checkbox'"
+    }
+  },
+  "api_endpoints_verified": {
+    "GET /api/haccp-completo/scheduler/status": "✅ Returns {running: true, jobs: [...], info: '...'}",
+    "POST /api/haccp-completo/scheduler/trigger-now": "✅ Returns {success: true, message: '...', timestamp: '...'}",
+    "PUT /api/prima-nota/cassa/{id}": "✅ Updates movement, returns {message: '...', id: '...'}",
+    "DELETE /api/prima-nota/cassa/{id}": "✅ Deletes movement, returns {message: '...'}",
+    "PUT /api/prima-nota/banca/{id}": "✅ Updates movement, returns {message: '...', id: '...'}",
+    "DELETE /api/prima-nota/banca/{id}": "✅ Deletes movement, returns {message: '...'}",
+    "GET /api/f24-public/models": "✅ Returns {f24s: [...], count: N, totale_da_pagare: N, totale_pagato: N}",
+    "PUT /api/f24-public/models/{id}": "✅ Updates F24, returns {message: '...', id: '...'}",
+    "DELETE /api/f24-public/models/{id}": "✅ Deletes F24, returns {message: '...', id: '...'}"
+  }
+}
