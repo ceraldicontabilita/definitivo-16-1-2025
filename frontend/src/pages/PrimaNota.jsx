@@ -110,6 +110,135 @@ export default function PrimaNota() {
     }
   };
 
+  // Automation handlers
+  const handleImportCassaExcel = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setAutomationLoading(true);
+    setAutomationResult(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await api.post('/api/prima-nota-auto/import-cassa-from-excel', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setAutomationResult({
+        type: 'success',
+        title: 'Import Cassa Completato',
+        message: res.data.message,
+        details: `Processate: ${res.data.processed} | Create: ${res.data.created_in_cassa} | Associate a fatture: ${res.data.matched_invoices}`
+      });
+      
+      loadData();
+      loadAutoStats();
+    } catch (error) {
+      setAutomationResult({
+        type: 'error',
+        title: 'Errore Import',
+        message: error.response?.data?.detail || error.message
+      });
+    } finally {
+      setAutomationLoading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleImportEstrattoContoAssegni = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setAutomationLoading(true);
+    setAutomationResult(null);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await api.post('/api/prima-nota-auto/import-assegni-from-estratto-conto', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setAutomationResult({
+        type: 'success',
+        title: 'Import Assegni Completato',
+        message: res.data.message,
+        details: `Trovati: ${res.data.assegni_found} | Creati: ${res.data.assegni_created} | Associati a fatture: ${res.data.fatture_matched}`
+      });
+      
+      loadAutoStats();
+    } catch (error) {
+      setAutomationResult({
+        type: 'error',
+        title: 'Errore Import',
+        message: error.response?.data?.detail || error.message
+      });
+    } finally {
+      setAutomationLoading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleProcessInvoicesBySupplier = async () => {
+    if (!window.confirm('Processare tutte le fatture non pagate e spostarle in prima nota cassa/banca in base al metodo pagamento del fornitore?')) return;
+    
+    setAutomationLoading(true);
+    setAutomationResult(null);
+    
+    try {
+      const res = await api.post('/api/prima-nota-auto/move-invoices-by-supplier-payment', {
+        only_unpaid: true
+      });
+      
+      setAutomationResult({
+        type: 'success',
+        title: 'Elaborazione Completata',
+        message: res.data.message,
+        details: `Processate: ${res.data.processed} | In Cassa: ${res.data.moved_to_cassa} | In Banca: ${res.data.moved_to_banca}`
+      });
+      
+      loadData();
+      loadAutoStats();
+    } catch (error) {
+      setAutomationResult({
+        type: 'error',
+        title: 'Errore Elaborazione',
+        message: error.response?.data?.detail || error.message
+      });
+    } finally {
+      setAutomationLoading(false);
+    }
+  };
+
+  const handleMatchAssegniToInvoices = async () => {
+    setAutomationLoading(true);
+    setAutomationResult(null);
+    
+    try {
+      const res = await api.post('/api/prima-nota-auto/match-assegni-to-invoices');
+      
+      setAutomationResult({
+        type: 'success',
+        title: 'Associazione Assegni Completata',
+        message: res.data.message,
+        details: `Processati: ${res.data.assegni_processed} | Associati: ${res.data.matched} | Non trovati: ${res.data.no_match}`
+      });
+      
+      loadAutoStats();
+    } catch (error) {
+      setAutomationResult({
+        type: 'error',
+        title: 'Errore Associazione',
+        message: error.response?.data?.detail || error.message
+      });
+    } finally {
+      setAutomationLoading(false);
+    }
+  };
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
