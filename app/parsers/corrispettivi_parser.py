@@ -1,19 +1,54 @@
 """
 Parser per Corrispettivi Elettronici (Trasmissione Telematica)
 Supporta il formato XML dell'Agenzia delle Entrate per i corrispettivi giornalieri.
+Gestisce tutti i formati: con namespace, con prefissi, senza namespace.
 """
 import xml.etree.ElementTree as ET
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import logging
 import re
+import hashlib
 
 logger = logging.getLogger(__name__)
+
+
+def clean_xml_namespaces(xml_content: str) -> str:
+    """
+    Rimuove completamente tutti i namespace e prefissi dall'XML.
+    Risolve l'errore "unbound prefix".
+    """
+    # Rimuovi BOM
+    if xml_content.startswith('\ufeff'):
+        xml_content = xml_content[1:]
+    
+    # Rimuovi caratteri nulli e whitespace iniziale
+    xml_content = xml_content.replace('\x00', '').strip()
+    
+    # Rimuovi tutte le dichiarazioni xmlns (anche con prefisso)
+    # xmlns="..." e xmlns:prefix="..."
+    xml_content = re.sub(r'\s+xmlns(:[a-zA-Z0-9_-]+)?="[^"]*"', '', xml_content)
+    xml_content = re.sub(r"\s+xmlns(:[a-zA-Z0-9_-]+)?='[^']*'", '', xml_content)
+    
+    # Rimuovi xsi:... attributes
+    xml_content = re.sub(r'\s+xsi:[a-zA-Z]+="[^"]*"', '', xml_content)
+    xml_content = re.sub(r"\s+xsi:[a-zA-Z]+='[^']*'", '', xml_content)
+    
+    # Rimuovi prefissi dai tag: <p:TagName> -> <TagName>, </p:TagName> -> </TagName>
+    # Questo risolve "unbound prefix"
+    xml_content = re.sub(r'<([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)', r'<\2', xml_content)
+    xml_content = re.sub(r'</([a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)', r'</\2', xml_content)
+    
+    # Rimuovi prefissi dagli attributi: prefix:attr="value" -> attr="value"
+    xml_content = re.sub(r'\s+[a-zA-Z0-9_-]+:([a-zA-Z0-9_-]+)=', r' \1=', xml_content)
+    
+    return xml_content
 
 
 def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
     """
     Parse un file XML di corrispettivi elettronici.
+    Supporta tutti i formati dell'Agenzia delle Entrate.
     
     Args:
         xml_content: Contenuto XML dei corrispettivi
@@ -22,21 +57,34 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
         Dict con i dati dei corrispettivi estratti
     """
     try:
-        # Rimuovi BOM se presente
-        if xml_content.startswith('\ufeff'):
-            xml_content = xml_content[1:]
+        # Pulisci XML da namespace e prefissi
+        xml_content = clean_xml_namespaces(xml_content)
         
-        # Rimuovi namespace declaration per parsing più semplice
-        xml_content = re.sub(r'xmlns[^"]*"[^"]*"', '', xml_content)
-        xml_content = re.sub(r'xmlns="[^"]*"', '', xml_content)
+        # Parse XML - prova diverse codifiche
+        root = None
+        for encoding in ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']:
+            try:
+                root = ET.fromstring(xml_content.encode(encoding))
+                break
+            except (ET.ParseError, UnicodeEncodeError, UnicodeDecodeError):
+                continue
         
-        # Parse XML
-        root = ET.fromstring(xml_content.encode('utf-8'))
+        if root is None:
+            # Ultimo tentativo: parse diretto
+            try:
+                root = ET.fromstring(xml_content)
+            except ET.ParseError as e:
+                return {"error": f"Errore parsing XML: {str(e)}", "raw_xml_parsed": False}
         
         def find_element(parent, tag_name):
-            """Trova elemento ignorando namespace."""
+            """Trova elemento ignorando namespace residui."""
             if parent is None:
                 return None
+            # Prima cerca direttamente
+            el = parent.find(f".//{tag_name}")
+            if el is not None:
+                return el
+            # Cerca in tutti i figli
             for child in parent.iter():
                 local_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
                 if local_name == tag_name:
@@ -57,107 +105,143 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
         def get_text(parent, tag_name, default=""):
             """Ottieni il testo di un elemento."""
             el = find_element(parent, tag_name)
-            return el.text if el is not None and el.text else default
+            return el.text.strip() if el is not None and el.text else default
+        
+        # Identifica il tipo di documento (corrispettivo RT o altro formato)
+        root_tag = root.tag.split('}')[-1] if '}' in root.tag else root.tag
         
         # Estrai dati identificativi trasmittente
         trasmittente = find_element(root, 'Trasmittente') or find_element(root, 'DatiTrasmissione')
         id_trasmittente = {
             "paese": get_text(trasmittente, 'IdPaese', 'IT'),
             "codice": get_text(trasmittente, 'IdCodice') or get_text(trasmittente, 'PartitaIVA'),
-            "progressivo": get_text(trasmittente, 'ProgressivoInvio'),
+            "progressivo": get_text(trasmittente, 'ProgressivoInvio') or get_text(root, 'ProgressivoInvio'),
         }
         
         # Estrai dati cedente (esercente)
-        cedente = find_element(root, 'Cedente') or find_element(root, 'CedentePrestatore')
+        cedente = find_element(root, 'Cedente') or find_element(root, 'CedentePrestatore') or \
+                  find_element(root, 'DatiAnagrafici')
         esercente = {
-            "partita_iva": get_text(cedente, 'IdCodice') or get_text(cedente, 'PartitaIVA'),
-            "codice_fiscale": get_text(cedente, 'CodiceFiscale'),
-            "denominazione": get_text(cedente, 'Denominazione'),
+            "partita_iva": get_text(cedente, 'IdCodice') or get_text(cedente, 'PartitaIVA') or \
+                          get_text(root, 'PartitaIVA') or get_text(root, 'IdCodice'),
+            "codice_fiscale": get_text(cedente, 'CodiceFiscale') or get_text(root, 'CodiceFiscale'),
+            "denominazione": get_text(cedente, 'Denominazione') or get_text(root, 'Denominazione'),
             "comune": get_text(cedente, 'Comune'),
             "provincia": get_text(cedente, 'Provincia'),
             "indirizzo": get_text(cedente, 'Indirizzo'),
             "cap": get_text(cedente, 'CAP'),
         }
         
-        # Estrai dati corrispettivi giornalieri
-        dati_corrispettivi = find_element(root, 'DatiCorrispettivi') or root
+        # Se P.IVA non trovata, cerca in altri posti comuni
+        if not esercente["partita_iva"]:
+            # Cerca nel nome del file o in attributi
+            piva_match = re.search(r'(\d{11})', xml_content[:500])
+            if piva_match:
+                esercente["partita_iva"] = piva_match.group(1)
         
-        # Data operazione
-        data_operazione = get_text(dati_corrispettivi, 'DataOraRilevazione') or \
-                         get_text(dati_corrispettivi, 'Data') or \
-                         get_text(root, 'DataOraRilevazione') or \
-                         datetime.utcnow().strftime('%Y-%m-%d')
+        # Estrai dati corrispettivi giornalieri
+        dati_corrispettivi = find_element(root, 'DatiCorrispettivi') or \
+                            find_element(root, 'Corrispettivo') or root
+        
+        # Data operazione - cerca in vari posti
+        data_operazione = ""
+        for tag in ['DataOraRilevazione', 'Data', 'DataRiferimento', 'DataOraInvio', 'DataChiusura']:
+            data_operazione = get_text(dati_corrispettivi, tag) or get_text(root, tag)
+            if data_operazione:
+                break
+        
+        if not data_operazione:
+            data_operazione = datetime.utcnow().strftime('%Y-%m-%d')
         
         # Se è datetime, prendi solo la data
         if 'T' in data_operazione:
             data_operazione = data_operazione.split('T')[0]
         
-        # Numero registratore telematico / scontrino
-        matricola_rt = get_text(root, 'MatricolaRT') or get_text(root, 'Matricola') or ""
-        numero_documento = get_text(root, 'NumeroDocumento') or get_text(root, 'NumeroScontrino') or ""
+        # Normalizza formato data
+        data_operazione = data_operazione.replace('/', '-')
         
-        # Estrai righe corrispettivi (dettaglio vendite)
-        righe = []
+        # Numero registratore telematico / scontrino
+        matricola_rt = ""
+        for tag in ['MatricolaRT', 'Matricola', 'MatricolaDispositivo', 'IdDispositivo']:
+            matricola_rt = get_text(root, tag)
+            if matricola_rt:
+                break
+        
+        numero_documento = ""
+        for tag in ['NumeroDocumento', 'NumeroScontrino', 'NumeroChiusura', 'ProgressivoRT']:
+            numero_documento = get_text(root, tag) or get_text(dati_corrispettivi, tag)
+            if numero_documento:
+                break
+        
+        # Estrai totali
         totale_corrispettivi = 0.0
         totale_iva = 0.0
         
-        # Cerca righe in vari possibili contenitori
-        for container_name in ['DatiCorrispettivi', 'Corrispettivi', 'DettaglioCorrispettivi', 'DatiRiepilogo']:
-            container = find_element(root, container_name)
-            if container:
-                # Cerca aliquote IVA e importi
-                for aliquota_el in find_all_elements(container, 'AliquotaIVA'):
-                    aliquota = aliquota_el.text if aliquota_el.text else "0"
-                    
-                for importo_el in find_all_elements(container, 'Ammontare'):
-                    try:
-                        importo = float(importo_el.text or 0)
-                        totale_corrispettivi += importo
-                    except ValueError:
-                        pass
+        # Cerca totali in vari contenitori
+        for container in [dati_corrispettivi, root]:
+            if container is None:
+                continue
                 
-                for imposta_el in find_all_elements(container, 'Imposta'):
+            # Cerca ammontare/importo totale
+            for tag in ['Ammontare', 'AmmontareComplessivo', 'TotaleComplessivo', 
+                       'ImportoTotale', 'Totale', 'TotaleCorrispettivi', 'ImportoPagato']:
+                val = get_text(container, tag)
+                if val:
                     try:
-                        imposta = float(imposta_el.text or 0)
-                        totale_iva += imposta
+                        totale_corrispettivi = float(val.replace(',', '.'))
+                        break
                     except ValueError:
                         pass
+            
+            if totale_corrispettivi > 0:
+                break
         
-        # Alternativa: cerca ammontare totale direttamente
-        if totale_corrispettivi == 0:
-            ammontare = get_text(root, 'Ammontare') or get_text(root, 'AmmontareComplessivo') or \
-                       get_text(root, 'TotaleComplessivo') or get_text(root, 'ImportoTotale')
-            try:
-                totale_corrispettivi = float(ammontare) if ammontare else 0
-            except ValueError:
-                totale_corrispettivi = 0
+        # Cerca IVA totale
+        for container in [dati_corrispettivi, root]:
+            if container is None:
+                continue
+            for tag in ['Imposta', 'TotaleIVA', 'ImpostaComplessiva']:
+                val = get_text(container, tag)
+                if val:
+                    try:
+                        totale_iva = float(val.replace(',', '.'))
+                        break
+                    except ValueError:
+                        pass
+            if totale_iva > 0:
+                break
         
         # Estrai dettaglio per aliquota IVA
         riepilogo_iva = []
-        for riepilogo in find_all_elements(root, 'Riepilogo') + find_all_elements(root, 'DatiRiepilogo'):
-            aliquota = get_text(riepilogo, 'AliquotaIVA', '0')
-            natura = get_text(riepilogo, 'Natura')
-            imponibile = get_text(riepilogo, 'Ammontare') or get_text(riepilogo, 'Imponibile', '0')
-            imposta = get_text(riepilogo, 'Imposta', '0')
-            
-            try:
-                riepilogo_iva.append({
-                    "aliquota_iva": aliquota,
-                    "natura": natura,
-                    "imponibile": float(imponibile) if imponibile else 0,
-                    "imposta": float(imposta) if imposta else 0,
-                })
-            except ValueError:
-                pass
+        for container_name in ['DatiRiepilogo', 'Riepilogo', 'RiepilogoIVA', 'DettaglioIVA']:
+            for riepilogo in find_all_elements(root, container_name):
+                aliquota = get_text(riepilogo, 'AliquotaIVA', '0')
+                natura = get_text(riepilogo, 'Natura')
+                imponibile = get_text(riepilogo, 'Ammontare') or get_text(riepilogo, 'Imponibile') or \
+                            get_text(riepilogo, 'ImponibileImporto', '0')
+                imposta = get_text(riepilogo, 'Imposta', '0')
+                
+                try:
+                    imp_float = float(imponibile.replace(',', '.')) if imponibile else 0
+                    iva_float = float(imposta.replace(',', '.')) if imposta else 0
+                    if imp_float > 0 or iva_float > 0:
+                        riepilogo_iva.append({
+                            "aliquota_iva": aliquota,
+                            "natura": natura,
+                            "imponibile": imp_float,
+                            "imposta": iva_float,
+                        })
+                except ValueError:
+                    pass
         
         # Genera chiave univoca per controllo duplicati
-        # Formato: matricola_data_progressivo
         piva = esercente.get("partita_iva", "") or id_trasmittente.get("codice", "")
-        corrispettivo_key = f"{piva}_{data_operazione}_{matricola_rt}_{numero_documento}".replace(" ", "").upper()
-        if not corrispettivo_key.strip("_"):
-            # Se non ci sono dati sufficienti, usa hash del contenuto
-            import hashlib
-            corrispettivo_key = hashlib.md5(xml_content.encode()).hexdigest()[:16]
+        corrispettivo_key = f"{piva}_{data_operazione}_{matricola_rt}_{numero_documento}"
+        corrispettivo_key = corrispettivo_key.replace(" ", "").replace("/", "-").upper()
+        
+        # Se chiave troppo corta, usa hash
+        if len(corrispettivo_key.replace("_", "")) < 8:
+            corrispettivo_key = hashlib.md5(xml_content.encode('utf-8', errors='ignore')).hexdigest()[:20]
         
         result = {
             "corrispettivo_key": corrispettivo_key,
@@ -171,6 +255,7 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
             "totale": totale_corrispettivi,
             "riepilogo_iva": riepilogo_iva,
             "trasmittente": id_trasmittente,
+            "tipo_documento": root_tag,
             "raw_xml_parsed": True
         }
         
@@ -181,6 +266,8 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
         return {"error": f"Errore parsing XML: {str(e)}", "raw_xml_parsed": False}
     except Exception as e:
         logger.error(f"Errore generico parsing corrispettivi: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return {"error": f"Errore parsing: {str(e)}", "raw_xml_parsed": False}
 
 
