@@ -10,27 +10,25 @@ Ricreare un'applicazione ERP aziendale completa da un file zip fornito dall'uten
 - Modulo Prima Nota Cassa per movimenti contanti
 - **Modulo Fatture**: Upload XML singolo/massivo con controllo duplicati atomico
 - **Modulo Corrispettivi**: Upload XML singolo/massivo con controllo duplicati atomico
-- Modulo Paghe/Salari (in progress)
+- **Modulo Paghe/Salari**: Upload PDF buste paga, gestione dipendenti
 
 ## What's Been Implemented
 
-### 2025-01-04 - Corrispettivi e Fatture Upload
-- ✅ Implementato endpoint `/api/corrispettivi/upload-xml` per upload singolo
-- ✅ Implementato endpoint `/api/corrispettivi/upload-xml-bulk` per upload massivo
-- ✅ Controllo duplicati atomico basato su chiave univoca (P.IVA + data + matricola + numero documento)
-- ✅ Parser XML corrispettivi (`/app/app/parsers/corrispettivi_parser.py`)
-- ✅ Frontend Corrispettivi aggiornato con upload massivo e riepilogo totali
-- ✅ Migliorato parser fatture per gestire più formati XML
-- ✅ Test automatizzati passati al 100% (13/13 test)
+### 2025-01-04 - Fix Parsing XML e Paghe
+- ✅ **FIX CRITICO**: Risolto errore "unbound prefix" nel parsing XML
+  - Aggiunta funzione `clean_xml_namespaces()` che rimuove TUTTI i namespace e prefissi
+  - Supporta formati: `<p:Tag>`, `xmlns:p="..."`, `xsi:type="..."`
+- ✅ Parser corrispettivi migliorato per gestire vari formati Agenzia Entrate
+- ✅ Parser fatture migliorato con stessa logica
+- ✅ Pagina Paghe/Salari funzionante con upload PDF e form manuale
+- ✅ Test con XML con prefissi namespace passato con successo
 
 ### Completato in precedenza
+- ✅ Corrispettivi upload singolo/massivo con duplicati
+- ✅ Fatture upload XML funzionante
 - ✅ Applicazione ricreata da zip
-- ✅ Backend FastAPI configurato
-- ✅ Frontend React + Vite configurato
-- ✅ MongoDB integrato
-- ✅ Upload fatture XML con controllo duplicati
-- ✅ Indice unico MongoDB su `invoice_key`
-- ✅ NGINX configurato per upload grandi (500MB)
+- ✅ Backend FastAPI + Frontend React/Vite
+- ✅ MongoDB integrato con indici unici
 
 ## Architecture
 
@@ -40,12 +38,7 @@ Ricreare un'applicazione ERP aziendale completa da un file zip fornito dall'uten
 - **Entry Point**: `/app/backend/server.py`
 - **Router principale**: `/app/app/routers/public_api.py`
 
-### Frontend
-- **Framework**: React + Vite
-- **Styling**: CSS base (TailwindCSS disabilitato)
-- **Entry Point**: `/app/frontend/src/main.jsx`
-
-### Parsers
+### Parsers (con gestione namespace avanzata)
 - `/app/app/parsers/fattura_elettronica_parser.py` - Parser FatturaPA XML
 - `/app/app/parsers/corrispettivi_parser.py` - Parser Corrispettivi XML
 - `/app/app/parsers/payslip_parser.py` - Parser buste paga PDF
@@ -53,60 +46,35 @@ Ricreare un'applicazione ERP aziendale completa da un file zip fornito dall'uten
 ## Key API Endpoints
 
 ### Corrispettivi
-- `GET /api/corrispettivi` - Lista corrispettivi
+- `GET /api/corrispettivi` - Lista
 - `POST /api/corrispettivi/upload-xml` - Upload singolo
 - `POST /api/corrispettivi/upload-xml-bulk` - Upload massivo
-- `DELETE /api/corrispettivi/all` - Elimina tutti
-- `DELETE /api/corrispettivi/{id}` - Elimina singolo
 
 ### Fatture
-- `GET /api/invoices` - Lista fatture
+- `GET /api/invoices` - Lista
 - `POST /api/fatture/upload-xml` - Upload singolo
 - `POST /api/fatture/upload-xml-bulk` - Upload massivo
-- `POST /api/invoices` - Creazione manuale
-- `DELETE /api/invoices/{id}` - Elimina singolo
 
-## Database Schema
-
-### invoices
-```json
-{
-  "id": "uuid",
-  "invoice_key": "unique", // numero_piva_data
-  "invoice_number": "string",
-  "invoice_date": "string",
-  "supplier_name": "string",
-  "supplier_vat": "string",
-  "total_amount": "float",
-  "status": "imported|pending|paid"
-}
-```
-
-### corrispettivi
-```json
-{
-  "id": "uuid",
-  "corrispettivo_key": "unique", // piva_data_matricola_numero
-  "data": "string",
-  "matricola_rt": "string",
-  "partita_iva": "string",
-  "totale": "float",
-  "totale_iva": "float"
-}
-```
+### Paghe
+- `GET /api/employees` - Lista dipendenti
+- `POST /api/paghe/upload-pdf` - Upload PDF buste paga
+- `POST /api/employees` - Creazione manuale
 
 ## P0 - Priorità Alta
+- [x] Fix errore "unbound prefix" nei corrispettivi
 - [x] Corrispettivi upload massivo con duplicati
 - [x] Fatture upload XML funzionante
+- [x] Pagina Paghe funzionante
 
 ## P1 - Priorità Media
-- [ ] Paghe/Salari - Upload PDF buste paga
-- [ ] Altri moduli da verificare (Finanziaria, Assegni, etc.)
+- [ ] Integrazione automatica Fatture -> Magazzino -> Prima Nota
+- [ ] Controllo mensile incrociato (Manuale vs XML vs Banca)
+- [ ] Dashboard con grafici entrate/uscite
 
 ## P2 - Priorità Bassa
-- [ ] Miglioramenti UI/UX
 - [ ] Export dati
 - [ ] Report aggregati
+- [ ] Analytics fornitori
 
 ## Test Files
 - `/app/tests/test_corrispettivi_fatture.py`
