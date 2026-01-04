@@ -75,15 +75,21 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
-### 2026-01-04 (Sessione 2)
+### 2026-01-04 (Sessione 2 - Parte 2)
+- **FIX CRITICO Controllo Mensile**: Corretto bug che impediva il caricamento dei dati POS, Corrispettivi, Versamenti e Saldo Cassa dalla Prima Nota
+  - Aumentato limite API da 2500 a 10000 records
+  - Corretta logica filtro per categoria POS (case-insensitive)
+  - Corretta logica per Versamenti (filtro su categoria + descrizione)
+- **Documentazione Logiche**: Aggiunta documentazione completa delle logiche di calcolo in ControlloMensile.jsx
+
+### 2026-01-04 (Sessione 2 - Parte 1)
 - **Corrispettivi**: Aggiunto upload ZIP massivo con barra di progresso
 - **Corrispettivi**: Gestione duplicati atomica (salta e continua)
+- **Corrispettivi**: Aggiunto filtro anno
 - **Fatture**: Aggiunto upload ZIP massivo con barra di progresso separato
-- **Fatture**: Barra di progresso per tutti gli upload
 - **Controllo Mensile**: Sostituito "Stato" con "Saldo Cassa"
 - **Controllo Mensile**: POS Auto estratto da pagato_elettronico dei corrispettivi XML
-- **Controllo Mensile**: Aggiunto modale "Dettaglio Versamenti" con operazioni mensili
-- **Controllo Mensile**: Info box per indicare che XML sovrascrive dati Excel
+- **Finanziaria**: Aggiunto filtro anno e sezione IVA completa
 - **Componente**: Creato UploadProgressBar riutilizzabile
 
 ### 2026-01-04 (Sessione 1)
