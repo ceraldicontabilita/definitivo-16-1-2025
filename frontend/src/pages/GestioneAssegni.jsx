@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const STATI_ASSEGNO = {
   vuoto: { label: "Valido", color: "#4caf50" },
@@ -28,7 +30,7 @@ export default function GestioneAssegni() {
   // Fatture per collegamento
   const [fatture, setFatture] = useState([]);
   const [loadingFatture, setLoadingFatture] = useState(false);
-  const [selectedFatture, setSelectedFatture] = useState([]); // Max 4 fatture
+  const [selectedFatture, setSelectedFatture] = useState([]);
   const [showFattureModal, setShowFattureModal] = useState(false);
   const [editingAssegnoForFatture, setEditingAssegnoForFatture] = useState(null);
 
@@ -61,9 +63,8 @@ export default function GestioneAssegni() {
   const loadFatture = async (beneficiario = '') => {
     setLoadingFatture(true);
     try {
-      // Carica fatture non pagate, filtrate per fornitore se specificato
       const params = new URLSearchParams();
-      params.append('status', 'imported'); // Solo non pagate
+      params.append('status', 'imported');
       if (beneficiario) {
         params.append('fornitore', beneficiario);
       }
@@ -109,7 +110,6 @@ export default function GestioneAssegni() {
     }
   };
 
-  // Inizia modifica inline
   const startEdit = (assegno) => {
     setEditingId(assegno.id);
     setEditForm({
@@ -122,7 +122,6 @@ export default function GestioneAssegni() {
     });
   };
 
-  // Salva modifica inline
   const handleSaveEdit = async () => {
     if (!editingId) return;
     
@@ -138,13 +137,11 @@ export default function GestioneAssegni() {
     }
   };
 
-  // Annulla modifica
   const cancelEdit = () => {
     setEditingId(null);
     setEditForm({});
   };
 
-  // Apri modal per collegare fatture
   const openFattureModal = (assegno) => {
     setEditingAssegnoForFatture(assegno);
     setSelectedFatture(assegno.fatture_collegate || []);
@@ -152,7 +149,6 @@ export default function GestioneAssegni() {
     setShowFattureModal(true);
   };
 
-  // Toggle selezione fattura (max 4)
   const toggleFattura = (fattura) => {
     const exists = selectedFatture.find(f => f.id === fattura.id);
     if (exists) {
@@ -170,7 +166,6 @@ export default function GestioneAssegni() {
     }
   };
 
-  // Salva fatture collegate all'assegno
   const saveFattureCollegate = async () => {
     if (!editingAssegnoForFatture) return;
     
@@ -213,7 +208,7 @@ export default function GestioneAssegni() {
   const [autoAssocResult, setAutoAssocResult] = useState(null);
   
   const handleAutoAssocia = async () => {
-    if (!window.confirm('Vuoi avviare l\'auto-associazione degli assegni alle fatture?\n\nIl sistema cercherà di abbinare:\n1. Assegni con importo uguale a fatture\n2. Assegni multipli con stesso importo a fatture di importo maggiore (es. 3 assegni da €1663 = fattura €4989)')) return;
+    if (!window.confirm('Vuoi avviare l\'auto-associazione degli assegni alle fatture?\n\nIl sistema cercherà di abbinare:\n1. Assegni con importo uguale a fatture\n2. Assegni multipli con stesso importo a fatture di importo maggiore')) return;
     
     setAutoAssociating(true);
     setAutoAssocResult(null);
@@ -246,9 +241,78 @@ export default function GestioneAssegni() {
 
   const carnets = groupByCarnet();
 
+  // Genera PDF per un singolo carnet
+  const generateCarnetPDF = (carnetId, carnetAssegni) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(76, 175, 80);
+    doc.text('Carnet Assegni', 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text(`ID: ${carnetId}`, 14, 30);
+    
+    // Summary
+    const totale = carnetAssegni.reduce((sum, a) => sum + (parseFloat(a.importo) || 0), 0);
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text(`Numero Assegni: ${carnetAssegni.length}`, 14, 45);
+    doc.setFontSize(14);
+    doc.setTextColor(76, 175, 80);
+    doc.text(`Totale: ${formatCurrency(totale)}`, 14, 55);
+    
+    // Table
+    const tableData = carnetAssegni.map(a => [
+      a.numero || '-',
+      STATI_ASSEGNO[a.stato]?.label || a.stato || '-',
+      (a.beneficiario || '-').substring(0, 25),
+      formatCurrency(a.importo),
+      a.data_fattura?.substring(0, 10) || '-',
+      a.numero_fattura || '-',
+      (a.note || '-').substring(0, 20)
+    ]);
+    
+    doc.autoTable({
+      startY: 65,
+      head: [['N. Assegno', 'Stato', 'Beneficiario', 'Importo', 'Data Fatt.', 'N. Fattura', 'Note']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillColor: [76, 175, 80] },
+      styles: { fontSize: 8 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        2: { cellWidth: 35 },
+        6: { cellWidth: 25 }
+      }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128);
+      doc.text(
+        `Ceraldi Group S.R.L. - Generato il ${new Date().toLocaleDateString('it-IT')} - Pagina ${i}/${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    return doc;
+  };
+
+  // Stampa singolo carnet
+  const handleStampaCarnet = (carnetId, carnetAssegni) => {
+    const doc = generateCarnetPDF(carnetId, carnetAssegni);
+    doc.save(`Carnet_${carnetId}.pdf`);
+  };
+
   return (
     <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
-      <h1 style={{ marginBottom: 5, color: '#1a365d' }}>📝 Gestione Assegni</h1>
+      <h1 style={{ marginBottom: 5, color: '#1a365d' }}>Gestione Assegni</h1>
       <p style={{ color: '#666', marginBottom: 25 }}>
         Genera, collega e controlla i tuoi assegni in un'unica schermata
       </p>
@@ -268,7 +332,7 @@ export default function GestioneAssegni() {
             fontWeight: 'bold'
           }}
         >
-          ➕ Genera 10 Assegni
+          + Genera 10 Assegni
         </button>
         
         <button
@@ -285,7 +349,7 @@ export default function GestioneAssegni() {
             fontWeight: 'bold'
           }}
         >
-          {autoAssociating ? '⏳ Associando...' : '🔗 Auto-Associa Fatture'}
+          {autoAssociating ? 'Associando...' : 'Auto-Associa Fatture'}
         </button>
         
         <button
@@ -316,7 +380,7 @@ export default function GestioneAssegni() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <strong style={{ color: autoAssocResult.assegni_aggiornati > 0 ? '#2e7d32' : '#e65100' }}>
-                {autoAssocResult.assegni_aggiornati > 0 ? '✅' : '⚠️'} {autoAssocResult.message}
+                {autoAssocResult.assegni_aggiornati > 0 ? '✓' : '!'} {autoAssocResult.message}
               </strong>
               {autoAssocResult.dettagli && autoAssocResult.dettagli.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: 13 }}>
@@ -380,23 +444,32 @@ export default function GestioneAssegni() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(carnets).map(([carnetId, carnetAssegni]) => (
+                {Object.entries(carnets).map(([carnetId, carnetAssegni], carnetIdx) => (
                   <React.Fragment key={carnetId}>
-                    {/* Carnet Header */}
+                    {/* Carnet Header with Print Button */}
                     <tr style={{ background: '#f0f9ff' }}>
-                      <td colSpan={8} style={{ padding: '10px 12px' }}>
-                        <strong>📁 Carnet {Object.keys(carnets).indexOf(carnetId) + 1}</strong>
+                      <td colSpan={6} style={{ padding: '10px 12px' }}>
+                        <strong>Carnet {carnetIdx + 1}</strong>
                         <span style={{ color: '#666', marginLeft: 10 }}>
-                          (Assegni {carnetAssegni.length})
+                          (Assegni {carnetAssegni.length} - Totale: {formatCurrency(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
                         </span>
                       </td>
-                    </tr>
+                      <td colSpan={2} style={{ padding: '10px 12px', textAlign: 'right' }}>
+                        <button
+                          onClick={() => handleStampaCarnet(carnetId, carnetAssegni)}
+                          data-testid={`stampa-carnet-${carnetIdx}`}
+                          style={{
+                            padding: '6px 14px',
+                            background: '#2196f3',
+                            color: 'white',
+                            border: 'none',
                             borderRadius: 6,
                             cursor: 'pointer',
-                            fontSize: 12
+                            fontSize: 12,
+                            fontWeight: 'bold'
                           }}
                         >
-                          🖨️ Stampa Carnet
+                          Stampa Carnet PDF
                         </button>
                       </td>
                     </tr>
@@ -415,7 +488,6 @@ export default function GestioneAssegni() {
                           <div style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#1a365d' }}>
                             {assegno.numero}
                           </div>
-                          <div style={{ fontSize: 11, color: '#666' }}>🖨️</div>
                         </td>
 
                         {/* Stato */}
@@ -508,7 +580,7 @@ export default function GestioneAssegni() {
                               type="text"
                               value={editForm.note}
                               onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
-                              placeholder="Note (es. Fattura 2/3263 -"
+                              placeholder="Note"
                               style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd', width: '100%' }}
                             />
                           ) : (
@@ -613,7 +685,7 @@ export default function GestioneAssegni() {
           <div style={{
             background: 'white', borderRadius: 12, padding: 24, maxWidth: 400, width: '90%'
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ marginTop: 0 }}>➕ Genera 10 Assegni Progressivi</h2>
+            <h2 style={{ marginTop: 0 }}>Genera 10 Assegni Progressivi</h2>
             <p style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>
               Inserisci il numero del primo assegno nel formato PREFISSO-NUMERO
             </p>
@@ -661,13 +733,12 @@ export default function GestioneAssegni() {
           <div style={{
             background: 'white', borderRadius: 12, padding: 24, maxWidth: 700, width: '95%', maxHeight: '80vh', overflow: 'auto'
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ marginTop: 0 }}>📄 Collega Fatture all'Assegno</h2>
+            <h2 style={{ marginTop: 0 }}>Collega Fatture all'Assegno</h2>
             <p style={{ color: '#666', fontSize: 14, marginBottom: 10 }}>
               Assegno: <strong>{editingAssegnoForFatture?.numero}</strong>
             </p>
             <p style={{ color: '#2196f3', fontSize: 13, marginBottom: 20 }}>
-              💡 Puoi collegare fino a <strong>4 fatture</strong> a un singolo assegno. 
-              Seleziona fatture dello stesso fornitore per pagare più fatture insieme.
+              Puoi collegare fino a <strong>4 fatture</strong> a un singolo assegno.
             </p>
 
             {/* Fatture Selezionate */}
