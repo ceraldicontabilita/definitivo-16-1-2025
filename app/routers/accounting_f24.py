@@ -298,7 +298,7 @@ async def upload_f24_pdf(
 
 # ==================== ENDPOINT 15: Lista F24 (senza autenticazione) ====================
 @router.get(
-    "/f24/all",
+    "/all",
     summary="Lista tutti F24",
     description="Lista tutti i modelli F24 senza autenticazione"
 )
