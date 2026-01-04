@@ -2,12 +2,21 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 
 /**
- * Prima Nota - Registro movimenti di cassa e banca con saldo progressivo
- * Due sezioni separate: Cassa e Banca
- * Basato sul formato Prima Nota contabile italiana
+ * Prima Nota - Due sezioni separate: Cassa e Banca
+ * 
+ * CASSA:
+ * - DARE (Entrate): Corrispettivi (al lordo IVA), Finanziamento soci
+ * - AVERE (Uscite): POS, Versamenti, Fatture pagate contanti
+ * 
+ * BANCA:
+ * - AVERE (Uscite): Fatture riconciliate (pagate bonifico/assegno)
+ * - Dati da estratto conto
  */
 export default function PrimaNota() {
   const today = new Date().toISOString().split('T')[0];
+  
+  // Sezione attiva
+  const [activeSection, setActiveSection] = useState('cassa');
   
   // Data state
   const [cassaData, setCassaData] = useState({ movimenti: [], saldo: 0, totale_entrate: 0, totale_uscite: 0 });
@@ -17,7 +26,7 @@ export default function PrimaNota() {
   // Filters
   const [filterPeriodo, setFilterPeriodo] = useState({ da: '', a: '' });
   
-  // Quick entry forms
+  // Quick entry forms - CASSA
   const [corrispettivo, setCorrispettivo] = useState({ data: today, importo: '' });
   const [pos, setPos] = useState({ data: today, pos1: '', pos2: '', pos3: '' });
   const [versamento, setVersamento] = useState({ data: today, importo: '' });
@@ -28,22 +37,11 @@ export default function PrimaNota() {
   const [savingPos, setSavingPos] = useState(false);
   const [savingVers, setSavingVers] = useState(false);
   const [savingMov, setSavingMov] = useState(false);
-  
-  // Sync status
-  const [syncStatus, setSyncStatus] = useState(null);
-  const [syncing, setSyncing] = useState(false);
-  
-  // POS Comparison
-  const [posComparison, setPosComparison] = useState({ xml: 0, manuale: 0 });
 
-  // Load data on mount
   useEffect(() => {
     loadAllData();
-    loadSyncStatus();
-    loadPosComparison();
   }, []);
 
-  // Reload when filter changes
   useEffect(() => {
     loadAllData();
   }, [filterPeriodo]);
@@ -70,49 +68,16 @@ export default function PrimaNota() {
     }
   };
 
-  const loadSyncStatus = async () => {
-    try {
-      const res = await api.get('/api/prima-nota/corrispettivi-status');
-      setSyncStatus(res.data);
-    } catch (e) {
-      console.error('Error loading sync status:', e);
-    }
-  };
-
-  const loadPosComparison = async () => {
-    try {
-      // Get today's month range
-      const now = new Date();
-      const startOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-      const endOfMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${new Date(now.getFullYear(), now.getMonth()+1, 0).getDate()}`;
-      
-      const cassaRes = await api.get(`/api/prima-nota/cassa?data_da=${startOfMonth}&data_a=${endOfMonth}&limit=1000`);
-      const movimenti = cassaRes.data.movimenti || [];
-      
-      // POS from XML (corrispettivi elettronico)
-      const posXml = movimenti
-        .filter(m => m.categoria === 'Corrispettivi' && m.source === 'sync_corrispettivi')
-        .reduce((sum, m) => sum + (m.dettaglio?.elettronico || 0), 0);
-      
-      // POS manual
-      const posManuale = movimenti
-        .filter(m => m.categoria === 'POS' || m.source === 'manual_pos')
-        .reduce((sum, m) => sum + (m.importo || 0), 0);
-      
-      setPosComparison({ xml: posXml, manuale: posManuale });
-    } catch (e) {
-      console.error('Error loading POS comparison:', e);
-    }
-  };
-
-  // Save handlers
+  // === SAVE HANDLERS CASSA ===
+  
+  // Corrispettivo (DARE/Entrata) - Importo al LORDO IVA
   const handleSaveCorrispettivo = async () => {
     if (!corrispettivo.importo) return alert('Inserisci importo');
     setSavingCorrisp(true);
     try {
       await api.post('/api/prima-nota/cassa', {
         data: corrispettivo.data,
-        tipo: 'entrata',
+        tipo: 'entrata',  // DARE
         importo: parseFloat(corrispettivo.importo),
         descrizione: `Corrispettivo giornaliero ${corrispettivo.data}`,
         categoria: 'Corrispettivi',
@@ -128,15 +93,15 @@ export default function PrimaNota() {
     }
   };
 
+  // POS (AVERE/Uscita) - Escono dalla cassa
   const handleSavePos = async () => {
     const totale = (parseFloat(pos.pos1) || 0) + (parseFloat(pos.pos2) || 0) + (parseFloat(pos.pos3) || 0);
     if (totale === 0) return alert('Inserisci almeno un importo POS');
     setSavingPos(true);
     try {
-      // POS va in CASSA come ENTRATA
       await api.post('/api/prima-nota/cassa', {
         data: pos.data,
-        tipo: 'entrata',
+        tipo: 'uscita',  // AVERE - escono dalla cassa
         importo: totale,
         descrizione: `POS giornaliero ${pos.data} (POS1: €${pos.pos1 || 0}, POS2: €${pos.pos2 || 0}, POS3: €${pos.pos3 || 0})`,
         categoria: 'POS',
@@ -145,8 +110,7 @@ export default function PrimaNota() {
       });
       setPos({ data: today, pos1: '', pos2: '', pos3: '' });
       loadAllData();
-      loadPosComparison();
-      alert(`✅ POS salvato in CASSA! Totale: €${totale.toFixed(2)}`);
+      alert(`✅ POS salvato! Totale: €${totale.toFixed(2)}`);
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     } finally {
@@ -154,30 +118,19 @@ export default function PrimaNota() {
     }
   };
 
+  // Versamento (AVERE/Uscita da cassa)
   const handleSaveVersamento = async () => {
     if (!versamento.importo) return alert('Inserisci importo');
     setSavingVers(true);
     try {
-      const importo = parseFloat(versamento.importo);
-      // Versamento: USCITA da Cassa, ENTRATA in Banca
-      await Promise.all([
-        api.post('/api/prima-nota/cassa', {
-          data: versamento.data,
-          tipo: 'uscita',
-          importo: importo,
-          descrizione: `Versamento in banca ${versamento.data}`,
-          categoria: 'Versamento',
-          source: 'manual_entry'
-        }),
-        api.post('/api/prima-nota/banca', {
-          data: versamento.data,
-          tipo: 'entrata',
-          importo: importo,
-          descrizione: `Versamento da cassa ${versamento.data}`,
-          categoria: 'Versamento',
-          source: 'manual_entry'
-        })
-      ]);
+      await api.post('/api/prima-nota/cassa', {
+        data: versamento.data,
+        tipo: 'uscita',  // AVERE
+        importo: parseFloat(versamento.importo),
+        descrizione: `Versamento in banca ${versamento.data}`,
+        categoria: 'Versamento',
+        source: 'manual_entry'
+      });
       setVersamento({ data: today, importo: '' });
       loadAllData();
       alert('✅ Versamento salvato!');
@@ -188,6 +141,7 @@ export default function PrimaNota() {
     }
   };
 
+  // Movimento generico
   const handleSaveMovimento = async () => {
     if (!movimento.importo || !movimento.descrizione) return alert('Compila tutti i campi');
     setSavingMov(true);
@@ -197,7 +151,7 @@ export default function PrimaNota() {
         tipo: movimento.tipo,
         importo: parseFloat(movimento.importo),
         descrizione: movimento.descrizione,
-        categoria: movimento.tipo === 'entrata' ? 'Incasso cliente' : 'Spese generali',
+        categoria: movimento.tipo === 'entrata' ? 'Incasso' : 'Spese',
         source: 'manual_entry'
       });
       setMovimento({ data: today, tipo: 'uscita', importo: '', descrizione: '' });
@@ -207,21 +161,6 @@ export default function PrimaNota() {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     } finally {
       setSavingMov(false);
-    }
-  };
-
-  const handleSyncCorrispettivi = async () => {
-    if (!confirm('Sincronizzare tutti i corrispettivi XML con la Prima Nota?')) return;
-    setSyncing(true);
-    try {
-      const res = await api.post('/api/prima-nota/sync-corrispettivi');
-      alert(`✅ ${res.data.message}`);
-      loadSyncStatus();
-      loadAllData();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -240,13 +179,14 @@ export default function PrimaNota() {
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('it-IT');
   
   const posTotale = (parseFloat(pos.pos1) || 0) + (parseFloat(pos.pos2) || 0) + (parseFloat(pos.pos3) || 0);
-  const posDifferenza = posComparison.xml - posComparison.manuale;
 
-  // Calculate totals for quick stats
-  const totalePOS = cassaData.movimenti?.filter(m => m.categoria === 'POS' || m.source === 'manual_pos').reduce((s, m) => s + m.importo, 0) || 0;
-  const totaleVersamenti = cassaData.movimenti?.filter(m => m.categoria === 'Versamento' && m.tipo === 'uscita').reduce((s, m) => s + m.importo, 0) || 0;
+  // Calculate category totals for Cassa
+  const totalePOS = cassaData.movimenti?.filter(m => m.categoria === 'POS').reduce((s, m) => s + m.importo, 0) || 0;
+  const totaleVersamenti = cassaData.movimenti?.filter(m => m.categoria === 'Versamento').reduce((s, m) => s + m.importo, 0) || 0;
+  const totaleFattureCassa = cassaData.movimenti?.filter(m => m.categoria === 'Pagamento fornitore').reduce((s, m) => s + m.importo, 0) || 0;
+  const totaleCorrispettivi = cassaData.movimenti?.filter(m => m.categoria === 'Corrispettivi').reduce((s, m) => s + m.importo, 0) || 0;
 
-  // Find record day
+  // Giorno record
   const giornoRecord = cassaData.movimenti?.reduce((best, m) => {
     if (m.tipo === 'entrata' && m.importo > (best?.importo || 0)) return m;
     return best;
@@ -276,195 +216,239 @@ export default function PrimaNota() {
   return (
     <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
       
-      {/* ============ SEZIONE CASSA ============ */}
-      <section style={{ marginBottom: 40 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ width: 40, height: 40, background: '#4f46e5', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: 'white', fontSize: 20 }}>💵</span>
-          </div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 'bold' }}>Prima Nota Cassa</h1>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>Registro movimenti di cassa con saldo progressivo</p>
-          </div>
-        </div>
+      {/* SECTION BUTTONS */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+        <button
+          data-testid="btn-prima-nota-cassa"
+          onClick={() => setActiveSection('cassa')}
+          style={{
+            flex: 1,
+            padding: '20px 24px',
+            fontSize: 18,
+            fontWeight: 'bold',
+            background: activeSection === 'cassa' 
+              ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' 
+              : '#f3f4f6',
+            color: activeSection === 'cassa' ? 'white' : '#374151',
+            border: 'none',
+            borderRadius: 12,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            boxShadow: activeSection === 'cassa' ? '0 4px 15px rgba(79, 70, 229, 0.4)' : 'none'
+          }}
+        >
+          <span style={{ fontSize: 24 }}>💵</span>
+          PRIMA NOTA CASSA
+        </button>
+        
+        <button
+          data-testid="btn-prima-nota-banca"
+          onClick={() => setActiveSection('banca')}
+          style={{
+            flex: 1,
+            padding: '20px 24px',
+            fontSize: 18,
+            fontWeight: 'bold',
+            background: activeSection === 'banca' 
+              ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' 
+              : '#f3f4f6',
+            color: activeSection === 'banca' ? 'white' : '#374151',
+            border: 'none',
+            borderRadius: 12,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 12,
+            boxShadow: activeSection === 'banca' ? '0 4px 15px rgba(37, 99, 235, 0.4)' : 'none'
+          }}
+        >
+          <span style={{ fontSize: 24 }}>🏦</span>
+          PRIMA NOTA BANCA
+        </button>
+      </div>
 
-        {/* Summary Cards Cassa */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-          <SummaryCard title="Totale Entrate" value={formatCurrency(cassaData.totale_entrate)} color="#10b981" icon="📈" />
-          <SummaryCard title="Totale Uscite" value={formatCurrency(cassaData.totale_uscite)} color="#ef4444" icon="📉" />
-          <SummaryCard title="Saldo Finale" value={formatCurrency(cassaData.saldo)} color={cassaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
-        </div>
-
-        {/* Quick Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-          <QuickStatCard title="Totale POS" value={formatCurrency(totalePOS)} subtitle="Commissioni e spese POS" icon="💳" />
-          <QuickStatCard title="Totale Versamenti" value={formatCurrency(totaleVersamenti)} subtitle="Versamenti bancari" icon="🏦" />
-          
-          {/* POS Comparison Card */}
-          <div style={{ background: 'white', borderRadius: 12, padding: 16, border: '1px solid #e5e7eb' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <span style={{ fontSize: 18 }}>📊</span>
-              <span style={{ fontWeight: 'bold' }}>Controllo POS XML vs Prima Nota</span>
-            </div>
-            {Math.abs(posDifferenza) > 1 && (
-              <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 12, color: '#92400e' }}>
-                ⚠️ ATTENZIONE: Risultano pagamenti elettronici/POS registrati in {posDifferenza > 0 ? 'MENO' : 'PIÙ'} rispetto alla chiusura serale del POS. Differenza: {formatCurrency(Math.abs(posDifferenza))} ({posDifferenza > 0 ? '-' : '+'}{Math.abs(posDifferenza / (posComparison.xml || 1) * 100).toFixed(1)}%)
-              </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-              <span>POS da XML (Corrispettivi):</span>
-              <strong>{formatCurrency(posComparison.xml)}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 8 }}>
-              <span>POS Manuale (Chiusura Vera):</span>
-              <strong style={{ color: '#4f46e5' }}>{formatCurrency(posComparison.manuale)}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderTop: '1px solid #e5e7eb', paddingTop: 8 }}>
-              <span>Differenza:</span>
-              <strong style={{ color: posDifferenza !== 0 ? '#ef4444' : '#10b981' }}>
-                {formatCurrency(posDifferenza)} ({posDifferenza !== 0 ? ((posDifferenza / (posComparison.xml || 1)) * 100).toFixed(1) : '0'}%)
-              </strong>
-            </div>
-            <p style={{ fontSize: 11, color: '#6b7280', marginTop: 8 }}>💡 Il dato manuale (chiusura serale) è quello da considerare come riferimento vero</p>
+      {/* ========== SEZIONE CASSA ========== */}
+      {activeSection === 'cassa' && (
+        <section>
+          <div style={{ marginBottom: 20 }}>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span>💵</span> Prima Nota Cassa
+            </h1>
+            <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: 14 }}>
+              Registro movimenti di cassa • DARE: Corrispettivi, Finanziamenti • AVERE: POS, Versamenti, Fatture
+            </p>
           </div>
-        </div>
 
-        {/* Chiusure Giornaliere Serali */}
-        <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #faf5ff 50%, #fef3c7 100%)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-          <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>⚡</span> Chiusure Giornaliere Serali
-          </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-            {/* Corrispettivo */}
-            <QuickEntryCard title="📊 Corrispettivo" color="#f59e0b">
-              <input type="date" value={corrispettivo.data} onChange={(e) => setCorrispettivo({...corrispettivo, data: e.target.value})} style={inputStyle} />
-              <input type="number" step="0.01" placeholder="€" value={corrispettivo.importo} onChange={(e) => setCorrispettivo({...corrispettivo, importo: e.target.value})} style={inputStyle} />
-              <button onClick={handleSaveCorrispettivo} disabled={savingCorrisp} style={buttonStyle('#92400e', savingCorrisp)}>
-                {savingCorrisp ? '⏳...' : 'Inserisci'}
-              </button>
-              {syncStatus && syncStatus.da_sincronizzare > 0 && (
-                <div style={{ marginTop: 10, padding: 8, background: 'rgba(255,255,255,0.8)', borderRadius: 6, fontSize: 12 }}>
-                  📦 XML da sincronizzare: <strong>{syncStatus.da_sincronizzare}</strong>
-                  <button onClick={handleSyncCorrispettivi} disabled={syncing} style={{ ...buttonStyle('#065f46', syncing), marginTop: 6, fontSize: 11, padding: 8 }}>
-                    {syncing ? '⏳...' : '🔄 Sincronizza XML'}
-                  </button>
+          {/* Summary Cards Cassa */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
+            <SummaryCard title="Totale Entrate (DARE)" value={formatCurrency(cassaData.totale_entrate)} color="#10b981" icon="📈" subtitle="Corrispettivi + Finanziamenti" />
+            <SummaryCard title="Totale Uscite (AVERE)" value={formatCurrency(cassaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="POS + Versamenti + Fatture" />
+            <SummaryCard title="Saldo Cassa" value={formatCurrency(cassaData.saldo)} color={cassaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
+          </div>
+
+          {/* Dettaglio Uscite */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
+            <MiniStatCard title="Corrispettivi" value={formatCurrency(totaleCorrispettivi)} color="#f59e0b" />
+            <MiniStatCard title="POS" value={formatCurrency(totalePOS)} color="#3b82f6" />
+            <MiniStatCard title="Versamenti" value={formatCurrency(totaleVersamenti)} color="#10b981" />
+            <MiniStatCard title="Fatture Contanti" value={formatCurrency(totaleFattureCassa)} color="#ef4444" />
+          </div>
+
+          {/* Chiusure Giornaliere Serali */}
+          <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #faf5ff 50%, #fef3c7 100%)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+            <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>⚡</span> Chiusure Giornaliere Serali
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+              {/* Corrispettivo */}
+              <QuickEntryCard title="📊 Corrispettivo (LORDO IVA)" color="#f59e0b">
+                <input type="date" value={corrispettivo.data} onChange={(e) => setCorrispettivo({...corrispettivo, data: e.target.value})} style={inputStyle} />
+                <input type="number" step="0.01" placeholder="Importo €" value={corrispettivo.importo} onChange={(e) => setCorrispettivo({...corrispettivo, importo: e.target.value})} style={inputStyle} />
+                <button onClick={handleSaveCorrispettivo} disabled={savingCorrisp} style={buttonStyle('#92400e', savingCorrisp)}>
+                  {savingCorrisp ? '⏳...' : '💾 Salva'}
+                </button>
+              </QuickEntryCard>
+
+              {/* POS */}
+              <QuickEntryCard title="💳 POS (Chiusura Serale)" color="#3b82f6">
+                <input type="date" value={pos.data} onChange={(e) => setPos({...pos, data: e.target.value})} style={inputStyle} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                  <input type="number" step="0.01" placeholder="POS 1" value={pos.pos1} onChange={(e) => setPos({...pos, pos1: e.target.value})} style={{...inputStyle, padding: 8}} />
+                  <input type="number" step="0.01" placeholder="POS 2" value={pos.pos2} onChange={(e) => setPos({...pos, pos2: e.target.value})} style={{...inputStyle, padding: 8}} />
+                  <input type="number" step="0.01" placeholder="POS 3" value={pos.pos3} onChange={(e) => setPos({...pos, pos3: e.target.value})} style={{...inputStyle, padding: 8}} />
                 </div>
-              )}
-            </QuickEntryCard>
+                <div style={{ background: 'rgba(255,255,255,0.8)', padding: 8, borderRadius: 6, textAlign: 'center', fontSize: 13 }}>
+                  Totale: <strong>€{posTotale.toFixed(2)}</strong>
+                </div>
+                <button onClick={handleSavePos} disabled={savingPos} style={buttonStyle('#1d4ed8', savingPos)}>
+                  {savingPos ? '⏳...' : '💾 Salva'}
+                </button>
+              </QuickEntryCard>
 
-            {/* POS */}
-            <QuickEntryCard title="💳 POS" color="#3b82f6">
-              <input type="date" value={pos.data} onChange={(e) => setPos({...pos, data: e.target.value})} style={inputStyle} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                <input type="number" step="0.01" placeholder="POS 1 €" value={pos.pos1} onChange={(e) => setPos({...pos, pos1: e.target.value})} style={{...inputStyle, padding: 8}} />
-                <input type="number" step="0.01" placeholder="POS 2 €" value={pos.pos2} onChange={(e) => setPos({...pos, pos2: e.target.value})} style={{...inputStyle, padding: 8}} />
-                <input type="number" step="0.01" placeholder="POS 3 €" value={pos.pos3} onChange={(e) => setPos({...pos, pos3: e.target.value})} style={{...inputStyle, padding: 8}} />
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.8)', padding: 8, borderRadius: 6, textAlign: 'center', fontSize: 13 }}>
-                Totale: <strong>€{posTotale.toFixed(2)}</strong>
-              </div>
-              <button onClick={handleSavePos} disabled={savingPos} style={buttonStyle('#1d4ed8', savingPos)}>
-                {savingPos ? '⏳...' : 'Inserisci'}
-              </button>
-            </QuickEntryCard>
+              {/* Versamento */}
+              <QuickEntryCard title="🏦 Versamento" color="#10b981">
+                <input type="date" value={versamento.data} onChange={(e) => setVersamento({...versamento, data: e.target.value})} style={inputStyle} />
+                <input type="number" step="0.01" placeholder="Importo €" value={versamento.importo} onChange={(e) => setVersamento({...versamento, importo: e.target.value})} style={inputStyle} />
+                <button onClick={handleSaveVersamento} disabled={savingVers} style={buttonStyle('#059669', savingVers)}>
+                  {savingVers ? '⏳...' : '💾 Salva'}
+                </button>
+              </QuickEntryCard>
 
-            {/* Versamento */}
-            <QuickEntryCard title="🏦 Versamento" color="#10b981">
-              <input type="date" value={versamento.data} onChange={(e) => setVersamento({...versamento, data: e.target.value})} style={inputStyle} />
-              <input type="number" step="0.01" placeholder="€" value={versamento.importo} onChange={(e) => setVersamento({...versamento, importo: e.target.value})} style={inputStyle} />
-              <button onClick={handleSaveVersamento} disabled={savingVers} style={buttonStyle('#059669', savingVers)}>
-                {savingVers ? '⏳...' : 'Inserisci'}
-              </button>
-            </QuickEntryCard>
-
-            {/* Registra Movimento */}
-            <QuickEntryCard title="✏️ Registra Movimento" color="#f97316">
-              <input type="date" value={movimento.data} onChange={(e) => setMovimento({...movimento, data: e.target.value})} style={inputStyle} />
-              <select value={movimento.tipo} onChange={(e) => setMovimento({...movimento, tipo: e.target.value})} style={inputStyle}>
-                <option value="uscita">Uscita</option>
-                <option value="entrata">Entrata</option>
-              </select>
-              <input type="number" step="0.01" placeholder="€" value={movimento.importo} onChange={(e) => setMovimento({...movimento, importo: e.target.value})} style={inputStyle} />
-              <input type="text" placeholder="Descrizione" value={movimento.descrizione} onChange={(e) => setMovimento({...movimento, descrizione: e.target.value})} style={inputStyle} />
-              <button onClick={handleSaveMovimento} disabled={savingMov} style={buttonStyle('#ea580c', savingMov)}>
-                {savingMov ? '⏳...' : 'Registra'}
-              </button>
-            </QuickEntryCard>
-          </div>
-        </div>
-
-        {/* Giorno Incasso Record */}
-        {giornoRecord && (
-          <div style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 50, height: 50, background: '#f59e0b', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 24 }}>🏆</span>
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#92400e' }}>Giorno Incasso Record</div>
-              <div style={{ color: '#b45309', fontSize: 13 }}>{formatDate(giornoRecord.data)}</div>
-              <div style={{ fontSize: 22, fontWeight: 'bold', color: '#d97706' }}>{formatCurrency(giornoRecord.importo)}</div>
+              {/* Movimento Generico */}
+              <QuickEntryCard title="✏️ Movimento Manuale" color="#f97316">
+                <input type="date" value={movimento.data} onChange={(e) => setMovimento({...movimento, data: e.target.value})} style={inputStyle} />
+                <select value={movimento.tipo} onChange={(e) => setMovimento({...movimento, tipo: e.target.value})} style={inputStyle}>
+                  <option value="uscita">Uscita (AVERE)</option>
+                  <option value="entrata">Entrata (DARE)</option>
+                </select>
+                <input type="number" step="0.01" placeholder="Importo €" value={movimento.importo} onChange={(e) => setMovimento({...movimento, importo: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="Descrizione" value={movimento.descrizione} onChange={(e) => setMovimento({...movimento, descrizione: e.target.value})} style={inputStyle} />
+                <button onClick={handleSaveMovimento} disabled={savingMov} style={buttonStyle('#ea580c', savingMov)}>
+                  {savingMov ? '⏳...' : '💾 Salva'}
+                </button>
+              </QuickEntryCard>
             </div>
           </div>
-        )}
 
-        {/* Filter */}
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 14, color: '#6b7280' }}>📅 Filtra periodo:</span>
-          <input type="date" value={filterPeriodo.da} onChange={(e) => setFilterPeriodo({...filterPeriodo, da: e.target.value})} style={{...inputStyle, width: 'auto'}} />
-          <input type="date" value={filterPeriodo.a} onChange={(e) => setFilterPeriodo({...filterPeriodo, a: e.target.value})} style={{...inputStyle, width: 'auto'}} />
-          <button onClick={loadAllData} style={{ padding: '10px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
-            🔍 Filtra
-          </button>
-        </div>
+          {/* Giorno Incasso Record */}
+          {giornoRecord && (
+            <div style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 50, height: 50, background: '#f59e0b', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 24 }}>🏆</span>
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#92400e' }}>Giorno Incasso Record</div>
+                <div style={{ color: '#b45309', fontSize: 13 }}>{formatDate(giornoRecord.data)}</div>
+                <div style={{ fontSize: 22, fontWeight: 'bold', color: '#d97706' }}>{formatCurrency(giornoRecord.importo)}</div>
+              </div>
+            </div>
+          )}
 
-        {/* Movements Table Cassa */}
-        <MovementsTable 
-          movimenti={cassaData.movimenti || []}
-          tipo="cassa"
-          loading={loading}
-          formatCurrency={formatCurrency}
-          formatDate={formatDate}
-          onDelete={(id) => handleDeleteMovimento('cassa', id)}
-        />
-      </section>
-
-      {/* ============ SEZIONE BANCA ============ */}
-      <section>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ width: 40, height: 40, background: '#2563eb', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: 'white', fontSize: 20 }}>🏦</span>
+          {/* Filter */}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14, color: '#6b7280' }}>📅 Filtra periodo:</span>
+            <input type="date" value={filterPeriodo.da} onChange={(e) => setFilterPeriodo({...filterPeriodo, da: e.target.value})} style={{...inputStyle, width: 'auto'}} />
+            <input type="date" value={filterPeriodo.a} onChange={(e) => setFilterPeriodo({...filterPeriodo, a: e.target.value})} style={{...inputStyle, width: 'auto'}} />
+            <button onClick={loadAllData} style={{ padding: '10px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+              🔍 Filtra
+            </button>
           </div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 'bold' }}>Prima Nota Banca</h1>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>Registro movimenti bancari con saldo progressivo</p>
+
+          {/* Movements Table Cassa */}
+          <MovementsTable 
+            movimenti={cassaData.movimenti || []}
+            tipo="cassa"
+            loading={loading}
+            formatCurrency={formatCurrency}
+            formatDate={formatDate}
+            onDelete={(id) => handleDeleteMovimento('cassa', id)}
+          />
+        </section>
+      )}
+
+      {/* ========== SEZIONE BANCA ========== */}
+      {activeSection === 'banca' && (
+        <section>
+          <div style={{ marginBottom: 20 }}>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span>🏦</span> Prima Nota Banca
+            </h1>
+            <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: 14 }}>
+              Registro movimenti bancari • Solo AVERE: Fatture riconciliate (bonifico/assegno)
+            </p>
           </div>
-        </div>
 
-        {/* Summary Cards Banca */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-          <SummaryCard title="Totale Entrate" value={formatCurrency(bancaData.totale_entrate)} color="#10b981" icon="📈" />
-          <SummaryCard title="Totale Uscite" value={formatCurrency(bancaData.totale_uscite)} color="#ef4444" icon="📉" />
-          <SummaryCard title="Saldo Finale" value={formatCurrency(bancaData.saldo)} color={bancaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
-        </div>
+          {/* Summary Cards Banca */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
+            <SummaryCard title="Totale Uscite (AVERE)" value={formatCurrency(bancaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="Fatture pagate bonifico/assegno" />
+            <SummaryCard title="Saldo Banca" value={formatCurrency(bancaData.saldo)} color={bancaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
+          </div>
 
-        {/* Movements Table Banca */}
-        <MovementsTable 
-          movimenti={bancaData.movimenti || []}
-          tipo="banca"
-          loading={loading}
-          formatCurrency={formatCurrency}
-          formatDate={formatDate}
-          onDelete={(id) => handleDeleteMovimento('banca', id)}
-        />
-      </section>
+          {/* Info Box */}
+          <div style={{ background: '#eff6ff', border: '1px solid #3b82f6', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 20 }}>ℹ️</span>
+              <strong style={{ color: '#1e40af' }}>Informazioni</strong>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: '#1e40af' }}>
+              La Prima Nota Banca contiene solo le <strong>uscite</strong> per fatture riconciliate con estratto conto (pagate tramite bonifico o assegno).
+              I dati vengono importati automaticamente dalla sezione Fatture quando vengono marcate come pagate.
+            </p>
+          </div>
+
+          {/* Filter */}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14, color: '#6b7280' }}>📅 Filtra periodo:</span>
+            <input type="date" value={filterPeriodo.da} onChange={(e) => setFilterPeriodo({...filterPeriodo, da: e.target.value})} style={{...inputStyle, width: 'auto'}} />
+            <input type="date" value={filterPeriodo.a} onChange={(e) => setFilterPeriodo({...filterPeriodo, a: e.target.value})} style={{...inputStyle, width: 'auto'}} />
+            <button onClick={loadAllData} style={{ padding: '10px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+              🔍 Filtra
+            </button>
+          </div>
+
+          {/* Movements Table Banca */}
+          <MovementsTable 
+            movimenti={bancaData.movimenti || []}
+            tipo="banca"
+            loading={loading}
+            formatCurrency={formatCurrency}
+            formatDate={formatDate}
+            onDelete={(id) => handleDeleteMovimento('banca', id)}
+          />
+        </section>
+      )}
     </div>
   );
 }
 
 // Sub-components
 
-function SummaryCard({ title, value, color, icon, highlight }) {
+function SummaryCard({ title, value, color, icon, highlight, subtitle }) {
   return (
     <div style={{ 
       background: highlight ? `linear-gradient(135deg, ${color}15 0%, ${color}25 100%)` : 'white',
@@ -477,18 +461,16 @@ function SummaryCard({ title, value, color, icon, highlight }) {
         <span style={{ fontSize: 18 }}>{icon}</span>
       </div>
       <div style={{ fontSize: 24, fontWeight: 'bold', color }}>{value}</div>
+      {subtitle && <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>{subtitle}</div>}
     </div>
   );
 }
 
-function QuickStatCard({ title, value, subtitle, icon }) {
+function MiniStatCard({ title, value, color }) {
   return (
-    <div style={{ background: 'white', borderRadius: 12, padding: 16, border: '1px solid #e5e7eb' }}>
-      <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 4 }}>{title}</div>
-      <div style={{ fontSize: 22, fontWeight: 'bold', color: '#1f2937', display: 'flex', alignItems: 'center', gap: 8 }}>
-        {value} <span style={{ fontSize: 18 }}>{icon}</span>
-      </div>
-      <div style={{ fontSize: 12, color: '#9ca3af' }}>{subtitle}</div>
+    <div style={{ background: 'white', borderRadius: 8, padding: 12, border: '1px solid #e5e7eb', borderLeft: `4px solid ${color}` }}>
+      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>{title}</div>
+      <div style={{ fontSize: 16, fontWeight: 'bold', color }}>{value}</div>
     </div>
   );
 }
@@ -562,8 +544,8 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
               <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Tipo</th>
               <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Categoria</th>
               <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Descrizione</th>
-              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Dare</th>
-              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Avere</th>
+              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>DARE</th>
+              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>AVERE</th>
               <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Saldo</th>
               <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Azioni</th>
             </tr>
@@ -581,7 +563,7 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
                     background: mov.tipo === 'entrata' ? '#dcfce7' : '#fee2e2',
                     color: mov.tipo === 'entrata' ? '#166534' : '#991b1b'
                   }}>
-                    {mov.tipo === 'entrata' ? '↑ ENTRATA' : '↓ USCITA'}
+                    {mov.tipo === 'entrata' ? '↑ DARE' : '↓ AVERE'}
                   </span>
                 </td>
                 <td style={{ padding: 10 }}>
