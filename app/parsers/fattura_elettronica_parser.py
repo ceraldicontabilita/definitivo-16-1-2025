@@ -53,27 +53,23 @@ def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
         Dict con i dati della fattura estratti
     """
     try:
-        # Rimuovi BOM se presente
-        if xml_content.startswith('\ufeff'):
-            xml_content = xml_content[1:]
+        # Pulisci XML da namespace e prefissi
+        xml_content = clean_xml_namespaces(xml_content)
         
-        # Rimuovi eventuali caratteri nulli o non validi
-        xml_content = xml_content.replace('\x00', '').strip()
-        
-        # Rimuovi namespace declarations per semplificare il parsing
-        # Mantiene la struttura ma rimuove xmlns=...
-        xml_content = re.sub(r'\s+xmlns(:[a-zA-Z0-9]+)?="[^"]*"', '', xml_content)
-        xml_content = re.sub(r'\s+xsi:[a-zA-Z]+="[^"]*"', '', xml_content)
-        
-        # Parse XML
-        try:
-            root = ET.fromstring(xml_content.encode('utf-8'))
-        except ET.ParseError as pe:
-            # Prova con encoding diverso
+        # Parse XML - prova diverse codifiche
+        root = None
+        for encoding in ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252']:
             try:
-                root = ET.fromstring(xml_content.encode('latin-1'))
-            except:
-                raise pe
+                root = ET.fromstring(xml_content.encode(encoding))
+                break
+            except (ET.ParseError, UnicodeEncodeError, UnicodeDecodeError):
+                continue
+        
+        if root is None:
+            try:
+                root = ET.fromstring(xml_content)
+            except ET.ParseError as e:
+                return {"error": f"Errore parsing XML: {str(e)}", "raw_xml_parsed": False}
         
         # Funzione helper per trovare elementi indipendentemente dal namespace
         def find_element(parent, tag_name):
