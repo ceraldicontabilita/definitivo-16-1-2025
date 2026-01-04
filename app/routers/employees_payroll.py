@@ -183,19 +183,61 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     results["skipped_duplicates"] += 1
                     continue
                 
+                payslip_id = str(uuid.uuid4())
+                mese = payslip.get("mese", "")
+                anno = payslip.get("anno", "")
+                netto = float(payslip.get("retribuzione_netta", 0) or 0)
+                
                 # Save payslip
                 await db["payslips"].insert_one({
-                    "id": str(uuid.uuid4()), "payslip_key": payslip_key, "employee_id": emp_id,
+                    "id": payslip_id, "payslip_key": payslip_key, "employee_id": emp_id,
                     "codice_fiscale": cf, "nome_completo": nome, "periodo": periodo,
+                    "mese": mese, "anno": anno,
                     "ore_ordinarie": float(payslip.get("ore_ordinarie", 0) or 0),
                     "retribuzione_lorda": float(payslip.get("retribuzione_lorda", 0) or 0),
-                    "retribuzione_netta": float(payslip.get("retribuzione_netta", 0) or 0),
+                    "retribuzione_netta": netto,
                     "contributi_inps": float(payslip.get("contributi_inps", 0) or 0),
                     "qualifica": payslip.get("qualifica", ""),
                     "source": "pdf_upload", "filename": file.filename, "created_at": datetime.utcnow().isoformat()
                 })
                 
-                results["success"].append({"nome": nome, "periodo": periodo, "netto": payslip.get("retribuzione_netta", 0), "is_new": is_new})
+                # Inserisci automaticamente in Prima Nota Cassa - Salari
+                if netto > 0 and anno and mese:
+                    # Calcola data fine mese (ultimo giorno del mese)
+                    try:
+                        import calendar
+                        ultimo_giorno = calendar.monthrange(int(anno), int(mese))[1]
+                        data_pagamento = f"{anno}-{mese.zfill(2)}-{str(ultimo_giorno).zfill(2)}"
+                    except:
+                        data_pagamento = f"{anno}-{mese.zfill(2)}-28"
+                    
+                    # Verifica se esiste già un movimento salari per questo dipendente/periodo
+                    existing_salario = await db["prima_nota_cassa"].find_one({
+                        "categoria": "Salari",
+                        "riferimento": payslip_key,
+                        "source": "payslip_import"
+                    })
+                    
+                    if not existing_salario:
+                        movimento_salario = {
+                            "id": str(uuid.uuid4()),
+                            "data": data_pagamento,
+                            "tipo": "uscita",
+                            "importo": netto,
+                            "descrizione": f"Stipendio {nome} - {periodo}",
+                            "categoria": "Salari",
+                            "riferimento": payslip_key,
+                            "payslip_id": payslip_id,
+                            "employee_id": emp_id,
+                            "codice_fiscale": cf,
+                            "source": "payslip_import",
+                            "note": f"Importato da busta paga PDF",
+                            "created_at": datetime.utcnow().isoformat()
+                        }
+                        await db["prima_nota_cassa"].insert_one(movimento_salario)
+                        logger.info(f"Prima Nota Salari: €{netto} per {nome} ({periodo})")
+                
+                results["success"].append({"nome": nome, "periodo": periodo, "netto": netto, "is_new": is_new, "prima_nota": netto > 0})
                 results["imported"] += 1
                 
             except Exception as e:
