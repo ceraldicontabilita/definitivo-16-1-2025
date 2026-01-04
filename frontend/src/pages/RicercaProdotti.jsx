@@ -1,0 +1,413 @@
+import React, { useState, useEffect, useRef } from "react";
+import api from "../api";
+
+export default function RicercaProdotti() {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [cart, setCart] = useState({});
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [suppliers, setSuppliers] = useState([]);
+  const [err, setErr] = useState("");
+  const searchTimeout = useRef(null);
+
+  useEffect(() => {
+    loadProducts();
+    loadCategories();
+  }, []);
+
+  async function loadProducts() {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append("category", selectedCategory);
+      if (searchQuery) params.append("search", searchQuery);
+      params.append("days", "90");
+      
+      const r = await api.get(`/api/products/catalog?${params}`);
+      setProducts(Array.isArray(r.data) ? r.data : []);
+    } catch (e) {
+      console.error("Error loading products:", e);
+      setErr("Errore caricamento prodotti");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadCategories() {
+    try {
+      const r = await api.get("/api/products/categories");
+      setCategories(Array.isArray(r.data) ? r.data : []);
+    } catch (e) {
+      console.error("Error loading categories:", e);
+    }
+  }
+
+  async function handleSearch(query) {
+    setSearchQuery(query);
+    
+    // Debounce per ricerca predittiva
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    
+    if (query.length >= 2) {
+      searchTimeout.current = setTimeout(async () => {
+        try {
+          const r = await api.get(`/api/products/search?q=${encodeURIComponent(query)}&limit=10`);
+          setSuggestions(Array.isArray(r.data) ? r.data : []);
+        } catch (e) {
+          console.error("Error searching:", e);
+        }
+      }, 300);
+    } else {
+      setSuggestions([]);
+    }
+  }
+
+  async function loadSuppliers(productId) {
+    try {
+      const r = await api.get(`/api/products/${productId}/suppliers?days=90`);
+      setSuppliers(Array.isArray(r.data) ? r.data : []);
+    } catch (e) {
+      console.error("Error loading suppliers:", e);
+      setSuppliers([]);
+    }
+  }
+
+  function selectSuggestion(product) {
+    setSearchQuery(product.nome || "");
+    setSuggestions([]);
+    loadProducts();
+  }
+
+  function selectProduct(product) {
+    if (selectedProduct?.id === product.id) {
+      setSelectedProduct(null);
+      setSuppliers([]);
+    } else {
+      setSelectedProduct(product);
+      loadSuppliers(product.id);
+    }
+  }
+
+  function addToCart(product, supplier = null) {
+    const key = `${product.id}_${supplier?.supplier_name || product.best_supplier || 'default'}`;
+    const supplierName = supplier?.supplier_name || product.best_supplier || "Fornitore";
+    const price = supplier?.last_price || product.best_price || product.prezzi?.avg || 0;
+    
+    setCart(prev => ({
+      ...prev,
+      [key]: {
+        product_id: product.id,
+        product_name: product.nome,
+        supplier_name: supplierName,
+        price: price,
+        unit: product.unita_misura,
+        quantity: (prev[key]?.quantity || 0) + 1
+      }
+    }));
+  }
+
+  function updateCartQuantity(key, delta) {
+    setCart(prev => {
+      const newQty = (prev[key]?.quantity || 0) + delta;
+      if (newQty <= 0) {
+        const { [key]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [key]: { ...prev[key], quantity: newQty } };
+    });
+  }
+
+  function removeFromCart(key) {
+    setCart(prev => {
+      const { [key]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
+  // Raggruppa carrello per fornitore
+  const cartBySupplier = Object.entries(cart).reduce((acc, [key, item]) => {
+    const supplier = item.supplier_name;
+    if (!acc[supplier]) acc[supplier] = [];
+    acc[supplier].push({ key, ...item });
+    return acc;
+  }, {});
+
+  // Calcola totale carrello
+  const cartTotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartItemCount = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+
+  return (
+    <>
+      {/* Header con ricerca */}
+      <div className="card">
+        <div className="h1">Ricerca Prodotti</div>
+        <div className="small" style={{ marginBottom: 15 }}>
+          Catalogo prodotti popolato automaticamente dalle fatture XML. Trova il miglior prezzo per fornitore.
+        </div>
+        
+        <div className="row" style={{ gap: 10, flexWrap: "wrap", position: "relative" }}>
+          <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+            <input
+              type="text"
+              placeholder="Cerca prodotto..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: "100%" }}
+              data-testid="product-search-input"
+            />
+            
+            {/* Suggerimenti ricerca predittiva */}
+            {suggestions.length > 0 && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                background: "white",
+                border: "1px solid #ddd",
+                borderRadius: 8,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                zIndex: 1000,
+                maxHeight: 300,
+                overflow: "auto"
+              }}>
+                {suggestions.map((s, i) => (
+                  <div
+                    key={s.id || i}
+                    onClick={() => selectSuggestion(s)}
+                    style={{
+                      padding: "10px 15px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid #eee",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                    className="hover-bg"
+                  >
+                    <div>
+                      <strong>{s.nome?.substring(0, 50)}</strong>
+                      <div className="small" style={{ color: "#666" }}>
+                        {s.categoria} | {s.best_supplier}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ color: "#2e7d32", fontWeight: "bold" }}>
+                        €{(s.best_price || 0).toFixed(2)}
+                      </span>
+                      <div className="small" style={{ color: "#999" }}>
+                        Match: {s.match_score}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{ minWidth: 150 }}
+          >
+            <option value="">Tutte le categorie</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          
+          <button onClick={loadProducts} className="primary" data-testid="search-btn">
+            🔍 Cerca
+          </button>
+        </div>
+        
+        {err && <div className="small" style={{ color: "#c00", marginTop: 10 }}>{err}</div>}
+      </div>
+
+      {/* Carrello */}
+      {cartItemCount > 0 && (
+        <div className="card" style={{ background: "#e3f2fd" }}>
+          <div className="h1">
+            🛒 Carrello ({cartItemCount} prodotti)
+            <span style={{ float: "right", color: "#1565c0" }}>€{cartTotal.toFixed(2)}</span>
+          </div>
+          
+          {Object.entries(cartBySupplier).map(([supplier, items]) => (
+            <div key={supplier} style={{ marginBottom: 15, padding: 10, background: "white", borderRadius: 8 }}>
+              <div style={{ fontWeight: "bold", marginBottom: 10, borderBottom: "1px solid #eee", paddingBottom: 5 }}>
+                📦 {supplier}
+                <span style={{ float: "right", fontSize: 12 }}>
+                  Totale: €{items.reduce((s, i) => s + i.price * i.quantity, 0).toFixed(2)}
+                </span>
+              </div>
+              
+              {items.map(item => (
+                <div key={item.key} style={{ display: "flex", alignItems: "center", marginBottom: 5, gap: 10 }}>
+                  <span style={{ flex: 1 }}>{item.product_name?.substring(0, 40)}</span>
+                  <span>€{item.price.toFixed(2)}</span>
+                  <button onClick={() => updateCartQuantity(item.key, -1)}>-</button>
+                  <span style={{ minWidth: 30, textAlign: "center" }}>{item.quantity}</span>
+                  <button onClick={() => updateCartQuantity(item.key, 1)}>+</button>
+                  <button onClick={() => removeFromCart(item.key)} style={{ color: "#c00" }}>🗑️</button>
+                </div>
+              ))}
+            </div>
+          ))}
+          
+          <button onClick={() => setCart({})} style={{ marginTop: 10 }}>Svuota Carrello</button>
+        </div>
+      )}
+
+      {/* Statistiche */}
+      <div className="card" style={{ background: "#f5f5f5" }}>
+        <div className="grid">
+          <div>
+            <strong>Prodotti nel catalogo</strong>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#1565c0" }}>{products.length}</div>
+          </div>
+          <div>
+            <strong>Categorie</strong>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#2e7d32" }}>{categories.length}</div>
+          </div>
+          <div>
+            <strong>Nel carrello</strong>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#e65100" }}>{cartItemCount}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista Prodotti */}
+      <div className="card">
+        <div className="h1">Catalogo ({products.length} prodotti)</div>
+        
+        {loading ? (
+          <div className="small">Caricamento catalogo...</div>
+        ) : products.length === 0 ? (
+          <div className="small">
+            Nessun prodotto trovato. Il catalogo si popola automaticamente quando carichi fatture XML.
+          </div>
+        ) : (
+          <div>
+            {products.slice(0, 100).map((p, i) => (
+              <div 
+                key={p.id || i} 
+                style={{ 
+                  border: selectedProduct?.id === p.id ? "2px solid #1565c0" : "1px solid #eee",
+                  borderRadius: 8,
+                  padding: 15,
+                  marginBottom: 10,
+                  cursor: "pointer",
+                  background: selectedProduct?.id === p.id ? "#e3f2fd" : "white"
+                }}
+                onClick={() => selectProduct(p)}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <strong>{p.nome?.substring(0, 60)}</strong>
+                    <div className="small" style={{ color: "#666", marginTop: 3 }}>
+                      Categoria: <span style={{ 
+                        background: "#e3f2fd", 
+                        padding: "2px 8px", 
+                        borderRadius: 4 
+                      }}>{p.categoria}</span>
+                      {" | "}Giacenza: {(p.giacenza || 0).toFixed(1)} {p.unita_misura}
+                    </div>
+                  </div>
+                  
+                  <div style={{ textAlign: "right", minWidth: 120 }}>
+                    <div style={{ color: "#2e7d32", fontSize: 18, fontWeight: "bold" }}>
+                      €{(p.best_price || p.prezzi?.avg || 0).toFixed(2)}
+                    </div>
+                    <div className="small" style={{ color: "#666" }}>
+                      {p.best_supplier?.substring(0, 20)}
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={(e) => { e.stopPropagation(); addToCart(p); }}
+                    style={{ marginLeft: 10, background: "#4caf50", color: "white" }}
+                  >
+                    + Carrello
+                  </button>
+                </div>
+                
+                {/* Dettaglio Fornitori */}
+                {selectedProduct?.id === p.id && suppliers.length > 0 && (
+                  <div style={{ marginTop: 15, paddingTop: 15, borderTop: "1px solid #ddd" }}>
+                    <strong>Fornitori e Prezzi (ultimi 90 giorni)</strong>
+                    <table style={{ width: "100%", marginTop: 10, fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid #ddd", textAlign: "left" }}>
+                          <th style={{ padding: 5 }}>Fornitore</th>
+                          <th style={{ padding: 5 }}>Min</th>
+                          <th style={{ padding: 5 }}>Max</th>
+                          <th style={{ padding: 5 }}>Media</th>
+                          <th style={{ padding: 5 }}>Ultimo</th>
+                          <th style={{ padding: 5 }}>Acquisti</th>
+                          <th style={{ padding: 5 }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {suppliers.map((s, si) => (
+                          <tr key={si} style={{ 
+                            borderBottom: "1px solid #eee",
+                            background: si === 0 ? "#e8f5e9" : "transparent"
+                          }}>
+                            <td style={{ padding: 5 }}>
+                              {s.supplier_name?.substring(0, 30)}
+                              {si === 0 && <span style={{ color: "#2e7d32", marginLeft: 5 }}>⭐ Best</span>}
+                            </td>
+                            <td style={{ padding: 5 }}>€{s.min_price.toFixed(2)}</td>
+                            <td style={{ padding: 5 }}>€{s.max_price.toFixed(2)}</td>
+                            <td style={{ padding: 5 }}>€{s.avg_price.toFixed(2)}</td>
+                            <td style={{ padding: 5 }}>€{s.last_price.toFixed(2)}</td>
+                            <td style={{ padding: 5 }}>{s.purchase_count}x</td>
+                            <td style={{ padding: 5 }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); addToCart(p, s); }}
+                                style={{ fontSize: 12 }}
+                              >
+                                Aggiungi
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                
+                {selectedProduct?.id === p.id && suppliers.length === 0 && (
+                  <div style={{ marginTop: 15, paddingTop: 15, borderTop: "1px solid #ddd" }}>
+                    <span className="small">Nessuno storico prezzi disponibile per questo prodotto.</span>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {products.length > 100 && (
+              <div className="small" style={{ textAlign: "center", padding: 20 }}>
+                Mostrati 100 di {products.length} prodotti. Usa la ricerca per trovare altri prodotti.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Informazioni */}
+      <div className="card">
+        <div className="h1">Come Funziona</div>
+        <ul style={{ paddingLeft: 20 }}>
+          <li><strong>Auto-popolamento:</strong> Ogni fattura XML caricata aggiunge automaticamente i prodotti al catalogo</li>
+          <li><strong>Best Price:</strong> Il sistema calcola il miglior prezzo degli ultimi 90 giorni per ogni prodotto</li>
+          <li><strong>Storico Prezzi:</strong> Clicca su un prodotto per vedere tutti i fornitori e confrontare i prezzi</li>
+          <li><strong>Carrello:</strong> Aggiungi prodotti al carrello per creare ordini raggruppati per fornitore</li>
+        </ul>
+      </div>
+    </>
+  );
+}
