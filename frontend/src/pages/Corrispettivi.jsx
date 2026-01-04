@@ -280,7 +280,7 @@ export default function Corrispettivi() {
               {data.success.slice(0, 15).map((s, i) => (
                 <li key={i} style={{ marginBottom: 3 }}>
                   <strong>{s.data}</strong> - € {s.totale?.toFixed(2)} 
-                  {s.contanti > 0 && <span style={{ color: "#2e7d32" }}> (💵 {s.contanti?.toFixed(2)})</span>}
+                  {s.contanti > 0 && <span style={{ color: "#2e7d32" }}> (💵 Cassa: {s.contanti?.toFixed(2)})</span>}
                   {s.elettronico > 0 && <span style={{ color: "#9c27b0" }}> (💳 {s.elettronico?.toFixed(2)})</span>}
                 </li>
               ))}
