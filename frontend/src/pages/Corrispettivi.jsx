@@ -114,11 +114,17 @@ export default function Corrispettivi() {
     }
   }
 
-  // Calcola totali
+  // Calcola totali - Se IVA nel DB è 0, calcola con scorporo al 10%
   const totaleGiornaliero = corrispettivi.reduce((sum, c) => sum + (c.totale || 0), 0);
   const totaleContanti = corrispettivi.reduce((sum, c) => sum + (c.pagato_contanti || 0), 0);
   const totaleElettronico = corrispettivi.reduce((sum, c) => sum + (c.pagato_elettronico || 0), 0);
-  const totaleIVA = corrispettivi.reduce((sum, c) => sum + (c.totale_iva || 0), 0);
+  const totaleIVA = corrispettivi.reduce((sum, c) => {
+    if (c.totale_iva && c.totale_iva > 0) return sum + c.totale_iva;
+    // Se IVA non presente, calcola scorporo al 10%
+    const totale = c.totale || 0;
+    return sum + (totale - (totale / 1.10));
+  }, 0);
+  const totaleImponibile = totaleGiornaliero / 1.10;
 
   return (
     <>
