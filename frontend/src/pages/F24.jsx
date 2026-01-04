@@ -398,10 +398,13 @@ export default function F24() {
               color: 'white',
               border: 'none',
               borderRadius: 4,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
             }}
           >
-            📤 Carica PDF F24
+            <Upload size={16} /> Carica PDF F24
           </button>
           <button 
             onClick={() => { loadF24(); loadAlerts(); loadDashboard(); }}
@@ -418,6 +421,18 @@ export default function F24() {
             🔄 Aggiorna
           </button>
         </div>
+        
+        {/* Overwrite option */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#666' }}>
+          <input
+            type="checkbox"
+            checked={overwriteMode}
+            onChange={(e) => setOverwriteMode(e.target.checked)}
+            data-testid="overwrite-checkbox"
+          />
+          <span>Sovrascrivi F24 esistenti con stessa scadenza/importo</span>
+        </label>
+        
         {err && <div style={{ marginTop: 10, color: '#c00', fontSize: 14 }}>{err}</div>}
       </div>
 
