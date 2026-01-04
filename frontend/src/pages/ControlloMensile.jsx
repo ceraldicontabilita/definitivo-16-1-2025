@@ -491,29 +491,91 @@ export default function ControlloMensile() {
 
         {viewMode === 'mese' && (
           <>
+            {/* Navigazione Mesi */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                onClick={() => {
+                  if (meseSelezionato > 1) {
+                    setMeseSelezionato(meseSelezionato - 1);
+                  } else {
+                    // Vai a Dicembre dell'anno precedente
+                    setAnno(anno - 1);
+                    setMeseSelezionato(12);
+                  }
+                }}
+                style={{
+                  padding: '8px 14px',
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: 14
+                }}
+                data-testid="prev-month-btn"
+              >
+                ◀ {meseSelezionato > 1 ? monthNames[meseSelezionato - 2] : 'Dic ' + (anno - 1)}
+              </button>
+              
+              <span style={{ 
+                fontWeight: 'bold', 
+                fontSize: 16, 
+                padding: '8px 16px',
+                background: '#f0f9ff',
+                borderRadius: 8,
+                minWidth: 140,
+                textAlign: 'center'
+              }}>
+                {monthNames[meseSelezionato - 1]} {anno}
+              </span>
+              
+              <button
+                onClick={() => {
+                  if (meseSelezionato < 12) {
+                    setMeseSelezionato(meseSelezionato + 1);
+                  } else {
+                    // Vai a Gennaio dell'anno successivo
+                    setAnno(anno + 1);
+                    setMeseSelezionato(1);
+                  }
+                }}
+                style={{
+                  padding: '8px 14px',
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: 14
+                }}
+                data-testid="next-month-btn"
+              >
+                {meseSelezionato < 12 ? monthNames[meseSelezionato] : 'Gen ' + (anno + 1)} ▶
+              </button>
+            </div>
+            
             <button
               onClick={handleBackToYear}
               style={{
-                padding: '10px 20px',
+                padding: '8px 16px',
                 background: '#6b7280',
                 color: 'white',
                 border: 'none',
                 borderRadius: 8,
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
+                fontWeight: 'bold'
               }}
               data-testid="back-to-year-btn"
             >
-              ← Torna a Vista Annuale
+              ← Riepilogo Annuale
             </button>
             
             <button
               onClick={() => setShowVersamentiModal(true)}
               style={{
-                padding: '10px 20px',
+                padding: '8px 16px',
                 background: '#16a34a',
                 color: 'white',
                 border: 'none',
@@ -523,7 +585,7 @@ export default function ControlloMensile() {
               }}
               data-testid="show-versamenti-btn"
             >
-              💰 Dettaglio Versamenti
+              💰 Versamenti
             </button>
           </>
         )}
