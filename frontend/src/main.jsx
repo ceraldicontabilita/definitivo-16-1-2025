@@ -38,6 +38,7 @@ import GestioneDipendenti from "./pages/GestioneDipendenti.jsx";
 import ControlloMensile from "./pages/ControlloMensile.jsx";
 import ImportExport from "./pages/ImportExport.jsx";
 import HACCPNotifiche from "./pages/HACCPNotifiche.jsx";
+import PianoDeiConti from "./pages/PianoDeiConti.jsx";
 
 const router = createBrowserRouter([
   {
@@ -81,6 +82,7 @@ const router = createBrowserRouter([
       { path: "ordini-fornitori", element: <OrdiniFornitori /> },
       { path: "fornitori", element: <Fornitori /> },
       { path: "controllo-mensile", element: <ControlloMensile /> },
+      { path: "piano-dei-conti", element: <PianoDeiConti /> },
     ],
   },
 ]);
