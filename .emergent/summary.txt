@@ -1,212 +1,170 @@
 <analysis>**original_problem_statement:**
-L'utente sta costruendo un'applicazione ERP completa. Le richieste recenti includono:
-1.  **Analisi PDF Buste Paga:** Estrarre dati atomici, in particolare il Netto Mese, dai PDF delle buste paga e registrarli automaticamente nella Prima Nota.
-2.  **Correzione Categoria Salari:** I pagamenti degli stipendi devono essere registrati in una nuova Prima Nota Salari, non nella Prima Nota Cassa.
-3.  **Risoluzione Bug e Funzionalità Mancanti:**
-    *   La pagina  non funziona.
-    *   La pagina  non mostra dati.
-    *   L'importazione di PDF F24 per i contributi non è possibile.
-4.  **Creazione Pagina Import/Export:** Centralizzare tutte le funzioni di importazione (versamenti, POS, corrispettivi, F24, buste paga) in una nuova pagina dedicata.
-5.  **Correzione Logica Contabile POS:** Gli incassi POS devono essere registrati come uscite () nella .
-6.  **Miglioramento UI F24:** La lista dei modelli F24 deve mostrare in dettaglio i codici tributo e gli importi per un controllo visivo e per analisi aggregate (es. totale pagato per codice 1001 durante l'anno).
+L'utente sta costruendo un'applicazione ERP completa. Durante questa sessione, l'utente ha richiesto le seguenti funzionalità, in aggiunta a quelle preesistenti:
+1.  **Logica Prima Nota:** Replicare una logica specifica da un'applicazione di esempio, includendo l'aggiunta di pulsanti Modifica ed Elimina per ogni movimento.
+2.  **Automazione HACCP:**
+    *   Auto-popolare i dati per tutti i moduli HACCP (frigoriferi, congelatori, sanificazioni) ogni giorno alle 01:00 AM tramite un processo schedulato.
+    *   Aggiungere pulsanti Modifica ed Elimina ai moduli HACCP per correggere i dati.
+    *   Creare un pannello di Analytics per visualizzare statistiche mensili e annuali (medie, % di conformità, anomalie) con grafici interattivi.
+    *   Implementare un sistema di notifiche per le anomalie (es. temperature fuori range), con alert visivi nell'interfaccia e invio di email automatiche.
+    *   Generare report PDF mensili e annuali delle statistiche HACCP.
+3.  **Funzionalità F24:** Aggiungere la possibilità di modificare, eliminare e sovrascrivere un modello F24 esistente durante l'upload di un nuovo PDF.
+4.  **Refactoring:** Suddividere il componente , che era molto grande, in componenti più piccoli e manutenibili.
+5.  **Correzione Bug:** Risolvere un bug nella ricerca prodotti dove il prezzo non appariva nei suggerimenti.
+6.  **Miglioramenti UI/UX:**
+    *   Migliorare la Dashboard principale con un banner per gli alert HACCP e collegamenti rapidi.
+    *   Aggiungere un badge di notifica non letta sull'icona HACCP nella barra di navigazione.
+    *   Aggiungere una pagina Admin con funzionalità di backup.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-Un'applicazione ERP full-stack con backend FastAPI (modulare) e frontend React (responsive). L'applicazione include moduli per Fatture, Corrispettivi, Catalogo Prodotti, IVA, Ordini Fornitori, Paghe, Fornitori, Assegni, HACCP, e Prima Nota.
-
-Funzionalità chiave implementate:
-- **Prima Nota:** Dispone di un pannello di inserimento rapido (Chiusure Giornaliere Serali) e una pagina Controllo Mensile per confrontare dati automatici e manuali.
-- **Paghe:** Un parser PDF avanzato () estrae dati da diversi formati di buste paga, importandoli e creando automaticamente movimenti nella nuova collection .
-- **F24:** Un parser PDF () estrae i dati dai modelli F24, inclusi i dettagli dei tributi.
-- **Import/Export:** Una pagina centralizzata () gestisce l'upload di file Excel/PDF per varie operazioni e l'export di dati in formato Excel/JSON.
-- **Backend:** Conflitti di routing sono stati risolti e diversi endpoint sono stati resi pubblici (rimuovendo l'autenticazione non utilizzata).
+L'applicazione ERP è stata notevolmente ampliata. Ora include un modulo HACCP completo con automazione, analytics e un sistema di notifiche. Le funzionalità di Prima Nota e F24 sono state estese per supportare operazioni CRUD complete. L'architettura frontend è stata migliorata attraverso il refactoring di componenti di grandi dimensioni.
+- **Backend (FastAPI)**: Include uno scheduler () che popola automaticamente i dati HACCP ogni notte. Sono stati aggiunti numerosi endpoint per supportare CRUD su Prima Nota e F24, statistiche HACCP, generazione di PDF (), e invio di notifiche via email.
+- **Frontend (React)**:
+    - **Prima Nota**: La tabella dei movimenti ora include pulsanti per modificare ed eliminare ogni riga.
+    - **F24**: La pagina di gestione consente ora di modificare, eliminare e sovrascrivere i modelli.
+    - **HACCP**: È stato aggiunto un ecosistema completo che include:
+        - Una dashboard di Analytics () con statistiche mensili/annuali e grafici ().
+        - Una pagina per la gestione delle notifiche ().
+        - Funzionalità di export PDF e invio report via email.
+    - **Gestione Dipendenti**: La pagina è stata refattorizzata in componenti React più piccoli e riutilizzabili.
+    - **Dashboard Principale**: Visualizza alert HACCP e link rapidi alle nuove funzionalità.
+    - **Layout Principale**: Mostra un badge numerico per le notifiche HACCP non lette.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava iniziando a implementare le due richieste più recenti dell'utente:
-    1.  Modificare la logica di inserimento dei POS in modo che vengano registrati come uscite nella Prima Nota Cassa.
-    2.  Migliorare la visualizzazione della lista F24 per includere i dettagli dei codici tributo.
-    L'agente ha analizzato la richiesta, esaminato un nuovo file F24 di esempio e identificato i file da modificare ( per la logica POS e  per l'UI).
+- **Last item agent was working**: L'agente stava implementando una serie continua di miglioramenti richiesti dall'utente (Continua continua senza fermarti). L'ultima azione è stata l'aggiunta di una funzionalità per inviare via email i report di analytics HACCP. Ha aggiunto l'endpoint backend, il pulsante nel frontend e ha verificato visivamente la modifica con uno screenshot.
 - **Status**: IN PROGRESS
-- **Agent Testing Done**: N
-- **Which testing method agent to use?**: both.
-    - Per la modifica dei POS: test backend con  per verificare la creazione del movimento come uscita in cassa.
-    - Per la modifica F24:  sulla pagina  per verificare che la nuova vista dettagliata dei codici tributo sia visualizzata correttamente.
+- **Agent Testing Done**: Y (L'agente ha testato le singole funzionalità man mano che le implementava tramite  e . I test sono stati positivi.)
+- **Which testing method agent to use?**: both. Le modifiche sono state estese. Usare  per una regressione completa delle funzionalità HACCP, Prima Nota e F24. Verificare l'invio email manualmente o con un test specifico.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: (P0) Le registrazioni POS sono inserite come entrate nella  invece che come uscite nella .
-- **Issue 2**: (P1) La pagina F24 non mostra i dettagli dei codici tributo per ogni modello importato.
-- **Issue 3**: (P2) Bug d'UI sulla ricerca di prodotti - il prezzo non appare nelle suggestions.
+- **Issue 1**: (P0) L'importazione dell'estratto conto PDF non è stata testata e completata.
 
 **Issues Detail:**
-- **Issue 1: Le registrazioni POS sono inserite come entrate in banca invece che uscite in cassa.**
-    - **Attempted fixes**: Nessuno. L'agente ha appena iniziato ad analizzare il problema.
+- **Issue 1: Testare e finalizzare l'importazione dell'estratto conto PDF**
+    - **Attempted fixes**: L'agente ha tentato di testare l'endpoint () con  ma ha ricevuto un errore . Ha poi accantonato il task per dare priorità ad altre richieste dell'utente.
     - **Next debug checklist**:
-        1.  Modificare la funzione  in  per inviare la richiesta di creazione movimento alla  con tipo .
-        2.  Modificare l'endpoint backend  in  per gestire correttamente la descrizione e la categorizzazione degli incassi POS come un'operazione di cassa.
-        3.  Modificare l'endpoint di importazione da Excel in  (funzione ) per creare un'uscita in cassa.
-    - **Why fix this issue and what will be achieved with the fix?**: Correggerà il flusso contabile secondo le specifiche dell'utente, riflettendo correttamente la gestione della liquidità.
-    - **Status**: IN PROGRESS
+        1.  Rivedere il codice dell'endpoint in .
+        2.  Analizzare l'errore di validazione Pydantic per capire quale campo del payload è mancante o malformato.
+        3.  Costruire una richiesta  corretta, assicurandosi di inviare un file PDF valido con il  appropriato ().
+        4.  Verificare che il parser dell'estratto conto funzioni correttamente con un file di esempio.
+        5.  Assicurarsi che l'interfaccia frontend in  sia collegata correttamente e invii la richiesta nel formato atteso.
+    - **Why fix this issue and what will be achieved with the fix?**: Completerà una funzionalità chiave per l'automazione della contabilità, richiesta in una sessione precedente ma mai finalizzata.
+    - **Status**: NOT STARTED
     - **Is recurring issue?**: N
     - **Should Test frontend/backend/both after fix?**: both
     - **Blocked on other issue**: None
-- **Issue 2: La pagina F24 non mostra i dettagli dei codici tributo.**
-    - **Attempted fixes**: Nessuno.
-    - **Next debug checklist**:
-        1.  Modificare il componente che renderizza la lista dei Modelli F24 Registrati in .
-        2.  Per ogni modello F24, iterare sugli array  e  e visualizzare una tabella o una lista dettagliata con Codice Tributo, Periodo, Importo a Debito, Importo a Credito.
-        3.  Considerare l'uso di un componente  o  di Shadcn per mostrare/nascondere i dettagli ed evitare di affollare l'interfaccia.
-    - **Why fix this issue and what will be achieved with the fix?**: Fornirà all'utente una visione immediata della composizione di ogni F24, facilitando i controlli e le analisi.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: frontend
-    - **Blocked on other issue**: None
-- **Issue 3: Bug d'UI sulla ricerca di prodotti - il prezzo non appare nelle suggestions.**
-    - **Attempted fixes**: Nessuno. Problema noto da sessioni precedenti.
-    - **Next debug checklist**:
-        1.  Verificare l'endpoint  in  per assicurarsi che  sia incluso nella risposta.
-        2.  Ispezionare il componente  per garantire che il campo  venga letto e visualizzato correttamente.
-    - **Why fix this issue and what will be achieved with the fix?**: Migliorerà l'esperienza utente durante la ricerca di prodotti.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: frontend
-    - **Blocked on other issue**: None
 
 **In progress Task List**:
-N/A
+- **Task 1: Continuare con i miglioramenti dell'applicazione**
+    - **Where to resume**: L'utente ha chiesto di continuare senza sosta. Il prossimo passo logico è affrontare l'unico task in sospeso: il test dell'importazione dell'estratto conto. In alternativa, si possono implementare le migliorie suggerite dall'agente (ricerca globale, alert HACCP con severità).
+    - **What will be achieved with this?**: Aumentare ulteriormente le funzionalità e la robustezza dell'applicazione.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on something**: In attesa di una nuova direttiva dall'utente o procedere con i task in sospeso/suggeriti.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1) Testare l'import di estratto conto PDF:** La funzionalità backend è stata implementata in una sessione precedente ma non è mai stata testata end-to-end con un file fornito dall'utente.
+    - **(P1) Implementare un sistema di severità per gli alert HACCP:** Distinguere tra anomalie normali e critiche (es. temperatura > 8°C per frigo) con notifiche più urgenti.
+    - **(P2) Aggiungere una barra di ricerca globale:** Implementare una barra di ricerca nell'header per cercare rapidamente fatture, prodotti, fornitori, ecc. da qualsiasi punto dell'applicazione.
 - **Future Tasks**:
-    - **(P2) Refactoring di :** La pagina è molto grande e potrebbe essere suddivisa in componenti più piccoli per una migliore manutenibilità.
+    - **(P2) Testare l'import di estratto conto PDF:** (Spostato da Upcoming a Pending Issues dato che è stato tentato e fallito).
 
 **Completed work in this session**
-- **Correzione UI Modale Contratti:** Risolto un problema di allineamento e leggibilità dei bottoni nella modale di generazione contratti.
-- **Creazione Pagina Controllo Mensile:** Creata una nuova pagina () che offre una vista annuale e mensile per confrontare i totali POS automatici (da XML) e manuali (da Quick Entry), evidenziando le discrepanze.
-- **Integrazione Quick Entry Panel:** Il pannello per la saisie rapida delle chiusure giornaliere è stato integrato con successo nella pagina .
-- **Sviluppo Parser PDF Buste Paga:** Creato un parser robusto () in grado di gestire tre diversi formati di PDF per le buste paga, estraendo i dati anagrafici e il netto del mese.
-- **Automazione Inserimento Salari:** Implementato l'upload di PDF di buste paga che registra automaticamente il totale netto di ogni dipendente nella nuova collection .
-- **Creazione Pagina Import/Export:** Sviluppata una nuova pagina centralizzata () per tutte le operazioni di importazione (POS, Versamenti, Corrispettivi, F24, Buste Paga) ed esportazione dati.
-- **Sviluppo Parser PDF F24:** Creato un parser () per estrarre dati dettagliati dai PDF dei modelli F24, inclusi i singoli codici tributo.
-- **Risoluzione Bug Critici:**
-    - Spostati i movimenti degli stipendi dalla  alla nuova collection .
-    - Risolti errori 404 e di autenticazione sugli endpoint di  e  rimuovendo dipendenze non necessarie.
-    - Sistemati numerosi conflitti di routing su  e  riorganizzando l'ordine di inclusione dei router e creando un router pubblico dedicato ().
-    - Corretto il frontend delle pagine F24 e Finanziaria per usare i nuovi endpoint corretti.
-- **Migrazione Dati:** Eseguito uno script per spostare tutti i movimenti Salari esistenti da  a .
+- **Logica POS**: Verificato che la logica per registrare i POS come uscita in cassa era già corretta.
+- **UI Dettagliata F24**: Implementata una vista espandibile nella lista F24 che mostra i dettagli di ogni codice tributo.
+- **CRUD Completo per Prima Nota**: Aggiunti endpoint e UI per modificare ed eliminare i movimenti di cassa e banca.
+- **CRUD e Sovrascrittura F24**: Aggiunti endpoint e UI per modificare, eliminare e sovrascrivere i modelli F24.
+- **Modulo HACCP (Sviluppo Massivo)**:
+    - Creato uno scheduler per l'auto-popolamento giornaliero dei dati.
+    - Creata una pagina di Analytics con statistiche mensili/annuali e grafici.
+    - Implementato l'export dei report Analytics in formato PDF (mensile e annuale).
+    - Implementato un sistema di notifiche per anomalie con UI dedicata, badge e invio di email.
+    - Aggiunta la funzionalità di invio report via email.
+- **Refactoring **: Il componente è stato scomposto da 625 a 231 righe, con la logica spostata in componenti riutilizzabili.
+- **Bug Fix Ricerca Prodotti**: Risolto il bug per cui il prezzo non veniva mostrato nei suggerimenti di ricerca.
+- **Miglioramenti Dashboard e UI**: Aggiunto un banner di alert HACCP e azioni rapide nella Dashboard principale; aggiunto un badge di notifica nella sidebar.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **PDF Parsing (Rule-Based):** Utilizzo estensivo di usage: pdfplumber [-h] [--structure | --structure-text]
-                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
-                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
-                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
-                  [--laparams LAPARAMS] [--precision PRECISION]
-                  [--pages PAGES [PAGES ...]] [--indent INDENT]
-                  [infile]
-
-positional arguments:
-  infile
-
-options:
-  -h, --help            show this help message and exit
-  --structure           Write the structure tree as JSON. All other arguments
-                        except --pages, --laparams, and --indent will be
-                        ignored
-  --structure-text      Write the structure tree as JSON including text
-                        contents. All other arguments except --pages,
-                        --laparams, and --indent will be ignored
-  --format {csv,json,text}
-  --types TYPES [TYPES ...]
-  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
-                        Include *only* these object attributes in output.
-  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
-                        Exclude these object attributes from output.
-  --laparams LAPARAMS
-  --precision PRECISION
-  --pages PAGES [PAGES ...]
-  --indent INDENT       Indent level for JSON pretty-printing. con espressioni regolari (regex) e logiche complesse per estrarre dati strutturati da PDF con layout variabili (buste paga, F24).
-- **Risoluzione Conflitti di Routing (FastAPI):** Gestione di problemi derivanti da più router che condividono lo stesso prefisso URL, risolti attraverso la riorganizzazione dell'ordine di inclusione e la creazione di router dedicati per gli endpoint pubblici.
-- **Data Migration Scripting ():** Creazione ed esecuzione di script per migrare dati tra collection MongoDB (es. spostamento dei salari da cassa a salari).
-- **Frontend State Management (React):** Utilizzo di  e  per gestire dati asincroni, stati di caricamento e interazioni complesse dell'interfaccia utente (viste annuali/mensili, upload di file).
+- **Task Scheduling**: Utilizzo di  per eseguire job in background (auto-popolamento HACCP, controllo notifiche).
+- **PDF Generation**: Utilizzo di  per creare dinamicamente report PDF dal backend.
+- **Data Visualization**: Integrazione della libreria  nel frontend React per creare grafici a barre, a linea e a torta interattivi.
+- **Component Refactoring**: Scomposizione di un grande God Component React in componenti più piccoli, specializzati e riutilizzabili, migliorando la manutenibilità.
+- **State Management**: Gestione dello stato asincrono complesso (dati, caricamenti, notifiche) attraverso  e  in più componenti interconnessi.
+- **Email Integration**: Utilizzo di credenziali SMTP per l'invio programmatico di email con report e notifiche.
 
 **key DB schema**
-- **prima_nota_salari**: (NEW) Collection dedicata per registrare tutti i pagamenti degli stipendi. Schema: .
-- **f24_models**: Lo schema è stato arricchito per includere un oggetto  contenente array dettagliati per  e , ciascuno con , , , .
-- **prima_nota_cassa**: Ora gestisce le registrazioni POS come uscite.
+- **haccp_notifications**: (NEW) Collection per memorizzare le notifiche di anomalie. Schema: .
 
 **changes in tech stack**
-- None.
+- **Aggiunte dipendenze frontend**: , , .
 
 **All files of reference**
-- : Da modificare per la visualizzazione dettagliata dei tributi.
-- : Da modificare per la logica POS.
-- : Da modificare per la logica POS in import Excel.
-- : Contiene la logica per tutte e tre le Prime Note (cassa, banca, salari).
-- : Parser per le buste paga.
-- : Parser per i modelli F24.
-- : Pagina di confronto POS.
-- : Pagina centralizzata per import/export.
-- : Punto di ingresso del backend dove sono registrati tutti i router.
+-  (Per debuggare l'import dell'estratto conto).
+-  (Logica dei task automatici).
+-  (Core del modulo HACCP).
+-  (Pagina delle statistiche).
+-  (Pagina delle notifiche).
+-  (Esempio di refactoring completato).
+-  (Frontend per l'importazione dell'estratto conto).
 
 **Areas that need refactoring**:
-- **Routing in :** La presenza di più router per prefissi simili (, ) ha causato conflitti. Una strategia di routing più chiara potrebbe prevenire problemi futuri.
-- **:** Resta un componente molto grande che beneficerebbe di una scomposizione.
+- Il refactoring di  è stato completato con successo. Nessuna nuova area critica identificata, ma si potrebbe applicare lo stesso pattern ad altre pagine complesse se necessario.
 
 **key api endpoints**
-- : CRUD per la nuova Prima Nota Salari.
-- : (NEW) Importa incassi POS da file Excel.
-- : (NEW) Importa versamenti da file Excel.
-- : (NEW) Importa corrispettivi da file Excel.
-- : Upload PDF buste paga.
-- : (NEW) Upload PDF F24 senza autenticazione.
-- : (NEW) Lista di tutti gli F24 importati senza autenticazione.
-- : (NEW) Endpoint per l'export di vari dati senza autenticazione.
+- : (NEW) Statistiche mensili HACCP.
+- : (NEW) Statistiche annuali HACCP.
+- : (NEW) Genera report PDF mensile.
+- : (NEW) Genera report PDF annuale.
+- : (NEW) Invia report via email.
+- : (NEW) CRUD per le notifiche HACCP.
+- : (NEW) Trigger manuale per il controllo delle anomalie.
+- : (NEW  method) Aggiorna un movimento.
+- : (NEW ,  methods) Aggiorna o elimina un F24.
 
 **Critical Info for New Agent**
-- L'utente fornisce feedback molto specifici e spesso multipli in un singolo messaggio. È fondamentale leggerli attentamente e affrontare ogni punto.
-- I conflitti di routing in FastAPI sono stati un problema ricorrente. Presta la massima attenzione quando aggiungi nuovi router o endpoint con prefissi già esistenti. L'ordine di inclusione in  è determinante.
-- I pagamenti degli stipendi ora devono essere gestiti tramite la collection  e i relativi endpoint. Non usare più  per i salari.
-- La priorità è correggere la logica dei POS e migliorare l'UI degli F24 come da ultima richiesta dell'utente.
+- L'utente ha mostrato una chiara preferenza per uno sviluppo rapido e continuo (Continua continua senza fermarti). Mantieni questo ritmo, proponendo e implementando nuove funzionalità in modo proattivo.
+- Il modulo HACCP è ora una parte centrale e complessa dell'applicazione. Qualsiasi modifica richiede attenzione per non rompere la catena: scheduler -> dati -> analytics -> notifiche.
+- L'importazione dell'estratto conto bancario è l'unico task in sospeso da una richiesta precedente. Risolverlo dovrebbe essere la priorità, a meno che l'utente non indichi diversamente.
+- Sono state installate nuove dipendenze (, , ). Tieni presente questo per la build del frontend.
 
 **documents and test reports created in this job**
 - 
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Richiesta Correzione POS e Dettagli F24:** L'utente chiede che i POS siano registrati come uscite in cassa e che la lista F24 mostri i dettagli dei codici tributo. (IN PROGRESS)
-9.  **Report Bug Multipli e Nuove Funzionalità:** L'utente segnala che l'export non funziona, la pagina finanziaria è vuota, l'import F24 non va, e chiede una nuova pagina di import/export. Chiede anche che i salari vadano in Prima Nota Salari. (COMPLETED)
-8.  **Richiesta di Parsing PDF Buste Paga:** L'utente fornisce 3 PDF di buste paga e chiede di estrarre i dati (netto mese) per inserirli in Prima Nota. (COMPLETED)
-7.  **Richiesta Correzione Vista Annuale:** L'utente chiede di modificare la pagina Controllo Mensile per mostrare di default l'intero anno e permettere la selezione dell'anno. (COMPLETED)
-6.  **Segnalazione Bug UI:** L'utente segnala un problema di allineamento e leggibilità dei bottoni nella modale di generazione contratti. Fornisce anche 4 file Excel per la struttura della Prima Nota. (COMPLETED)
-5.  (Dalla sessione precedente) L'utente chiede di ottimizzare la pagina di gestione dei fornitori. (COMPLETED)
-4.  (Dalla sessione precedente) L'utente chiede di ricreare l'interfaccia di saisie manuelle di Prima Nota e creare una pagina Controllo Mensile. (COMPLETED)
-3.  (Dalla sessione precedente) L'utente chiede di completare i dati dei dipendenti e implementare la generazione di contratti. (COMPLETED)
-2.  (Dalla sessione precedente) L'utente chiede di correggere i metodi di pagamento sulle fatture esistenti. (COMPLETED)
-1.  (Dalla sessione precedente) L'utente chiede di rendere l'applicazione responsive. (COMPLETED)
+10. **User**:  - Richiesta di procedere con lo sviluppo senza interruzioni. (IN PROGRESS)
+9.  **User**:  - Approvazione a procedere con l'implementazione del sistema di notifiche e dell'export PDF annuale. (COMPLETED)
+8.  **User**:  - Approvazione a procedere con la risoluzione del bug di ricerca e l'aggiunta dei grafici. (COMPLETED)
+7.  **User**:  - Approvazione a procedere con il task successivo. (COMPLETED)
+6.  **User**:  - Approvazione a implementare il pannello Analytics HACCP e a refattorizzare GestioneDipendenti. (COMPLETED)
+5.  **User**:  - Approvazione del piano per implementare scheduler HACCP, CRUD Prima Nota e F24. (COMPLETED)
+4.  **User**:  - Nuova richiesta massiva per logica Prima Nota, automazione HACCP e funzionalità F24. (COMPLETED)
+3.  **User**:  - Approvazione del piano iniziale per correggere la logica POS e l'UI F24. (COMPLETED)
 
 **Project Health Check:**
-- **Broken**: Il bug UI sulla ricerca prodotti (prezzo mancante nelle suggestions).
+- **Broken**: La funzionalità di importazione dell'estratto conto PDF è parzialmente implementata ma non funzionante.
 - **Mocked**: Nessuno.
 
 **3rd Party Integrations**
-- **Gmail SMTP:** Utilizzato per l'invio di email.
-- **pdfplumber:** Libreria Python per l'estrazione di testo e tabelle da file PDF.
-- **python-docx:** Libreria Python per la generazione di documenti  da template.
+- **Gmail SMTP**: Utilizzato per l'invio di email di notifica e report.
+- **pdfplumber**: Libreria Python per l'estrazione di dati da PDF.
+- **python-docx**: Libreria Python per la generazione di documenti .
+- **reportlab**: (NEW USAGE) Utilizzato per generare report PDF per HACCP.
+- **recharts**: (NEW) Libreria frontend per la visualizzazione di grafici.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES (per le funzionalità di Quick Entry Panel e Controllo Mensile, con report in ).
+- **Testing agent used after significant changes**: YES, dopo l'implementazione del CRUD su Prima Nota e F24. Il report è in .
 - **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**:  (creato dal testing agent).
-- **Known regressions**: None.
+- **Test files created**: ,  (creati dal testing agent).
+- **Known regressions**: Nessuna.
 
 **Credentials to test flow:**
-- L'applicazione non utilizza un sistema di autenticazione per l'utente.
-- Le credenziali SMTP di Gmail sono configurate nel file .
+- Nessuna credenziale utente richiesta.
+- Le credenziali SMTP sono configurate in .
 
 **What agent forgot to execute**
-- Non è mai stato eseguito un test end-to-end della funzionalità di importazione di estratti conto bancari in formato PDF, sebbene il backend sia stato implementato.
-- Il bug sulla ricerca prodotti, di bassa priorità, non è stato risolto.</analysis>
+- L'agente non ha completato il debug e il test della funzionalità di importazione dell'estratto conto bancario dopo aver riscontrato un errore iniziale, decidendo di passare ad altre richieste dell'utente.</analysis>
