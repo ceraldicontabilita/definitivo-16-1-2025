@@ -415,9 +415,10 @@ export default function F24() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: '#f5f5f5', borderBottom: "2px solid #ddd" }}>
+                  <th style={{ padding: 12, textAlign: "left", width: 40 }}></th>
                   <th style={{ padding: 12, textAlign: "left" }}>Data/Scadenza</th>
                   <th style={{ padding: 12, textAlign: "left" }}>Tipo</th>
-                  <th style={{ padding: 12, textAlign: "left" }}>Descrizione</th>
+                  <th style={{ padding: 12, textAlign: "left" }}>Tributi</th>
                   <th style={{ padding: 12, textAlign: "right" }}>Importo</th>
                   <th style={{ padding: 12, textAlign: "center" }}>Stato</th>
                   <th style={{ padding: 12, textAlign: "center" }}>Azioni</th>
@@ -425,47 +426,131 @@ export default function F24() {
               </thead>
               <tbody>
                 {f24List.map((f, i) => (
-                  <tr key={f.id || i} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ padding: 12, fontFamily: 'monospace' }}>
-                      {f.scadenza ? new Date(f.scadenza).toLocaleDateString('it-IT') : f.date || "-"}
-                    </td>
-                    <td style={{ padding: 12 }}>{f.tipo || "F24"}</td>
-                    <td style={{ padding: 12 }}>{f.descrizione || f.codice_tributo || "-"}</td>
-                    <td style={{ padding: 12, textAlign: "right", fontWeight: 'bold' }}>
-                      {formatCurrency(f.importo || f.amount || 0)}
-                    </td>
-                    <td style={{ padding: 12, textAlign: "center" }}>
-                      <span style={{
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: 11,
-                        fontWeight: 'bold',
-                        background: f.status === 'paid' ? '#4caf50' : '#ff9800',
-                        color: 'white'
-                      }}>
-                        {f.status === 'paid' ? '✓ PAGATO' : '⏳ PENDING'}
-                      </span>
-                    </td>
-                    <td style={{ padding: 12, textAlign: "center" }}>
-                      {f.status !== 'paid' && (
-                        <button
-                          onClick={() => handleMarkAsPaid(f.id)}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#4caf50',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            fontSize: 12
-                          }}
-                          data-testid={`pay-f24-${f.id}`}
-                        >
-                          Paga
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                  <React.Fragment key={f.id || i}>
+                    <tr style={{ borderBottom: "1px solid #eee", cursor: hasTributi(f) ? 'pointer' : 'default' }}>
+                      <td 
+                        style={{ padding: 12 }}
+                        onClick={() => hasTributi(f) && toggleRowExpand(f.id || i)}
+                      >
+                        {hasTributi(f) && (
+                          <span style={{ color: '#666' }}>
+                            {expandedRows[f.id || i] ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                          </span>
+                        )}
+                      </td>
+                      <td 
+                        style={{ padding: 12, fontFamily: 'monospace' }}
+                        onClick={() => hasTributi(f) && toggleRowExpand(f.id || i)}
+                      >
+                        {f.scadenza ? new Date(f.scadenza).toLocaleDateString('it-IT') : 
+                         f.data_scadenza ? new Date(f.data_scadenza).toLocaleDateString('it-IT') :
+                         f.date || "-"}
+                      </td>
+                      <td 
+                        style={{ padding: 12 }}
+                        onClick={() => hasTributi(f) && toggleRowExpand(f.id || i)}
+                      >
+                        {f.tipo || "F24"}
+                      </td>
+                      <td 
+                        style={{ padding: 12 }}
+                        onClick={() => hasTributi(f) && toggleRowExpand(f.id || i)}
+                      >
+                        {hasTributi(f) ? (
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {(f.tributi_erario?.length > 0) && (
+                              <span style={{ 
+                                padding: '2px 8px', 
+                                borderRadius: 4, 
+                                fontSize: 11, 
+                                background: '#dbeafe', 
+                                color: '#1e40af' 
+                              }}>
+                                ERARIO: {f.tributi_erario.length}
+                              </span>
+                            )}
+                            {(f.tributi_inps?.length > 0) && (
+                              <span style={{ 
+                                padding: '2px 8px', 
+                                borderRadius: 4, 
+                                fontSize: 11, 
+                                background: '#dcfce7', 
+                                color: '#166534' 
+                              }}>
+                                INPS: {f.tributi_inps.length}
+                              </span>
+                            )}
+                            {(f.tributi_regioni?.length > 0) && (
+                              <span style={{ 
+                                padding: '2px 8px', 
+                                borderRadius: 4, 
+                                fontSize: 11, 
+                                background: '#fef3c7', 
+                                color: '#92400e' 
+                              }}>
+                                REGIONI: {f.tributi_regioni.length}
+                              </span>
+                            )}
+                            {(f.tributi_imu?.length > 0) && (
+                              <span style={{ 
+                                padding: '2px 8px', 
+                                borderRadius: 4, 
+                                fontSize: 11, 
+                                background: '#f3e8ff', 
+                                color: '#7c3aed' 
+                              }}>
+                                IMU: {f.tributi_imu.length}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ color: '#999' }}>{f.descrizione || f.codice_tributo || "-"}</span>
+                        )}
+                      </td>
+                      <td style={{ padding: 12, textAlign: "right", fontWeight: 'bold' }}>
+                        {formatCurrency(f.importo || f.saldo_finale || f.amount || 0)}
+                      </td>
+                      <td style={{ padding: 12, textAlign: "center" }}>
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: 12,
+                          fontSize: 11,
+                          fontWeight: 'bold',
+                          background: (f.status === 'paid' || f.pagato) ? '#4caf50' : '#ff9800',
+                          color: 'white'
+                        }}>
+                          {(f.status === 'paid' || f.pagato) ? '✓ PAGATO' : '⏳ PENDING'}
+                        </span>
+                      </td>
+                      <td style={{ padding: 12, textAlign: "center" }}>
+                        {(f.status !== 'paid' && !f.pagato) && (
+                          <button
+                            onClick={() => handleMarkAsPaid(f.id)}
+                            style={{
+                              padding: '6px 12px',
+                              background: '#4caf50',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              fontSize: 12
+                            }}
+                            data-testid={`pay-f24-${f.id}`}
+                          >
+                            Paga
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {/* Expanded row for tributi details */}
+                    {expandedRows[f.id || i] && hasTributi(f) && (
+                      <tr>
+                        <td colSpan={7} style={{ padding: '0 12px 12px 12px', background: '#fafafa' }}>
+                          {renderTributiDetails(f)}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
