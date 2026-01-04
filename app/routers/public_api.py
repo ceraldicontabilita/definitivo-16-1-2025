@@ -525,6 +525,133 @@ async def create_employee(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     return employee
 
 
+@router.delete("/employees/{employee_id}")
+async def delete_employee(employee_id: str) -> Dict[str, Any]:
+    """Delete an employee."""
+    db = Database.get_db()
+    result = await db[Collections.EMPLOYEES].delete_one({"id": employee_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Dipendente non trovato")
+    return {"success": True, "deleted_id": employee_id}
+
+
+@router.post("/paghe/upload-pdf")
+async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Upload e parse di buste paga da PDF.
+    Estrae i dati dei dipendenti e li salva nel database.
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Il file deve essere in formato PDF")
+    
+    try:
+        content = await file.read()
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="File vuoto")
+        
+        # Parse PDF
+        try:
+            payslips = extract_payslips_from_pdf(content)
+        except Exception as e:
+            logger.error(f"Errore parsing PDF: {e}")
+            raise HTTPException(status_code=400, detail=f"Errore parsing PDF: {str(e)}")
+        
+        if not payslips:
+            raise HTTPException(status_code=400, detail="Nessuna busta paga trovata nel PDF")
+        
+        db = Database.get_db()
+        
+        results = {
+            "success": [],
+            "duplicates": [],
+            "errors": [],
+            "total": len(payslips),
+            "imported": 0,
+            "skipped_duplicates": 0,
+            "failed": 0
+        }
+        
+        for payslip in payslips:
+            try:
+                codice_fiscale = payslip.get("codice_fiscale", "")
+                if not codice_fiscale:
+                    results["errors"].append({
+                        "nome": payslip.get("nome", "Sconosciuto"),
+                        "error": "Codice fiscale mancante"
+                    })
+                    results["failed"] += 1
+                    continue
+                
+                # Controllo duplicato
+                existing = await db[Collections.EMPLOYEES].find_one(
+                    {"codice_fiscale": codice_fiscale},
+                    {"_id": 1}
+                )
+                
+                if existing:
+                    results["duplicates"].append({
+                        "nome": payslip.get("nome", ""),
+                        "codice_fiscale": codice_fiscale
+                    })
+                    results["skipped_duplicates"] += 1
+                    continue
+                
+                # Crea record dipendente
+                employee = {
+                    "id": str(uuid.uuid4()),
+                    "name": payslip.get("nome", ""),
+                    "codice_fiscale": codice_fiscale,
+                    "role": payslip.get("qualifica", ""),
+                    "livello": payslip.get("livello", ""),
+                    "salary": payslip.get("retribuzione_lorda", 0),
+                    "netto": payslip.get("netto", 0),
+                    "ore_lavorate": payslip.get("ore_lavorate", 0),
+                    "giorni_lavorati": payslip.get("giorni_lavorati", ""),
+                    "contract_type": "dipendente",
+                    "hire_date": payslip.get("data_assunzione", ""),
+                    "azienda": payslip.get("azienda", ""),
+                    "periodo_riferimento": payslip.get("periodo", ""),
+                    "source": "pdf_upload",
+                    "filename": file.filename,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+                
+                await db[Collections.EMPLOYEES].insert_one(employee)
+                
+                results["success"].append({
+                    "nome": employee["name"],
+                    "codice_fiscale": codice_fiscale,
+                    "qualifica": employee["role"],
+                    "netto": employee["netto"]
+                })
+                results["imported"] += 1
+                
+            except Exception as e:
+                logger.error(f"Errore inserimento dipendente: {e}")
+                results["errors"].append({
+                    "nome": payslip.get("nome", "Sconosciuto"),
+                    "error": str(e)
+                })
+                results["failed"] += 1
+        
+        return results
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Errore upload buste paga: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore durante l'elaborazione: {str(e)}")
+
+
+@router.delete("/employees/all")
+async def delete_all_employees() -> Dict[str, Any]:
+    """Elimina tutti i dipendenti (usa con cautela!)."""
+    db = Database.get_db()
+    result = await db[Collections.EMPLOYEES].delete_many({})
+    return {"success": True, "deleted_count": result.deleted_count}
+
+
 # ============== CASH ==============
 @router.get("/cash")
 async def list_cash_movements(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
