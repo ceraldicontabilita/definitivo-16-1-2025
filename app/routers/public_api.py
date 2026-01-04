@@ -15,10 +15,107 @@ from datetime import datetime
 import uuid
 import logging
 
+from datetime import timezone
 from app.database import Database, Collections
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# ============== F24 PUBLIC ALERTS ==============
+
+@router.get("/f24-public/alerts")
+async def get_f24_alerts_public() -> List[Dict[str, Any]]:
+    """Alert pubblici scadenze F24."""
+    db = Database.get_db()
+    alerts = []
+    today = datetime.now(timezone.utc).date()
+    
+    f24_list = await db[Collections.F24_MODELS].find({"status": {"$ne": "paid"}}, {"_id": 0}).to_list(1000)
+    
+    for f24 in f24_list:
+        try:
+            scadenza_str = f24.get("scadenza") or f24.get("data_versamento")
+            if not scadenza_str:
+                continue
+            
+            if isinstance(scadenza_str, str):
+                scadenza_str = scadenza_str.replace("Z", "+00:00")
+                if "T" in scadenza_str:
+                    scadenza = datetime.fromisoformat(scadenza_str).date()
+                else:
+                    try:
+                        scadenza = datetime.strptime(scadenza_str, "%d/%m/%Y").date()
+                    except ValueError:
+                        scadenza = datetime.strptime(scadenza_str, "%Y-%m-%d").date()
+            elif isinstance(scadenza_str, datetime):
+                scadenza = scadenza_str.date()
+            else:
+                continue
+            
+            giorni = (scadenza - today).days
+            
+            if giorni < 0:
+                severity, msg = "critical", f"⚠️ SCADUTO da {abs(giorni)} giorni!"
+            elif giorni == 0:
+                severity, msg = "high", "⏰ SCADE OGGI!"
+            elif giorni <= 3:
+                severity, msg = "high", f"⚡ Scade tra {giorni} giorni"
+            elif giorni <= 7:
+                severity, msg = "medium", f"📅 Scade tra {giorni} giorni"
+            elif giorni <= 30:
+                severity, msg = "low", f"📌 Scade tra {giorni} giorni"
+            else:
+                continue
+            
+            alerts.append({
+                "f24_id": f24.get("id"), "tipo": f24.get("tipo", "F24"),
+                "descrizione": f24.get("descrizione", ""), "importo": float(f24.get("importo", 0) or 0),
+                "scadenza": scadenza.isoformat(), "giorni_mancanti": giorni,
+                "severity": severity, "messaggio": msg
+            })
+        except Exception as e:
+            logger.error(f"Error F24 alert: {e}")
+    
+    return sorted(alerts, key=lambda x: x["giorni_mancanti"])
+
+
+@router.get("/f24-public/dashboard")
+async def get_f24_dashboard_public() -> Dict[str, Any]:
+    """Dashboard pubblica F24."""
+    db = Database.get_db()
+    today = datetime.now(timezone.utc).date()
+    
+    all_f24 = await db[Collections.F24_MODELS].find({}, {"_id": 0}).to_list(10000)
+    pagati = [f for f in all_f24 if f.get("status") == "paid"]
+    non_pagati = [f for f in all_f24 if f.get("status") != "paid"]
+    
+    def days_to_scadenza(scadenza_str):
+        try:
+            if not scadenza_str:
+                return 999
+            if isinstance(scadenza_str, str):
+                scadenza_str = scadenza_str.replace("Z", "+00:00")
+                if "T" in scadenza_str:
+                    scadenza = datetime.fromisoformat(scadenza_str).date()
+                else:
+                    try:
+                        scadenza = datetime.strptime(scadenza_str, "%d/%m/%Y").date()
+                    except:
+                        scadenza = datetime.strptime(scadenza_str, "%Y-%m-%d").date()
+                return (scadenza - today).days
+            return 999
+        except:
+            return 999
+    
+    alert_attivi = sum(1 for f24 in non_pagati if days_to_scadenza(f24.get("scadenza")) <= 7)
+    
+    return {
+        "totale_f24": len(all_f24),
+        "pagati": {"count": len(pagati), "totale": round(sum(float(f.get("importo", 0) or 0) for f in pagati), 2)},
+        "da_pagare": {"count": len(non_pagati), "totale": round(sum(float(f.get("importo", 0) or 0) for f in non_pagati), 2)},
+        "alert_attivi": alert_attivi
+    }
 
 
 # ============== HACCP BASIC (Legacy) ==============
