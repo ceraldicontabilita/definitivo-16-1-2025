@@ -97,18 +97,21 @@ Ricreare un'applicazione ERP aziendale completa da un file zip fornito dall'uten
 - `/app/backend/services/email_service.py` - Servizio email (richiede SMTP)
 - `/app/backend/routers/comparatore_routes.py` - Router comparatore standalone
 - `/app/app/routers/comparatore.py` - Router comparatore integrato
+- `/app/frontend/src/pages/IVA.jsx` - Dashboard IVA
 
 ### Database Collections
 - `warehouse_inventory`: Catalogo prodotti con prezzi
 - `price_history`: Storico prezzi per fornitore
 - `invoices`: Fatture con flag `warehouse_registered`
-- `corrispettivi`: Dati giornalieri RT
+- `corrispettivi`: Dati giornalieri RT + `bank_movement_id` (auto-registrazione)
+- `bank_statements`: Movimenti bancari + auto-registrazione POS
 - `employees`: Anagrafica dipendenti
 - `payslips`: Buste paga mensili
 - `f24`: Modelli F24
 - `comparatore_cart`: Carrello comparatore
 - `comparatore_supplier_exclusions`: Fornitori esclusi
 - `product_catalog`: Catalogo prodotti normalizzati
+- `supplier_payment_methods`: Metodi pagamento fornitori
 
 ## P0 - Completati
 - [x] Auto-popolamento magazzino da fatture
@@ -121,13 +124,14 @@ Ricreare un'applicazione ERP aziendale completa da un file zip fornito dall'uten
 - [x] Codici tributo F24
 - [x] Dashboard F24 con alert
 - [x] Comparatore prezzi base
+- [x] **Dashboard IVA** - Vista annuale, mensile, giornaliera
+- [x] **Dizionario Metodi Pagamento Fornitori** - 12 metodi + import automatico
+- [x] **Corrispettivi → Prima Nota Banca** - Registrazione automatica POS
+- [x] **Fix Parser Buste Paga** - Migliorato regex netto del mese
 
 ## P1 - Prossimi
-- [ ] **API Calcolo IVA** - credito/debito giornaliero, mensile, annuale
-- [ ] **Dizionario Metodi Pagamento Fornitori**
-- [ ] Integrazione Corrispettivi -> Prima Nota automatica
 - [ ] Ordini fornitori generati da carrello
-- [ ] Fix bug parser buste paga (netto del mese)
+- [ ] Pagina frontend Metodi Pagamento Fornitori
 - [ ] Fix bug prezzi €0.00 nei suggerimenti ricerca
 
 ## P2 - Backlog
