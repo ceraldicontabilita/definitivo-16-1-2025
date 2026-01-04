@@ -579,6 +579,7 @@ export default function PrimaNota() {
                 <th style={{ padding: 12, textAlign: 'center' }}>Tipo</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>Descrizione</th>
                 <th style={{ padding: 12, textAlign: 'left' }}>Categoria</th>
+                {activeTab === 'banca' && <th style={{ padding: 12, textAlign: 'center' }}>Assegno</th>}
                 <th style={{ padding: 12, textAlign: 'right' }}>Importo</th>
                 <th style={{ padding: 12, textAlign: 'center' }}>Azioni</th>
               </tr>
@@ -611,6 +612,23 @@ export default function PrimaNota() {
                     )}
                   </td>
                   <td style={{ padding: 12, fontSize: 12 }}>{mov.categoria}</td>
+                  {activeTab === 'banca' && (
+                    <td style={{ padding: 12, textAlign: 'center' }}>
+                      {mov.assegno_collegato ? (
+                        <span style={{
+                          padding: '4px 8px',
+                          background: '#e91e63',
+                          color: 'white',
+                          borderRadius: 4,
+                          fontSize: 11
+                        }}>
+                          ✓ {mov.assegno_collegato}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#999', fontSize: 11 }}>-</span>
+                      )}
+                    </td>
+                  )}
                   <td style={{ 
                     padding: 12, 
                     textAlign: 'right', 
