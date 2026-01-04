@@ -123,6 +123,14 @@ UI aggiunta in `HACCPDashboard.jsx` con sezione "Stampa Report PDF per Ispezioni
 - Gestione duplicati: aggiorna solo dati mancanti
 - Endpoint: `POST /api/prima-nota-auto/import-assegni-from-estratto-conto`
 
+## Gestione Fornitori Ottimizzata (04/01/2026)
+- ✅ **236 fornitori** con statistiche KPI
+- ✅ Regole automatiche: Contanti/Assegno/F24 → "A Vista"
+- ✅ **Modifica inline** veloce (dropdown nella riga)
+- ✅ **Modifica multipla** con checkbox e pulsanti bulk
+- ✅ Shortcut **"🔄 Imposta 30gg"** per bonifico 30gg rapido
+- ✅ Termini: A Vista, 30gg DF, 30gg FM, 60gg, 90gg, 120gg
+
 ## Gestione Dipendenti Completa (04/01/2026)
 - ✅ Import dati da Excel: 23 dipendenti importati
 - ✅ Modifica dati anagrafici tramite modal
