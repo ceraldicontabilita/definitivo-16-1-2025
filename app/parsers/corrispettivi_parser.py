@@ -159,6 +159,7 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
         riepilogo_iva = []
         totale_imponibile = 0.0
         totale_imposta = 0.0
+        totale_ammontare_lordo = 0.0  # Per scorporo IVA se necessario
         
         for riepilogo in find_all_elements(dati_rt, 'Riepilogo'):
             iva_el = find_element(riepilogo, 'IVA')
@@ -168,16 +169,21 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
             importo_parziale = get_float(riepilogo, 'ImportoParziale')
             natura = get_text(riepilogo, 'Natura')
             
+            # Calcola importo lordo del riepilogo
+            importo_lordo = importo_parziale if importo_parziale > 0 else (ammontare + imposta)
+            
             if ammontare > 0 or imposta > 0 or importo_parziale > 0:
                 riepilogo_iva.append({
                     "aliquota_iva": aliquota,
                     "imposta": imposta,
                     "ammontare": ammontare,  # Imponibile
                     "importo_parziale": importo_parziale,
+                    "importo_lordo": importo_lordo,
                     "natura": natura,
                 })
                 totale_imponibile += ammontare
                 totale_imposta += imposta
+                totale_ammontare_lordo += importo_lordo
         
         # ========== TOTALI - PAGAMENTI ==========
         totali = find_element(dati_rt, 'Totali')
@@ -191,8 +197,37 @@ def parse_corrispettivo_xml(xml_content: str) -> Dict[str, Any]:
         
         # Se totale è 0, prova a calcolarlo dai riepiloghi
         if totale_corrispettivi == 0:
-            for riep in riepilogo_iva:
-                totale_corrispettivi += riep.get('importo_parziale', 0) or (riep.get('ammontare', 0) + riep.get('imposta', 0))
+            totale_corrispettivi = totale_ammontare_lordo
+        
+        # ========== CALCOLO IVA SE NON PRESENTE ==========
+        # Se l'IVA totale è 0 ma abbiamo un totale > 0, applichiamo scorporo al 10%
+        # Ristorazione tipicamente ha IVA al 10%
+        if totale_imposta == 0 and totale_corrispettivi > 0:
+            # Scorporo IVA al 10%: IVA = Totale - (Totale / 1.10)
+            totale_imposta = totale_corrispettivi - (totale_corrispettivi / 1.10)
+            totale_imponibile = totale_corrispettivi / 1.10
+            
+            # Aggiungi al riepilogo
+            if not riepilogo_iva:
+                riepilogo_iva.append({
+                    "aliquota_iva": "10.00",
+                    "imposta": round(totale_imposta, 2),
+                    "ammontare": round(totale_imponibile, 2),
+                    "importo_parziale": round(totale_corrispettivi, 2),
+                    "importo_lordo": round(totale_corrispettivi, 2),
+                    "natura": "",
+                    "calcolato_scorporo": True  # Flag che indica calcolo automatico
+                })
+            else:
+                # Aggiorna primo riepilogo con IVA calcolata
+                for riep in riepilogo_iva:
+                    if riep.get("imposta", 0) == 0:
+                        importo_lordo = riep.get("importo_lordo", 0) or riep.get("importo_parziale", 0)
+                        if importo_lordo > 0:
+                            riep["imposta"] = round(importo_lordo - (importo_lordo / 1.10), 2)
+                            riep["ammontare"] = round(importo_lordo / 1.10, 2)
+                            riep["aliquota_iva"] = "10.00"
+                            riep["calcolato_scorporo"] = True
         
         # ========== GENERA CHIAVE UNIVOCA ==========
         # Formato: piva_data_idDispositivo_progressivo
