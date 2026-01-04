@@ -270,3 +270,70 @@ async def cleanup_duplicate_invoices() -> Dict[str, Any]:
             deleted_count += result.deleted_count
     
     return {"duplicate_groups": len(duplicates), "deleted": deleted_count}
+
+
+@router.put("/{invoice_id}/metodo-pagamento")
+async def update_metodo_pagamento(invoice_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Aggiorna il metodo di pagamento di una fattura e la sposta in prima nota."""
+    db = Database.get_db()
+    
+    metodo = data.get("metodo_pagamento")
+    if not metodo or metodo not in ["cassa", "banca", "misto", "assegno", "bonifico"]:
+        raise HTTPException(status_code=400, detail="Metodo pagamento non valido")
+    
+    invoice = await db[Collections.INVOICES].find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fattura non trovata")
+    
+    # Update invoice with new payment method
+    update_data = {"metodo_pagamento": metodo}
+    
+    # If moving to prima nota
+    prima_nota_result = {"cassa": None, "banca": None}
+    if metodo in ["cassa", "banca", "assegno", "bonifico"]:
+        try:
+            from app.routers.prima_nota import registra_pagamento_fattura
+            
+            # Map metodo to prima nota type
+            tipo_prima_nota = metodo
+            if metodo in ["assegno", "bonifico"]:
+                tipo_prima_nota = "banca"
+            
+            prima_nota_result = await registra_pagamento_fattura(
+                fattura=invoice,
+                metodo_pagamento=tipo_prima_nota
+            )
+            
+            update_data["pagato"] = True
+            update_data["data_pagamento"] = datetime.utcnow().isoformat()[:10]
+            update_data["prima_nota_cassa_id"] = prima_nota_result.get("cassa")
+            update_data["prima_nota_banca_id"] = prima_nota_result.get("banca")
+            update_data["status"] = "paid"
+            
+        except Exception as e:
+            logger.warning(f"Prima nota registration failed: {e}")
+    
+    await db[Collections.INVOICES].update_one(
+        {"id": invoice_id},
+        {"$set": update_data}
+    )
+    
+    return {
+        "success": True,
+        "message": f"Metodo pagamento aggiornato a '{metodo}'",
+        "prima_nota": prima_nota_result,
+        "invoice_id": invoice_id
+    }
+
+
+@router.get("/by-metodo-pagamento")
+async def get_invoices_by_metodo(metodo: str = None) -> List[Dict[str, Any]]:
+    """Recupera fatture per metodo di pagamento."""
+    db = Database.get_db()
+    
+    query = {}
+    if metodo:
+        query["metodo_pagamento"] = metodo
+    
+    invoices = await db[Collections.INVOICES].find(query, {"_id": 0}).sort("invoice_date", -1).to_list(1000)
+    return invoices
