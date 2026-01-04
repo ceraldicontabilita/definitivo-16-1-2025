@@ -544,12 +544,17 @@ export default function Fatture() {
                   </td>
                   <td style={{ padding: 8 }}>
                     <span style={{
-                      background: inv.status === "imported" ? "#e3f2fd" : inv.status === "paid" ? "#c8e6c9" : "#fff3e0",
+                      background: inv.status === "paid" || inv.metodo_pagamento === "contanti" ? "#c8e6c9" : 
+                                 inv.status === "imported" ? "#e3f2fd" : "#fff3e0",
+                      color: inv.status === "paid" || inv.metodo_pagamento === "contanti" ? "#2e7d32" : 
+                             inv.status === "imported" ? "#1565c0" : "#e65100",
                       padding: "2px 8px",
                       borderRadius: 4,
-                      fontSize: 12
+                      fontSize: 12,
+                      fontWeight: inv.status === "paid" || inv.metodo_pagamento === "contanti" ? "bold" : "normal"
                     }}>
-                      {inv.status === "imported" ? "Importata" : inv.status === "paid" ? "Pagata" : inv.status || "Pending"}
+                      {inv.status === "paid" || inv.metodo_pagamento === "contanti" ? "✓ Pagata" : 
+                       inv.status === "imported" ? "Importata" : inv.status || "Pending"}
                     </span>
                   </td>
                   <td style={{ padding: 8 }}>
