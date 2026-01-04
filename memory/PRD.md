@@ -194,6 +194,38 @@ UI aggiunta in `HACCPDashboard.jsx` con sezione "Stampa Report PDF per Ispezioni
 - ✅ Griglia 2 colonne con minWidth 280px
 - ✅ Bordi colorati per tipo: blu (determinato), verde (indeterminato), grigio (altri)
 
+## Pagina Import/Export Centralizzata (04/01/2026)
+- ✅ Nuova pagina `/import-export` per tutte le operazioni di import/export
+- ✅ Import: POS, Versamenti, Corrispettivi, F24 (PDF), Buste Paga (PDF)
+- ✅ Export: Excel/JSON per varie entità
+- File: `/app/frontend/src/pages/ImportExport.jsx`
+
+## Parser PDF F24 (04/01/2026)
+- ✅ Parser robusto per estrarre dati dai modelli F24 PDF
+- ✅ Estrazione tributi: ERARIO, INPS, REGIONI, IMU
+- ✅ Campi estratti: codice tributo, periodo, importi debito/credito
+- ✅ Endpoint upload: `POST /api/f24-public/upload`
+- File: `/app/app/parsers/f24_parser.py`, `/app/app/routers/f24_public.py`
+
+## Prima Nota Salari (04/01/2026)
+- ✅ Nuova collection `prima_nota_salari` dedicata agli stipendi
+- ✅ Migrazione dati: movimenti "Salari" spostati da `prima_nota_cassa`
+- ✅ Endpoint CRUD: `/api/prima-nota/salari`
+- ✅ Upload buste paga ora registra in `prima_nota_salari`
+
+## UI F24 - Dettagli Codici Tributo (04/01/2026)
+- ✅ Visualizzazione espandibile per ogni F24 nella lista
+- ✅ Badge colorati per sezione: ERARIO (blu), INPS (verde), REGIONI (giallo), IMU (viola)
+- ✅ Tabella dettagli: Codice, Descrizione, Periodo, Debito, Credito
+- ✅ Totali aggregati per debito e credito
+- ✅ Freccia espansione cliccabile con icone lucide-react
+- File: `/app/frontend/src/pages/F24.jsx`
+
+## Logica POS Verificata (04/01/2026)
+- ✅ POS da QuickEntryPanel: registrati come `uscita` in `prima_nota_cassa`
+- ✅ POS da import Excel: registrati come `uscita` in `prima_nota_cassa`
+- ✅ Categoria: "POS", Source: "manual_pos" o "excel_import"
+
 ---
 
 ## 🔴 REGOLE ARCHITETTURALI (OBBLIGATORIE)
