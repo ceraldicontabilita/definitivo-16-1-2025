@@ -1458,17 +1458,42 @@ async def check_and_notify_anomalie() -> Dict[str, Any]:
     
     notifiche_create = []
     
+    def get_frigo_severity(temp):
+        """Calcola severità per frigoriferi (range normale: 0-4°C)."""
+        if temp > 10 or temp < -5:
+            return "critica"  # Fuori range critico
+        elif temp > 8 or temp < -2:
+            return "alta"     # Fuori range alto
+        elif temp > 5 or temp < 0:
+            return "media"    # Leggermente fuori range
+        else:
+            return "bassa"    # Borderline
+
+    def get_congel_severity(temp):
+        """Calcola severità per congelatori (range normale: -18/-22°C)."""
+        if temp > -10:
+            return "critica"  # Scongelamento imminente
+        elif temp > -15:
+            return "alta"     # Fuori range pericoloso
+        elif temp > -17 or temp < -25:
+            return "media"    # Leggermente fuori range
+        else:
+            return "bassa"    # Borderline
+
     for a in anomalie_frigo:
+        temp = a.get("temperatura", 0)
+        severita = get_frigo_severity(temp)
+        
         notifica = {
             "id": str(uuid.uuid4()),
             "tipo": "anomalia_temperatura",
             "categoria": "frigorifero",
             "equipaggiamento": a.get("equipaggiamento"),
-            "temperatura": a.get("temperatura"),
+            "temperatura": temp,
             "data": oggi,
             "ora": a.get("ora"),
-            "messaggio": f"⚠️ Temperatura anomala {a.get('temperatura')}°C su {a.get('equipaggiamento')} (range: 0-4°C)",
-            "severita": "alta" if a.get("temperatura", 0) > 8 or a.get("temperatura", 0) < -2 else "media",
+            "messaggio": f"⚠️ Temperatura anomala {temp}°C su {a.get('equipaggiamento')} (range: 0-4°C)",
+            "severita": severita,
             "letta": False,
             "created_at": datetime.utcnow().isoformat()
         }
@@ -1485,16 +1510,19 @@ async def check_and_notify_anomalie() -> Dict[str, Any]:
             notifiche_create.append(notifica)
     
     for a in anomalie_congel:
+        temp = a.get("temperatura", 0)
+        severita = get_congel_severity(temp)
+        
         notifica = {
             "id": str(uuid.uuid4()),
             "tipo": "anomalia_temperatura",
             "categoria": "congelatore",
             "equipaggiamento": a.get("equipaggiamento"),
-            "temperatura": a.get("temperatura"),
+            "temperatura": temp,
             "data": oggi,
             "ora": a.get("ora"),
-            "messaggio": f"⚠️ Temperatura anomala {a.get('temperatura')}°C su {a.get('equipaggiamento')} (range: -18/-22°C)",
-            "severita": "alta" if a.get("temperatura", 0) > -15 else "media",
+            "messaggio": f"⚠️ Temperatura anomala {temp}°C su {a.get('equipaggiamento')} (range: -18/-22°C)",
+            "severita": severita,
             "letta": False,
             "created_at": datetime.utcnow().isoformat()
         }
