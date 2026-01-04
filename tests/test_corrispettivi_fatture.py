@@ -7,7 +7,7 @@ import requests
 import os
 import tempfile
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://biz-manager-51.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bizcontrol-16.preview.emergentagent.com').rstrip('/')
 
 # Sample valid FatturaPA XML (Italian electronic invoice format)
 SAMPLE_FATTURA_XML = '''<?xml version="1.0" encoding="UTF-8"?>
