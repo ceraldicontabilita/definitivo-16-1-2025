@@ -226,12 +226,14 @@ export default function ControlloMensile() {
         // Debug info
         _debug: {
           cassaCount: monthCassa.length,
+          bancaCount: monthBanca.length,
           corrispCount: monthCorrisp.length
         }
       });
 
       yearPosAuto += posAuto;
       yearPosManual += posManual;
+      yearPosBanca += posBanca;
       yearCorrispAuto += corrispAuto;
       yearCorrispManual += corrispManual;
       yearVersamenti += versamenti;
@@ -242,6 +244,7 @@ export default function ControlloMensile() {
     setYearTotals({
       posAuto: yearPosAuto,
       posManual: yearPosManual,
+      posBanca: yearPosBanca,
       corrispettiviAuto: yearCorrispAuto,
       corrispettiviManual: yearCorrispManual,
       versamenti: yearVersamenti,
