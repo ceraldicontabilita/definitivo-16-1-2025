@@ -484,14 +484,34 @@ def extract_row_data(row, col_mapping: Dict[str, str]) -> Optional[Dict[str, Any
                 # Determina tipo dalla categoria o descrizione
                 categoria = str(row.get(col_mapping.get("category", ""), "") or "").lower()
                 desc_lower = descrizione.lower() if descrizione else ""
+                desc_upper = descrizione.upper() if descrizione else ""
                 
-                # Entrate: POS, incasso, accredito, stipendio, ricavi
-                if any(k in categoria for k in ['ricavi', 'incasso', 'accredito']) or \
-                   any(k in desc_lower for k in ['pos', 'incasso', 'accredito', 'versamento']):
+                # ============ REGOLE TIPO MOVIMENTO ============
+                # USCITE CERTE (sempre addebiti):
+                # - VOSTRA DISPOSIZIONE = addebito automatico
+                # - VS.DISP = addebito automatico
+                # - BONIFICO A FAVORE = pagamento verso terzi
+                # - F24 = pagamento tasse
+                # - RID = addebito diretto
+                # - MAV/RAV = pagamenti
+                # - PRELIEVO
+                if any(k in desc_upper for k in ['VOSTRA DISPOSIZIONE', 'VS.DISP', 'VS DISP', 
+                                                  'BONIFICO A FAVORE', 'F24', 'RID ', 'MAV ', 'RAV ',
+                                                  'PRELIEVO', 'ADDEBITO', 'PAGAMENTO']):
+                    tipo = "uscita"
+                # ENTRATE CERTE (sempre accrediti):
+                # - INC.POS / INCAS. TRAMITE P.O.S = accredito incassi POS
+                # - ACCREDITO
+                # - BONIFICO DA / BONIFICO A VS FAVORE = ricezione
+                # - GIRO DA = giroconto in entrata
+                elif any(k in desc_upper for k in ['INC.POS', 'INCAS.', 'INC. POS', 'INCASSO POS',
+                                                    'TRAMITE P.O.S', 'ACCREDITO', 'STIPENDIO',
+                                                    'A VS FAVORE', 'A VOSTRO FAVORE', 'GIRO DA']):
                     tipo = "entrata"
-                # Uscite: pagamento, bonifico, addebito, costi
-                elif any(k in categoria for k in ['costi', 'pagament', 'addebito']) or \
-                     any(k in desc_lower for k in ['pagamento', 'bonifico', 'addebito', 'prelievo']):
+                # Regole da categoria
+                elif any(k in categoria for k in ['ricavi', 'incasso', 'accredito']):
+                    tipo = "entrata"
+                elif any(k in categoria for k in ['costi', 'pagament', 'addebito']):
                     tipo = "uscita"
                 else:
                     # Default: valore negativo = uscita, positivo = entrata
