@@ -88,7 +88,8 @@ from app.routers import (
     employees_payroll,
     f24_tributi,
     haccp_report_pdf,
-    email_notifications
+    email_notifications,
+    employee_contracts
 )
 
 # Include public API first (no auth required)
