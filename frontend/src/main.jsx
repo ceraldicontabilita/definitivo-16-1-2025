@@ -14,6 +14,11 @@ import Riconciliazione from "./pages/Riconciliazione.jsx";
 import Magazzino from "./pages/Magazzino.jsx";
 import RicercaProdotti from "./pages/RicercaProdotti.jsx";
 import HACCP from "./pages/HACCP.jsx";
+import HACCPDashboard from "./pages/HACCPDashboard.jsx";
+import HACCPTemperatureFrigo from "./pages/HACCPTemperatureFrigo.jsx";
+import HACCPSanificazioni from "./pages/HACCPSanificazioni.jsx";
+import HACCPEquipaggiamenti from "./pages/HACCPEquipaggiamenti.jsx";
+import HACCPScadenzario from "./pages/HACCPScadenzario.jsx";
 import F24 from "./pages/F24.jsx";
 import Paghe from "./pages/Paghe.jsx";
 import Finanziaria from "./pages/Finanziaria.jsx";
@@ -27,6 +32,7 @@ import IVA from "./pages/IVA.jsx";
 import MetodiPagamento from "./pages/MetodiPagamento.jsx";
 import OrdiniFornitori from "./pages/OrdiniFornitori.jsx";
 import Fornitori from "./pages/Fornitori.jsx";
+import GestioneDipendenti from "./pages/GestioneDipendenti.jsx";
 
 const router = createBrowserRouter([
   {
@@ -42,7 +48,17 @@ const router = createBrowserRouter([
       { path: "riconciliazione", element: <Riconciliazione /> },
       { path: "magazzino", element: <Magazzino /> },
       { path: "ricerca-prodotti", element: <RicercaProdotti /> },
-      { path: "haccp", element: <HACCP /> },
+      { path: "haccp", element: <HACCPDashboard /> },
+      { path: "haccp/temperature-frigoriferi", element: <HACCPTemperatureFrigo /> },
+      { path: "haccp/temperature-congelatori", element: <HACCPTemperatureFrigo /> },
+      { path: "haccp/sanificazioni", element: <HACCPSanificazioni /> },
+      { path: "haccp/equipaggiamenti", element: <HACCPEquipaggiamenti /> },
+      { path: "haccp/scadenzario", element: <HACCPScadenzario /> },
+      { path: "haccp/disinfestazioni", element: <HACCP /> },
+      { path: "haccp/ricezione-merci", element: <HACCP /> },
+      { path: "haccp/oli-frittura", element: <HACCP /> },
+      { path: "haccp/non-conformita", element: <HACCP /> },
+      { path: "dipendenti", element: <GestioneDipendenti /> },
       { path: "f24", element: <F24 /> },
       { path: "paghe", element: <Paghe /> },
       { path: "finanziaria", element: <Finanziaria /> },
