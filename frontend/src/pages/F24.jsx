@@ -99,8 +99,8 @@ export default function F24() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1 data-testid="f24-title" style={{ marginBottom: 20 }}>📋 F24 / Tributi</h1>
+    <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
+      <h1 data-testid="f24-title" style={{ marginBottom: 20, fontSize: 'clamp(20px, 5vw, 28px)' }}>📋 F24 / Tributi</h1>
 
       {/* Dashboard Stats */}
       {dashboard && (
@@ -108,24 +108,24 @@ export default function F24() {
           data-testid="f24-dashboard"
           style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-            gap: 15, 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: 'clamp(8px, 2vw, 15px)', 
             marginBottom: 25 
           }}
         >
-          <div style={{ background: '#e3f2fd', padding: 15, borderRadius: 8, borderLeft: '4px solid #2196f3' }}>
-            <div style={{ fontSize: 12, color: '#666' }}>📊 Totale F24</div>
-            <div style={{ fontSize: 28, fontWeight: 'bold', color: '#2196f3' }}>{dashboard.totale_f24}</div>
+          <div style={{ background: '#e3f2fd', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #2196f3' }}>
+            <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>📊 Totale F24</div>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#2196f3' }}>{dashboard.totale_f24}</div>
           </div>
-          <div style={{ background: '#e8f5e9', padding: 15, borderRadius: 8, borderLeft: '4px solid #4caf50' }}>
-            <div style={{ fontSize: 12, color: '#666' }}>✅ Pagati</div>
-            <div style={{ fontSize: 28, fontWeight: 'bold', color: '#4caf50' }}>{dashboard.pagati?.count || 0}</div>
-            <div style={{ fontSize: 11, color: '#666' }}>{formatCurrency(dashboard.pagati?.totale)}</div>
+          <div style={{ background: '#e8f5e9', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #4caf50' }}>
+            <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>✅ Pagati</div>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#4caf50' }}>{dashboard.pagati?.count || 0}</div>
+            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatCurrency(dashboard.pagati?.totale)}</div>
           </div>
-          <div style={{ background: '#fff3e0', padding: 15, borderRadius: 8, borderLeft: '4px solid #ff9800' }}>
-            <div style={{ fontSize: 12, color: '#666' }}>⏳ Da Pagare</div>
-            <div style={{ fontSize: 28, fontWeight: 'bold', color: '#ff9800' }}>{dashboard.da_pagare?.count || 0}</div>
-            <div style={{ fontSize: 11, color: '#666' }}>{formatCurrency(dashboard.da_pagare?.totale)}</div>
+          <div style={{ background: '#fff3e0', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #ff9800' }}>
+            <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>⏳ Da Pagare</div>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#ff9800' }}>{dashboard.da_pagare?.count || 0}</div>
+            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatCurrency(dashboard.da_pagare?.totale)}</div>
           </div>
           <div style={{ 
             background: dashboard.alert_attivi > 0 ? '#ffebee' : '#f5f5f5', 
