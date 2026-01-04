@@ -27,7 +27,7 @@ export default function FattureMobile() {
   const loadFatture = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get('/api/fatture?limit=100&sort=-invoice_date');
+      const res = await api.get('/api/invoices?limit=100&sort=-invoice_date');
       const items = res.data.items || res.data || [];
       setFatture(items);
     } catch (e) {
