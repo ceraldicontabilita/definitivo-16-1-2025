@@ -298,60 +298,60 @@ export default function PrimaNota() {
             <TinyStatCard title="Fatture" value={formatCurrency(totaleFattureCassa)} color="#ef4444" />
           </div>
 
-          {/* Chiusure Giornaliere Serali */}
-          <div style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #faf5ff 50%, #fef3c7 100%)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-            <h3 style={{ margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span>⚡</span> Chiusure Giornaliere Serali
+          {/* Chiusure Giornaliere Serali - Compatte */}
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, marginBottom: 16, border: '1px solid #e2e8f0' }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>⚡</span> Chiusure Giornaliere
             </h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               {/* Corrispettivo */}
-              <QuickEntryCard title="📊 Corrispettivo (LORDO IVA)" color="#f59e0b">
-                <input type="date" value={corrispettivo.data} onChange={(e) => setCorrispettivo({...corrispettivo, data: e.target.value})} style={inputStyle} />
-                <input type="number" step="0.01" placeholder="Importo €" value={corrispettivo.importo} onChange={(e) => setCorrispettivo({...corrispettivo, importo: e.target.value})} style={inputStyle} />
-                <button onClick={handleSaveCorrispettivo} disabled={savingCorrisp} style={buttonStyle('#92400e', savingCorrisp)}>
-                  {savingCorrisp ? '⏳...' : '💾 Salva'}
+              <CompactEntryCard title="📊 Corrispettivo" color="#f59e0b">
+                <input type="date" value={corrispettivo.data} onChange={(e) => setCorrispettivo({...corrispettivo, data: e.target.value})} style={inputStyleCompact} />
+                <input type="number" step="0.01" placeholder="€" value={corrispettivo.importo} onChange={(e) => setCorrispettivo({...corrispettivo, importo: e.target.value})} style={inputStyleCompact} />
+                <button onClick={handleSaveCorrispettivo} disabled={savingCorrisp} style={buttonStyleCompact('#92400e', savingCorrisp)}>
+                  {savingCorrisp ? '⏳' : '💾'}
                 </button>
-              </QuickEntryCard>
+              </CompactEntryCard>
 
               {/* POS */}
-              <QuickEntryCard title="💳 POS (Chiusura Serale)" color="#3b82f6">
-                <input type="date" value={pos.data} onChange={(e) => setPos({...pos, data: e.target.value})} style={inputStyle} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                  <input type="number" step="0.01" placeholder="POS 1" value={pos.pos1} onChange={(e) => setPos({...pos, pos1: e.target.value})} style={{...inputStyle, padding: 8}} />
-                  <input type="number" step="0.01" placeholder="POS 2" value={pos.pos2} onChange={(e) => setPos({...pos, pos2: e.target.value})} style={{...inputStyle, padding: 8}} />
-                  <input type="number" step="0.01" placeholder="POS 3" value={pos.pos3} onChange={(e) => setPos({...pos, pos3: e.target.value})} style={{...inputStyle, padding: 8}} />
+              <CompactEntryCard title="💳 POS" color="#3b82f6">
+                <input type="date" value={pos.data} onChange={(e) => setPos({...pos, data: e.target.value})} style={inputStyleCompact} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+                  <input type="number" step="0.01" placeholder="P1" value={pos.pos1} onChange={(e) => setPos({...pos, pos1: e.target.value})} style={{...inputStyleCompact, padding: 6, fontSize: 11}} />
+                  <input type="number" step="0.01" placeholder="P2" value={pos.pos2} onChange={(e) => setPos({...pos, pos2: e.target.value})} style={{...inputStyleCompact, padding: 6, fontSize: 11}} />
+                  <input type="number" step="0.01" placeholder="P3" value={pos.pos3} onChange={(e) => setPos({...pos, pos3: e.target.value})} style={{...inputStyleCompact, padding: 6, fontSize: 11}} />
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.8)', padding: 8, borderRadius: 6, textAlign: 'center', fontSize: 13 }}>
-                  Totale: <strong>€{posTotale.toFixed(2)}</strong>
+                <div style={{ fontSize: 11, textAlign: 'center', background: 'rgba(255,255,255,0.7)', padding: 4, borderRadius: 4 }}>
+                  Tot: <strong>€{posTotale.toFixed(2)}</strong>
                 </div>
-                <button onClick={handleSavePos} disabled={savingPos} style={buttonStyle('#1d4ed8', savingPos)}>
-                  {savingPos ? '⏳...' : '💾 Salva'}
+                <button onClick={handleSavePos} disabled={savingPos} style={buttonStyleCompact('#1d4ed8', savingPos)}>
+                  {savingPos ? '⏳' : '💾'}
                 </button>
-              </QuickEntryCard>
+              </CompactEntryCard>
 
               {/* Versamento */}
-              <QuickEntryCard title="🏦 Versamento" color="#10b981">
-                <input type="date" value={versamento.data} onChange={(e) => setVersamento({...versamento, data: e.target.value})} style={inputStyle} />
-                <input type="number" step="0.01" placeholder="Importo €" value={versamento.importo} onChange={(e) => setVersamento({...versamento, importo: e.target.value})} style={inputStyle} />
-                <button onClick={handleSaveVersamento} disabled={savingVers} style={buttonStyle('#059669', savingVers)}>
-                  {savingVers ? '⏳...' : '💾 Salva'}
+              <CompactEntryCard title="🏦 Versamento" color="#10b981">
+                <input type="date" value={versamento.data} onChange={(e) => setVersamento({...versamento, data: e.target.value})} style={inputStyleCompact} />
+                <input type="number" step="0.01" placeholder="€" value={versamento.importo} onChange={(e) => setVersamento({...versamento, importo: e.target.value})} style={inputStyleCompact} />
+                <button onClick={handleSaveVersamento} disabled={savingVers} style={buttonStyleCompact('#059669', savingVers)}>
+                  {savingVers ? '⏳' : '💾'}
                 </button>
-              </QuickEntryCard>
+              </CompactEntryCard>
 
-              {/* Movimento Generico */}
-              <QuickEntryCard title="✏️ Movimento Manuale" color="#f97316">
-                <input type="date" value={movimento.data} onChange={(e) => setMovimento({...movimento, data: e.target.value})} style={inputStyle} />
-                <select value={movimento.tipo} onChange={(e) => setMovimento({...movimento, tipo: e.target.value})} style={inputStyle}>
-                  <option value="uscita">Uscita (AVERE)</option>
-                  <option value="entrata">Entrata (DARE)</option>
+              {/* Movimento */}
+              <CompactEntryCard title="✏️ Altro" color="#f97316">
+                <input type="date" value={movimento.data} onChange={(e) => setMovimento({...movimento, data: e.target.value})} style={inputStyleCompact} />
+                <select value={movimento.tipo} onChange={(e) => setMovimento({...movimento, tipo: e.target.value})} style={inputStyleCompact}>
+                  <option value="uscita">Uscita</option>
+                  <option value="entrata">Entrata</option>
                 </select>
-                <input type="number" step="0.01" placeholder="Importo €" value={movimento.importo} onChange={(e) => setMovimento({...movimento, importo: e.target.value})} style={inputStyle} />
-                <input type="text" placeholder="Descrizione" value={movimento.descrizione} onChange={(e) => setMovimento({...movimento, descrizione: e.target.value})} style={inputStyle} />
-                <button onClick={handleSaveMovimento} disabled={savingMov} style={buttonStyle('#ea580c', savingMov)}>
-                  {savingMov ? '⏳...' : '💾 Salva'}
+                <input type="number" step="0.01" placeholder="€" value={movimento.importo} onChange={(e) => setMovimento({...movimento, importo: e.target.value})} style={inputStyleCompact} />
+                <input type="text" placeholder="Desc." value={movimento.descrizione} onChange={(e) => setMovimento({...movimento, descrizione: e.target.value})} style={inputStyleCompact} />
+                <button onClick={handleSaveMovimento} disabled={savingMov} style={buttonStyleCompact('#ea580c', savingMov)}>
+                  {savingMov ? '⏳' : '💾'}
                 </button>
-              </QuickEntryCard>
+              </CompactEntryCard>
             </div>
           </div>
 
