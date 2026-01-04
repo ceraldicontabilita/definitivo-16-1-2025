@@ -13,6 +13,13 @@ from app.database import Database, Collections
 from app.parsers.fattura_elettronica_parser import parse_fattura_xml
 from app.parsers.payslip_parser import extract_payslips_from_pdf, create_employee_from_payslip
 from app.parsers.corrispettivi_parser import parse_corrispettivo_xml, generate_corrispettivo_key
+from app.utils.warehouse_helpers import (
+    auto_populate_warehouse_from_invoice,
+    get_product_catalog,
+    search_products_predictive,
+    get_suppliers_for_product,
+    normalize_product_name
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
