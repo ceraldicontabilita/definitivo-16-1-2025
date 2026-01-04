@@ -415,7 +415,7 @@ export default function Fatture() {
             <div style={{ marginTop: 15 }}>
               <strong>Pagamento</strong>
               <div className="small">
-                Scadenza: {selectedInvoice.pagamento.data_scadenza}<br/>
+                Scadenza: {formatDateIT(selectedInvoice.pagamento.data_scadenza)}<br/>
                 {selectedInvoice.pagamento.istituto_finanziario && `Banca: ${selectedInvoice.pagamento.istituto_finanziario}`}
               </div>
             </div>
