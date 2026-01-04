@@ -389,28 +389,41 @@ def identify_columns(columns: List[str]) -> Dict[str, str]:
         "amount": None,
         "debit": None,
         "credit": None,
-        "type": None
+        "type": None,
+        "category": None
     }
     
-    date_keywords = ['data', 'date', 'valuta', 'contabile']
-    desc_keywords = ['descrizione', 'causale', 'description', 'operazione', 'movimento']
-    amount_keywords = ['importo', 'amount', 'valore']
-    debit_keywords = ['dare', 'uscite', 'debit', 'addebito']
-    credit_keywords = ['avere', 'entrate', 'credit', 'accredito']
+    # Normalizza nomi colonne
+    normalized = [c.lower().strip() for c in columns]
     
-    for col in columns:
-        col_lower = col.lower()
+    for idx, col in enumerate(normalized):
+        orig_col = columns[idx]
         
-        if any(k in col_lower for k in date_keywords) and not mapping["date"]:
-            mapping["date"] = col
-        elif any(k in col_lower for k in desc_keywords) and not mapping["description"]:
-            mapping["description"] = col
-        elif any(k in col_lower for k in debit_keywords):
-            mapping["debit"] = col
-        elif any(k in col_lower for k in credit_keywords):
-            mapping["credit"] = col
-        elif any(k in col_lower for k in amount_keywords) and not mapping["amount"]:
-            mapping["amount"] = col
+        # Date columns
+        if 'data_contabile' in col or col == 'data_contabile':
+            mapping["date"] = orig_col
+        elif 'data_valuta' in col and not mapping["date"]:
+            mapping["date"] = orig_col
+        elif 'data' in col and not mapping["date"]:
+            mapping["date"] = orig_col
+        
+        # Description
+        elif 'descrizione' in col or 'causale' in col or 'operazione' in col:
+            mapping["description"] = orig_col
+        
+        # Amount (single column)
+        elif col == 'importo' or 'importo' in col:
+            mapping["amount"] = orig_col
+        
+        # Dare/Avere separate
+        elif 'dare' in col or 'uscite' in col or 'addebito' in col:
+            mapping["debit"] = orig_col
+        elif 'avere' in col or 'entrate' in col or 'accredito' in col:
+            mapping["credit"] = orig_col
+        
+        # Category
+        elif 'categoria' in col or 'sottocategoria' in col:
+            mapping["category"] = orig_col
     
     return mapping
 
