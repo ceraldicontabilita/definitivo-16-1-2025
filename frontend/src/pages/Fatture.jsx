@@ -160,15 +160,21 @@ export default function Fatture() {
     setErr("");
     setUploadResult(null);
     setUploading(true);
+    setUploadProgress({ current: 0, total: 100, phase: "Caricamento file..." });
     
     try {
       const formData = new FormData();
       formData.append("file", file);
       
       const r = await api.post("/api/fatture/upload-xml", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress({ current: percentCompleted, total: 100, phase: `Upload: ${percentCompleted}%` });
+        }
       });
       
+      setUploadProgress({ current: 100, total: 100, phase: "Completato!" });
       setUploadResult({
         type: "success",
         message: r.data.message,
@@ -176,9 +182,15 @@ export default function Fatture() {
       });
       loadInvoices();
     } catch (e) {
-      setErr(e.response?.data?.detail || "Errore durante l'upload");
+      const detail = e.response?.data?.detail || "Errore durante l'upload";
+      if (e.response?.status === 409) {
+        setErr("Fattura già presente nel sistema (duplicato saltato).");
+      } else {
+        setErr(detail);
+      }
     } finally {
       setUploading(false);
+      setUploadProgress({ current: 0, total: 0, phase: "" });
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -190,6 +202,7 @@ export default function Fatture() {
     setErr("");
     setUploadResult(null);
     setUploading(true);
+    setUploadProgress({ current: 0, total: files.length, phase: `Preparazione ${files.length} file...` });
     
     try {
       const formData = new FormData();
@@ -199,9 +212,14 @@ export default function Fatture() {
       
       const r = await api.post("/api/fatture/upload-xml-bulk", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 300000 // 5 minuti timeout per upload grandi
+        timeout: 600000, // 10 minuti per upload grandi
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress({ current: percentCompleted, total: 100, phase: `Upload: ${percentCompleted}%` });
+        }
       });
       
+      setUploadProgress({ current: files.length, total: files.length, phase: "Elaborazione completata!" });
       setUploadResult({
         type: "bulk",
         data: r.data
@@ -220,9 +238,80 @@ export default function Fatture() {
       setErr(errorMsg);
     } finally {
       setUploading(false);
+      setUploadProgress({ current: 0, total: 0, phase: "" });
       if (bulkFileInputRef.current) bulkFileInputRef.current.value = "";
     }
   }
+
+  async function handleZipUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setErr("");
+    setUploadResult(null);
+    setUploading(true);
+    setUploadProgress({ current: 0, total: 100, phase: "Caricamento archivio ZIP..." });
+    
+    try {
+      const formData = new FormData();
+      formData.append("files", file); // L'endpoint bulk supporta già gli ZIP
+      
+      const r = await api.post("/api/fatture/upload-xml-bulk", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 600000,
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress({ current: percentCompleted, total: 100, phase: `Upload ZIP: ${percentCompleted}%` });
+        }
+      });
+      
+      setUploadProgress({ current: r.data.total || 100, total: r.data.total || 100, phase: `Elaborati ${r.data.total || 0} file` });
+      setUploadResult({
+        type: "zip",
+        data: r.data
+      });
+      loadInvoices();
+    } catch (e) {
+      console.error("ZIP Upload error:", e);
+      let errorMsg = "Errore durante l'upload del file ZIP";
+      if (e.response?.data?.detail) {
+        errorMsg = e.response.data.detail;
+      } else if (e.code === "ECONNABORTED") {
+        errorMsg = "Timeout - file ZIP troppo grande.";
+      } else if (e.message) {
+        errorMsg = e.message;
+      }
+      setErr(errorMsg);
+    } finally {
+      setUploading(false);
+      setUploadProgress({ current: 0, total: 0, phase: "" });
+      if (zipFileInputRef.current) zipFileInputRef.current.value = "";
+    }
+  }
+
+  // Componente Barra di Progresso
+  const ProgressBar = ({ progress }) => {
+    if (!progress.phase) return null;
+    const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+    
+    return (
+      <div style={{ marginTop: 15, marginBottom: 10 }} data-testid="upload-progress">
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+          <span style={{ fontSize: 13, fontWeight: 500 }}>{progress.phase}</span>
+          <span style={{ fontSize: 13, color: "#666" }}>{percentage}%</span>
+        </div>
+        <div style={{ width: "100%", height: 8, background: "#e0e0e0", borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ 
+            width: `${percentage}%`, 
+            height: "100%", 
+            background: "linear-gradient(90deg, #1565c0, #42a5f5)",
+            borderRadius: 4,
+            transition: "width 0.3s ease"
+          }} />
+        </div>
+      </div>
+    );
+  };
 
   async function handleCreateInvoice(e) {
     e.preventDefault();
