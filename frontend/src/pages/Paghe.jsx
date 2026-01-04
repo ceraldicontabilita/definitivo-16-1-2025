@@ -336,12 +336,15 @@ export default function Paghe() {
               {employees.map((emp, i) => (
                 <tr key={emp.id || i} style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 8 }}>
-                    <strong>{emp.name}</strong>
+                    <strong>{emp.nome_completo || emp.name}</strong>
+                    {emp.ultimo_periodo && (
+                      <div style={{ fontSize: 11, color: "#666" }}>{emp.ultimo_periodo}</div>
+                    )}
                   </td>
                   <td style={{ padding: 8, fontSize: 12 }}>{emp.codice_fiscale || "-"}</td>
-                  <td style={{ padding: 8 }}>{emp.role || "-"}</td>
+                  <td style={{ padding: 8 }}>{emp.qualifica || emp.role || "-"}</td>
                   <td style={{ padding: 8 }}>{emp.livello || "-"}</td>
-                  <td style={{ padding: 8 }}>€ {(emp.salary || 0).toFixed(2)}</td>
+                  <td style={{ padding: 8 }}>€ {(emp.lordo || emp.salary || 0).toFixed(2)}</td>
                   <td style={{ padding: 8, fontWeight: "bold", color: "#2e7d32" }}>
                     € {(emp.netto || 0).toFixed(2)}
                   </td>
