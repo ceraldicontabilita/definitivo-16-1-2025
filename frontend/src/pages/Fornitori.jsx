@@ -119,8 +119,26 @@ export default function Fornitori() {
   };
 
   // Apri inventario fornitore
-  const openInventario = (supplier) => {
-    window.location.href = `/magazzino?fornitore=${encodeURIComponent(supplier.denominazione || supplier.partita_iva)}`;
+  const [showInventario, setShowInventario] = useState(false);
+  const [selectedSupplierInventario, setSelectedSupplierInventario] = useState(null);
+  const [inventarioData, setInventarioData] = useState(null);
+  const [loadingInventario, setLoadingInventario] = useState(false);
+  
+  const openInventario = async (supplier) => {
+    setSelectedSupplierInventario(supplier);
+    setShowInventario(true);
+    setLoadingInventario(true);
+    
+    try {
+      const piva = supplier.partita_iva || supplier.id;
+      const res = await api.get(`/api/suppliers/${piva}/inventory`);
+      setInventarioData(res.data);
+    } catch (e) {
+      console.error("Errore caricamento inventario:", e);
+      setInventarioData({ error: e.response?.data?.detail || e.message });
+    } finally {
+      setLoadingInventario(false);
+    }
   };
 
   return (
