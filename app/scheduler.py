@@ -4,6 +4,7 @@ Auto-popolamento temperature alle 01:00 AM ogni giorno.
 """
 import asyncio
 import logging
+import uuid
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
