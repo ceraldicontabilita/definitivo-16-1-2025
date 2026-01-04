@@ -141,7 +141,7 @@ export default function PrimaNotaCassa() {
             <tbody>
               {movements.map((m, i) => (
                 <tr key={m.id || i} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>{new Date(m.date || m.created_at).toLocaleDateString("it-IT")}</td>
+                  <td style={{ padding: 8 }}>{formatDateIT(m.date || m.created_at)}</td>
                   <td style={{ padding: 8 }}>
                     <span style={{ 
                       background: m.type === "entrata" ? "#c8e6c9" : "#ffcdd2",
