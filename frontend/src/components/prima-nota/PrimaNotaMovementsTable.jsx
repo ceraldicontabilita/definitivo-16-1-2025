@@ -160,9 +160,40 @@ export function PrimaNotaMovementsTable({
       )}
       
       {/* Show count */}
-      {data.movimenti?.length > 0 && (
-        <div style={{ padding: '12px 16px', background: '#f9f9f9', borderTop: '1px solid #eee', fontSize: 13, color: '#666' }}>
-          Mostrando {data.movimenti.length} movimenti
+      {allMovements.length > 0 && (
+        <div style={{ padding: '12px 16px', background: '#f9f9f9', borderTop: '1px solid #eee', fontSize: 13, color: '#666', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Mostrando {startIndex + 1}-{Math.min(endIndex, allMovements.length)} di {allMovements.length} movimenti</span>
+          {totalPages > 1 && (
+            <span style={{ fontWeight: 'bold', color: '#1976d2' }}>
+              Pagina {currentPage}/{totalPages}
+            </span>
+          )}
+        </div>
+      )}
+      
+      {/* Bottom Pagination */}
+      {totalPages > 1 && (
+        <div style={{ 
+          padding: '12px 16px', 
+          background: '#f5f5f5', 
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 5
+        }}>
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            style={{ padding: '8px 16px', borderRadius: 4, border: '1px solid #ddd', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1, background: 'white' }}
+          >◀️ Precedente</button>
+          <span style={{ padding: '0 15px', fontWeight: 'bold' }}>
+            {currentPage} / {totalPages}
+          </span>
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            style={{ padding: '8px 16px', borderRadius: 4, border: '1px solid #ddd', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1, background: 'white' }}
+          >Successivo ▶️</button>
         </div>
       )}
       
@@ -176,9 +207,9 @@ export function PrimaNotaMovementsTable({
   );
 }
 
-// Calculate running total up to index
-function calculateRunningTotal(movimenti, upToIndex) {
-  let total = 0;
+// Calculate running total up to index considering previous month balance
+function calculateRunningTotal(movimenti, upToIndex, previousBalance = 0) {
+  let total = previousBalance;
   for (let i = movimenti.length - 1; i >= upToIndex; i--) {
     const mov = movimenti[i];
     if (mov.tipo === 'entrata') {
