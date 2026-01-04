@@ -481,14 +481,29 @@ def extract_row_data(row, col_mapping: Dict[str, str]) -> Optional[Dict[str, Any
             parsed = parse_italian_amount(str(val))
             if abs(parsed) > 0:
                 importo = abs(parsed)
-                tipo = "uscita" if parsed < 0 else "entrata"
+                # Determina tipo dalla categoria o descrizione
+                categoria = str(row.get(col_mapping.get("category", ""), "") or "").lower()
+                desc_lower = descrizione.lower() if descrizione else ""
+                
+                # Entrate: POS, incasso, accredito, stipendio, ricavi
+                if any(k in categoria for k in ['ricavi', 'incasso', 'accredito']) or \
+                   any(k in desc_lower for k in ['pos', 'incasso', 'accredito', 'versamento']):
+                    tipo = "entrata"
+                # Uscite: pagamento, bonifico, addebito, costi
+                elif any(k in categoria for k in ['costi', 'pagament', 'addebito']) or \
+                     any(k in desc_lower for k in ['pagamento', 'bonifico', 'addebito', 'prelievo']):
+                    tipo = "uscita"
+                else:
+                    # Default: valore negativo = uscita, positivo = entrata
+                    tipo = "uscita" if parsed < 0 else "entrata"
     
     if data and importo > 0:
         return {
             "data": data,
             "descrizione": descrizione or f"Movimento del {data}",
             "importo": importo,
-            "tipo": tipo
+            "tipo": tipo,
+            "categoria": str(row.get(col_mapping.get("category", ""), "")) if col_mapping.get("category") else None
         }
     
     return None
