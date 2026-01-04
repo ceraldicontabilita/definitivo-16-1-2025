@@ -459,11 +459,36 @@ export default function PrimaNota() {
 
       {/* Filters & Actions */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Month selector */}
+        <select
+          data-testid="filter-mese"
+          value={selectedMonth}
+          onChange={(e) => {
+            setSelectedMonth(e.target.value);
+            setCurrentPage(1);
+            setFilterDataDa('');
+            setFilterDataA('');
+          }}
+          style={{ padding: '8px 12px', borderRadius: 4, border: '2px solid #1976d2', fontWeight: 'bold', minWidth: 160 }}
+        >
+          <option value="">📅 Tutti i mesi</option>
+          {/* Generate last 24 months */}
+          {Array.from({length: 24}, (_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+            const monthNames = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+            return <option key={val} value={val}>{monthNames[d.getMonth()]} {d.getFullYear()}</option>;
+          })}
+        </select>
+        
+        <span style={{ color: '#666', fontSize: 12 }}>oppure</span>
+        
         <input
           data-testid="filter-data-da"
           type="date"
           value={filterDataDa}
-          onChange={(e) => setFilterDataDa(e.target.value)}
+          onChange={(e) => { setFilterDataDa(e.target.value); setSelectedMonth(''); }}
           style={{ padding: '8px 12px', borderRadius: 4, border: '1px solid #ddd' }}
           placeholder="Da"
         />
@@ -471,7 +496,7 @@ export default function PrimaNota() {
           data-testid="filter-data-a"
           type="date"
           value={filterDataA}
-          onChange={(e) => setFilterDataA(e.target.value)}
+          onChange={(e) => { setFilterDataA(e.target.value); setSelectedMonth(''); }}
           style={{ padding: '8px 12px', borderRadius: 4, border: '1px solid #ddd' }}
           placeholder="A"
         />
@@ -503,6 +528,23 @@ export default function PrimaNota() {
           </button>
         </div>
       </div>
+      
+      {/* Riporto mese precedente */}
+      {selectedMonth && previousMonthBalance !== 0 && (
+        <div style={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+          padding: '12px 20px', 
+          borderRadius: 8, 
+          marginBottom: 15,
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span>📊 Riporto saldo mese precedente:</span>
+          <strong style={{ fontSize: 18 }}>{formatCurrency(previousMonthBalance)}</strong>
+        </div>
+      )}
 
       {/* Current Tab Stats */}
       <div style={{ display: 'flex', gap: 20, marginBottom: 20 }}>
