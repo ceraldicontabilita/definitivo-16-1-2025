@@ -7,6 +7,8 @@ from typing import Dict, Any, List
 from datetime import datetime
 import uuid
 import logging
+import zipfile
+import io
 
 from app.database import Database
 from app.parsers.corrispettivi_parser import parse_corrispettivo_xml
@@ -254,3 +256,129 @@ async def delete_corrispettivo(corrispettivo_id: str) -> Dict[str, Any]:
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Corrispettivo non trovato")
     return {"deleted": True}
+
+
+@router.post("/upload-zip")
+async def upload_corrispettivi_zip(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Upload massivo corrispettivi da file ZIP contenente XML.
+    Gestisce duplicati automaticamente (salta e continua).
+    """
+    if not file.filename.lower().endswith('.zip'):
+        raise HTTPException(status_code=400, detail="Il file deve essere un archivio ZIP")
+    
+    results = {
+        "success": [],
+        "errors": [],
+        "duplicates": [],
+        "total": 0,
+        "imported": 0,
+        "failed": 0,
+        "skipped_duplicates": 0
+    }
+    
+    db = Database.get_db()
+    
+    try:
+        # Leggi il file ZIP
+        content = await file.read()
+        zip_buffer = io.BytesIO(content)
+        
+        with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
+            # Filtra solo file XML
+            xml_files = [f for f in zip_file.namelist() if f.lower().endswith('.xml') and not f.startswith('__MACOSX')]
+            results["total"] = len(xml_files)
+            
+            for xml_filename in xml_files:
+                try:
+                    # Leggi il file XML dal ZIP
+                    xml_content = None
+                    xml_bytes = zip_file.read(xml_filename)
+                    
+                    # Prova diverse codifiche
+                    for enc in ['utf-8', 'utf-8-sig', 'latin-1', 'iso-8859-1']:
+                        try:
+                            xml_content = xml_bytes.decode(enc)
+                            break
+                        except:
+                            continue
+                    
+                    if not xml_content:
+                        results["errors"].append({
+                            "filename": xml_filename,
+                            "error": "Impossibile decodificare il file"
+                        })
+                        results["failed"] += 1
+                        continue
+                    
+                    # Parsa XML
+                    parsed = parse_corrispettivo_xml(xml_content)
+                    if parsed.get("error"):
+                        results["errors"].append({
+                            "filename": xml_filename,
+                            "error": parsed["error"]
+                        })
+                        results["failed"] += 1
+                        continue
+                    
+                    # Controlla duplicati
+                    key = parsed.get("corrispettivo_key", "")
+                    if key:
+                        existing = await db["corrispettivi"].find_one({"corrispettivo_key": key})
+                        if existing:
+                            results["duplicates"].append({
+                                "filename": xml_filename,
+                                "data": parsed.get("data"),
+                                "matricola": parsed.get("matricola_rt"),
+                                "totale": parsed.get("totale", 0)
+                            })
+                            results["skipped_duplicates"] += 1
+                            continue
+                    
+                    # Inserisci nuovo corrispettivo
+                    corr = {
+                        "id": str(uuid.uuid4()),
+                        "corrispettivo_key": key,
+                        "data": parsed.get("data", ""),
+                        "matricola_rt": parsed.get("matricola_rt", ""),
+                        "partita_iva": parsed.get("partita_iva", ""),
+                        "totale": float(parsed.get("totale", 0) or 0),
+                        "pagato_contanti": float(parsed.get("pagato_contanti", 0) or 0),
+                        "pagato_elettronico": float(parsed.get("pagato_elettronico", 0) or 0),
+                        "totale_imponibile": float(parsed.get("totale_imponibile", 0) or 0),
+                        "totale_iva": float(parsed.get("totale_iva", 0) or 0),
+                        "riepilogo_iva": parsed.get("riepilogo_iva", []),
+                        "numero_documenti": parsed.get("numero_documenti", 0),
+                        "status": "imported",
+                        "source": "zip_upload",
+                        "filename": xml_filename,
+                        "zip_filename": file.filename,
+                        "created_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    await db["corrispettivi"].insert_one(corr)
+                    
+                    results["success"].append({
+                        "filename": xml_filename,
+                        "data": parsed.get("data"),
+                        "totale": corr["totale"],
+                        "contanti": corr["pagato_contanti"],
+                        "elettronico": corr["pagato_elettronico"]
+                    })
+                    results["imported"] += 1
+                    
+                except Exception as e:
+                    logger.error(f"Errore processando {xml_filename}: {e}")
+                    results["errors"].append({
+                        "filename": xml_filename,
+                        "error": str(e)
+                    })
+                    results["failed"] += 1
+        
+        return results
+        
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="File ZIP non valido o corrotto")
+    except Exception as e:
+        logger.error(f"Errore upload ZIP: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
