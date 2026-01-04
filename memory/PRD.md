@@ -75,6 +75,13 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-04 (Sessione 2 - Parte 3)
+- **Controllo Mensile - Quadratura POS Banca**: Aggiunta nuova colonna "🏦 POS Banca" che mostra gli accrediti POS dalla banca (INC.POS, INCAS. TRAMITE P.O.S)
+- **Controllo Mensile**: Aggiunto KPI "POS Banca (Accrediti)" per visualizzare il totale accrediti POS bancari
+- **Riconciliazione - Tipo Movimento**: Corretta logica per "VOSTRA DISPOSIZIONE" (ora è sempre USCITA)
+- **Riconciliazione - Descrizione**: Aumentata lunghezza descrizione da 200 a 400 caratteri per mostrare numeri assegno
+- **Bank Statement Import**: Migliorata logica riconoscimento tipo movimento per INC.POS, INCAS., VS.DISP., ecc.
+
 ### 2026-01-04 (Sessione 2 - Parte 2)
 - **FIX CRITICO Controllo Mensile**: Corretto bug che impediva il caricamento dei dati POS, Corrispettivi, Versamenti e Saldo Cassa dalla Prima Nota
   - Aumentato limite API da 2500 a 10000 records
