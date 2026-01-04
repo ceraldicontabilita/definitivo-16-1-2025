@@ -572,6 +572,7 @@ export default function PrimaNota() {
         formatCurrency={formatCurrency}
         onDeleteMovement={handleDeleteMovement}
         onEditMovement={handleEditMovement}
+        previousMonthBalance={previousMonthBalance}
       />
 
       {/* New/Edit Movement Modal */}
