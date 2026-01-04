@@ -20,6 +20,7 @@ import HACCPTemperaturaCongelatori from "./pages/HACCPTemperaturaCongelatori.jsx
 import HACCPSanificazioni from "./pages/HACCPSanificazioni.jsx";
 import HACCPEquipaggiamenti from "./pages/HACCPEquipaggiamenti.jsx";
 import HACCPScadenzario from "./pages/HACCPScadenzario.jsx";
+import HACCPAnalytics from "./pages/HACCPAnalytics.jsx";
 import F24 from "./pages/F24.jsx";
 import Paghe from "./pages/Paghe.jsx";
 import Finanziaria from "./pages/Finanziaria.jsx";
