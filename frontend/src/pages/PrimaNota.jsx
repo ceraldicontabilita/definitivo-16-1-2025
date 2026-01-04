@@ -54,7 +54,7 @@ export default function PrimaNota() {
   useEffect(() => {
     loadData();
     loadAutoStats();
-  }, [filterDataDa, filterDataA, filterTipo]);
+  }, [filterDataDa, filterDataA, filterTipo, selectedMonth, activeTab]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
