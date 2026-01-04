@@ -716,3 +716,90 @@ async def create_disinfestazione(data: Dict[str, Any] = Body(...)) -> Dict[str, 
     record.pop("_id", None)
     
     return record
+
+
+# ============== EXPORT PDF/EXCEL HACCP ==============
+
+from fastapi.responses import StreamingResponse
+import io
+
+@router.get("/export/temperature-excel")
+async def export_temperature_excel(
+    mese: str = Query(..., description="Mese in formato YYYY-MM"),
+    tipo: str = Query("frigoriferi", description="frigoriferi o congelatori")
+) -> StreamingResponse:
+    """Export temperature mensili in Excel."""
+    try:
+        import pandas as pd
+    except ImportError:
+        raise HTTPException(status_code=500, detail="pandas non installato")
+    
+    db = Database.get_db()
+    
+    year, month = mese.split("-")
+    start_date = f"{mese}-01"
+    end_date = f"{year}-{int(month)+1:02d}-01" if int(month) < 12 else f"{int(year)+1}-01-01"
+    
+    collection = COLLECTION_TEMP_FRIGO if tipo == "frigoriferi" else COLLECTION_TEMP_CONGEL
+    
+    records = await db[collection].find(
+        {"data": {"$gte": start_date, "$lt": end_date}},
+        {"_id": 0}
+    ).sort("data", 1).to_list(1000)
+    
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        if records:
+            df = pd.DataFrame(records)
+            cols = ["data", "ora", "equipaggiamento", "temperatura", "conforme", "operatore", "note"]
+            df = df[[c for c in cols if c in df.columns]]
+            df.to_excel(writer, sheet_name=f"Temperature {tipo.title()}", index=False)
+    
+    output.seek(0)
+    filename = f"haccp_temperature_{tipo}_{mese}.xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@router.get("/export/sanificazioni-excel")
+async def export_sanificazioni_excel(mese: str = Query(...)) -> StreamingResponse:
+    """Export sanificazioni mensili in Excel."""
+    try:
+        import pandas as pd
+    except ImportError:
+        raise HTTPException(status_code=500, detail="pandas non installato")
+    
+    db = Database.get_db()
+    
+    year, month = mese.split("-")
+    start_date = f"{mese}-01"
+    end_date = f"{year}-{int(month)+1:02d}-01" if int(month) < 12 else f"{int(year)+1}-01-01"
+    
+    records = await db[COLLECTION_SANIFICAZIONI].find(
+        {"data": {"$gte": start_date, "$lt": end_date}},
+        {"_id": 0}
+    ).sort("data", 1).to_list(1000)
+    
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        if records:
+            df = pd.DataFrame(records)
+            cols = ["data", "ora", "area", "operatore", "prodotto_utilizzato", "esito", "note"]
+            df = df[[c for c in cols if c in df.columns]]
+            df.to_excel(writer, sheet_name="Sanificazioni", index=False)
+    
+    output.seek(0)
+    filename = f"haccp_sanificazioni_{mese}.xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
