@@ -1063,19 +1063,31 @@ async def upload_corrispettivi_xml_bulk(files: List[UploadFile] = File(...)) -> 
                     results["skipped_duplicates"] += 1
                     continue
             
-            # Prepara documento per salvataggio
+            # Prepara documento per salvataggio con tutti i dati incluso pagamento elettronico
             corrispettivo = {
                 "id": str(uuid.uuid4()),
                 "corrispettivo_key": corrispettivo_key,
                 "data": parsed.get("data", ""),
+                "data_ora_rilevazione": parsed.get("data_ora_rilevazione", ""),
+                "data_ora_trasmissione": parsed.get("data_ora_trasmissione", ""),
                 "matricola_rt": parsed.get("matricola_rt", ""),
+                "tipo_dispositivo": parsed.get("tipo_dispositivo", "RT"),
                 "numero_documento": parsed.get("numero_documento", ""),
+                "formato": parsed.get("formato", "COR10"),
                 "partita_iva": parsed.get("partita_iva", ""),
+                "codice_fiscale": parsed.get("codice_fiscale", ""),
                 "esercente": parsed.get("esercente", {}),
+                # TOTALI
                 "totale": float(parsed.get("totale", 0) or 0),
                 "totale_corrispettivi": float(parsed.get("totale_corrispettivi", 0) or 0),
+                "pagato_contanti": float(parsed.get("pagato_contanti", 0) or 0),
+                "pagato_elettronico": float(parsed.get("pagato_elettronico", 0) or 0),
+                "numero_documenti": int(parsed.get("numero_documenti", 0) or 0),
+                # IVA
+                "totale_imponibile": float(parsed.get("totale_imponibile", 0) or 0),
                 "totale_iva": float(parsed.get("totale_iva", 0) or 0),
                 "riepilogo_iva": parsed.get("riepilogo_iva", []),
+                # METADATA
                 "status": "imported",
                 "source": "xml_bulk_upload",
                 "filename": filename,
@@ -1107,7 +1119,9 @@ async def upload_corrispettivi_xml_bulk(files: List[UploadFile] = File(...)) -> 
             results["success"].append({
                 "filename": filename,
                 "data": parsed.get("data"),
-                "totale": float(parsed.get("totale", 0) or 0)
+                "totale": float(parsed.get("totale", 0) or 0),
+                "contanti": float(parsed.get("pagato_contanti", 0) or 0),
+                "elettronico": float(parsed.get("pagato_elettronico", 0) or 0)
             })
             results["imported"] += 1
             
