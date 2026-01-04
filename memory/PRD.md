@@ -75,6 +75,18 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-04 (Sessione 5 - Vista Mobile Fatture)
+- **NUOVA Vista Mobile Fatture**: Interfaccia semplificata per smartphone
+  - Lista fatture leggibile e cliccabile (espande dettagli)
+  - NO upload XML su mobile (solo visualizzazione)
+  - Tab "Inserisci" con card grosse per inserimento rapido:
+    - 💳 POS (incasso carta)
+    - 💵 Cassa (incasso cash)
+    - 🏦 Versamento (verso banca)
+  - Campo importo GRANDE per digitazione facile
+  - Rilevamento automatico mobile (< 768px)
+  - Desktop mantiene tutte le funzionalità complete
+
 ### 2026-01-04 (Sessione 4 - Correzioni e Alert)
 - **Sostituzione "Contanti" → "Cassa"**: Aggiornato in tutte le pagine (Fatture, Fornitori, Corrispettivi, Commercialista, PrimaNota)
 - **Alert Automatico Commercialista**: Banner globale che appare 2 giorni dopo fine mese precedente
