@@ -257,6 +257,9 @@ export default function Fatture() {
   }
 
   async function handleUpdateMetodoPagamento(invoiceId, metodo) {
+    // Ignora se metodo è vuoto (selezione "-- Seleziona --")
+    if (!metodo) return;
+    
     setUpdatingPayment(invoiceId);
     try {
       await api.put(`/api/fatture/${invoiceId}/metodo-pagamento`, {
