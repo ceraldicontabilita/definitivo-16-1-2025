@@ -270,6 +270,64 @@ export default function PrimaNota() {
   return (
     <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
       
+      {/* HEADER CON SELETTORE ANNO */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 20,
+        padding: '15px 20px',
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
+        borderRadius: 12,
+        color: 'white'
+      }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 'bold' }}>📒 Prima Nota</h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, opacity: 0.9 }}>
+            Registro contabile cassa e banca
+          </p>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+          <label style={{ fontSize: 14, fontWeight: '500' }}>Anno:</label>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            style={{
+              padding: '10px 20px',
+              fontSize: 16,
+              fontWeight: 'bold',
+              borderRadius: 8,
+              border: 'none',
+              background: 'white',
+              color: '#1e3a5f',
+              cursor: 'pointer',
+              minWidth: 120
+            }}
+            data-testid="select-anno"
+          >
+            {availableYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          
+          <button
+            onClick={loadAllData}
+            style={{
+              padding: '10px 16px',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: '500'
+            }}
+          >
+            🔄 Aggiorna
+          </button>
+        </div>
+      </div>
+      
       {/* SECTION BUTTONS */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
         <button
@@ -295,7 +353,7 @@ export default function PrimaNota() {
           }}
         >
           <span style={{ fontSize: 24 }}>💵</span>
-          PRIMA NOTA CASSA
+          PRIMA NOTA CASSA {selectedYear}
         </button>
         
         <button
@@ -321,7 +379,7 @@ export default function PrimaNota() {
           }}
         >
           <span style={{ fontSize: 24 }}>🏦</span>
-          PRIMA NOTA BANCA
+          PRIMA NOTA BANCA {selectedYear}
         </button>
       </div>
 
