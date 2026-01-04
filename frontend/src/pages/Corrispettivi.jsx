@@ -4,6 +4,7 @@ import { formatDateIT } from "../lib/utils";
 import { UploadProgressBar } from "../components/UploadProgressBar";
 
 export default function Corrispettivi() {
+  const currentYear = new Date().getFullYear();
   const [corrispettivi, setCorrispettivi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -11,18 +12,28 @@ export default function Corrispettivi() {
   const [uploadResult, setUploadResult] = useState(null);
   const [err, setErr] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const fileInputRef = useRef(null);
   const bulkFileInputRef = useRef(null);
   const zipFileInputRef = useRef(null);
 
+  // Anni disponibili (ultimi 5 anni)
+  const availableYears = [];
+  for (let y = currentYear; y >= currentYear - 4; y--) {
+    availableYears.push(y);
+  }
+
   useEffect(() => {
     loadCorrispettivi();
-  }, []);
+  }, [selectedYear]);
 
   async function loadCorrispettivi() {
     try {
       setLoading(true);
-      const r = await api.get("/api/corrispettivi");
+      // Filtra per anno selezionato
+      const startDate = `${selectedYear}-01-01`;
+      const endDate = `${selectedYear}-12-31`;
+      const r = await api.get(`/api/corrispettivi?data_da=${startDate}&data_a=${endDate}`);
       setCorrispettivi(Array.isArray(r.data) ? r.data : []);
     } catch (e) {
       console.error("Error loading corrispettivi:", e);
