@@ -515,17 +515,22 @@ def parse_libro_unico_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                                 if emp_data["netto"] is not None:
                                     break
                     
-                    # Pattern 3: Last line with amount ending in "+" (Smart Forms netto is usually at the end)
-                    if emp_data["netto"] is None and 'COMPETENZE' in page_text.upper():
-                        # Search from bottom for netto value
-                        for line in reversed(lines):
-                            # Match amounts ending with "+" 
-                            netto_match = re.search(r'(\d{3,4})[,.](\d{2})\+\s*$', line)
-                            if netto_match:
-                                val = float(f"{netto_match.group(1)}.{netto_match.group(2)}")
-                                if 100 <= val <= 10000:
-                                    emp_data["netto"] = val
-                                    logger.info(f"  Netto (bottom search): €{val}")
+                    # Pattern 3: Smart Forms - look for "Mat." pattern followed by netto
+                    # Format: "Mat. XXX+Mat. XXX+Mat. XXX+ X.XX X.XX NETTO+"
+                    if emp_data["netto"] is None:
+                        for line in lines:
+                            if 'Mat.' in line and '+' in line:
+                                # Find all amounts ending with + in the line
+                                amounts = re.findall(r'(\d{1,4})[,.](\d{2})\+', line)
+                                if amounts:
+                                    # The last amount before LIRE or at end is usually the netto
+                                    for amt in reversed(amounts):
+                                        val = float(f"{amt[0]}.{amt[1]}")
+                                        if 100 <= val <= 10000:  # Reasonable salary range
+                                            emp_data["netto"] = val
+                                            logger.info(f"  Netto (Mat. line): €{val}")
+                                            break
+                                if emp_data["netto"] is not None:
                                     break
             
             # Finalize employee data
