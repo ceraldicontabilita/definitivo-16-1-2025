@@ -482,6 +482,7 @@ export default function Fatture() {
                 <th style={{ padding: 8 }}>Fornitore</th>
                 <th style={{ padding: 8 }}>Data</th>
                 <th style={{ padding: 8 }}>Importo</th>
+                <th style={{ padding: 8 }}>Metodo Pag.</th>
                 <th style={{ padding: 8 }}>Stato</th>
                 <th style={{ padding: 8 }}>Azioni</th>
               </tr>
@@ -506,6 +507,39 @@ export default function Fatture() {
                   <td style={{ padding: 8 }}>{formatDateIT(inv.invoice_date) || "-"}</td>
                   <td style={{ padding: 8, fontWeight: "bold" }}>
                     € {(inv.total_amount || 0).toFixed(2)}
+                  </td>
+                  <td style={{ padding: 8 }}>
+                    {updatingPayment === inv.id ? (
+                      <span style={{ color: '#666', fontSize: 12 }}>⏳ Aggiorno...</span>
+                    ) : (
+                      <select
+                        value={inv.metodo_pagamento || ""}
+                        onChange={(e) => handleUpdateMetodoPagamento(inv.id, e.target.value)}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: 6,
+                          border: '1px solid #ddd',
+                          fontSize: 12,
+                          background: inv.metodo_pagamento ? 
+                            METODI_PAGAMENTO.find(m => m.value === inv.metodo_pagamento)?.color + '20' : 
+                            'white',
+                          cursor: 'pointer',
+                          minWidth: 100
+                        }}
+                        data-testid={`metodo-pagamento-${inv.id}`}
+                      >
+                        <option value="">-- Seleziona --</option>
+                        {METODI_PAGAMENTO.map(m => (
+                          <option key={m.value} value={m.value}>{m.label}</option>
+                        ))}
+                      </select>
+                    )}
+                    {inv.prima_nota_cassa_id && (
+                      <div style={{ fontSize: 10, color: '#4caf50', marginTop: 2 }}>✓ In Cassa</div>
+                    )}
+                    {inv.prima_nota_banca_id && (
+                      <div style={{ fontSize: 10, color: '#2196f3', marginTop: 2 }}>✓ In Banca</div>
+                    )}
                   </td>
                   <td style={{ padding: 8 }}>
                     <span style={{
