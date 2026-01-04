@@ -469,6 +469,45 @@ export default function PrimaNota() {
 
 // Sub-components
 
+function MiniCard({ title, value, color, highlight }) {
+  return (
+    <div style={{ 
+      background: highlight ? `${color}15` : 'white',
+      borderRadius: 8, 
+      padding: 10, 
+      border: highlight ? `2px solid ${color}` : '1px solid #e5e7eb'
+    }}>
+      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>{title}</div>
+      <div style={{ fontSize: 18, fontWeight: 'bold', color }}>{value}</div>
+    </div>
+  );
+}
+
+function TinyStatCard({ title, value, color }) {
+  return (
+    <div style={{ background: 'white', borderRadius: 6, padding: 8, border: '1px solid #e5e7eb', borderLeft: `3px solid ${color}` }}>
+      <div style={{ fontSize: 10, color: '#6b7280' }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 'bold', color }}>{value}</div>
+    </div>
+  );
+}
+
+function CompactEntryCard({ title, color, children }) {
+  return (
+    <div style={{ 
+      background: `${color}10`,
+      borderRadius: 8, 
+      padding: 10,
+      border: `1px solid ${color}30`
+    }}>
+      <h4 style={{ margin: '0 0 8px 0', fontSize: 12, fontWeight: 'bold', color }}>{title}</h4>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function SummaryCard({ title, value, color, icon, highlight, subtitle }) {
   return (
     <div style={{ 
