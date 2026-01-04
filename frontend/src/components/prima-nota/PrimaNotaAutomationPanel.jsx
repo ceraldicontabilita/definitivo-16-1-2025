@@ -57,12 +57,12 @@ export function PrimaNotaAutomationPanel({
         
         <AutomationAction
           title="📊 Import Assegni (Estratto Conto)"
-          description="Parsa estratto conto CSV/Excel per trovare prelievi assegno"
+          description="Parsa estratto conto PDF/CSV/Excel per trovare prelievi assegno"
           buttonLabel={automationLoading ? '⏳ Elaborazione...' : '📤 Seleziona Estratto Conto'}
           buttonColor="#2196f3"
           disabled={automationLoading}
           fileInputRef={estrattoFileRef}
-          accept=".csv,.xls,.xlsx"
+          accept=".pdf,.csv,.xls,.xlsx"
           onChange={onImportEstrattoContoAssegni}
           dataTestId="import-assegni-btn"
         />
