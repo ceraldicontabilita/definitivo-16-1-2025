@@ -1,304 +1,409 @@
 """
-Suppliers router.
-Handles supplier CRUD operations and management.
+Suppliers router - Gestione Fornitori.
+API per CRUD fornitori, import Excel, metodi di pagamento.
 """
-from fastapi import APIRouter, Depends, Query, status
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Body
+from typing import Dict, Any, List, Optional
+from datetime import datetime, timedelta
+import uuid
 import logging
+import io
 
 from app.database import Database, Collections
-from app.repositories import SupplierRepository, InvoiceRepository
-from app.services import SupplierService
-from app.models import SupplierCreate, SupplierUpdate, SupplierResponse
-from app.utils.dependencies import get_current_user, pagination_params
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
+# Metodi di pagamento disponibili
+PAYMENT_METHODS = {
+    "contanti": {"label": "Contanti", "prima_nota": "cassa"},
+    "bonifico": {"label": "Bonifico Bancario", "prima_nota": "banca"},
+    "assegno": {"label": "Assegno", "prima_nota": "banca"},
+    "riba": {"label": "Ri.Ba.", "prima_nota": "banca"},
+    "carta": {"label": "Carta di Credito", "prima_nota": "banca"},
+    "sepa": {"label": "Addebito SEPA", "prima_nota": "banca"},
+    "mav": {"label": "MAV", "prima_nota": "banca"},
+    "rav": {"label": "RAV", "prima_nota": "banca"},
+    "rid": {"label": "RID", "prima_nota": "banca"},
+    "f24": {"label": "F24", "prima_nota": "banca"},
+    "compensazione": {"label": "Compensazione", "prima_nota": "altro"},
+    "misto": {"label": "Misto (Cassa + Banca)", "prima_nota": "misto"}
+}
 
-# Dependency to get supplier service
-async def get_supplier_service() -> SupplierService:
-    """Get supplier service with injected dependencies."""
+# Termini di pagamento predefiniti
+PAYMENT_TERMS = [
+    {"code": "VISTA", "days": 0, "label": "A vista"},
+    {"code": "30GG", "days": 30, "label": "30 giorni"},
+    {"code": "30GGDFM", "days": 30, "label": "30 giorni data fattura fine mese"},
+    {"code": "60GG", "days": 60, "label": "60 giorni"},
+    {"code": "60GGDFM", "days": 60, "label": "60 giorni data fattura fine mese"},
+    {"code": "90GG", "days": 90, "label": "90 giorni"},
+    {"code": "120GG", "days": 120, "label": "120 giorni"},
+]
+
+
+def clean_mongo_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Rimuove _id da documento MongoDB."""
+    if doc and "_id" in doc:
+        doc.pop("_id", None)
+    return doc
+
+
+@router.get("/payment-methods")
+async def get_payment_methods() -> List[Dict[str, Any]]:
+    """Ritorna la lista dei metodi di pagamento disponibili."""
+    return [
+        {"code": code, **data}
+        for code, data in PAYMENT_METHODS.items()
+    ]
+
+
+@router.get("/payment-terms")
+async def get_payment_terms() -> List[Dict[str, Any]]:
+    """Ritorna la lista dei termini di pagamento disponibili."""
+    return PAYMENT_TERMS
+
+
+@router.post("/upload-excel")
+async def upload_suppliers_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Import fornitori da file Excel.
+    Formato atteso: Partita Iva, Denominazione, Email, Comune, Provincia, etc.
+    """
+    if not file.filename.endswith(('.xls', '.xlsx')):
+        raise HTTPException(status_code=400, detail="Il file deve essere in formato Excel (.xls o .xlsx)")
+    
+    try:
+        import pandas as pd
+        
+        content = await file.read()
+        
+        # Determina l'engine corretto
+        if file.filename.endswith('.xls'):
+            df = pd.read_excel(io.BytesIO(content), engine='xlrd')
+        else:
+            df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
+        
+        db = Database.get_db()
+        results = {
+            "imported": 0,
+            "updated": 0,
+            "skipped": 0,
+            "errors": []
+        }
+        
+        for idx, row in df.iterrows():
+            try:
+                partita_iva = str(row.get('Partita Iva', '')).strip()
+                denominazione = str(row.get('Denominazione', '')).strip()
+                
+                # Skip se manca P.IVA o denominazione
+                if not partita_iva or partita_iva == 'nan' or not denominazione or denominazione == 'nan':
+                    results["skipped"] += 1
+                    continue
+                
+                # Pulisce la denominazione (rimuove virgolette)
+                denominazione = denominazione.strip('"').strip()
+                
+                # Prepara il documento fornitore
+                supplier_doc = {
+                    "partita_iva": partita_iva,
+                    "denominazione": denominazione,
+                    "codice_fiscale": str(row.get('Codice Fiscale', '')).strip() if pd.notna(row.get('Codice Fiscale')) else "",
+                    "email": str(row.get('Email', '')).strip() if pd.notna(row.get('Email')) else "",
+                    "pec": str(row.get('PEC', '')).strip() if pd.notna(row.get('PEC')) else "",
+                    "telefono": str(row.get('Telefono', '')).strip() if pd.notna(row.get('Telefono')) else "",
+                    "indirizzo": str(row.get('Indirizzo', '')).strip() if pd.notna(row.get('Indirizzo')) else "",
+                    "cap": str(int(row.get('CAP', 0))) if pd.notna(row.get('CAP')) else "",
+                    "comune": str(row.get('Comune', '')).strip() if pd.notna(row.get('Comune')) else "",
+                    "provincia": str(row.get('Provincia', '')).strip() if pd.notna(row.get('Provincia')) else "",
+                    "nazione": str(row.get('Nazione', 'IT')).strip() if pd.notna(row.get('Nazione')) else "IT",
+                    # Campi pagamento (default)
+                    "metodo_pagamento": "bonifico",
+                    "termini_pagamento": "30GG",
+                    "giorni_pagamento": 30,
+                    "iban": "",
+                    "banca": "",
+                    # Status
+                    "attivo": True,
+                    "updated_at": datetime.utcnow().isoformat()
+                }
+                
+                # Verifica se esiste già
+                existing = await db[Collections.SUPPLIERS].find_one({"partita_iva": partita_iva})
+                
+                if existing:
+                    # Aggiorna solo i campi base, non sovrascrivere metodo pagamento se già impostato
+                    update_fields = {k: v for k, v in supplier_doc.items() 
+                                     if k not in ['metodo_pagamento', 'termini_pagamento', 'giorni_pagamento', 'iban', 'banca']}
+                    await db[Collections.SUPPLIERS].update_one(
+                        {"partita_iva": partita_iva},
+                        {"$set": update_fields}
+                    )
+                    results["updated"] += 1
+                else:
+                    # Inserisci nuovo
+                    supplier_doc["id"] = str(uuid.uuid4())
+                    supplier_doc["created_at"] = datetime.utcnow().isoformat()
+                    await db[Collections.SUPPLIERS].insert_one(supplier_doc)
+                    results["imported"] += 1
+                    
+            except Exception as e:
+                results["errors"].append(f"Riga {idx+2}: {str(e)}")
+        
+        return {
+            "success": True,
+            "message": f"Import completato: {results['imported']} nuovi, {results['updated']} aggiornati, {results['skipped']} saltati",
+            **results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error importing suppliers: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore import: {str(e)}")
+
+
+@router.get("")
+async def list_suppliers(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(1000, ge=1, le=10000),
+    search: Optional[str] = Query(None),
+    metodo_pagamento: Optional[str] = Query(None),
+    attivo: Optional[bool] = Query(None)
+) -> List[Dict[str, Any]]:
+    """Lista fornitori con filtri opzionali."""
     db = Database.get_db()
-    supplier_repo = SupplierRepository(db[Collections.SUPPLIERS])
-    invoice_repo = InvoiceRepository(db[Collections.INVOICES])
-    return SupplierService(supplier_repo, invoice_repo)
+    
+    query = {}
+    if search:
+        query["$or"] = [
+            {"denominazione": {"$regex": search, "$options": "i"}},
+            {"partita_iva": {"$regex": search, "$options": "i"}}
+        ]
+    if metodo_pagamento:
+        query["metodo_pagamento"] = metodo_pagamento
+    if attivo is not None:
+        query["attivo"] = attivo
+    
+    suppliers = await db[Collections.SUPPLIERS].find(query, {"_id": 0}).sort("denominazione", 1).skip(skip).limit(limit).to_list(limit)
+    
+    # Arricchisci con statistiche fatture
+    for supplier in suppliers:
+        piva = supplier.get("partita_iva")
+        if piva:
+            # Conta fatture e totale
+            pipeline = [
+                {"$match": {"cedente_piva": piva}},
+                {"$group": {
+                    "_id": None,
+                    "count": {"$sum": 1},
+                    "total": {"$sum": "$importo_totale"},
+                    "unpaid": {"$sum": {"$cond": [{"$eq": ["$pagato", False]}, "$importo_totale", 0]}}
+                }}
+            ]
+            stats = await db[Collections.INVOICES].aggregate(pipeline).to_list(1)
+            if stats:
+                supplier["fatture_count"] = stats[0].get("count", 0)
+                supplier["fatture_totale"] = stats[0].get("total", 0)
+                supplier["fatture_non_pagate"] = stats[0].get("unpaid", 0)
+            else:
+                supplier["fatture_count"] = 0
+                supplier["fatture_totale"] = 0
+                supplier["fatture_non_pagate"] = 0
+    
+    return suppliers
 
 
-@router.post(
-    "",
-    response_model=Dict[str, str],
-    status_code=status.HTTP_201_CREATED,
-    summary="Create supplier",
-    description="Create a new supplier"
-)
-async def create_supplier(
-    supplier_data: SupplierCreate,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> Dict[str, str]:
-    """
-    Create a new supplier.
+@router.get("/stats")
+async def get_suppliers_stats() -> Dict[str, Any]:
+    """Statistiche fornitori aggregate."""
+    db = Database.get_db()
     
-    - **vat_number**: Partita IVA (11 digits)
-    - **name**: Supplier name
-    - **payment_method**: Payment method (cassa, banca, assegno, etc.)
+    total = await db[Collections.SUPPLIERS].count_documents({})
+    active = await db[Collections.SUPPLIERS].count_documents({"attivo": True})
     
-    VAT number will be validated (must be 11 digits).
-    """
-    user_id = current_user["user_id"]
-    
-    supplier_id = await supplier_service.create_supplier(
-        supplier_data=supplier_data,
-        user_id=user_id
-    )
+    # Distribuzione per metodo pagamento
+    pipeline = [
+        {"$group": {
+            "_id": "$metodo_pagamento",
+            "count": {"$sum": 1}
+        }}
+    ]
+    by_method = await db[Collections.SUPPLIERS].aggregate(pipeline).to_list(100)
     
     return {
-        "message": "Supplier created successfully",
-        "supplier_id": supplier_id
+        "totale": total,
+        "attivi": active,
+        "inattivi": total - active,
+        "per_metodo_pagamento": {item["_id"] or "non_definito": item["count"] for item in by_method}
     }
 
 
-@router.get(
-    "",
-    response_model=List[Dict[str, Any]],
-    summary="List suppliers",
-    description="Get list of suppliers with optional filters"
-)
-async def list_suppliers(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    pagination: Dict[str, Any] = Depends(pagination_params),
-    active_only: bool = Query(True, description="Only return active suppliers"),
-    payment_method: Optional[str] = Query(None, description="Filter by payment method"),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> List[Dict[str, Any]]:
-    """
-    List suppliers with optional filters.
-    
-    **Query Parameters:**
-    - **skip**: Number of suppliers to skip (pagination)
-    - **limit**: Maximum number of suppliers to return
-    - **active_only**: Only return active suppliers (default: true)
-    - **payment_method**: Filter by payment method
-    """
-    user_id = current_user["user_id"]
-    
-    return await supplier_service.list_suppliers(
-        user_id=user_id,
-        skip=pagination["skip"],
-        limit=pagination["limit"],
-        active_only=active_only,
-        payment_method=payment_method
-    )
-
-
-@router.get(
-    "/search",
-    response_model=List[Dict[str, Any]],
-    summary="Search suppliers",
-    description="Search suppliers by name or VAT number"
-)
-async def search_suppliers(
-    q: str = Query(..., description="Search query"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    pagination: Dict[str, Any] = Depends(pagination_params),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> List[Dict[str, Any]]:
-    """
-    Search suppliers by name or VAT number.
-    
-    **Query Parameters:**
-    - **q**: Search query (searches in name and vat_number)
-    """
-    user_id = current_user["user_id"]
-    
-    return await supplier_service.search_suppliers(
-        user_id=user_id,
-        query=q,
-        skip=pagination["skip"],
-        limit=pagination["limit"]
-    )
-
-
-@router.get(
-    "/stats",
-    response_model=Dict[str, Any],
-    summary="Get supplier statistics",
-    description="Get comprehensive supplier statistics"
-)
-async def get_supplier_stats(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
+@router.get("/scadenze")
+async def get_payment_deadlines(
+    days_ahead: int = Query(30, ge=1, le=365)
 ) -> Dict[str, Any]:
     """
-    Get supplier statistics.
-    
-    Returns:
-    - Total and active supplier counts
-    - Total invoices and amounts
-    - Distribution by payment method
-    - Top 10 suppliers by amount
+    Ritorna le fatture in scadenza nei prossimi N giorni.
     """
-    user_id = current_user["user_id"]
+    db = Database.get_db()
     
-    return await supplier_service.get_supplier_stats(user_id)
+    today = datetime.utcnow()
+    deadline = today + timedelta(days=days_ahead)
+    
+    # Trova fatture non pagate con scadenza nel range
+    pipeline = [
+        {
+            "$match": {
+                "pagato": {"$ne": True},
+                "data_scadenza": {
+                    "$gte": today.isoformat(),
+                    "$lte": deadline.isoformat()
+                }
+            }
+        },
+        {"$sort": {"data_scadenza": 1}},
+        {"$project": {"_id": 0}}
+    ]
+    
+    invoices = await db[Collections.INVOICES].aggregate(pipeline).to_list(1000)
+    
+    # Raggruppa per fornitore
+    by_supplier = {}
+    for inv in invoices:
+        piva = inv.get("cedente_piva", "sconosciuto")
+        if piva not in by_supplier:
+            by_supplier[piva] = {
+                "fornitore": inv.get("cedente_denominazione", ""),
+                "fatture": [],
+                "totale": 0
+            }
+        by_supplier[piva]["fatture"].append(inv)
+        by_supplier[piva]["totale"] += inv.get("importo_totale", 0)
+    
+    # Calcola scadenze critiche (prossimi 7 giorni)
+    critical_deadline = today + timedelta(days=7)
+    critical = [inv for inv in invoices if inv.get("data_scadenza", "") <= critical_deadline.isoformat()]
+    
+    return {
+        "totale_fatture": len(invoices),
+        "totale_importo": sum(inv.get("importo_totale", 0) for inv in invoices),
+        "critiche_7gg": len(critical),
+        "per_fornitore": by_supplier,
+        "fatture": invoices
+    }
 
 
-@router.get(
-    "/top",
-    response_model=List[Dict[str, Any]],
-    summary="Get top suppliers",
-    description="Get top suppliers by total amount"
-)
-async def get_top_suppliers(
-    limit: int = Query(10, ge=1, le=50, description="Number of suppliers to return"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> List[Dict[str, Any]]:
-    """
-    Get top suppliers ranked by total amount spent.
+@router.get("/{supplier_id}")
+async def get_supplier(supplier_id: str) -> Dict[str, Any]:
+    """Dettaglio singolo fornitore."""
+    db = Database.get_db()
     
-    **Query Parameters:**
-    - **limit**: Number of suppliers to return (1-50, default: 10)
-    """
-    user_id = current_user["user_id"]
-    
-    return await supplier_service.get_top_suppliers(
-        user_id=user_id,
-        limit=limit
+    supplier = await db[Collections.SUPPLIERS].find_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]},
+        {"_id": 0}
     )
-
-
-@router.get(
-    "/{supplier_id}",
-    response_model=Dict[str, Any],
-    summary="Get supplier by ID",
-    description="Get detailed supplier information"
-)
-async def get_supplier(
-    supplier_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> Dict[str, Any]:
-    """
-    Get supplier details by ID.
     
-    Returns complete supplier data including statistics.
-    """
-    return await supplier_service.get_supplier(supplier_id)
-
-
-@router.get(
-    "/{supplier_id}/summary",
-    response_model=Dict[str, Any],
-    summary="Get supplier summary",
-    description="Get comprehensive supplier summary with invoices"
-)
-async def get_supplier_summary(
-    supplier_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> Dict[str, Any]:
-    """
-    Get comprehensive supplier summary.
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
     
-    Returns:
-    - Supplier details
-    - Recent invoices (last 10)
-    - Invoice count and total amount
-    - Unpaid amount
-    """
-    return await supplier_service.get_supplier_summary(supplier_id)
-
-
-@router.get(
-    "/{supplier_id}/invoices",
-    response_model=List[Dict[str, Any]],
-    summary="Get supplier invoices",
-    description="Get all invoices for a supplier"
-)
-async def get_supplier_invoices(
-    supplier_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    pagination: Dict[str, Any] = Depends(pagination_params),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> List[Dict[str, Any]]:
-    """
-    Get all invoices for a specific supplier.
+    # Aggiungi fatture recenti
+    piva = supplier.get("partita_iva")
+    if piva:
+        invoices = await db[Collections.INVOICES].find(
+            {"cedente_piva": piva},
+            {"_id": 0}
+        ).sort("data_fattura", -1).limit(20).to_list(20)
+        supplier["fatture_recenti"] = invoices
     
-    Returns invoices sorted by date (newest first).
-    """
-    # Get supplier to get VAT number
-    supplier = await supplier_service.get_supplier(supplier_id)
-    
-    return await supplier_service.get_supplier_invoices(
-        supplier_vat=supplier["vat_number"],
-        skip=pagination["skip"],
-        limit=pagination["limit"]
-    )
+    return supplier
 
 
-@router.put(
-    "/{supplier_id}",
-    response_model=Dict[str, str],
-    summary="Update supplier",
-    description="Update supplier information"
-)
+@router.put("/{supplier_id}")
 async def update_supplier(
     supplier_id: str,
-    update_data: SupplierUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
+    data: Dict[str, Any] = Body(...)
 ) -> Dict[str, str]:
     """
-    Update supplier information.
-    
-    Only provided fields will be updated.
+    Aggiorna dati fornitore incluso metodo pagamento.
     """
-    await supplier_service.update_supplier(
-        supplier_id=supplier_id,
-        update_data=update_data
+    db = Database.get_db()
+    
+    # Rimuovi campi non modificabili
+    data.pop("id", None)
+    data.pop("partita_iva", None)  # Non modificabile
+    data.pop("created_at", None)
+    
+    # Valida metodo pagamento se fornito
+    if "metodo_pagamento" in data:
+        if data["metodo_pagamento"] not in PAYMENT_METHODS:
+            raise HTTPException(status_code=400, detail=f"Metodo pagamento non valido. Valori ammessi: {list(PAYMENT_METHODS.keys())}")
+    
+    # Calcola giorni pagamento se termini forniti
+    if "termini_pagamento" in data:
+        term = next((t for t in PAYMENT_TERMS if t["code"] == data["termini_pagamento"]), None)
+        if term:
+            data["giorni_pagamento"] = term["days"]
+    
+    data["updated_at"] = datetime.utcnow().isoformat()
+    
+    result = await db[Collections.SUPPLIERS].update_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]},
+        {"$set": data}
     )
     
-    return {"message": "Supplier updated successfully"}
-
-
-@router.post(
-    "/{supplier_id}/deactivate",
-    status_code=status.HTTP_200_OK,
-    summary="Deactivate supplier",
-    description="Deactivate a supplier"
-)
-async def deactivate_supplier(
-    supplier_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> Dict[str, str]:
-    """
-    Deactivate a supplier.
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
     
-    Deactivated suppliers are not deleted but marked as inactive.
-    """
-    await supplier_service.deactivate_supplier(supplier_id)
-    
-    return {"message": "Supplier deactivated successfully"}
+    return {"message": "Fornitore aggiornato con successo"}
 
 
-@router.post(
-    "/{supplier_id}/activate",
-    status_code=status.HTTP_200_OK,
-    summary="Activate supplier",
-    description="Activate a supplier"
-)
-async def activate_supplier(
-    supplier_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    supplier_service: SupplierService = Depends(get_supplier_service)
-) -> Dict[str, str]:
-    """
-    Activate a supplier.
-    """
-    await supplier_service.activate_supplier(supplier_id)
+@router.post("/{supplier_id}/toggle-active")
+async def toggle_supplier_active(supplier_id: str) -> Dict[str, Any]:
+    """Attiva/disattiva fornitore."""
+    db = Database.get_db()
     
-    return {"message": "Supplier activated successfully"}
+    supplier = await db[Collections.SUPPLIERS].find_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]}
+    )
+    
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
+    
+    new_status = not supplier.get("attivo", True)
+    
+    await db[Collections.SUPPLIERS].update_one(
+        {"_id": supplier["_id"]},
+        {"$set": {"attivo": new_status, "updated_at": datetime.utcnow().isoformat()}}
+    )
+    
+    return {"message": f"Fornitore {'attivato' if new_status else 'disattivato'}", "attivo": new_status}
+
+
+@router.delete("/{supplier_id}")
+async def delete_supplier(supplier_id: str, force: bool = Query(False)) -> Dict[str, str]:
+    """
+    Elimina fornitore.
+    Se force=False e ci sono fatture collegate, blocca l'eliminazione.
+    """
+    db = Database.get_db()
+    
+    supplier = await db[Collections.SUPPLIERS].find_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]}
+    )
+    
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
+    
+    # Verifica fatture collegate
+    piva = supplier.get("partita_iva")
+    invoice_count = await db[Collections.INVOICES].count_documents({"cedente_piva": piva})
+    
+    if invoice_count > 0 and not force:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Impossibile eliminare: {invoice_count} fatture collegate. Usa force=true per procedere."
+        )
+    
+    await db[Collections.SUPPLIERS].delete_one({"_id": supplier["_id"]})
+    
+    return {"message": "Fornitore eliminato"}
