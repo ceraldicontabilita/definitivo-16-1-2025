@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api';
 
 /**
@@ -14,6 +14,11 @@ import api from '../api';
  */
 export default function PrimaNota() {
   const today = new Date().toISOString().split('T')[0];
+  const currentYear = new Date().getFullYear();
+  
+  // Anno selezionato (default: anno corrente)
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [availableYears, setAvailableYears] = useState([currentYear]);
   
   // Sezione attiva
   const [activeSection, setActiveSection] = useState('cassa');
@@ -23,7 +28,7 @@ export default function PrimaNota() {
   const [bancaData, setBancaData] = useState({ movimenti: [], saldo: 0, totale_entrate: 0, totale_uscite: 0 });
   const [loading, setLoading] = useState(true);
   
-  // Filters
+  // Filters - ora basati su anno
   const [filterPeriodo, setFilterPeriodo] = useState({ da: '', a: '' });
   
   // Quick entry forms - CASSA
@@ -38,19 +43,44 @@ export default function PrimaNota() {
   const [savingVers, setSavingVers] = useState(false);
   const [savingMov, setSavingMov] = useState(false);
 
+  // Carica anni disponibili all'avvio
+  useEffect(() => {
+    loadAvailableYears();
+  }, []);
+
+  // Carica dati quando cambia l'anno selezionato
   useEffect(() => {
     loadAllData();
-  }, []);
+  }, [selectedYear]);
 
   useEffect(() => {
     loadAllData();
   }, [filterPeriodo]);
+
+  // Funzione per caricare gli anni disponibili
+  const loadAvailableYears = async () => {
+    try {
+      const res = await api.get('/api/prima-nota/anni-disponibili');
+      const years = res.data.anni || [currentYear];
+      // Assicurati che l'anno corrente sia sempre presente
+      if (!years.includes(currentYear)) {
+        years.push(currentYear);
+      }
+      setAvailableYears(years.sort((a, b) => b - a)); // Ordina decrescente
+    } catch (error) {
+      console.error('Error loading available years:', error);
+      setAvailableYears([currentYear]);
+    }
+  };
 
   const loadAllData = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       params.append('limit', '2000');
+      params.append('anno', selectedYear.toString());
+      
+      // Se ci sono filtri periodo aggiuntivi
       if (filterPeriodo.da) params.append('data_da', filterPeriodo.da);
       if (filterPeriodo.a) params.append('data_a', filterPeriodo.a);
 
@@ -61,6 +91,9 @@ export default function PrimaNota() {
 
       setCassaData(cassaRes.data);
       setBancaData(bancaRes.data);
+      
+      // Aggiorna anni disponibili dopo caricamento
+      loadAvailableYears();
     } catch (error) {
       console.error('Error loading prima nota:', error);
     } finally {
