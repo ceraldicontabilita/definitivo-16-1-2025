@@ -560,7 +560,7 @@ export default function Corrispettivi() {
               <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left" }}>
                 <th style={{ padding: 8 }}>Data</th>
                 <th style={{ padding: 8 }}>Matricola RT</th>
-                <th style={{ padding: 8 }}>💵 Contanti</th>
+                <th style={{ padding: 8 }}>💵 Cassa</th>
                 <th style={{ padding: 8 }}>💳 Elettronico</th>
                 <th style={{ padding: 8 }}>Totale</th>
                 <th style={{ padding: 8 }}>IVA</th>
