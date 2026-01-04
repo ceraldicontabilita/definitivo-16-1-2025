@@ -122,6 +122,38 @@ export default function PrimaNota() {
     }
   };
 
+  const handleEditMovement = (mov) => {
+    setEditingMovement(mov);
+    setNewMovement({
+      data: mov.data,
+      tipo: mov.tipo,
+      importo: mov.importo.toString(),
+      descrizione: mov.descrizione,
+      categoria: mov.categoria || 'Altro',
+      riferimento: mov.riferimento || '',
+      note: mov.note || ''
+    });
+    setShowNewMovement(true);
+  };
+
+  const handleUpdateMovement = async () => {
+    if (!editingMovement) return;
+    
+    try {
+      const endpoint = activeTab === 'cassa' ? 'cassa' : 'banca';
+      await api.put(`/api/prima-nota/${endpoint}/${editingMovement.id}`, {
+        ...newMovement,
+        importo: parseFloat(newMovement.importo)
+      });
+      setShowNewMovement(false);
+      setEditingMovement(null);
+      setNewMovement(DEFAULT_MOVEMENT);
+      loadData();
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   // Automation handlers
   const handleImportCassaExcel = async (e) => {
     const file = e.target.files?.[0];
