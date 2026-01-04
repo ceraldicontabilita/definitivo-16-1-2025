@@ -271,21 +271,38 @@ export default function PrimaNota() {
     <div style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h1 data-testid="prima-nota-title">📒 Prima Nota</h1>
-        <button
-          data-testid="toggle-automation-btn"
-          onClick={() => setShowAutomation(!showAutomation)}
-          style={{
-            padding: '10px 20px',
-            background: showAutomation ? '#ff9800' : '#673ab7',
-            color: 'white',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          🤖 {showAutomation ? 'Nascondi Automazione' : 'Automazione'}
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            data-testid="export-excel-btn"
+            onClick={handleExportExcel}
+            style={{
+              padding: '10px 20px',
+              background: '#4caf50',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            📥 Export Excel
+          </button>
+          <button
+            data-testid="toggle-automation-btn"
+            onClick={() => setShowAutomation(!showAutomation)}
+            style={{
+              padding: '10px 20px',
+              background: showAutomation ? '#ff9800' : '#673ab7',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            🤖 {showAutomation ? 'Nascondi Automazione' : 'Automazione'}
+          </button>
+        </div>
       </div>
 
       {/* Automation Panel */}
