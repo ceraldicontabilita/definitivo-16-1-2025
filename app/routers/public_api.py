@@ -1127,6 +1127,19 @@ async def get_f24_alerts() -> List[Dict[str, Any]]:
     """
     Alert scadenze F24 - restituisce F24 in scadenza o scaduti.
     """
+    return await _get_f24_alerts_internal()
+
+
+@router.get("/f24-public/alerts")
+async def get_f24_alerts_public() -> List[Dict[str, Any]]:
+    """
+    Alert scadenze F24 - endpoint pubblico alternativo.
+    """
+    return await _get_f24_alerts_internal()
+
+
+async def _get_f24_alerts_internal() -> List[Dict[str, Any]]:
+    """Implementazione interna per gli alert F24."""
     db = Database.get_db()
     alerts = []
     
