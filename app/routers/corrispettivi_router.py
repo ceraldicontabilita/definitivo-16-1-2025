@@ -18,10 +18,24 @@ router = APIRouter()
 
 
 @router.get("")
-async def list_corrispettivi(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
-    """List corrispettivi."""
+async def list_corrispettivi(
+    skip: int = 0, 
+    limit: int = 10000,
+    data_da: str = None,
+    data_a: str = None
+) -> List[Dict[str, Any]]:
+    """List corrispettivi con filtro opzionale per data."""
     db = Database.get_db()
-    return await db["corrispettivi"].find({}, {"_id": 0}).sort("data", -1).skip(skip).limit(limit).to_list(limit)
+    
+    query = {}
+    if data_da or data_a:
+        query["data"] = {}
+        if data_da:
+            query["data"]["$gte"] = data_da
+        if data_a:
+            query["data"]["$lte"] = data_a
+    
+    return await db["corrispettivi"].find(query, {"_id": 0}).sort("data", -1).skip(skip).limit(limit).to_list(limit)
 
 
 @router.post("/ricalcola-iva")
