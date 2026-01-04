@@ -141,6 +141,54 @@ export default function RicercaProdotti() {
   const cartTotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const cartItemCount = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
 
+  // Invia ordine
+  const [sendingOrder, setSendingOrder] = useState(false);
+  
+  async function handleSendOrder() {
+    if (cartItemCount === 0) {
+      alert('Il carrello è vuoto!');
+      return;
+    }
+    
+    setSendingOrder(true);
+    try {
+      // Raggruppa per fornitore
+      const ordersData = Object.entries(cartBySupplier).map(([supplier, items]) => ({
+        fornitore: supplier,
+        prodotti: items.map(item => ({
+          nome: item.product_name,
+          quantita: item.quantity,
+          unita: item.unit,
+          prezzo_unitario: item.price,
+          totale: item.price * item.quantity
+        })),
+        totale: items.reduce((s, i) => s + i.price * i.quantity, 0)
+      }));
+      
+      // Salva ordine nel database
+      const res = await api.post('/api/orders/create', {
+        ordini: ordersData,
+        totale_generale: cartTotal,
+        data_creazione: new Date().toISOString(),
+        stato: 'da_inviare'
+      });
+      
+      alert(`✅ Ordine creato con successo!\n\n${ordersData.length} ordini per un totale di €${cartTotal.toFixed(2)}`);
+      setCart({});
+    } catch (error) {
+      console.error('Error sending order:', error);
+      // Se l'API non esiste, mostra comunque il riepilogo
+      const riepilogo = Object.entries(cartBySupplier).map(([supplier, items]) => {
+        const tot = items.reduce((s, i) => s + i.price * i.quantity, 0);
+        return `📦 ${supplier}: ${items.length} prodotti - €${tot.toFixed(2)}`;
+      }).join('\n');
+      
+      alert(`📋 Riepilogo Ordine:\n\n${riepilogo}\n\n💰 TOTALE: €${cartTotal.toFixed(2)}\n\n(Funzione salvataggio ordine in sviluppo)`);
+    } finally {
+      setSendingOrder(false);
+    }
+  }
+
   return (
     <>
       {/* Header con ricerca */}
