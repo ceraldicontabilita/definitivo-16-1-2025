@@ -124,6 +124,107 @@ export default function F24() {
     }
   };
 
+  const toggleRowExpand = (id) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  // Check if an F24 has tributi details
+  const hasTributi = (f24) => {
+    return (f24.tributi_erario?.length > 0) ||
+           (f24.tributi_inps?.length > 0) ||
+           (f24.tributi_regioni?.length > 0) ||
+           (f24.tributi_imu?.length > 0);
+  };
+
+  // Render tributi details table
+  const renderTributiDetails = (f24) => {
+    const allTributi = [];
+    
+    (f24.tributi_erario || []).forEach(t => allTributi.push({ ...t, sezione: 'ERARIO' }));
+    (f24.tributi_inps || []).forEach(t => allTributi.push({ ...t, sezione: 'INPS' }));
+    (f24.tributi_regioni || []).forEach(t => allTributi.push({ ...t, sezione: 'REGIONI' }));
+    (f24.tributi_imu || []).forEach(t => allTributi.push({ ...t, sezione: 'IMU/TASI' }));
+
+    if (allTributi.length === 0) return null;
+
+    return (
+      <div style={{ 
+        background: '#f8fafc', 
+        padding: 15, 
+        borderRadius: 8, 
+        margin: '10px 0',
+        border: '1px solid #e2e8f0'
+      }}>
+        <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: '#475569' }}>
+          📋 Dettaglio Codici Tributo ({allTributi.length})
+        </h4>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: '#e2e8f0' }}>
+              <th style={{ padding: '8px 10px', textAlign: 'left', borderRadius: '4px 0 0 0' }}>Sezione</th>
+              <th style={{ padding: '8px 10px', textAlign: 'left' }}>Codice</th>
+              <th style={{ padding: '8px 10px', textAlign: 'left' }}>Descrizione</th>
+              <th style={{ padding: '8px 10px', textAlign: 'center' }}>Periodo</th>
+              <th style={{ padding: '8px 10px', textAlign: 'right' }}>Debito</th>
+              <th style={{ padding: '8px 10px', textAlign: 'right', borderRadius: '0 4px 0 0' }}>Credito</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allTributi.map((t, idx) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <td style={{ padding: '8px 10px' }}>
+                  <span style={{
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 'bold',
+                    background: t.sezione === 'ERARIO' ? '#dbeafe' :
+                               t.sezione === 'INPS' ? '#dcfce7' :
+                               t.sezione === 'REGIONI' ? '#fef3c7' : '#f3e8ff',
+                    color: t.sezione === 'ERARIO' ? '#1e40af' :
+                           t.sezione === 'INPS' ? '#166534' :
+                           t.sezione === 'REGIONI' ? '#92400e' : '#7c3aed'
+                  }}>
+                    {t.sezione}
+                  </span>
+                </td>
+                <td style={{ padding: '8px 10px', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                  {t.codice || t.causale || '-'}
+                </td>
+                <td style={{ padding: '8px 10px', color: '#64748b' }}>
+                  {t.tipo || (t.sezione === 'INPS' ? 'Contributi INPS' : `Tributo ${t.codice}`)}
+                </td>
+                <td style={{ padding: '8px 10px', textAlign: 'center', fontFamily: 'monospace' }}>
+                  {t.mese_riferimento || t.mese || ''}/{t.anno || ''}
+                </td>
+                <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: t.debito > 0 ? '#dc2626' : '#64748b' }}>
+                  {t.debito > 0 ? formatCurrency(t.debito) : '-'}
+                </td>
+                <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: t.credito > 0 ? '#16a34a' : '#64748b' }}>
+                  {t.credito > 0 ? formatCurrency(t.credito) : '-'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr style={{ background: '#f1f5f9', fontWeight: 'bold' }}>
+              <td colSpan={4} style={{ padding: '10px', textAlign: 'right' }}>TOTALI:</td>
+              <td style={{ padding: '10px', textAlign: 'right', color: '#dc2626' }}>
+                {formatCurrency(allTributi.reduce((sum, t) => sum + (t.debito || 0), 0))}
+              </td>
+              <td style={{ padding: '10px', textAlign: 'right', color: '#16a34a' }}>
+                {formatCurrency(allTributi.reduce((sum, t) => sum + (t.credito || 0), 0))}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    );
+  };
+
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
       <h1 data-testid="f24-title" style={{ marginBottom: 20, fontSize: 'clamp(20px, 5vw, 28px)' }}>📋 F24 / Tributi</h1>
