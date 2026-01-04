@@ -438,20 +438,20 @@ async def invia_fatture_cassa(data: Dict[str, Any] = Body(...)) -> Dict[str, Any
     # Get data for email body
     fatture_data = await get_fatture_pagate_cassa(anno, mese)
     
-    subject = f"💵 Fatture Pagate in Contanti - {mese_nome} {anno}"
+    subject = f"💵 Fatture Pagate per Cassa - {mese_nome} {anno}"
     
     html_body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5;">
         <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
             <div style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; padding: 20px;">
-                <h1 style="margin: 0;">💵 Fatture Pagate in Contanti</h1>
+                <h1 style="margin: 0;">💵 Fatture Pagate per Cassa</h1>
                 <p style="margin: 10px 0 0 0; opacity: 0.9;">{mese_nome} {anno}</p>
             </div>
             
             <div style="padding: 20px;">
                 <p>Gentile Commercialista,</p>
-                <p>in allegato trova l'elenco delle fatture pagate in contanti nel mese di <strong>{mese_nome} {anno}</strong>.</p>
+                <p>in allegato trova l'elenco delle fatture pagate per cassa nel mese di <strong>{mese_nome} {anno}</strong>.</p>
                 
                 <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <h3 style="margin: 0 0 10px 0; color: #f57c00;">📊 Riepilogo</h3>
