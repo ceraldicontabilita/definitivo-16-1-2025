@@ -194,7 +194,7 @@ async def delete_prima_nota_cassa(movimento_id: str) -> Dict[str, str]:
 @router.get("/banca")
 async def list_prima_nota_banca(
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=2500),
     data_da: Optional[str] = Query(None),
     data_a: Optional[str] = Query(None),
     tipo: Optional[str] = Query(None),
@@ -608,7 +608,7 @@ async def get_prima_nota_salari(
     data_a: Optional[str] = Query(None, description="Data fine (YYYY-MM-DD)"),
     dipendente: Optional[str] = Query(None, description="Filtro per nome dipendente"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000)
+    limit: int = Query(100, ge=1, le=2500)
 ) -> Dict[str, Any]:
     """Lista movimenti prima nota salari con filtri."""
     db = Database.get_db()
