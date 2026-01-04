@@ -431,9 +431,102 @@ async def get_finanziaria() -> Dict[str, Any]:
 # ============== PORTAL UPLOAD ==============
 
 @router.post("/portal/upload")
-async def portal_upload(file: UploadFile = File(...)) -> Dict[str, Any]:
-    """Upload generico portale."""
+async def portal_upload(
+    file: UploadFile = File(...),
+    kind: str = ""
+) -> Dict[str, Any]:
+    """
+    Upload generico portale con routing per tipo documento.
+    
+    kind values:
+    - "estratto-conto": Redirect to bank statement import
+    - "": Generic upload
+    """
     content = await file.read()
+    
+    # Route to specific handler based on kind
+    if kind == "estratto-conto":
+        # Import bank statement module
+        from app.routers.bank_statement_import import (
+            extract_movements_from_pdf, 
+            extract_movements_from_excel,
+            reconcile_movement
+        )
+        
+        filename = file.filename.lower()
+        movements = []
+        
+        try:
+            if filename.endswith('.pdf'):
+                movements = extract_movements_from_pdf(content)
+            elif filename.endswith(('.xlsx', '.xls', '.csv')):
+                movements = extract_movements_from_excel(content, filename)
+            else:
+                return {
+                    "success": False,
+                    "error": "Formato non supportato. Usa PDF, Excel o CSV."
+                }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Errore parsing file: {str(e)}"
+            }
+        
+        if not movements:
+            return {
+                "success": False,
+                "message": "Nessun movimento trovato nel file",
+                "movements_found": 0
+            }
+        
+        # Remove duplicates
+        seen = set()
+        unique_movements = []
+        for m in movements:
+            key = f"{m['data']}_{m['tipo']}_{m['importo']:.2f}"
+            if key not in seen:
+                seen.add(key)
+                unique_movements.append(m)
+        
+        db = Database.get_db()
+        results = {
+            "success": True,
+            "filename": file.filename,
+            "movements_found": len(unique_movements),
+            "reconciled": 0,
+            "not_found": 0,
+            "movements": [],
+            "reconciled_details": [],
+            "not_found_details": []
+        }
+        
+        # Process and reconcile each movement
+        for movement in unique_movements:
+            match = await reconcile_movement(db, movement)
+            
+            mov_summary = {
+                "data": movement["data"],
+                "descrizione": movement["descrizione"][:50] if movement.get("descrizione") else "",
+                "importo": movement["importo"],
+                "tipo": movement["tipo"],
+                "riconciliato": bool(match)
+            }
+            results["movements"].append(mov_summary)
+            
+            if match:
+                results["reconciled"] += 1
+                results["reconciled_details"].append({
+                    "estratto_conto": mov_summary,
+                    "prima_nota": match
+                })
+            else:
+                results["not_found"] += 1
+                results["not_found_details"].append(mov_summary)
+        
+        results["message"] = f"Importati {len(unique_movements)} movimenti. Riconciliati: {results['reconciled']}, Non trovati: {results['not_found']}"
+        return results
+    
+    # Default: generic upload
     return {
         "success": True,
         "filename": file.filename,
