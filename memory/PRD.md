@@ -134,19 +134,19 @@ FATTURA XML → Parse → FATTURE DB
 ## TODO Priority
 
 ### P0 (Urgente)
-- [ ] Fix pagina Magazzino
-- [ ] Fix bottone Inventario fornitori
-- [ ] Associazione automatica fatture → fornitori
+- [x] Upload ZIP massivo Corrispettivi con barra progresso
+- [x] Controllo Mensile: POS Auto da XML, Saldo Cassa, Versamenti
+- [ ] Fix pagina Prima Nota (regressione - non carica dati)
 
 ### P1 (Alta)
 - [ ] Bilancio (Stato Patrimoniale, Conto Economico)
-- [ ] Ricerca Prodotti filtro esatto
-- [ ] Controllo Mensile POS
+- [ ] Associazione automatica fatture → fornitori all'import
+- [ ] Fix pagina Magazzino
 
 ### P2 (Media)
 - [ ] Mapping prodotti descrizione → nome commerciale
 - [ ] Export PDF Bilancio
-- [ ] Integrazione n8n per workflow automation
+- [ ] Ricerca Prodotti filtro esatto
 
 ---
 
