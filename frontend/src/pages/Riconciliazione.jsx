@@ -31,16 +31,15 @@ export default function Riconciliazione() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("kind", "estratto-conto");
       
-      const res = await api.post("/api/portal/upload", formData, {
+      const res = await api.post("/api/bank-statement/import", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       
       setResults(res.data);
       loadStats(); // Refresh stats after import
       
-      if (res.data.success) {
+      if (res.data.success || res.data.total > 0) {
         setFile(null);
       }
     } catch (e) {
