@@ -461,25 +461,31 @@ export default function GestioneDipendenti() {
                   I dati del dipendente verranno automaticamente inseriti nei campi del documento.
                 </p>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
                   {contractTypes.map(ct => (
                     <button
                       key={ct.id}
                       onClick={() => handleGenerateContract(ct.id)}
                       disabled={generatingContract}
                       style={{
-                        padding: 15,
-                        background: ct.id.includes('determinato') ? '#e3f2fd' : ct.id.includes('indeterminato') ? '#e8f5e9' : '#f5f5f5',
-                        border: '2px solid #ddd',
-                        borderRadius: 8,
+                        padding: '16px 20px',
+                        background: ct.id.includes('determinato') ? '#e3f2fd' : ct.id.includes('indeterminato') ? '#e8f5e9' : '#fff',
+                        border: '2px solid',
+                        borderColor: ct.id.includes('determinato') ? '#2196f3' : ct.id.includes('indeterminato') ? '#4caf50' : '#9e9e9e',
+                        borderRadius: 10,
                         cursor: generatingContract ? 'wait' : 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.2s'
+                        textAlign: 'center',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 90
                       }}
                       data-testid={`generate-contract-${ct.id}`}
                     >
-                      <div style={{ fontWeight: 'bold', marginBottom: 5 }}>📄 {ct.name}</div>
-                      <div style={{ fontSize: 11, color: '#666' }}>{ct.filename}</div>
+                      <div style={{ fontWeight: 'bold', marginBottom: 8, fontSize: 14, color: '#333' }}>📄 {ct.name}</div>
+                      <div style={{ fontSize: 12, color: '#666', wordBreak: 'break-word' }}>{ct.filename}</div>
                     </button>
                   ))}
                 </div>
