@@ -1575,3 +1575,168 @@ async def mark_all_notifiche_lette() -> Dict[str, Any]:
     return {"message": "Tutte le notifiche segnate come lette", "aggiornate": result.modified_count}
 
 
+
+@router.post("/email/send-report")
+async def send_haccp_report_email(
+    email_to: str = Body(..., embed=True, description="Email destinatario"),
+    mese: str = Body(None, embed=True, description="Mese in formato YYYY-MM")
+) -> Dict[str, Any]:
+    """
+    Invia report HACCP mensile via email.
+    """
+    import os
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+    from email import encoders
+    
+    db = Database.get_db()
+    
+    if not mese:
+        now = datetime.utcnow()
+        mese = now.strftime("%Y-%m")
+    
+    # Get stats
+    year, month = mese.split("-")
+    import calendar
+    days_in_month = calendar.monthrange(int(year), int(month))[1]
+    start_date = f"{mese}-01"
+    end_date = f"{mese}-{days_in_month}"
+    
+    frigo_count = await db[COLLECTION_TEMP_FRIGO].count_documents({
+        "data": {"$gte": start_date, "$lte": end_date}
+    })
+    congel_count = await db[COLLECTION_TEMP_CONGEL].count_documents({
+        "data": {"$gte": start_date, "$lte": end_date}
+    })
+    sanif_count = await db["haccp_sanificazioni"].count_documents({
+        "data": {"$gte": start_date, "$lte": end_date}
+    })
+    
+    frigo_conformi = await db[COLLECTION_TEMP_FRIGO].count_documents({
+        "data": {"$gte": start_date, "$lte": end_date},
+        "conforme": True
+    })
+    congel_conformi = await db[COLLECTION_TEMP_CONGEL].count_documents({
+        "data": {"$gte": start_date, "$lte": end_date},
+        "conforme": True
+    })
+    
+    totale = frigo_count + congel_count + sanif_count
+    conformi = frigo_conformi + congel_conformi + sanif_count
+    conf_percent = round((conformi / totale * 100), 1) if totale > 0 else 0
+    
+    # Prepare email
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_pass = os.environ.get("SMTP_PASSWORD")
+    
+    if not smtp_user or not smtp_pass:
+        raise HTTPException(status_code=500, detail="Credenziali SMTP non configurate")
+    
+    mese_nome = calendar.month_name[int(month)]
+    
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"📊 Report HACCP - {mese_nome} {year}"
+    msg["From"] = smtp_user
+    msg["To"] = email_to
+    
+    html = f"""
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }}
+            .content {{ padding: 30px; }}
+            .stat-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }}
+            .stat-box {{ background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }}
+            .stat-value {{ font-size: 28px; font-weight: bold; color: #333; }}
+            .stat-label {{ font-size: 12px; color: #666; }}
+            .conformita {{ font-size: 48px; font-weight: bold; color: {'#4caf50' if conf_percent >= 80 else '#ff9800' if conf_percent >= 50 else '#f44336'}; text-align: center; margin: 20px 0; }}
+            .footer {{ background: #f5f5f5; padding: 20px; text-align: center; font-size: 12px; color: #666; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1 style="margin: 0;">📊 Report HACCP</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">{mese_nome} {year}</p>
+            </div>
+            <div class="content">
+                <p>Ecco il riepilogo delle attività HACCP per il mese di {mese_nome} {year}:</p>
+                
+                <div class="conformita">{conf_percent}%</div>
+                <p style="text-align: center; color: #666; margin-top: -10px;">Conformità Globale</p>
+                
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">{frigo_count}</div>
+                        <div class="stat-label">🧊 Frigoriferi</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{congel_count}</div>
+                        <div class="stat-label">❄️ Congelatori</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">{sanif_count}</div>
+                        <div class="stat-label">🧹 Sanificazioni</div>
+                    </div>
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; border: 1px solid #eee;"><strong>Totale Rilevazioni</strong></td>
+                        <td style="padding: 12px; border: 1px solid #eee; text-align: right;">{totale}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #eee;"><strong>Rilevazioni Conformi</strong></td>
+                        <td style="padding: 12px; border: 1px solid #eee; text-align: right; color: #4caf50;">{conformi}</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 12px; border: 1px solid #eee;"><strong>Rilevazioni Non Conformi</strong></td>
+                        <td style="padding: 12px; border: 1px solid #eee; text-align: right; color: #f44336;">{totale - conformi}</td>
+                    </tr>
+                </table>
+                
+                <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                    Per scaricare il report completo in PDF, accedi alla piattaforma e vai su 
+                    <strong>HACCP → Analytics → Esporta PDF</strong>.
+                </p>
+            </div>
+            <div class="footer">
+                Report generato automaticamente da Azienda Semplice<br>
+                {datetime.utcnow().strftime('%d/%m/%Y %H:%M')} UTC
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    msg.attach(MIMEText(html, "html"))
+    
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, email_to, msg.as_string())
+        
+        logger.info(f"📧 Report HACCP inviato a {email_to}")
+        
+        return {
+            "success": True,
+            "message": f"Report HACCP inviato a {email_to}",
+            "mese": mese,
+            "stats": {
+                "totale_rilevazioni": totale,
+                "conformita_percent": conf_percent
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore invio email: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore invio email: {str(e)}")
+
+
