@@ -1390,6 +1390,286 @@ async def get_financial_summary() -> Dict[str, Any]:
     }
 
 
+# ============== IVA CALCOLO ==============
+
+def format_date_italian(date_str: str) -> str:
+    """Converte data ISO in formato italiano gg/mm/aaaa."""
+    if not date_str:
+        return ""
+    try:
+        if "T" in date_str:
+            date_str = date_str.split("T")[0]
+        parts = date_str.split("-")
+        if len(parts) == 3:
+            return f"{parts[2]}/{parts[1]}/{parts[0]}"
+        return date_str
+    except:
+        return date_str
+
+
+@router.get("/iva/daily/{date}")
+async def get_iva_daily(date: str) -> Dict[str, Any]:
+    """
+    IVA giornaliera dettagliata per una specifica data.
+    
+    Args:
+        date: Data in formato YYYY-MM-DD
+    
+    Returns:
+        - IVA a DEBITO: Da corrispettivi del giorno
+        - IVA a CREDITO: Da fatture del giorno
+        - Saldo giornaliero
+    """
+    db = Database.get_db()
+    
+    try:
+        # IVA A DEBITO - Da Corrispettivi
+        corrispettivi = await db["corrispettivi"].find(
+            {"data": date},
+            {"_id": 0}
+        ).to_list(1000)
+        
+        iva_debito = sum(float(c.get('totale_iva', 0) or 0) for c in corrispettivi)
+        totale_corrispettivi = sum(float(c.get('totale', 0) or 0) for c in corrispettivi)
+        
+        # IVA A CREDITO - Da Fatture
+        fatture = await db["invoices"].find(
+            {"invoice_date": date},
+            {"_id": 0}
+        ).to_list(1000)
+        
+        iva_credito = 0
+        fatture_details = []
+        
+        for fattura in fatture:
+            fattura_iva = float(fattura.get('iva', 0) or 0)
+            
+            # Se non c'è IVA calcolata, scorporiamo dal totale (22%)
+            if fattura_iva == 0:
+                total = float(fattura.get('total_amount', 0) or 0)
+                if total > 0:
+                    fattura_iva = total - (total / 1.22)
+            
+            iva_credito += fattura_iva
+            
+            fatture_details.append({
+                "invoice_number": fattura.get('invoice_number'),
+                "supplier_name": fattura.get('supplier_name'),
+                "total_amount": float(fattura.get('total_amount', 0) or 0),
+                "iva": round(fattura_iva, 2),
+                "data": format_date_italian(fattura.get('invoice_date', ''))
+            })
+        
+        saldo = iva_debito - iva_credito
+        
+        return {
+            "data": format_date_italian(date),
+            "data_iso": date,
+            "iva_debito": round(iva_debito, 2),
+            "iva_credito": round(iva_credito, 2),
+            "saldo": round(saldo, 2),
+            "stato": "Da versare" if saldo > 0 else "A credito" if saldo < 0 else "Pareggio",
+            "corrispettivi": {
+                "count": len(corrispettivi),
+                "totale": round(totale_corrispettivi, 2),
+                "iva_totale": round(iva_debito, 2)
+            },
+            "fatture": {
+                "count": len(fatture),
+                "items": fatture_details
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore calcolo IVA giornaliera: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/iva/monthly/{year}/{month}")
+async def get_iva_monthly(year: int, month: int) -> Dict[str, Any]:
+    """
+    IVA progressiva giornaliera per tutto il mese.
+    """
+    db = Database.get_db()
+    
+    try:
+        from calendar import monthrange
+        
+        _, num_days = monthrange(year, month)
+        
+        daily_data = []
+        iva_debito_progressiva = 0
+        iva_credito_progressiva = 0
+        
+        mesi_italiani = ["", "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+                        "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+        
+        for day in range(1, num_days + 1):
+            date_str = f"{year}-{month:02d}-{day:02d}"
+            
+            # IVA DEBITO - Corrispettivi
+            corrispettivi = await db["corrispettivi"].find(
+                {"data": date_str},
+                {"_id": 0, "totale_iva": 1}
+            ).to_list(1000)
+            
+            iva_debito_giorno = sum(float(c.get('totale_iva', 0) or 0) for c in corrispettivi)
+            
+            # IVA CREDITO - Fatture
+            fatture = await db["invoices"].find(
+                {"invoice_date": date_str},
+                {"_id": 0}
+            ).to_list(1000)
+            
+            iva_credito_giorno = 0
+            for fattura in fatture:
+                fattura_iva = float(fattura.get('iva', 0) or 0)
+                if fattura_iva == 0:
+                    total = float(fattura.get('total_amount', 0) or 0)
+                    if total > 0:
+                        fattura_iva = total - (total / 1.22)
+                iva_credito_giorno += fattura_iva
+            
+            saldo_giorno = iva_debito_giorno - iva_credito_giorno
+            
+            iva_debito_progressiva += iva_debito_giorno
+            iva_credito_progressiva += iva_credito_giorno
+            saldo_progressivo = iva_debito_progressiva - iva_credito_progressiva
+            
+            daily_data.append({
+                "data": f"{day:02d}/{month:02d}/{year}",
+                "data_iso": date_str,
+                "giorno": day,
+                "iva_debito": round(iva_debito_giorno, 2),
+                "iva_credito": round(iva_credito_giorno, 2),
+                "saldo": round(saldo_giorno, 2),
+                "iva_debito_progressiva": round(iva_debito_progressiva, 2),
+                "iva_credito_progressiva": round(iva_credito_progressiva, 2),
+                "saldo_progressivo": round(saldo_progressivo, 2),
+                "has_data": iva_debito_giorno > 0 or iva_credito_giorno > 0
+            })
+        
+        return {
+            "anno": year,
+            "mese": month,
+            "mese_nome": mesi_italiani[month],
+            "daily_data": daily_data,
+            "totale_mensile": {
+                "iva_debito": round(iva_debito_progressiva, 2),
+                "iva_credito": round(iva_credito_progressiva, 2),
+                "saldo": round(iva_debito_progressiva - iva_credito_progressiva, 2),
+                "stato": "Da versare" if (iva_debito_progressiva - iva_credito_progressiva) > 0 else "A credito"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore calcolo progressivo mensile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/iva/annual/{year}")
+async def get_iva_annual(year: int) -> Dict[str, Any]:
+    """
+    Riepilogo IVA annuale con calcolo mensile.
+    """
+    db = Database.get_db()
+    
+    try:
+        monthly_data = []
+        mesi_italiani = ["", "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+                        "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+        
+        for month in range(1, 13):
+            month_prefix = f"{year}-{month:02d}"
+            
+            # IVA CREDITO da fatture
+            fatture_pipeline = [
+                {"$match": {"invoice_date": {"$regex": f"^{month_prefix}"}}},
+                {"$group": {
+                    "_id": None,
+                    "total_iva": {"$sum": "$iva"},
+                    "total_amount": {"$sum": "$total_amount"},
+                    "count": {"$sum": 1}
+                }}
+            ]
+            
+            fatture_result = await db["invoices"].aggregate(fatture_pipeline).to_list(1)
+            
+            if fatture_result:
+                iva_credito = float(fatture_result[0].get('total_iva', 0) or 0)
+                total_fatture = float(fatture_result[0].get('total_amount', 0) or 0)
+                fatture_count = fatture_result[0].get('count', 0)
+                
+                # Se IVA non calcolata, scorporo
+                if iva_credito == 0 and total_fatture > 0:
+                    iva_credito = total_fatture - (total_fatture / 1.22)
+            else:
+                iva_credito = 0
+                fatture_count = 0
+            
+            # IVA DEBITO da corrispettivi
+            corrispettivi_pipeline = [
+                {"$match": {"data": {"$regex": f"^{month_prefix}"}}},
+                {"$group": {
+                    "_id": None,
+                    "total_iva": {"$sum": "$totale_iva"},
+                    "total": {"$sum": "$totale"},
+                    "count": {"$sum": 1}
+                }}
+            ]
+            
+            corrispettivi_result = await db["corrispettivi"].aggregate(corrispettivi_pipeline).to_list(1)
+            
+            if corrispettivi_result:
+                iva_debito = float(corrispettivi_result[0].get('total_iva', 0) or 0)
+                corrispettivi_count = corrispettivi_result[0].get('count', 0)
+            else:
+                iva_debito = 0
+                corrispettivi_count = 0
+            
+            saldo = iva_debito - iva_credito
+            
+            monthly_data.append({
+                "mese": month,
+                "mese_nome": mesi_italiani[month],
+                "anno": year,
+                "iva_credito": round(iva_credito, 2),
+                "iva_debito": round(iva_debito, 2),
+                "saldo": round(saldo, 2),
+                "stato": "Da versare" if saldo > 0 else "A credito" if saldo < 0 else "Pareggio",
+                "fatture_count": fatture_count,
+                "corrispettivi_count": corrispettivi_count
+            })
+        
+        # Totali annuali
+        total_iva_credito = sum(m['iva_credito'] for m in monthly_data)
+        total_iva_debito = sum(m['iva_debito'] for m in monthly_data)
+        total_saldo = total_iva_debito - total_iva_credito
+        
+        return {
+            "anno": year,
+            "monthly_data": monthly_data,
+            "totali": {
+                "iva_credito": round(total_iva_credito, 2),
+                "iva_debito": round(total_iva_debito, 2),
+                "saldo": round(total_saldo, 2),
+                "stato": "Da versare" if total_saldo > 0 else "A credito" if total_saldo < 0 else "Pareggio"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore calcolo IVA annuale: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/iva/today")
+async def get_iva_today() -> Dict[str, Any]:
+    """IVA di oggi - shortcut per dashboard."""
+    from datetime import date
+    today = date.today().isoformat()
+    return await get_iva_daily(today)
+
+
 # ============== CORRISPETTIVI ==============
 @router.get("/corrispettivi")
 async def list_corrispettivi(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
