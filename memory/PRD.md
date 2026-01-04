@@ -103,13 +103,27 @@ UI aggiunta in `HACCPDashboard.jsx` con sezione "Stampa Report PDF per Ispezioni
 - Endpoint: `PUT /api/fatture/{id}/metodo-pagamento`
 - Tabella responsive con scroll orizzontale su mobile
 
-## Email Service (In Attesa)
-- Infrastruttura completa: `/api/email/test`, `/api/email/f24-alerts`
-- Configurazione SMTP Gmail pronta
-- **PROBLEMA**: App Password non funziona. Serve nuova App Password da https://myaccount.google.com/apppasswords
+## Email Service (Completato 04/01/2026)
+- ✅ App Password configurata: `okzo nmhl wrnq jlcf`
+- ✅ Email test inviata con successo
+- ✅ Email alert F24 funzionante (3 alert, €4.550)
+- Endpoint: `/api/email/test`, `/api/email/f24-alerts`, `/api/email/status`
+
+## Fatture - Metodo Pagamento Corretto (04/01/2026)
+- Metodi di pagamento popolati automaticamente:
+  - Cassa: 637 fatture
+  - Bonifico: 289 fatture
+  - Assegno: 97 fatture
+- Dropdown con: Cassa, Banca, Bonifico, Assegno, Misto
+- Selezione automatica sposta in Prima Nota
+
+## Estratto Conto PDF Support (04/01/2026)
+- Supporto PDF per import estratto conto bancario
+- Pattern "VOSTRO ASSEGNO N." per identificare assegni
+- Gestione duplicati: aggiorna solo dati mancanti
+- Endpoint: `POST /api/prima-nota-auto/import-assegni-from-estratto-conto`
 
 ## Prossimi Miglioramenti
-- [ ] Generare nuova App Password Gmail
 - [ ] Generazione contratti dipendenti
 
 ---
