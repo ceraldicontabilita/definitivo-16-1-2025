@@ -874,3 +874,47 @@ async def export_sanificazioni_excel(mese: str = Query(...)) -> StreamingRespons
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
+
+# ============== SCHEDULER HACCP ==============
+
+@router.post("/scheduler/trigger-now")
+async def trigger_scheduler_now() -> Dict[str, Any]:
+    """
+    Esegue manualmente l'auto-popolazione HACCP.
+    Utile per test o per popolare dati in ritardo.
+    """
+    from app.scheduler import auto_populate_haccp_daily
+    
+    logger.info("🔧 Trigger manuale scheduler HACCP")
+    
+    try:
+        await auto_populate_haccp_daily()
+        return {
+            "success": True,
+            "message": "Auto-popolazione HACCP completata",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Errore trigger scheduler: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/scheduler/status")
+async def get_scheduler_status() -> Dict[str, Any]:
+    """Stato dello scheduler HACCP."""
+    from app.scheduler import scheduler
+    
+    jobs = []
+    for job in scheduler.get_jobs():
+        jobs.append({
+            "id": job.id,
+            "name": job.name,
+            "next_run": job.next_run_time.isoformat() if job.next_run_time else None
+        })
+    
+    return {
+        "running": scheduler.running,
+        "jobs": jobs,
+        "info": "Lo scheduler esegue alle 01:00 CET ogni giorno"
+    }
+
