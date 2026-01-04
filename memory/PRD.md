@@ -11,72 +11,68 @@ Ricreare un'applicazione ERP aziendale completa da un file zip fornito dall'uten
 - **Modulo Fatture**: Upload XML singolo/massivo con controllo duplicati atomico
 - **Modulo Corrispettivi**: Upload XML singolo/massivo con estrazione pagamento elettronico
 - **Modulo Paghe/Salari**: Upload PDF buste paga LUL Zucchetti
+- **🆕 Catalogo Prodotti**: Auto-popolamento da fatture con best price e storico prezzi
 
 ## What's Been Implemented
 
-### 2025-01-04 - Fix Completo Parser e Limiti
-- ✅ **RIMOSSO LIMITE 100**: Tutti gli endpoint ora restituiscono fino a 10000 record
-- ✅ **Corrispettivi**: Parsing completo formato COR10 Agenzia Entrate
-  - Estrazione `PagatoContanti` e `PagatoElettronico`
-  - Gestione namespace `n1:`, `p:`, `ns3:`
-  - Riepilogo IVA per aliquota
-- ✅ **Fatture XML**: Parser robusto con gestione namespace multipli
-- ✅ **PDF Buste Paga**: Parser LUL Zucchetti
-  - Estrazione nome, codice fiscale, qualifica
-  - Ore lavorate, periodo (mese/anno)
-  - Salvataggio in collection `payslips` separata
+### 2025-01-04 - Auto-Popolamento Magazzino
+- ✅ **AUTO-POPOLAMENTO**: Quando si carica una fattura XML, i prodotti vengono automaticamente:
+  - Estratti dalle linee dettaglio
+  - Normalizzati (rimozione articoli, preposizioni)
+  - Categorizzati automaticamente (18 categorie: bevande, caffè, latticini, ecc.)
+  - Salvati in `warehouse_inventory` con giacenza e prezzi
+  - Storico prezzi salvato in `price_history`
+  
+- ✅ **NUOVA PAGINA**: "Ricerca Prodotti" (`/ricerca-prodotti`)
+  - 1911 prodotti nel catalogo (auto-popolati da 1128 fatture)
+  - Ricerca predittiva con matching intelligente
+  - Best price per fornitore (ultimi 90 giorni)
+  - Confronto prezzi tra fornitori
+  - Sistema carrello per ordini raggruppati
+
+- ✅ **API NUOVE**:
+  - `GET /api/products/catalog` - Catalogo con best price
+  - `GET /api/products/search?q=...` - Ricerca predittiva
+  - `GET /api/products/{id}/suppliers` - Fornitori e prezzi
+  - `GET /api/products/categories` - Lista categorie
+  - `POST /api/products/reprocess-invoices` - Rigenera catalogo
+  - `DELETE /api/products/clear-all` - Reset completo
 
 ### Statistiche Correnti
-- **366 Corrispettivi** caricati
-- **Totale**: €929,182.53
-- **Contanti**: €363,029.55 (39%)
-- **Elettronico**: €566,152.98 (61%)
+- **1911 prodotti** nel catalogo
+- **6059 record** storico prezzi
+- **18 categorie** automatiche
+- **366 Corrispettivi** con pagamento elettronico
 
 ## Architecture
 
 ### Backend
 - **Framework**: FastAPI
 - **Database**: MongoDB (motor async driver)
-- **Parsers**:
-  - `/app/app/parsers/corrispettivi_parser.py` - COR10 Agenzia Entrate
-  - `/app/app/parsers/fattura_elettronica_parser.py` - FatturaPA
-  - `/app/app/parsers/payslip_parser.py` - LUL Zucchetti
+- **Auto-popolamento**: `/app/app/utils/warehouse_helpers.py`
 
 ### Database Collections
-- `corrispettivi`: Dati giornalieri RT con pagamenti
-- `invoices`: Fatture elettroniche
+- `warehouse_inventory`: Catalogo prodotti con prezzi
+- `price_history`: Storico prezzi per fornitore
+- `invoices`: Fatture con flag `warehouse_registered`
+- `corrispettivi`: Dati giornalieri RT
 - `employees`: Anagrafica dipendenti
 - `payslips`: Buste paga mensili
 
-## Key API Endpoints (limit=10000 su tutti)
-
-### Corrispettivi
-- `GET /api/corrispettivi`
-- `POST /api/corrispettivi/upload-xml`
-- `POST /api/corrispettivi/upload-xml-bulk`
-
-### Fatture
-- `GET /api/invoices`
-- `POST /api/fatture/upload-xml`
-- `POST /api/fatture/upload-xml-bulk`
-
-### Paghe
-- `GET /api/employees`
-- `GET /api/payslips`
-- `POST /api/paghe/upload-pdf`
-
 ## P0 - Completati
-- [x] Limite 100 rimosso da tutte le API
+- [x] Auto-popolamento magazzino da fatture
+- [x] Ricerca prodotti con best price
+- [x] Storico prezzi per fornitore
+- [x] Sistema carrello
 - [x] Corrispettivi con pagamento elettronico
-- [x] Fatture XML funzionanti
-- [x] PDF Buste paga con parsing nomi/qualifiche
+- [x] Limite 100 rimosso da tutte le API
 
 ## P1 - Prossimi
-- [ ] Migliorare estrazione netto stipendio da PDF
-- [ ] Integrazione Corrispettivi -> Prima Nota (contanti -> cassa, elettronico -> banca)
-- [ ] Controllo mensile incrociato
+- [ ] Integrazione Corrispettivi -> Prima Nota automatica
+- [ ] Ordini fornitori generati da carrello
+- [ ] Export ordini PDF
 
 ## P2 - Backlog
-- [ ] Export dati
-- [ ] Report aggregati
-- [ ] Dashboard grafici
+- [ ] Dashboard con grafici vendite
+- [ ] Analytics fornitori
+- [ ] Controllo mensile incrociato
