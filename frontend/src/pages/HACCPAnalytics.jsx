@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { 
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  ResponsiveContainer, PieChart, Pie, Cell 
+} from 'recharts';
+
+const COLORS = ['#4caf50', '#f44336', '#ff9800', '#2196f3'];
 
 /**
  * Pagina Analytics HACCP - Statistiche mensili/annuali
- * Mostra: medie temperature, conformità %, anomalie
+ * Mostra: medie temperature, conformità %, anomalie, grafici
  */
 export default function HACCPAnalytics() {
   const [monthlyStats, setMonthlyStats] = useState(null);
