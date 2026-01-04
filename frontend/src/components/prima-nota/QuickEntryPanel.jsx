@@ -60,7 +60,8 @@ export function QuickEntryPanel({ onDataSaved }) {
     }
   };
 
-  // Save POS - goes to Cassa as "uscita" (cash goes out via POS to bank)
+  // Save POS - va in CASSA come ENTRATA (incasso POS/carta)
+  // Il POS è un incasso: il cliente paga con carta, quindi è un'ENTRATA in cassa
   const handleSavePos = async () => {
     const totale = (parseFloat(pos.pos1) || 0) + (parseFloat(pos.pos2) || 0) + (parseFloat(pos.pos3) || 0);
     if (totale === 0) {
@@ -69,9 +70,10 @@ export function QuickEntryPanel({ onDataSaved }) {
     }
     setSavingPos(true);
     try {
+      // POS = ENTRATA in CASSA (incasso con carta di credito)
       await api.post('/api/prima-nota/cassa', {
         data: pos.data,
-        tipo: 'uscita',
+        tipo: 'entrata',
         importo: totale,
         descrizione: `POS giornaliero ${pos.data} (POS1: €${pos.pos1 || 0}, POS2: €${pos.pos2 || 0}, POS3: €${pos.pos3 || 0})`,
         categoria: 'POS',
@@ -84,7 +86,7 @@ export function QuickEntryPanel({ onDataSaved }) {
       });
       setPos({ data: today, pos1: '', pos2: '', pos3: '' });
       onDataSaved?.();
-      alert(`✅ POS salvato! Totale: €${totale.toFixed(2)}`);
+      alert(`✅ POS salvato in CASSA come ENTRATA! Totale: €${totale.toFixed(2)}`);
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     } finally {

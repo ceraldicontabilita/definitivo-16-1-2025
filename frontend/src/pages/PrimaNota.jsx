@@ -61,6 +61,7 @@ export default function PrimaNota() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      params.append('limit', '500'); // Mostra fino a 500 movimenti
       if (filterDataDa) params.append('data_da', filterDataDa);
       if (filterDataA) params.append('data_a', filterDataA);
       if (filterTipo) params.append('tipo', filterTipo);
