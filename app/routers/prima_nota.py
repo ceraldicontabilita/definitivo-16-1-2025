@@ -728,3 +728,116 @@ async def get_salari_stats(
         "count": result.get("count", 0),
         "by_dipendente": [{"nome": d["_id"], "totale": d["totale"], "count": d["count"]} for d in by_dipendente if d["_id"]]
     }
+
+
+
+# ============== SINCRONIZZAZIONE CORRISPETTIVI -> PRIMA NOTA CASSA ==============
+
+@router.post("/sync-corrispettivi")
+async def sync_corrispettivi_to_prima_nota() -> Dict[str, Any]:
+    """
+    Sincronizza i corrispettivi (da XML) con la Prima Nota Cassa.
+    Ogni corrispettivo diventa un'ENTRATA in cassa (incasso giornaliero).
+    Evita duplicati controllando il corrispettivo_id.
+    """
+    db = Database.get_db()
+    
+    # Prendi tutti i corrispettivi
+    corrispettivi = await db["corrispettivi"].find({}, {"_id": 0}).to_list(10000)
+    
+    created = 0
+    skipped = 0
+    errors = []
+    
+    for corr in corrispettivi:
+        corr_id = corr.get("id") or corr.get("corrispettivo_key")
+        if not corr_id:
+            continue
+        
+        # Controlla se già esiste in prima nota
+        existing = await db[COLLECTION_PRIMA_NOTA_CASSA].find_one({"corrispettivo_id": corr_id})
+        if existing:
+            skipped += 1
+            continue
+        
+        # Calcola totale (contanti + elettronico = totale vendite)
+        totale = float(corr.get("totale", 0) or 0)
+        contanti = float(corr.get("pagato_contanti", 0) or 0)
+        elettronico = float(corr.get("pagato_elettronico", 0) or 0)
+        
+        # Se totale è 0, usa la somma di contanti + elettronico
+        if totale == 0:
+            totale = contanti + elettronico
+        
+        if totale <= 0:
+            continue
+        
+        data_corr = corr.get("data") or corr.get("data_ora", "")[:10]
+        if not data_corr:
+            continue
+        
+        try:
+            # Crea movimento in Prima Nota Cassa come ENTRATA (incasso giornaliero)
+            movimento = {
+                "id": str(uuid.uuid4()),
+                "data": data_corr,
+                "tipo": "entrata",
+                "importo": totale,
+                "descrizione": f"Corrispettivo {data_corr} - Incasso giornaliero RT {corr.get('matricola_rt', '')}",
+                "categoria": "Corrispettivi",
+                "corrispettivo_id": corr_id,
+                "dettaglio": {
+                    "contanti": contanti,
+                    "elettronico": elettronico,
+                    "totale_iva": float(corr.get("totale_iva", 0) or 0)
+                },
+                "source": "sync_corrispettivi",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento)
+            created += 1
+            
+        except Exception as e:
+            errors.append(f"Errore corr {corr_id}: {str(e)}")
+    
+    return {
+        "message": f"Sincronizzazione completata: {created} corrispettivi aggiunti a Prima Nota Cassa",
+        "created": created,
+        "skipped": skipped,
+        "errors": errors[:10] if errors else []
+    }
+
+
+@router.get("/corrispettivi-status")
+async def get_corrispettivi_sync_status() -> Dict[str, Any]:
+    """
+    Verifica lo stato di sincronizzazione corrispettivi.
+    """
+    db = Database.get_db()
+    
+    # Conta corrispettivi totali
+    total_corrispettivi = await db["corrispettivi"].count_documents({})
+    
+    # Conta corrispettivi già sincronizzati
+    synced = await db[COLLECTION_PRIMA_NOTA_CASSA].count_documents({"corrispettivo_id": {"$exists": True, "$ne": None}})
+    
+    # Totale corrispettivi
+    pipeline = [{"$group": {"_id": None, "totale": {"$sum": "$totale"}}}]
+    totals = await db["corrispettivi"].aggregate(pipeline).to_list(1)
+    
+    # Totale entrate corrispettivi in prima nota
+    pipeline_pn = [
+        {"$match": {"categoria": "Corrispettivi", "tipo": "entrata"}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]
+    totals_pn = await db[COLLECTION_PRIMA_NOTA_CASSA].aggregate(pipeline_pn).to_list(1)
+    
+    return {
+        "corrispettivi_totali": total_corrispettivi,
+        "corrispettivi_sincronizzati": synced,
+        "da_sincronizzare": total_corrispettivi - synced,
+        "totale_corrispettivi_euro": totals[0].get("totale", 0) if totals else 0,
+        "totale_in_prima_nota_euro": totals_pn[0].get("totale", 0) if totals_pn else 0
+    }
+
