@@ -141,7 +141,6 @@ async def get_anni_disponibili() -> Dict[str, Any]:
     description="Get list of invoices with optional filters"
 )
 async def list_invoices(
-    current_user: Dict[str, Any] = Depends(get_current_user),
     pagination: Dict[str, Any] = Depends(pagination_params),
     supplier_vat: Optional[str] = Query(None, description="Filter by supplier VAT"),
     month_year: Optional[str] = Query(None, description="Filter by month (MM-YYYY)"),
@@ -161,11 +160,10 @@ async def list_invoices(
     - **status**: Filter by status (active, archived)
     - **anno**: Filter by year (e.g., 2025)
     """
-    user_id = current_user["user_id"]
+    db = Database.get_db()
     
     # Se anno è specificato, filtra direttamente dal database
     if anno:
-        db = Database.get_db()
         anno_start = f"{anno}-01-01"
         anno_end = f"{anno}-12-31"
         
@@ -178,18 +176,20 @@ async def list_invoices(
         if status:
             query["status"] = status
         
-        actual_limit = limit or pagination.get("limit", 1000)
+        actual_limit = limit or pagination.get("limit", 3000)
         invoices = await db[Collections.INVOICES].find(query, {"_id": 0}).sort("invoice_date", -1).limit(actual_limit).to_list(actual_limit)
         return invoices
     
-    return await invoice_service.list_invoices(
-        user_id=user_id,
-        skip=pagination["skip"],
-        limit=limit or pagination["limit"],
-        supplier_vat=supplier_vat,
-        month_year=month_year,
-        status=status
-    )
+    # Senza filtro anno, restituisci tutte le fatture
+    actual_limit = limit or pagination.get("limit", 3000)
+    query = {}
+    if supplier_vat:
+        query["supplier_vat"] = supplier_vat
+    if status:
+        query["status"] = status
+    
+    invoices = await db[Collections.INVOICES].find(query, {"_id": 0}).sort("invoice_date", -1).limit(actual_limit).to_list(actual_limit)
+    return invoices
 
 
 @router.get(
