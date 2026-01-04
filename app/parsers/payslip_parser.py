@@ -479,9 +479,14 @@ def parse_libro_unico_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                     emp_data["differenza"] = emp_data["netto"] - emp_data["acconto"]
                     emp_data["note"] = f"Acconto: €{emp_data['acconto']:.2f}" if emp_data["acconto"] > 0 else "Nessun acconto"
 
-        # Convert to lists
+        # Convert to lists - only include employees with valid data
         employees_list: List[Dict[str, Any]] = []
         for emp_data in employees_found.values():
+            # Skip employees without netto (incomplete data)
+            if emp_data["netto"] is None:
+                logger.warning(f"Skipping {emp_data['nome']}: no netto found")
+                continue
+            
             salaries_data.append({
                 "nome": emp_data["nome"],
                 "netto": emp_data["netto"],
@@ -501,6 +506,7 @@ def parse_libro_unico_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
 
             employees_list.append({
                 "full_name": emp_data["nome"],
+                "codice_fiscale": emp_data.get("codice_fiscale"),
                 "mansione": emp_data.get("mansione"),
                 "contratto_scadenza": emp_data.get("contratto_scadenza")
             })
