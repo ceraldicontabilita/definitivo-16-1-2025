@@ -8,7 +8,6 @@ export default function Riconciliazione() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("import");
-  const API_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 
   useEffect(() => {
     loadStats();
