@@ -205,7 +205,7 @@ export default function Corrispettivi() {
 
   // Calcola totali
   const totaleGiornaliero = corrispettivi.reduce((sum, c) => sum + (c.totale || 0), 0);
-  const totaleContanti = corrispettivi.reduce((sum, c) => sum + (c.pagato_contanti || 0), 0);
+  const totaleCassa = corrispettivi.reduce((sum, c) => sum + (c.pagato_contanti || 0), 0);
   const totaleElettronico = corrispettivi.reduce((sum, c) => sum + (c.pagato_elettronico || 0), 0);
   const totaleIVA = corrispettivi.reduce((sum, c) => {
     if (c.totale_iva && c.totale_iva > 0) return sum + c.totale_iva;
@@ -225,7 +225,7 @@ export default function Corrispettivi() {
           <div className="grid" style={{ marginTop: 10 }}>
             <div><strong>Data:</strong> {uploadResult.corrispettivo?.data}</div>
             <div><strong>Totale:</strong> € {uploadResult.corrispettivo?.totale?.toFixed(2)}</div>
-            <div><strong>💵 Contanti:</strong> € {uploadResult.corrispettivo?.pagato_contanti?.toFixed(2)}</div>
+            <div><strong>💵 Cassa:</strong> € {uploadResult.corrispettivo?.pagato_contanti?.toFixed(2)}</div>
             <div><strong>💳 Elettronico:</strong> € {uploadResult.corrispettivo?.pagato_elettronico?.toFixed(2)}</div>
           </div>
           <button onClick={() => setUploadResult(null)} style={{ marginTop: 10 }}>Chiudi</button>
