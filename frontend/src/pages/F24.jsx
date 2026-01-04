@@ -76,7 +76,13 @@ export default function F24() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await api.post("/api/f24-public/upload", formData);
+      
+      // Use overwrite endpoint if mode is enabled
+      const endpoint = overwriteMode 
+        ? `/api/f24-public/upload-overwrite?overwrite=true`
+        : "/api/f24-public/upload";
+      
+      const res = await api.post(endpoint, formData);
       setOut(res.data);
       setFile(null);
       // Reset file input
@@ -87,6 +93,28 @@ export default function F24() {
       loadDashboard();
     } catch (e) {
       setErr("Upload fallito. " + (e.response?.data?.detail || e.message));
+    }
+  }
+
+  async function handleDeleteF24(f24Id) {
+    if (!window.confirm('Sei sicuro di voler eliminare questo F24?')) return;
+    try {
+      await api.delete(`/api/f24-public/models/${f24Id}`);
+      loadF24();
+      loadAlerts();
+      loadDashboard();
+    } catch (e) {
+      alert("Errore eliminazione: " + (e.response?.data?.detail || e.message));
+    }
+  }
+
+  async function handleUpdateF24(f24Id, updates) {
+    try {
+      await api.put(`/api/f24-public/models/${f24Id}`, updates);
+      setEditingF24(null);
+      loadF24();
+    } catch (e) {
+      alert("Errore aggiornamento: " + (e.response?.data?.detail || e.message));
     }
   }
 
