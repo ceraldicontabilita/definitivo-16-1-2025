@@ -381,7 +381,7 @@ export default function F24() {
         <p style={{ color: '#666', fontSize: 14, marginBottom: 15 }}>
           Carica i modelli F24 in formato PDF per l'estrazione automatica dei dati.
         </p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 15 }}>
           <input 
             type="file" 
             accept=".pdf" 
