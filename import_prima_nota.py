@@ -6,34 +6,20 @@ Logica contabile:
   - Corrispettivi -> DARE (entrata) - incassi giornalieri
   - POS -> AVERE (uscita) - i soldi escono dalla cassa per andare in banca
   - Versamenti -> AVERE (uscita) - versamento in banca
-  - Fatture pagate contanti -> AVERE (uscita)
   - Finanziamento soci -> DARE (entrata)
   
 - BANCA:
   - Versamenti -> DARE (entrata) - arrivano dalla cassa
   - POS accreditati -> DARE (entrata) - accredito POS
-  - Fatture pagate bonifico -> AVERE (uscita)
 """
 
 import openpyxl
 import requests
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 
 API_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://finance-hub-428.preview.emergentagent.com')
-
-def excel_date_to_str(excel_date):
-    """Convert Excel serial date to YYYY-MM-DD string"""
-    if isinstance(excel_date, (int, float)) and excel_date > 0:
-        # Excel date serial number (days since 1899-12-30)
-        base_date = datetime(1899, 12, 30)
-        return (base_date + timedelta(days=int(excel_date))).strftime('%Y-%m-%d')
-    elif isinstance(excel_date, datetime):
-        return excel_date.strftime('%Y-%m-%d')
-    elif isinstance(excel_date, str):
-        return excel_date
-    return datetime.now().strftime('%Y-%m-%d')
 
 def download_excel(url):
     """Download Excel file from URL"""
@@ -42,34 +28,32 @@ def download_excel(url):
     return BytesIO(response.content)
 
 def parse_corrispettivi(url):
-    """Parse corrispettivi.xlsx - vanno in CASSA come DARE (entrata)"""
+    """
+    Parse corrispettivi.xlsx - vanno in CASSA come DARE (entrata)
+    Colonne: Id invio, Matricola dispositivo, Data e ora rilevazione, Data e ora trasmissione, 
+             Ammontare delle vendite (totale in euro), Imponibile vendite, Imposta vendite, ...
+    """
     print(f"Parsing corrispettivi from {url}")
     file_content = download_excel(url)
     wb = openpyxl.load_workbook(file_content)
     ws = wb.active
     
     movements = []
-    for row in ws.iter_rows(min_row=2, values_only=True):  # Skip header
-        if row and len(row) >= 2:
-            # The data format seems to be: ID, serial_date, amount1, amount2, ...
-            # We need to find the date and total
-            data_serial = None
-            totale = None
+    for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True)):  # Skip header
+        if row and len(row) >= 5:
+            data_rilevazione = row[2]  # Data e ora rilevazione
+            ammontare_vendite = row[4]  # Ammontare delle vendite (totale in euro)
             
-            # Try to find date (serial number around 45658+)
-            for val in row:
-                if isinstance(val, (int, float)):
-                    if 45000 < val < 47000:  # Likely a date serial
-                        data_serial = val
-                    elif 0 < val < 10000:  # Likely an amount
-                        if totale is None:
-                            totale = val
-            
-            if data_serial and totale and totale > 0:
+            if data_rilevazione and ammontare_vendite and ammontare_vendite > 0:
+                if isinstance(data_rilevazione, datetime):
+                    data_str = data_rilevazione.strftime('%Y-%m-%d')
+                else:
+                    continue
+                
                 movements.append({
-                    "data": excel_date_to_str(data_serial),
+                    "data": data_str,
                     "tipo": "entrata",  # DARE
-                    "importo": round(float(totale), 2),
+                    "importo": round(float(ammontare_vendite), 2),
                     "descrizione": f"Corrispettivo giornaliero",
                     "categoria": "Corrispettivi",
                     "source": "excel_corrispettivi"
@@ -79,7 +63,10 @@ def parse_corrispettivi(url):
     return movements
 
 def parse_pos(url):
-    """Parse pos.xlsx - vanno in CASSA come AVERE (uscita) perché escono dalla cassa"""
+    """
+    Parse pos.xlsx - vanno in CASSA come AVERE (uscita) perché escono dalla cassa
+    Colonne: DATA, CONTO, IMPORTO
+    """
     print(f"Parsing POS from {url}")
     file_content = download_excel(url)
     wb = openpyxl.load_workbook(file_content)
@@ -89,20 +76,15 @@ def parse_pos(url):
     banca_movements = []  # DARE (entrata in banca quando accreditato)
     
     for row in ws.iter_rows(min_row=2, values_only=True):
-        if row and len(row) >= 2:
-            data_serial = None
-            importo = None
+        if row and len(row) >= 3:
+            data_val = row[0]  # DATA
+            importo = row[2]    # IMPORTO
             
-            for val in row:
-                if isinstance(val, (int, float)):
-                    if 45000 < val < 47000:
-                        data_serial = val
-                    elif 0 < val < 50000:
-                        if importo is None:
-                            importo = val
-            
-            if data_serial and importo and importo > 0:
-                data_str = excel_date_to_str(data_serial)
+            if data_val and importo and float(importo) > 0:
+                if isinstance(data_val, datetime):
+                    data_str = data_val.strftime('%Y-%m-%d')
+                else:
+                    continue
                 
                 # POS in CASSA come AVERE (i soldi escono per andare in banca)
                 cassa_movements.append({
@@ -128,7 +110,10 @@ def parse_pos(url):
     return cassa_movements, banca_movements
 
 def parse_versamenti(url):
-    """Parse versamento.xlsx - CASSA AVERE (uscita), BANCA DARE (entrata)"""
+    """
+    Parse versamento.xlsx - CASSA AVERE (uscita), BANCA DARE (entrata)
+    Colonne: DATA, CONTO, IMPORTO
+    """
     print(f"Parsing versamenti from {url}")
     file_content = download_excel(url)
     wb = openpyxl.load_workbook(file_content)
@@ -138,20 +123,16 @@ def parse_versamenti(url):
     banca_movements = []  # DARE (entrata in banca)
     
     for row in ws.iter_rows(min_row=2, values_only=True):
-        if row and len(row) >= 2:
-            data_serial = None
-            importo = None
+        if row and len(row) >= 3:
+            data_val = row[0]  # DATA
+            importo = row[2]    # IMPORTO
             
-            for val in row:
-                if isinstance(val, (int, float)):
-                    if 45000 < val < 47000:
-                        data_serial = val
-                    elif 100 < val < 50000:  # Importi versamento più grandi
-                        if importo is None:
-                            importo = val
-            
-            if data_serial and importo and importo > 0:
-                data_str = excel_date_to_str(data_serial)
+            # Solo righe con importo valorizzato
+            if data_val and importo and float(importo) > 0:
+                if isinstance(data_val, datetime):
+                    data_str = data_val.strftime('%Y-%m-%d')
+                else:
+                    continue
                 
                 # Versamento USCITA da CASSA
                 cassa_movements.append({
@@ -177,7 +158,10 @@ def parse_versamenti(url):
     return cassa_movements, banca_movements
 
 def parse_finanziamento_soci(url):
-    """Parse finanziamento soci.xlsx - vanno in CASSA come DARE (entrata)"""
+    """
+    Parse finanziamento soci.xlsx - vanno in CASSA come DARE (entrata)
+    Colonne: Data, Numero Fattura, Fornitore, Descrizione, Entrate, Uscite
+    """
     print(f"Parsing finanziamento soci from {url}")
     file_content = download_excel(url)
     wb = openpyxl.load_workbook(file_content)
@@ -185,27 +169,27 @@ def parse_finanziamento_soci(url):
     
     movements = []
     for row in ws.iter_rows(min_row=2, values_only=True):
-        if row and len(row) >= 2:
-            data_serial = None
-            importo = None
-            descrizione = "Finanziamento soci"
+        if row and len(row) >= 5:
+            data_val = row[0]    # Data
+            fornitore = row[2]   # Fornitore (nome socio)
+            descrizione = row[3] # Descrizione
+            entrate = row[4]     # Entrate
             
-            for val in row:
-                if isinstance(val, (int, float)):
-                    if 45000 < val < 47000:
-                        data_serial = val
-                    elif 100 < val < 100000:
-                        if importo is None:
-                            importo = val
-                elif isinstance(val, str) and "ceraldi" in val.lower():
-                    descrizione = f"Finanziamento socio - {val}"
-            
-            if data_serial and importo and importo > 0:
+            if data_val and entrate and float(entrate) > 0:
+                if isinstance(data_val, datetime):
+                    data_str = data_val.strftime('%Y-%m-%d')
+                else:
+                    continue
+                
+                desc = f"Finanziamento socio - {fornitore}" if fornitore else "Finanziamento soci"
+                if descrizione:
+                    desc = f"{desc} ({descrizione})"
+                
                 movements.append({
-                    "data": excel_date_to_str(data_serial),
+                    "data": data_str,
                     "tipo": "entrata",  # DARE - entrano soldi in cassa
-                    "importo": round(float(importo), 2),
-                    "descrizione": descrizione,
+                    "importo": round(float(entrate), 2),
+                    "descrizione": desc,
                     "categoria": "Finanziamento soci",
                     "source": "excel_finanziamento"
                 })
@@ -256,8 +240,21 @@ def main():
     fin = parse_finanziamento_soci(finanziamento_url)
     all_cassa.extend(fin)
     
-    print(f"\nTotale movimenti CASSA: {len(all_cassa)}")
-    print(f"Totale movimenti BANCA: {len(all_banca)}")
+    # Calcola totali per tipo
+    entrate_cassa = sum(m['importo'] for m in all_cassa if m['tipo'] == 'entrata')
+    uscite_cassa = sum(m['importo'] for m in all_cassa if m['tipo'] == 'uscita')
+    entrate_banca = sum(m['importo'] for m in all_banca if m['tipo'] == 'entrata')
+    uscite_banca = sum(m['importo'] for m in all_banca if m['tipo'] == 'uscita')
+    
+    print(f"\n=== RIEPILOGO ===")
+    print(f"Totale movimenti CASSA: {len(all_cassa)}")
+    print(f"  - Entrate (DARE): €{entrate_cassa:,.2f}")
+    print(f"  - Uscite (AVERE): €{uscite_cassa:,.2f}")
+    print(f"  - Saldo: €{entrate_cassa - uscite_cassa:,.2f}")
+    print(f"\nTotale movimenti BANCA: {len(all_banca)}")
+    print(f"  - Entrate (DARE): €{entrate_banca:,.2f}")
+    print(f"  - Uscite (AVERE): €{uscite_banca:,.2f}")
+    print(f"  - Saldo: €{entrate_banca - uscite_banca:,.2f}")
     
     # Import via API
     print("\nImportazione in corso...")
