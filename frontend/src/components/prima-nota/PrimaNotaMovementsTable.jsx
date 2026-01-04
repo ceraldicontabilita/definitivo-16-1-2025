@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 /**
- * PrimaNotaMovementsTable - Tabella movimenti Prima Nota
+ * PrimaNotaMovementsTable - Tabella movimenti Prima Nota con paginazione
  */
 export function PrimaNotaMovementsTable({ 
   data, 
@@ -9,11 +9,21 @@ export function PrimaNotaMovementsTable({
   loading, 
   formatCurrency, 
   onDeleteMovement,
-  onEditMovement
+  onEditMovement,
+  previousMonthBalance = 0
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 100;
+  
   if (loading) {
     return <div style={{ textAlign: 'center', padding: 40 }}>Caricamento...</div>;
   }
+
+  const allMovements = data.movimenti || [];
+  const totalPages = Math.ceil(allMovements.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentMovements = allMovements.slice(startIndex, endIndex);
 
   return (
     <div 
@@ -25,6 +35,78 @@ export function PrimaNotaMovementsTable({
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
       }}
     >
+      {/* Pagination Header */}
+      {totalPages > 1 && (
+        <div style={{ 
+          padding: '12px 16px', 
+          background: 'linear-gradient(135deg, #1976d2 0%, #2196f3 100%)', 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 10
+        }}>
+          <span style={{ fontWeight: 'bold' }}>
+            📄 Pagina {currentPage} di {totalPages} ({allMovements.length} movimenti)
+          </span>
+          <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+            <button 
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              style={{ padding: '5px 10px', borderRadius: 4, border: 'none', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+            >⏮️</button>
+            <button 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              style={{ padding: '5px 10px', borderRadius: 4, border: 'none', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+            >◀️ Prec</button>
+            
+            {/* Page numbers */}
+            {Array.from({length: Math.min(5, totalPages)}, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: 4,
+                    border: 'none',
+                    background: currentPage === pageNum ? '#fff' : 'rgba(255,255,255,0.2)',
+                    color: currentPage === pageNum ? '#1976d2' : 'white',
+                    fontWeight: currentPage === pageNum ? 'bold' : 'normal',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            
+            <button 
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              style={{ padding: '5px 10px', borderRadius: 4, border: 'none', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+            >Succ ▶️</button>
+            <button 
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              style={{ padding: '5px 10px', borderRadius: 4, border: 'none', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+            >⏭️</button>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Table */}
       <div style={{ display: 'block' }} className="desktop-table">
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -42,7 +124,7 @@ export function PrimaNotaMovementsTable({
             </tr>
           </thead>
           <tbody>
-            {data.movimenti?.map((mov, idx) => (
+            {currentMovements.map((mov, idx) => (
               <MovementRow 
                 key={mov.id} 
                 mov={mov} 
@@ -51,7 +133,7 @@ export function PrimaNotaMovementsTable({
                 formatCurrency={formatCurrency}
                 onDelete={onDeleteMovement}
                 onEdit={onEditMovement}
-                runningTotal={calculateRunningTotal(data.movimenti, idx)}
+                runningTotal={calculateRunningTotal(allMovements, startIndex + idx, previousMonthBalance)}
               />
             ))}
           </tbody>
@@ -60,7 +142,7 @@ export function PrimaNotaMovementsTable({
       
       {/* Mobile Cards */}
       <div style={{ display: 'none' }} className="mobile-cards">
-        {data.movimenti?.map((mov, idx) => (
+        {currentMovements.map((mov, idx) => (
           <MobileMovementCard
             key={mov.id}
             mov={mov}
@@ -71,7 +153,7 @@ export function PrimaNotaMovementsTable({
         ))}
       </div>
       
-      {data.movimenti?.length === 0 && (
+      {allMovements.length === 0 && (
         <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>
           Nessun movimento trovato
         </div>
