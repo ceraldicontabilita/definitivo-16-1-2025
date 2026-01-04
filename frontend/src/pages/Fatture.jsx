@@ -791,13 +791,22 @@ export default function Fatture() {
 
       {/* Lista Fatture */}
       <div className="card">
-        <div className="h1">Elenco Fatture ({invoices.length})</div>
+        <div className="h1">Elenco Fatture ({filteredInvoices.length}{activeFiltersCount > 0 ? ` / ${invoices.length}` : ""})</div>
         {loading ? (
           <div className="small">Caricamento...</div>
-        ) : invoices.length === 0 ? (
+        ) : filteredInvoices.length === 0 ? (
           <div className="small">
-            Nessuna fattura registrata.<br/>
-            Carica un file XML o crea una fattura manuale per iniziare.
+            {activeFiltersCount > 0 ? (
+              <>
+                Nessuna fattura trovata con i filtri selezionati.<br/>
+                <button onClick={resetFilters} style={{ marginTop: 10 }}>Azzera filtri</button>
+              </>
+            ) : (
+              <>
+                Nessuna fattura registrata.<br/>
+                Carica un file XML o crea una fattura manuale per iniziare.
+              </>
+            )}
           </div>
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
@@ -815,7 +824,7 @@ export default function Fatture() {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((inv, i) => (
+              {filteredInvoices.map((inv, i) => (
                 <tr 
                   key={inv.id || i} 
                   style={{ 
