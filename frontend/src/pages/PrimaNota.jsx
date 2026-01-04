@@ -376,28 +376,19 @@ export default function PrimaNota() {
             </div>
           </div>
 
-          {/* Giorno Incasso Record */}
-          {giornoRecord && (
-            <div style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 50, height: 50, background: '#f59e0b', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: 24 }}>🏆</span>
-              </div>
-              <div>
-                <div style={{ fontWeight: 'bold', color: '#92400e' }}>Giorno Incasso Record</div>
-                <div style={{ color: '#b45309', fontSize: 13 }}>{formatDate(giornoRecord.data)}</div>
-                <div style={{ fontSize: 22, fontWeight: 'bold', color: '#d97706' }}>{formatCurrency(giornoRecord.importo)}</div>
-              </div>
-            </div>
-          )}
-
           {/* Filter */}
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 14, color: '#6b7280' }}>📅 Filtra periodo:</span>
-            <input type="date" value={filterPeriodo.da} onChange={(e) => setFilterPeriodo({...filterPeriodo, da: e.target.value})} style={{...inputStyle, width: 'auto'}} />
-            <input type="date" value={filterPeriodo.a} onChange={(e) => setFilterPeriodo({...filterPeriodo, a: e.target.value})} style={{...inputStyle, width: 'auto'}} />
-            <button onClick={loadAllData} style={{ padding: '10px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
-              🔍 Filtra
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: '#6b7280' }}>📅 Periodo:</span>
+            <input type="date" value={filterPeriodo.da} onChange={(e) => setFilterPeriodo({...filterPeriodo, da: e.target.value})} style={{...inputStyleCompact, width: 'auto'}} />
+            <input type="date" value={filterPeriodo.a} onChange={(e) => setFilterPeriodo({...filterPeriodo, a: e.target.value})} style={{...inputStyleCompact, width: 'auto'}} />
+            <button onClick={loadAllData} style={{ padding: '6px 12px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
+              🔍
             </button>
+            {giornoRecord && (
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: '#92400e', background: '#fef3c7', padding: '4px 8px', borderRadius: 4 }}>
+                🏆 Record: {formatDate(giornoRecord.data)} - {formatCurrency(giornoRecord.importo)}
+              </span>
+            )}
           </div>
 
           {/* Movements Table Cassa */}
