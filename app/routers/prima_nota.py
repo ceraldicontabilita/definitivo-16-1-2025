@@ -549,9 +549,10 @@ async def registra_pagamento_fattura(
             "importo": importo_totale,
             "descrizione": descrizione_base,
             "categoria": "Pagamento fornitore",
-            "riferimento": fattura.get("numero_fattura"),
-            "fornitore_piva": fattura.get("cedente_piva"),
+            "riferimento": numero_fattura,
+            "fornitore_piva": fornitore_piva,
             "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+            "source": "fattura_pagata",
             "created_at": now
         }
         await db[COLLECTION_PRIMA_NOTA_BANCA].insert_one(movimento_banca)
@@ -567,9 +568,10 @@ async def registra_pagamento_fattura(
                 "importo": importo_cassa,
                 "descrizione": f"{descrizione_base} (parte contanti)",
                 "categoria": "Pagamento fornitore",
-                "riferimento": fattura.get("numero_fattura"),
-                "fornitore_piva": fattura.get("cedente_piva"),
+                "riferimento": numero_fattura,
+                "fornitore_piva": fornitore_piva,
                 "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+                "source": "fattura_pagata",
                 "created_at": now
             }
             await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento_cassa)
@@ -583,9 +585,10 @@ async def registra_pagamento_fattura(
                 "importo": importo_banca,
                 "descrizione": f"{descrizione_base} (parte bonifico)",
                 "categoria": "Pagamento fornitore",
-                "riferimento": fattura.get("numero_fattura"),
-                "fornitore_piva": fattura.get("cedente_piva"),
+                "riferimento": numero_fattura,
+                "fornitore_piva": fornitore_piva,
                 "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+                "source": "fattura_pagata",
                 "created_at": now
             }
             await db[COLLECTION_PRIMA_NOTA_BANCA].insert_one(movimento_banca)
