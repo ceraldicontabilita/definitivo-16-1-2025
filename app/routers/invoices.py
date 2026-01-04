@@ -107,9 +107,7 @@ async def create_invoice(
     summary="Get available years",
     description="Get list of years for which invoices exist"
 )
-async def get_anni_disponibili(
-    current_user: Dict[str, Any] = Depends(get_current_user)
-) -> Dict[str, Any]:
+async def get_anni_disponibili() -> Dict[str, Any]:
     """Restituisce gli anni per cui esistono fatture."""
     db = Database.get_db()
     
