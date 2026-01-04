@@ -590,9 +590,11 @@ export default function ControlloMensile() {
           </>
         )}
 
-        <span style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 'auto' }}>
-          📅 {viewMode === 'anno' ? anno : `${monthNames[meseSelezionato - 1]} ${anno}`}
-        </span>
+        {viewMode === 'anno' && (
+          <span style={{ fontSize: 18, fontWeight: 'bold', marginLeft: 'auto' }}>
+            📅 {anno}
+          </span>
+        )}
       </div>
 
       {/* Summary Cards */}
