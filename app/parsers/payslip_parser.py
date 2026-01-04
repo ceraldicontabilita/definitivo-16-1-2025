@@ -565,33 +565,37 @@ def extract_payslips_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
             nome = salary.get('nome', '')
             parts = nome.split() if nome else ['', '']
             cognome = parts[0] if len(parts) > 0 else ''
-            nome_proprio = parts[1] if len(parts) > 1 else ''
+            nome_proprio = ' '.join(parts[1:]) if len(parts) > 1 else ''
             
-            # Get matching presence data
+            # Get matching presence data and employee metadata
             ore_ordinarie = 0.0
             mansione = ""
+            codice_fiscale = ""
+            contratto_scadenza = ""
+            
             for presence in result.get('presenze', []):
                 if presence.get('nome') == nome:
                     ore_ordinarie = presence.get('ore_ordinarie', 0.0)
                     break
             
-            # Get employee metadata
             for emp in result.get('employees', []):
                 if emp.get('full_name') == nome:
                     mansione = emp.get('mansione') or ''
+                    codice_fiscale = emp.get('codice_fiscale') or ''
+                    contratto_scadenza = emp.get('contratto_scadenza') or ''
                     break
             
-            # Generate a fake codice fiscale if we don't have one
-            # The new parser doesn't extract CF, so we'll use name-based key
-            cf_base = (cognome[:3] + nome_proprio[:3]).upper().ljust(6, 'X')
-            fake_cf = f"{cf_base}00A00A000A"
+            # Use real codice fiscale if available, otherwise generate fake one
+            if not codice_fiscale:
+                cf_base = (cognome[:3] + nome_proprio[:3]).upper().ljust(6, 'X')
+                codice_fiscale = f"{cf_base}00A00A000A"
             
             payslips.append({
                 "nome": nome_proprio,
                 "cognome": cognome,
                 "nome_completo": nome,
                 "matricola": "",
-                "codice_fiscale": fake_cf,
+                "codice_fiscale": codice_fiscale,
                 "qualifica": mansione,
                 "livello": "",
                 "periodo": periodo_str,
@@ -606,7 +610,8 @@ def extract_payslips_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
                 "irpef": 0.0,
                 "tfr": 0.0,
                 "acconto": salary.get('acconto', 0.0),
-                "note": salary.get('note', '')
+                "note": salary.get('note', ''),
+                "contratto_scadenza": contratto_scadenza
             })
         
         return payslips
