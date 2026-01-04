@@ -248,6 +248,112 @@ export default function HACCPDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Report PDF Section */}
+      <div style={{ marginTop: 30, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: 12, padding: 24, color: 'white' }}>
+        <h3 style={{ marginTop: 0, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          📄 Stampa Report PDF per Ispezioni ASL
+        </h3>
+        <p style={{ opacity: 0.9, marginBottom: 20, fontSize: 14 }}>
+          Genera documentazione HACCP completa in formato PDF per le verifiche sanitarie
+        </p>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 20, flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>Mese di riferimento:</span>
+            <input
+              type="month"
+              value={meseReport}
+              onChange={(e) => setMeseReport(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 6,
+                border: 'none',
+                fontSize: 14,
+                background: 'rgba(255,255,255,0.9)',
+                color: '#333'
+              }}
+              data-testid="haccp-report-month-input"
+            />
+          </label>
+        </div>
+        
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => handleDownloadPDF('completo')}
+            style={{
+              padding: '12px 24px',
+              background: 'white',
+              color: '#764ba2',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              transition: 'transform 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            data-testid="haccp-download-completo-btn"
+          >
+            📋 Report Completo ASL
+          </button>
+          <button
+            onClick={() => handleDownloadPDF('frigoriferi')}
+            style={{
+              padding: '12px 24px',
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+            data-testid="haccp-download-frigo-btn"
+          >
+            🌡️ Temperature Frigo
+          </button>
+          <button
+            onClick={() => handleDownloadPDF('congelatori')}
+            style={{
+              padding: '12px 24px',
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+            data-testid="haccp-download-congel-btn"
+          >
+            ❄️ Temperature Congelatori
+          </button>
+          <button
+            onClick={() => handleDownloadPDF('sanificazioni')}
+            style={{
+              padding: '12px 24px',
+              background: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}
+            data-testid="haccp-download-sanif-btn"
+          >
+            🧹 Sanificazioni
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
