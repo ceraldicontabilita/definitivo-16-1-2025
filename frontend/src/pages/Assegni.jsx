@@ -149,7 +149,7 @@ export default function Assegni() {
                   <td style={{ padding: 8, fontWeight: "bold" }}>€ {(c.amount || 0).toFixed(2)}</td>
                   <td style={{ padding: 8 }}>{c.beneficiary}</td>
                   <td style={{ padding: 8 }}>{c.bank || "-"}</td>
-                  <td style={{ padding: 8 }}>{c.due_date ? new Date(c.due_date).toLocaleDateString("it-IT") : "-"}</td>
+                  <td style={{ padding: 8 }}>{formatDateIT(c.due_date) || "-"}</td>
                   <td style={{ padding: 8 }}>{c.status || "pending"}</td>
                 </tr>
               ))}
