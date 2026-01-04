@@ -474,17 +474,18 @@ export default function Fatture() {
             Carica un file XML o crea una fattura manuale per iniziare.
           </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left" }}>
-                <th style={{ padding: 8 }}>Numero</th>
-                <th style={{ padding: 8 }}>Tipo</th>
-                <th style={{ padding: 8 }}>Fornitore</th>
-                <th style={{ padding: 8 }}>Data</th>
-                <th style={{ padding: 8 }}>Importo</th>
-                <th style={{ padding: 8 }}>Metodo Pag.</th>
-                <th style={{ padding: 8 }}>Stato</th>
-                <th style={{ padding: 8 }}>Azioni</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Numero</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Tipo</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Fornitore</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Data</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Importo</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Metodo Pag.</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Stato</th>
+                <th style={{ padding: 8, whiteSpace: 'nowrap' }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
@@ -496,7 +497,7 @@ export default function Fatture() {
                   <td style={{ padding: 8 }}>
                     {inv.tipo_documento ? getTipoDocBadge(inv.tipo_documento) : "-"}
                   </td>
-                  <td style={{ padding: 8 }}>
+                  <td style={{ padding: 8, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {inv.supplier_name || inv.fornitore?.denominazione || "-"}
                     {inv.supplier_vat && (
                       <div className="small" style={{ color: "#666" }}>
@@ -504,8 +505,8 @@ export default function Fatture() {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: 8 }}>{formatDateIT(inv.invoice_date) || "-"}</td>
-                  <td style={{ padding: 8, fontWeight: "bold" }}>
+                  <td style={{ padding: 8, whiteSpace: 'nowrap' }}>{formatDateIT(inv.invoice_date) || "-"}</td>
+                  <td style={{ padding: 8, fontWeight: "bold", whiteSpace: 'nowrap' }}>
                     € {(inv.total_amount || 0).toFixed(2)}
                   </td>
                   <td style={{ padding: 8 }}>
