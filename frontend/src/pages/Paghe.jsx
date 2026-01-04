@@ -336,9 +336,9 @@ export default function Paghe() {
               {employees.map((emp, i) => (
                 <tr key={emp.id || i} style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 8 }}>
-                    <strong>{emp.nome_completo || emp.name}</strong>
+                    <strong>{emp.nome_completo || (emp.name && emp.name !== emp.ultimo_periodo ? emp.name : emp.codice_fiscale) || emp.codice_fiscale}</strong>
                     {emp.ultimo_periodo && (
-                      <div style={{ fontSize: 11, color: "#666" }}>{emp.ultimo_periodo}</div>
+                      <div style={{ fontSize: 11, color: "#666" }}>Periodo: {emp.ultimo_periodo}</div>
                     )}
                   </td>
                   <td style={{ padding: 8, fontSize: 12 }}>{emp.codice_fiscale || "-"}</td>
