@@ -1,84 +1,107 @@
-<analysis>Analyse de l'historique des messages du LLM et résumé de la prise en charge
-
-**original_problem_statement:**
-L'objectif de l'utilisateur est de construire une application ERP complète. Les dernières demandes qui ont guidé le travail sont :
-1.  **Récréer l'UI de la Prima Nota :** Recréer l'interface de saisie manuelle de la  (grille de Chiusure Giornaliere) et créer une nouvelle page  pour comparer les données de point de vente (POS) automatiques et manuelles, en se basant sur une URL de référence et des fichiers Excel fournis.
-2.  **Automatiser et Améliorer les Factures :** Ajouter une colonne Metodo Pagamento (Méthode de Paiement) dans la liste des factures, avec une logique qui déplace automatiquement la facture vers le bon grand livre ( ou ) lors de la sélection. Remplir rétroactivement cette information pour les factures existantes.
-3.  **Gestion des Employés et des Contrats :** Importer les données des employés à partir d'un fichier Excel, permettre la modification de ces données et mettre en place un système pour générer automatiquement des contrats de travail (fichiers ) à partir de modèles pré-remplis.
-4.  **Gestion des Fournisseurs :** Améliorer la page de gestion des fournisseurs en implémentant la modification en ligne (inline editing), des logiques de paiement automatiques (par exemple, contanti implique un paiement a vista), et des capacités de modification en masse.
-5.  **Service d'Email et Alertes F24 :** Mettre en place un service d'envoi d'emails pour les notifications, en particulier pour les alertes de paiement d'impôts (F24). L'utilisateur a fourni des identifiants, y compris un mot de passe d'application Gmail.
-6.  **Design Réactif (Responsive) :** Rendre l'ensemble de l'application réactive pour une utilisation optimale sur mobile, tablette et ordinateur de bureau.
-7.  **Import de Relevés Bancaires PDF :** Permettre l'import de relevés bancaires au format PDF (en plus des CSV/Excel), en s'assurant d'éviter les doublons et de ne mettre à jour que les informations manquantes.
+<analysis>**original_problem_statement:**
+L'utente sta costruendo un'applicazione ERP completa. Le richieste recenti includono:
+1.  **Analisi PDF Buste Paga:** Estrarre dati atomici, in particolare il Netto Mese, dai PDF delle buste paga e registrarli automaticamente nella Prima Nota.
+2.  **Correzione Categoria Salari:** I pagamenti degli stipendi devono essere registrati in una nuova Prima Nota Salari, non nella Prima Nota Cassa.
+3.  **Risoluzione Bug e Funzionalità Mancanti:**
+    *   La pagina  non funziona.
+    *   La pagina  non mostra dati.
+    *   L'importazione di PDF F24 per i contributi non è possibile.
+4.  **Creazione Pagina Import/Export:** Centralizzare tutte le funzioni di importazione (versamenti, POS, corrispettivi, F24, buste paga) in una nuova pagina dedicata.
+5.  **Correzione Logica Contabile POS:** Gli incassi POS devono essere registrati come uscite () nella .
+6.  **Miglioramento UI F24:** La lista dei modelli F24 deve mostrare in dettaglio i codici tributo e gli importi per un controllo visivo e per analisi aggregate (es. totale pagato per codice 1001 durante l'anno).
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-Une application ERP full-stack fonctionnelle avec un backend FastAPI et un frontend React. L'application comprend des modules pour les Factures, les Corrispettivi (recettes quotidiennes), un Catalogue de Produits, un tableau de bord TVA, les Commandes Fournisseurs, les Fiches de Paie, les Fournisseurs, la Gestion des Chèques, la Prima Nota (grand livre), la Gestion des Employés et un module HACCP complet. Le backend a été entièrement refactorisé pour passer d'une architecture monolithique à une architecture modulaire basée sur des routeurs. L'application est maintenant entièrement réactive. Un service d'email est configuré et fonctionnel.
+Un'applicazione ERP full-stack con backend FastAPI (modulare) e frontend React (responsive). L'applicazione include moduli per Fatture, Corrispettivi, Catalogo Prodotti, IVA, Ordini Fornitori, Paghe, Fornitori, Assegni, HACCP, e Prima Nota.
+
+Funzionalità chiave implementate:
+- **Prima Nota:** Dispone di un pannello di inserimento rapido (Chiusure Giornaliere Serali) e una pagina Controllo Mensile per confrontare dati automatici e manuali.
+- **Paghe:** Un parser PDF avanzato () estrae dati da diversi formati di buste paga, importandoli e creando automaticamente movimenti nella nuova collection .
+- **F24:** Un parser PDF () estrae i dati dai modelli F24, inclusi i dettagli dei tributi.
+- **Import/Export:** Una pagina centralizzata () gestisce l'upload di file Excel/PDF per varie operazioni e l'export di dati in formato Excel/JSON.
+- **Backend:** Conflitti di routing sono stati risolti e diversi endpoint sono stati resi pubblici (rimuovendo l'autenticazione non utilizzata).
 
 **Last working item**:
-- **Last item agent was working**: L'agent a commencé à mettre en œuvre la demande de l'utilisateur de recréer l'interface de saisie manuelle pour la  et de créer la page . L'agent a analysé l'URL de référence et les fichiers Excel fournis par l'utilisateur, a compris la structure requise (panneau Chiusure Giornaliere Serali) et a commencé à créer le composant frontend  pour cette fonctionnalité.
+- **Last item agent was working**: L'agente stava iniziando a implementare le due richieste più recenti dell'utente:
+    1.  Modificare la logica di inserimento dei POS in modo che vengano registrati come uscite nella Prima Nota Cassa.
+    2.  Migliorare la visualizzazione della lista F24 per includere i dettagli dei codici tributo.
+    L'agente ha analizzato la richiesta, esaminato un nuovo file F24 di esempio e identificato i file da modificare ( per la logica POS e  per l'UI).
 - **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?**: screenshot tool. L'agent doit d'abord intégrer le nouveau composant  dans la page  et prendre une capture d'écran pour vérifier l'interface. Ensuite, il devra créer la nouvelle page  et la vérifier également.
+- **Which testing method agent to use?**: both.
+    - Per la modifica dei POS: test backend con  per verificare la creazione del movimento come uscita in cassa.
+    - Per la modifica F24:  sulla pagina  per verificare che la nuova vista dettagliata dei codici tributo sia visualizzata correttamente.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: (P2) Bug d'UI sur la recherche de produits - Le prix n'apparaît pas dans les suggestions.
+- **Issue 1**: (P0) Le registrazioni POS sono inserite come entrate nella  invece che come uscite nella .
+- **Issue 2**: (P1) La pagina F24 non mostra i dettagli dei codici tributo per ogni modello importato.
+- **Issue 3**: (P2) Bug d'UI sulla ricerca di prodotti - il prezzo non appare nelle suggestions.
 
 **Issues Detail:**
-- **Issue 1: Bug d'UI sur la recherche de produits - Le prix n'apparaît pas dans les suggestions.**
-    - **Attempted fixes**: Aucun. C'est un bug mineur connu d'une session précédente.
+- **Issue 1: Le registrazioni POS sono inserite come entrate in banca invece che uscite in cassa.**
+    - **Attempted fixes**: Nessuno. L'agente ha appena iniziato ad analizzare il problema.
     - **Next debug checklist**:
-        1.  Inspecter le point d'API  (dans ) pour vérifier que  est bien inclus dans la réponse.
-        2.  Vérifier le composant frontend  pour s'assurer que le champ  est correctement lu et affiché.
-    - **Why fix this issue and what will be achieved with the fix?**: Résoudre ce bug améliorera l'expérience utilisateur sur la page de recherche de produits.
+        1.  Modificare la funzione  in  per inviare la richiesta di creazione movimento alla  con tipo .
+        2.  Modificare l'endpoint backend  in  per gestire correttamente la descrizione e la categorizzazione degli incassi POS come un'operazione di cassa.
+        3.  Modificare l'endpoint di importazione da Excel in  (funzione ) per creare un'uscita in cassa.
+    - **Why fix this issue and what will be achieved with the fix?**: Correggerà il flusso contabile secondo le specifiche dell'utente, riflettendo correttamente la gestione della liquidità.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: None
+- **Issue 2: La pagina F24 non mostra i dettagli dei codici tributo.**
+    - **Attempted fixes**: Nessuno.
+    - **Next debug checklist**:
+        1.  Modificare il componente che renderizza la lista dei Modelli F24 Registrati in .
+        2.  Per ogni modello F24, iterare sugli array  e  e visualizzare una tabella o una lista dettagliata con Codice Tributo, Periodo, Importo a Debito, Importo a Credito.
+        3.  Considerare l'uso di un componente  o  di Shadcn per mostrare/nascondere i dettagli ed evitare di affollare l'interfaccia.
+    - **Why fix this issue and what will be achieved with the fix?**: Fornirà all'utente una visione immediata della composizione di ogni F24, facilitando i controlli e le analisi.
+    - **Status**: NOT STARTED
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: frontend
+    - **Blocked on other issue**: None
+- **Issue 3: Bug d'UI sulla ricerca di prodotti - il prezzo non appare nelle suggestions.**
+    - **Attempted fixes**: Nessuno. Problema noto da sessioni precedenti.
+    - **Next debug checklist**:
+        1.  Verificare l'endpoint  in  per assicurarsi che  sia incluso nella risposta.
+        2.  Ispezionare il componente  per garantire che il campo  venga letto e visualizzato correttamente.
+    - **Why fix this issue and what will be achieved with the fix?**: Migliorerà l'esperienza utente durante la ricerca di prodotti.
     - **Status**: NOT STARTED
     - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: frontend
     - **Blocked on other issue**: None
 
 **In progress Task List**:
-- **Task 1**: (P0) Recréer l'interface de saisie manuelle de la Prima Nota.
-- **Task 2**: (P0) Créer la nouvelle page Controllo Mensile.
-
-**Task Detail:**
-- **Task 1: Recréer l'interface de saisie manuelle de la Prima Nota.**
-    - **Where to resume**: L'agent a déjà créé le fichier . La prochaine étape consiste à intégrer ce composant dans la page  et à implémenter la logique frontend et backend pour les quatre formulaires de saisie rapide : Corrispettivo, POS, Versamento, et Registra Movimento.
-    - **What will be achieved with this?**: L'utilisateur disposera d'une interface de saisie rapide et rationalisée pour les opérations comptables quotidiennes, comme demandé.
-    - **Status**: IN PROGRESS
-    - **Should Test frontend/backend/both after fix?**: frontend
-    - **Blocked on something**: None
-- **Task 2: Créer la nouvelle page Controllo Mensile.**
-    - **Where to resume**: Une fois la Tâche 1 terminée, l'agent doit créer une nouvelle route et une nouvelle page (par exemple, ). Cette page devra récupérer les données des transactions POS à la fois des imports XML automatiques et des saisies manuelles via la nouvelle interface, puis afficher un tableau comparatif mettant en évidence les écarts.
-    - **What will be achieved with this?**: L'utilisateur pourra facilement réconcilier les totaux des points de vente électroniques, ce qui est une fonctionnalité de contrôle financier cruciale.
-    - **Status**: NOT STARTED
-    - **Should Test frontend/backend/both after fix?**: both
-    - **Blocked on something**: Dépend de la finalisation de la Tâche 1 (saisie manuelle des POS).
+N/A
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1) Tester l'import de l'extrait de compte PDF :** L'agent a implémenté la logique backend pour parser les PDF de relevés bancaires, mais cette fonctionnalité n'a pas été testée de bout en bout après que l'utilisateur ait fourni un fichier d'exemple.
+    - **(P1) Testare l'import di estratto conto PDF:** La funzionalità backend è stata implementata in una sessione precedente ma non è mai stata testata end-to-end con un file fornito dall'utente.
 - **Future Tasks**:
-    - **(P2) Améliorer/Refactoriser  :** La page de gestion des employés est devenue assez volumineuse et complexe. Elle pourrait être décomposée en composants plus petits pour une meilleure maintenabilité.
+    - **(P2) Refactoring di :** La pagina è molto grande e potrebbe essere suddivisa in componenti più piccoli per una migliore manutenibilità.
 
 **Completed work in this session**
-- **Service Email et Alertes F24 :** Le service d'email a été configuré avec succès en utilisant le mot de passe d'application Gmail fourni par l'utilisateur. Les emails de test et les notifications d'alerte F24 ont été envoyés avec succès. L'interface utilisateur pour les alertes F24 sur la page  a été implémentée et testée.
-- **Design Réactif (Mobile/Tablet) :** Une refonte complète du design a été effectuée. L'application utilise désormais une approche mobile-first avec une barre de navigation inférieure sur les petits écrans et une barre latérale sur les écrans plus grands. Toutes les pages principales (, , , etc.) ont été testées et optimisées pour différents appareils.
-- **Automatisation et Amélioration des Factures :** La page  a été mise à jour avec une colonne Metodo Pagamento. La modification de cette colonne déclenche une mise à jour backend qui crée une entrée correspondante dans la . Un script a été exécuté pour corriger et peupler cette information pour plus de 1000 factures existantes.
-- **Gestion des Employés et Génération de Contrats :** Les données de 23 employés ont été importées d'un fichier Excel. La page  a été entièrement reconstruite pour permettre la modification des données des employés et la génération de contrats () à partir de modèles, en remplissant automatiquement les champs.
-- **Amélioration de la Gestion des Fournisseurs :** La page  a été optimisée avec des fonctionnalités de modification en ligne, de modification multiple et une logique de paiement automatique.
-- **Refactoring de  :** Le composant monolithique de 816 lignes a été décomposé en un composant principal plus petit et 4 composants enfants dédiés.
-- **Rapports PDF HACCP :** Le tableau de bord HACCP a été doté d'une interface utilisateur pour générer des rapports PDF mensuels. La fonctionnalité a été validée par l'agent de test.
-- **Import de Relevés Bancaires PDF :** La logique d'automatisation de la  a été étendue pour prendre en charge l'upload de relevés bancaires au format PDF, en plus des fichiers CSV et Excel existants.
+- **Correzione UI Modale Contratti:** Risolto un problema di allineamento e leggibilità dei bottoni nella modale di generazione contratti.
+- **Creazione Pagina Controllo Mensile:** Creata una nuova pagina () che offre una vista annuale e mensile per confrontare i totali POS automatici (da XML) e manuali (da Quick Entry), evidenziando le discrepanze.
+- **Integrazione Quick Entry Panel:** Il pannello per la saisie rapida delle chiusure giornaliere è stato integrato con successo nella pagina .
+- **Sviluppo Parser PDF Buste Paga:** Creato un parser robusto () in grado di gestire tre diversi formati di PDF per le buste paga, estraendo i dati anagrafici e il netto del mese.
+- **Automazione Inserimento Salari:** Implementato l'upload di PDF di buste paga che registra automaticamente il totale netto di ogni dipendente nella nuova collection .
+- **Creazione Pagina Import/Export:** Sviluppata una nuova pagina centralizzata () per tutte le operazioni di importazione (POS, Versamenti, Corrispettivi, F24, Buste Paga) ed esportazione dati.
+- **Sviluppo Parser PDF F24:** Creato un parser () per estrarre dati dettagliati dai PDF dei modelli F24, inclusi i singoli codici tributo.
+- **Risoluzione Bug Critici:**
+    - Spostati i movimenti degli stipendi dalla  alla nuova collection .
+    - Risolti errori 404 e di autenticazione sugli endpoint di  e  rimuovendo dipendenze non necessarie.
+    - Sistemati numerosi conflitti di routing su  e  riorganizzando l'ordine di inclusione dei router e creando un router pubblico dedicato ().
+    - Corretto il frontend delle pagine F24 e Finanziaria per usare i nuovi endpoint corretti.
+- **Migrazione Dati:** Eseguito uno script per spostare tutti i movimenti Salari esistenti da  a .
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Refactoring Frontend :** Décomposition de grands composants React en plus petits, réutilisables et à responsabilité unique.
-- **Design Réactif :** Utilisation de CSS avec une approche mobile-first, des variables CSS et des media queries pour adapter l'interface à différentes tailles d'écran.
-- **Génération de Documents :** Utilisation de la bibliothèque  côté backend pour lire des modèles , y insérer des données (remplissage de champs) et servir le fichier généré au téléchargement.
-- **Parsing de PDF :** Utilisation de la bibliothèque usage: pdfplumber [-h] [--structure | --structure-text]
+- **PDF Parsing (Rule-Based):** Utilizzo estensivo di usage: pdfplumber [-h] [--structure | --structure-text]
                   [--format {csv,json,text}] [--types TYPES [TYPES ...]]
                   [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
                   [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
@@ -106,75 +129,84 @@ options:
   --laparams LAPARAMS
   --precision PRECISION
   --pages PAGES [PAGES ...]
-  --indent INDENT       Indent level for JSON pretty-printing. pour extraire des données tabulaires à partir de documents PDF non structurés (relevés bancaires).
-- **Scripts de Migration/Remplissage de Données :** Création de scripts  autonomes pour effectuer des opérations de nettoyage et de remplissage en masse sur la base de données (par exemple, la mise à jour des méthodes de paiement pour les anciennes factures).
+  --indent INDENT       Indent level for JSON pretty-printing. con espressioni regolari (regex) e logiche complesse per estrarre dati strutturati da PDF con layout variabili (buste paga, F24).
+- **Risoluzione Conflitti di Routing (FastAPI):** Gestione di problemi derivanti da più router che condividono lo stesso prefisso URL, risolti attraverso la riorganizzazione dell'ordine di inclusione e la creazione di router dedicati per gli endpoint pubblici.
+- **Data Migration Scripting ():** Creazione ed esecuzione di script per migrare dati tra collection MongoDB (es. spostamento dei salari da cassa a salari).
+- **Frontend State Management (React):** Utilizzo di  e  per gestire dati asincroni, stati di caricamento e interazioni complesse dell'interfaccia utente (viste annuali/mensili, upload di file).
 
 **key DB schema**
-- **employees**: Collection peuplée avec les données des employés. Contient des informations personnelles, de contact et d'emploi.
-- **invoices**: Contient maintenant un champ  qui est synchronisé avec la .
-- **fornitori**: La logique de  et  est gérée au niveau de l'application.
+- **prima_nota_salari**: (NEW) Collection dedicata per registrare tutti i pagamenti degli stipendi. Schema: .
+- **f24_models**: Lo schema è stato arricchito per includere un oggetto  contenente array dettagliati per  e , ciascuno con , , , .
+- **prima_nota_cassa**: Ora gestisce le registrazioni POS come uscite.
+
+**changes in tech stack**
+- None.
 
 **All files of reference**
-- : Fichier principal pour la tâche en cours.
-- : Nouveau composant pour la saisie rapide.
-- : Contient la logique pour l'import de relevés bancaires.
-- : Contient la logique pour la génération de contrats.
-- : Page de gestion des employés.
-- : Page de gestion des fournisseurs.
-- : Page des factures.
-- : Contient les identifiants SMTP.
-- : A été mis à jour régulièrement tout au long de la session.
+- : Da modificare per la visualizzazione dettagliata dei tributi.
+- : Da modificare per la logica POS.
+- : Da modificare per la logica POS in import Excel.
+- : Contiene la logica per tutte e tre le Prime Note (cassa, banca, salari).
+- : Parser per le buste paga.
+- : Parser per i modelli F24.
+- : Pagina di confronto POS.
+- : Pagina centralizzata per import/export.
+- : Punto di ingresso del backend dove sono registrati tutti i router.
 
 **Areas that need refactoring**:
-- La page  est devenue volumineuse et pourrait bénéficier d'une décomposition en composants plus petits, suivant le modèle appliqué à .
+- **Routing in :** La presenza di più router per prefissi simili (, ) ha causato conflitti. Una strategia di routing più chiara potrebbe prevenire problemi futuri.
+- **:** Resta un componente molto grande che beneficerebbe di una scomposizione.
 
 **key api endpoints**
-- : Envoie des alertes F24 par email.
-- : Génère un contrat DOCX pré-rempli pour un employé.
-- : Met à jour la méthode de paiement d'une facture.
-- : (Méthode ) Met à jour les informations d'un fournisseur.
-- : (Méthode ) Met à jour les données d'un employé.
+- : CRUD per la nuova Prima Nota Salari.
+- : (NEW) Importa incassi POS da file Excel.
+- : (NEW) Importa versamenti da file Excel.
+- : (NEW) Importa corrispettivi da file Excel.
+- : Upload PDF buste paga.
+- : (NEW) Upload PDF F24 senza autenticazione.
+- : (NEW) Lista di tutti gli F24 importati senza autenticazione.
+- : (NEW) Endpoint per l'export di vari dati senza autenticazione.
 
 **Critical Info for New Agent**
-- **La priorité absolue est de terminer la nouvelle interface de  et la page ** comme demandé par l'utilisateur en se basant sur l'URL de référence.
-- Le service d'email est entièrement fonctionnel. Le mot de passe d'application Gmail est  et est déjà configuré dans le fichier .
-- L'architecture doit rester modulaire. Tout nouveau code doit suivre les principes de responsabilité unique, tant pour le backend que pour le frontend.
-- L'utilisateur est très réactif et fournit des instructions claires et des ressources (fichiers, URL). Il est important d'analyser attentivement ces ressources avant de commencer l'implémentation.
+- L'utente fornisce feedback molto specifici e spesso multipli in un singolo messaggio. È fondamentale leggerli attentamente e affrontare ogni punto.
+- I conflitti di routing in FastAPI sono stati un problema ricorrente. Presta la massima attenzione quando aggiungi nuovi router o endpoint con prefissi già esistenti. L'ordine di inclusione in  è determinante.
+- I pagamenti degli stipendi ora devono essere gestiti tramite la collection  e i relativi endpoint. Non usare più  per i salari.
+- La priorità è correggere la logica dei POS e migliorare l'UI degli F24 come da ultima richiesta dell'utente.
 
 **documents and test reports created in this job**
 - 
--  (mis à jour plusieurs fois)
--  (répertoire contenant 8 modèles de documents )
-- De nombreux fichiers Excel et PDF ont été fournis par l'utilisateur et analysés par l'agent.
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. L'utilisateur demande d'optimiser la page de gestion des fournisseurs. (Terminé)
-9. Agent termine et présente la nouvelle page Fournisseurs.
-8. L'utilisateur demande de recréer l'interface de saisie manuelle de  et de créer une page  en se basant sur une URL et des fichiers. (En cours)
-7. Agent analyse les fichiers et le site de référence.
-6. L'utilisateur demande de compléter les données des employés et d'implémenter un système de génération de contrats. (Terminé)
-5. Agent analyse les fichiers de données des employés et des contrats.
-4. L'utilisateur demande de corriger les méthodes de paiement sur les factures existantes et fournit un nouveau mot de passe d'application. (Terminé)
-3. Agent configure la nouvelle App Password et teste avec succès l'envoi d'email.
-2. L'utilisateur fournit des informations d'identification email et demande de poursuivre les tâches manquantes. (Terminé)
-1. L'utilisateur demande de corriger des erreurs, de formater le code et de rendre l'application réactive pour mobile/tablette. (Terminé)
+10. **Richiesta Correzione POS e Dettagli F24:** L'utente chiede che i POS siano registrati come uscite in cassa e che la lista F24 mostri i dettagli dei codici tributo. (IN PROGRESS)
+9.  **Report Bug Multipli e Nuove Funzionalità:** L'utente segnala che l'export non funziona, la pagina finanziaria è vuota, l'import F24 non va, e chiede una nuova pagina di import/export. Chiede anche che i salari vadano in Prima Nota Salari. (COMPLETED)
+8.  **Richiesta di Parsing PDF Buste Paga:** L'utente fornisce 3 PDF di buste paga e chiede di estrarre i dati (netto mese) per inserirli in Prima Nota. (COMPLETED)
+7.  **Richiesta Correzione Vista Annuale:** L'utente chiede di modificare la pagina Controllo Mensile per mostrare di default l'intero anno e permettere la selezione dell'anno. (COMPLETED)
+6.  **Segnalazione Bug UI:** L'utente segnala un problema di allineamento e leggibilità dei bottoni nella modale di generazione contratti. Fornisce anche 4 file Excel per la struttura della Prima Nota. (COMPLETED)
+5.  (Dalla sessione precedente) L'utente chiede di ottimizzare la pagina di gestione dei fornitori. (COMPLETED)
+4.  (Dalla sessione precedente) L'utente chiede di ricreare l'interfaccia di saisie manuelle di Prima Nota e creare una pagina Controllo Mensile. (COMPLETED)
+3.  (Dalla sessione precedente) L'utente chiede di completare i dati dei dipendenti e implementare la generazione di contratti. (COMPLETED)
+2.  (Dalla sessione precedente) L'utente chiede di correggere i metodi di pagamento sulle fatture esistenti. (COMPLETED)
+1.  (Dalla sessione precedente) L'utente chiede di rendere l'applicazione responsive. (COMPLETED)
 
 **Project Health Check:**
-- **Broken**: Le bug mineur sur la recherche de produits.
-- **Mocked**: Aucune donnée n'est maquettée. Le système utilise des données réelles ou des données de test persistantes.
+- **Broken**: Il bug UI sulla ricerca prodotti (prezzo mancante nelle suggestions).
+- **Mocked**: Nessuno.
 
 **3rd Party Integrations**
-- **Gmail SMTP:** Utilisé pour l'envoi d'emails. La configuration est terminée et fonctionnelle.
+- **Gmail SMTP:** Utilizzato per l'invio di email.
+- **pdfplumber:** Libreria Python per l'estrazione di testo e tabelle da file PDF.
+- **python-docx:** Libreria Python per la generazione di documenti  da template.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES (pour la fonctionnalité de rapport PDF HACCP).
+- **Testing agent used after significant changes**: YES (per le funzionalità di Quick Entry Panel e Controllo Mensile, con report in ).
 - **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**: 
+- **Test files created**:  (creato dal testing agent).
 - **Known regressions**: None.
 
 **Credentials to test flow:**
-- L'application n'a pas de système d'authentification utilisateur.
-- Les identifiants SMTP pour Gmail sont dans . Mot de passe d'application : .
+- L'applicazione non utilizza un sistema di autenticazione per l'utente.
+- Le credenziali SMTP di Gmail sono configurate nel file .
 
 **What agent forgot to execute**
-L'agent a été très complet. Le seul point non testé est la fonctionnalité d'upload de PDF pour l'extrait de compte, car l'utilisateur a immédiatement enchaîné sur une autre tâche prioritaire. Il serait bon de le vérifier. Le bug de recherche de produit à faible priorité reste non résolu.</analysis>
+- Non è mai stato eseguito un test end-to-end della funzionalità di importazione di estratti conto bancari in formato PDF, sebbene il backend sia stato implementato.
+- Il bug sulla ricerca prodotti, di bassa priorità, non è stato risolto.</analysis>
