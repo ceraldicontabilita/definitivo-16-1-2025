@@ -75,6 +75,28 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-04 (Sessione 3 - Area Commercialista)
+- **NUOVA PAGINA Commercialista**: Area dedicata per invio documenti PDF via email al commercialista
+  - Email configurata: rosaria.marotta@email.it
+  - Invio Prima Nota Cassa mensile in PDF
+  - Invio Fatture pagate in Contanti mensile in PDF
+  - Invio Carnet Assegni in PDF
+  - Alert automatico 2 giorni dopo fine mese precedente
+  - Storico invii con log
+- **FIX Stampa Carnet**: Ora stampa solo il carnet selezionato (non tutti i carnet insieme)
+  - Ogni carnet ha il proprio bottone "Stampa Carnet PDF"
+  - Genera PDF con dettaglio assegni, stato, importo, beneficiario
+- **Generazione PDF**: Aggiunta libreria jsPDF per generazione PDF frontend
+- **Backend Commercialista**: Nuovo router `/api/commercialista` con:
+  - GET `/config` - configurazione email
+  - GET `/prima-nota-cassa/{anno}/{mese}` - dati Prima Nota mensile
+  - GET `/fatture-cassa/{anno}/{mese}` - fatture pagate in contanti
+  - POST `/invia-prima-nota` - invio email con PDF allegato
+  - POST `/invia-carnet` - invio carnet via email
+  - POST `/invia-fatture-cassa` - invio fatture cassa via email
+  - GET `/alert-status` - stato alert per promemoria
+  - GET `/log` - storico invii
+
 ### 2026-01-04 (Sessione 2 - Parte 3)
 - **Controllo Mensile - Quadratura POS Banca**: Aggiunta nuova colonna "🏦 POS Banca" che mostra gli accrediti POS dalla banca (INC.POS, INCAS. TRAMITE P.O.S)
 - **Controllo Mensile**: Aggiunto KPI "POS Banca (Accrediti)" per visualizzare il totale accrediti POS bancari
@@ -149,6 +171,8 @@ FATTURA XML → Parse → FATTURE DB
 ### P0 (Urgente)
 - [x] Upload ZIP massivo Corrispettivi con barra progresso
 - [x] Controllo Mensile: POS Auto da XML, Saldo Cassa, Versamenti
+- [x] Area Commercialista con invio PDF via email
+- [x] Fix Stampa Carnet (singolo carnet, non tutti)
 - [ ] Fix pagina Prima Nota (regressione - non carica dati)
 
 ### P1 (Alta)
