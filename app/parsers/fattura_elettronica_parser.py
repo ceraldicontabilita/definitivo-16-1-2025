@@ -10,12 +10,6 @@ import re
 
 logger = logging.getLogger(__name__)
 
-# Namespace per FatturaPA
-NAMESPACES = {
-    'p': 'http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2',
-    'ds': 'http://www.w3.org/2000/09/xmldsig#'
-}
-
 
 def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
     """
@@ -35,112 +29,135 @@ def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
         # Parse XML
         root = ET.fromstring(xml_content.encode('utf-8'))
         
-        # Trova il namespace corretto
-        ns = {}
-        if root.tag.startswith('{'):
-            namespace = root.tag.split('}')[0] + '}'
-            ns['p'] = namespace[1:-1]
+        # Funzione helper per trovare elementi indipendentemente dal namespace
+        def find_element(parent, tag_name):
+            """Trova elemento ignorando namespace."""
+            if parent is None:
+                return None
+            # Prima prova direttamente
+            el = parent.find('.//' + tag_name)
+            if el is not None:
+                return el
+            # Cerca in tutti i figli
+            for child in parent.iter():
+                local_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                if local_name == tag_name:
+                    return child
+            return None
         
-        # Estrai dati header
-        header = root.find('.//FatturaElettronicaHeader', ns) or root.find('.//{%s}FatturaElettronicaHeader' % ns.get('p', ''))
-        if header is None:
-            # Prova senza namespace
-            header = root.find('.//FatturaElettronicaHeader')
+        def find_all_elements(parent, tag_name):
+            """Trova tutti gli elementi con un certo nome locale."""
+            results = []
+            if parent is None:
+                return results
+            for child in parent.iter():
+                local_name = child.tag.split('}')[-1] if '}' in child.tag else child.tag
+                if local_name == tag_name:
+                    results.append(child)
+            return results
         
-        # Estrai dati body
-        body = root.find('.//FatturaElettronicaBody', ns) or root.find('.//{%s}FatturaElettronicaBody' % ns.get('p', ''))
-        if body is None:
-            body = root.find('.//FatturaElettronicaBody')
-        
-        # Funzione helper per trovare elementi
-        def find_text(element, path, default=""):
-            if element is None:
-                return default
-            # Prova con namespace
-            el = element.find('.//' + path)
-            if el is None:
-                # Prova diverse varianti
-                for prefix in ['', 'p:', '{http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2}']:
-                    el = element.find('.//' + prefix + path)
-                    if el is not None:
-                        break
+        def get_text(parent, tag_name, default=""):
+            """Ottieni il testo di un elemento."""
+            el = find_element(parent, tag_name)
             return el.text if el is not None and el.text else default
         
+        def get_nested_text(parent, *path, default=""):
+            """Ottieni testo da path annidato."""
+            current = parent
+            for tag in path:
+                current = find_element(current, tag)
+                if current is None:
+                    return default
+            return current.text if current is not None and current.text else default
+        
+        # Trova header e body
+        header = find_element(root, 'FatturaElettronicaHeader')
+        body = find_element(root, 'FatturaElettronicaBody')
+        
         # Estrai dati fornitore (CedentePrestatore)
+        cedente = find_element(header, 'CedentePrestatore')
         fornitore = {
-            "denominazione": find_text(header, "CedentePrestatore//Denominazione"),
-            "partita_iva": find_text(header, "CedentePrestatore//IdCodice"),
-            "codice_fiscale": find_text(header, "CedentePrestatore//CodiceFiscale"),
-            "indirizzo": find_text(header, "CedentePrestatore//Sede//Indirizzo"),
-            "cap": find_text(header, "CedentePrestatore//Sede//CAP"),
-            "comune": find_text(header, "CedentePrestatore//Sede//Comune"),
-            "provincia": find_text(header, "CedentePrestatore//Sede//Provincia"),
-            "nazione": find_text(header, "CedentePrestatore//Sede//Nazione"),
-            "telefono": find_text(header, "CedentePrestatore//Contatti//Telefono"),
-            "email": find_text(header, "CedentePrestatore//Contatti//Email"),
+            "denominazione": get_nested_text(cedente, 'Anagrafica', 'Denominazione') or 
+                           get_nested_text(cedente, 'DatiAnagrafici', 'Anagrafica', 'Denominazione'),
+            "partita_iva": get_nested_text(cedente, 'IdFiscaleIVA', 'IdCodice') or
+                          get_nested_text(cedente, 'DatiAnagrafici', 'IdFiscaleIVA', 'IdCodice'),
+            "codice_fiscale": get_nested_text(cedente, 'CodiceFiscale') or
+                             get_nested_text(cedente, 'DatiAnagrafici', 'CodiceFiscale'),
+            "indirizzo": get_nested_text(cedente, 'Sede', 'Indirizzo'),
+            "cap": get_nested_text(cedente, 'Sede', 'CAP'),
+            "comune": get_nested_text(cedente, 'Sede', 'Comune'),
+            "provincia": get_nested_text(cedente, 'Sede', 'Provincia'),
+            "nazione": get_nested_text(cedente, 'Sede', 'Nazione'),
+            "telefono": get_nested_text(cedente, 'Contatti', 'Telefono'),
+            "email": get_nested_text(cedente, 'Contatti', 'Email'),
         }
         
         # Estrai dati cliente (CessionarioCommittente)
+        cessionario = find_element(header, 'CessionarioCommittente')
         cliente = {
-            "denominazione": find_text(header, "CessionarioCommittente//Denominazione"),
-            "partita_iva": find_text(header, "CessionarioCommittente//IdCodice"),
-            "codice_fiscale": find_text(header, "CessionarioCommittente//CodiceFiscale"),
-            "indirizzo": find_text(header, "CessionarioCommittente//Sede//Indirizzo"),
-            "cap": find_text(header, "CessionarioCommittente//Sede//CAP"),
-            "comune": find_text(header, "CessionarioCommittente//Sede//Comune"),
-            "provincia": find_text(header, "CessionarioCommittente//Sede//Provincia"),
+            "denominazione": get_nested_text(cessionario, 'Anagrafica', 'Denominazione') or
+                           get_nested_text(cessionario, 'DatiAnagrafici', 'Anagrafica', 'Denominazione'),
+            "partita_iva": get_nested_text(cessionario, 'IdFiscaleIVA', 'IdCodice') or
+                          get_nested_text(cessionario, 'DatiAnagrafici', 'IdFiscaleIVA', 'IdCodice'),
+            "codice_fiscale": get_nested_text(cessionario, 'CodiceFiscale') or
+                             get_nested_text(cessionario, 'DatiAnagrafici', 'CodiceFiscale'),
+            "indirizzo": get_nested_text(cessionario, 'Sede', 'Indirizzo'),
+            "cap": get_nested_text(cessionario, 'Sede', 'CAP'),
+            "comune": get_nested_text(cessionario, 'Sede', 'Comune'),
+            "provincia": get_nested_text(cessionario, 'Sede', 'Provincia'),
         }
         
         # Estrai dati generali documento
-        numero_fattura = find_text(body, "DatiGenerali//DatiGeneraliDocumento//Numero")
-        data_fattura = find_text(body, "DatiGenerali//DatiGeneraliDocumento//Data")
-        tipo_documento = find_text(body, "DatiGenerali//DatiGeneraliDocumento//TipoDocumento")
-        divisa = find_text(body, "DatiGenerali//DatiGeneraliDocumento//Divisa", "EUR")
-        importo_totale = find_text(body, "DatiGenerali//DatiGeneraliDocumento//ImportoTotaleDocumento", "0")
+        dati_generali = find_element(body, 'DatiGeneraliDocumento')
+        numero_fattura = get_text(dati_generali, 'Numero')
+        data_fattura = get_text(dati_generali, 'Data')
+        tipo_documento = get_text(dati_generali, 'TipoDocumento')
+        divisa = get_text(dati_generali, 'Divisa', 'EUR')
+        importo_totale = get_text(dati_generali, 'ImportoTotaleDocumento', '0')
         
         # Estrai causali
         causali = []
-        for causale_el in (body.findall('.//Causale') if body is not None else []):
+        for causale_el in find_all_elements(dati_generali, 'Causale'):
             if causale_el.text:
                 causali.append(causale_el.text)
         
         # Estrai linee dettaglio
         linee = []
-        dettaglio_linee = body.findall('.//DettaglioLinee') if body is not None else []
-        for linea in dettaglio_linee:
+        for linea in find_all_elements(body, 'DettaglioLinee'):
             linea_data = {
-                "numero_linea": find_text(linea, "NumeroLinea"),
-                "descrizione": find_text(linea, "Descrizione"),
-                "quantita": find_text(linea, "Quantita", "1"),
-                "unita_misura": find_text(linea, "UnitaMisura"),
-                "prezzo_unitario": find_text(linea, "PrezzoUnitario", "0"),
-                "prezzo_totale": find_text(linea, "PrezzoTotale", "0"),
-                "aliquota_iva": find_text(linea, "AliquotaIVA", "0"),
-                "natura": find_text(linea, "Natura"),
+                "numero_linea": get_text(linea, 'NumeroLinea'),
+                "descrizione": get_text(linea, 'Descrizione'),
+                "quantita": get_text(linea, 'Quantita', '1'),
+                "unita_misura": get_text(linea, 'UnitaMisura'),
+                "prezzo_unitario": get_text(linea, 'PrezzoUnitario', '0'),
+                "prezzo_totale": get_text(linea, 'PrezzoTotale', '0'),
+                "aliquota_iva": get_text(linea, 'AliquotaIVA', '0'),
+                "natura": get_text(linea, 'Natura'),
             }
             linee.append(linea_data)
         
         # Estrai riepilogo IVA
         riepilogo_iva = []
-        dati_riepilogo = body.findall('.//DatiRiepilogo') if body is not None else []
-        for riepilogo in dati_riepilogo:
+        for riepilogo in find_all_elements(body, 'DatiRiepilogo'):
             riepilogo_data = {
-                "aliquota_iva": find_text(riepilogo, "AliquotaIVA", "0"),
-                "natura": find_text(riepilogo, "Natura"),
-                "imponibile": find_text(riepilogo, "ImponibileImporto", "0"),
-                "imposta": find_text(riepilogo, "Imposta", "0"),
-                "riferimento_normativo": find_text(riepilogo, "RiferimentoNormativo"),
+                "aliquota_iva": get_text(riepilogo, 'AliquotaIVA', '0'),
+                "natura": get_text(riepilogo, 'Natura'),
+                "imponibile": get_text(riepilogo, 'ImponibileImporto', '0'),
+                "imposta": get_text(riepilogo, 'Imposta', '0'),
+                "riferimento_normativo": get_text(riepilogo, 'RiferimentoNormativo'),
             }
             riepilogo_iva.append(riepilogo_data)
         
         # Estrai dati pagamento
+        dati_pagamento = find_element(body, 'DatiPagamento')
+        dettaglio_pagamento = find_element(dati_pagamento, 'DettaglioPagamento') if dati_pagamento else None
         pagamento = {
-            "condizioni": find_text(body, "DatiPagamento//CondizioniPagamento"),
-            "modalita": find_text(body, "DatiPagamento//DettaglioPagamento//ModalitaPagamento"),
-            "data_scadenza": find_text(body, "DatiPagamento//DettaglioPagamento//DataScadenzaPagamento"),
-            "importo": find_text(body, "DatiPagamento//DettaglioPagamento//ImportoPagamento", "0"),
-            "istituto_finanziario": find_text(body, "DatiPagamento//DettaglioPagamento//IstitutoFinanziario"),
-            "iban": find_text(body, "DatiPagamento//DettaglioPagamento//IBAN"),
+            "condizioni": get_text(dati_pagamento, 'CondizioniPagamento') if dati_pagamento else "",
+            "modalita": get_text(dettaglio_pagamento, 'ModalitaPagamento') if dettaglio_pagamento else "",
+            "data_scadenza": get_text(dettaglio_pagamento, 'DataScadenzaPagamento') if dettaglio_pagamento else "",
+            "importo": get_text(dettaglio_pagamento, 'ImportoPagamento', '0') if dettaglio_pagamento else "0",
+            "istituto_finanziario": get_text(dettaglio_pagamento, 'IstitutoFinanziario') if dettaglio_pagamento else "",
+            "iban": get_text(dettaglio_pagamento, 'IBAN') if dettaglio_pagamento else "",
         }
         
         # Calcola totali
@@ -150,8 +167,14 @@ def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
             total_amount = 0
         
         # Calcola imponibile e IVA totali
-        imponibile_totale = sum(float(r.get("imponibile", 0)) for r in riepilogo_iva)
-        iva_totale = sum(float(r.get("imposta", 0)) for r in riepilogo_iva)
+        imponibile_totale = 0
+        iva_totale = 0
+        for r in riepilogo_iva:
+            try:
+                imponibile_totale += float(r.get("imponibile", 0))
+                iva_totale += float(r.get("imposta", 0))
+            except ValueError:
+                pass
         
         # Mappa tipo documento
         tipo_doc_map = {
