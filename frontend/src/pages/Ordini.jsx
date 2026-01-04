@@ -137,7 +137,7 @@ export default function Ordini() {
             <tbody>
               {orders.map((o, i) => (
                 <tr key={o.id || i} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>{new Date(o.order_date || o.created_at).toLocaleDateString("it-IT")}</td>
+                  <td style={{ padding: 8 }}>{formatDateIT(o.order_date || o.created_at)}</td>
                   <td style={{ padding: 8 }}>{o.supplier_name}</td>
                   <td style={{ padding: 8 }}>{o.product_name}</td>
                   <td style={{ padding: 8 }}>{o.quantity}</td>
