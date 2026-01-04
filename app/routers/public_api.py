@@ -568,6 +568,37 @@ async def reprocess_all_invoices() -> Dict[str, Any]:
 
 
 # ============== HACCP TEMPERATURES ==============
+
+# Costanti HACCP
+OPERATORI_HACCP = ["VALERIO", "VINCENZO", "POCCI"]
+TEMP_FRIGO_MIN = 2
+TEMP_FRIGO_MAX = 5
+TEMP_CONGELATORI_MIN = -25
+TEMP_CONGELATORI_MAX = -15
+
+AZIENDA_INFO = {
+    "ragione_sociale": "Ceraldi Group SRL",
+    "indirizzo": "Piazza Carità 14 - 80134 Napoli (NA)",
+    "piva": "04523831214",
+    "telefono": "+393937415426",
+    "email": "ceraldigroupsrl@gmail.com",
+    "footer_text": "Documento conforme al Regolamento (CE) N. 852/2004 sull'igiene dei prodotti alimentari"
+}
+
+
+@router.get("/haccp/config")
+async def get_haccp_config() -> Dict[str, Any]:
+    """Restituisce configurazione HACCP: operatori, temperature, info azienda."""
+    return {
+        "operatori": OPERATORI_HACCP,
+        "temperature_limits": {
+            "frigo": {"min": TEMP_FRIGO_MIN, "max": TEMP_FRIGO_MAX},
+            "congelatori": {"min": TEMP_CONGELATORI_MIN, "max": TEMP_CONGELATORI_MAX}
+        },
+        "azienda": AZIENDA_INFO
+    }
+
+
 @router.get("/haccp/temperatures")
 async def list_temperatures(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
     """List HACCP temperatures - public endpoint. Nessun limite pratico."""
