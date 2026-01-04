@@ -84,7 +84,9 @@ from app.routers import (
     corrispettivi_router,
     iva_calcolo,
     ordini_fornitori,
-    products_catalog
+    products_catalog,
+    employees_payroll,
+    f24_tributi
 )
 
 # Include public API first (no auth required)
