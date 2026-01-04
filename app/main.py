@@ -77,6 +77,7 @@ from app.routers import (
     public_api,
     comparatore,
     prima_nota,
+    prima_nota_automation,
     dipendenti,
     haccp_completo
 )
