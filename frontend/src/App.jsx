@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import api from "./api";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: "📊", short: "Home" },
@@ -14,7 +15,7 @@ const NAV_ITEMS = [
   { to: "/ricerca-prodotti", label: "Ricerca Prodotti", icon: "🔍", short: "Ricerca" },
   { to: "/ordini-fornitori", label: "Ordini Fornitori", icon: "📝", short: "Ordini" },
   { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝", short: "Assegni" },
-  { to: "/haccp", label: "HACCP", icon: "🍽️", short: "HACCP" },
+  { to: "/haccp", label: "HACCP", icon: "🍽️", short: "HACCP", hasBadge: true },
   { to: "/dipendenti", label: "Dipendenti", icon: "👥", short: "Dipend." },
   { to: "/f24", label: "F24 / Tributi", icon: "📋", short: "F24" },
   { to: "/paghe", label: "Paghe / Salari", icon: "💰", short: "Paghe" },
@@ -35,6 +36,24 @@ const MOBILE_NAV = [
 
 export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [notificheNonLette, setNotificheNonLette] = useState(0);
+
+  // Carica notifiche non lette all'avvio e ogni 60 secondi
+  useEffect(() => {
+    const loadNotifiche = async () => {
+      try {
+        const res = await api.get('/api/haccp-completo/notifiche?solo_non_lette=true&limit=1');
+        setNotificheNonLette(res.data.non_lette || 0);
+      } catch (e) {
+        // Silently fail
+      }
+    };
+    
+    loadNotifiche();
+    const interval = setInterval(loadNotifiche, 60000); // ogni 60 secondi
+    
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="layout">
@@ -50,9 +69,28 @@ export default function App() {
               key={item.to} 
               to={item.to} 
               className={({ isActive }) => isActive ? "active" : ""}
+              style={{ position: 'relative' }}
             >
               <span style={{ fontSize: 16, marginRight: 10 }}>{item.icon}</span>
               <span>{item.label}</span>
+              {item.hasBadge && notificheNonLette > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: '#f44336',
+                  color: 'white',
+                  borderRadius: 10,
+                  padding: '2px 8px',
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  minWidth: 20,
+                  textAlign: 'center'
+                }}>
+                  {notificheNonLette}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
