@@ -2,15 +2,19 @@
 
 ## Aggiornamento 04/01/2026 - Session 2 - Nuove Funzionalità
 
-### Import Estratto Conto Bancario (04/01/2026 - Session 2) - NEW
+### Import Estratto Conto Bancario (04/01/2026 - Session 2) - IMPROVED
 - ✅ Nuovo endpoint: `POST /api/bank-statement/import` per import PDF/Excel/CSV estratto conto
 - ✅ Riconciliazione automatica con Prima Nota Banca (matching per data, tipo, importo ±1%)
 - ✅ Endpoint statistiche: `GET /api/bank-statement/stats` (movimenti totali, riconciliati, %)
 - ✅ Supporto upload via `POST /api/portal/upload` con `kind="estratto-conto"`
-- ✅ Pagina `/riconciliazione` completamente rinnovata con:
-  - 4 cards statistiche (Movimenti Banca, Riconciliati, Da Riconciliare, % Riconciliazione)
+- ✅ **Parser multi-banca**: rilevamento automatico formato (Intesa Sanpaolo, UniCredit, BNL, Sella, MPS, Credem)
+- ✅ **Export Excel**: `GET /api/exports/riconciliazione?format=xlsx` con foglio riepilogo e movimenti
+- ✅ **Export Non Riconciliati**: filtro per esportare solo movimenti non riconciliati
+- ✅ Endpoint formati supportati: `GET /api/bank-statement/formati-supportati`
+- ✅ Pagina `/riconciliazione` con:
+  - 4 cards statistiche colorate
+  - 2 pulsanti export (Excel, Non Riconciliati)
   - Upload file con feedback dettagliato
-  - Tabelle risultati riconciliazione/non trovati
   - Tab istruzioni
 - File: `/app/app/routers/bank_statement_import.py`, `/app/frontend/src/pages/Riconciliazione.jsx`
 
