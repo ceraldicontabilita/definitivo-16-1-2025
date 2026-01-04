@@ -1,0 +1,100 @@
+{
+  "summary": "Testing completed for Commercialista features and Stampa Carnet fix. All 12 backend tests passed (100%). Frontend UI verified - all features working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "ControlloMensile.jsx",
+        "issues": ["Syntax error in JSX (line 771) - extra '}}>' characters causing Vite warnings. Non-blocking but should be fixed."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/tests/test_commercialista_features.py",
+    "/app/test_reports/pytest/pytest_commercialista.xml"
+  ],
+  "action_items": [
+    "Fix syntax error in /app/frontend/src/pages/ControlloMensile.jsx line 771 (extra '}}>' characters)"
+  ],
+  "critical_code_review_comments": [
+    "ControlloMensile.jsx has JSX syntax error at line 771 - needs cleanup"
+  ],
+  "updated_files": [
+    "/app/tests/test_commercialista_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": "None required - public APIs",
+  "seed_data_creation": "None - used existing data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Commercialista features fully tested. Key endpoints: GET /api/commercialista/config, GET /api/commercialista/prima-nota-cassa/{anno}/{mese}, GET /api/commercialista/fatture-cassa/{anno}/{mese}, GET /api/commercialista/alert-status, GET /api/commercialista/log. Frontend data-testids: download-prima-nota-pdf, download-fatture-cassa-pdf, download-carnet-pdf, send-prima-nota-email, send-fatture-cassa-email, send-carnet-email, stampa-carnet-{idx}",
+  "features_tested": {
+    "Stampa Carnet Fix (GestioneAssegni)": {
+      "status": "✅ PASS",
+      "details": "Each carnet now has its own 'Stampa Carnet PDF' button. Found 136 carnet headers with individual buttons. Button has data-testid='stampa-carnet-{idx}' for testing."
+    },
+    "Commercialista Page": {
+      "status": "✅ PASS",
+      "details": "Page loads correctly with: Email config (rosaria.marotta@email.it), SMTP status indicator (configured), Period selector (month/year), 3 cards (Prima Nota Cassa, Fatture Pagate in Contanti, Carnet Assegni)"
+    },
+    "Prima Nota Cassa PDF": {
+      "status": "✅ PASS",
+      "details": "Download button works, generates PDF 'Prima_Nota_Cassa_Gennaio_2025.pdf'. Shows Entrate, Uscite, Saldo summary."
+    },
+    "Fatture Cassa PDF": {
+      "status": "✅ PASS",
+      "details": "Download button present, shows 29 fatture totaling €4818.65 for January 2025"
+    },
+    "Carnet Selection": {
+      "status": "✅ PASS",
+      "details": "Carnet selector with 137 options. Selecting a carnet shows details (Assegni count, Totale) and enables Scarica PDF/Invia Email buttons"
+    },
+    "API /api/commercialista/config": {
+      "status": "✅ PASS",
+      "details": "Returns email='rosaria.marotta@email.it', nome='Dott.ssa Rosaria Marotta', alert_giorni=2, smtp_configured=true"
+    },
+    "API /api/commercialista/prima-nota-cassa/2025/1": {
+      "status": "✅ PASS",
+      "details": "Returns anno=2025, mese=1, mese_nome='Gennaio', movimenti=[], totale_movimenti=0, totale_entrate=0, totale_uscite=0, saldo=0"
+    },
+    "API /api/commercialista/fatture-cassa/2025/1": {
+      "status": "✅ PASS",
+      "details": "Returns 29 fatture with totale_importo=€4818.65 for January 2025"
+    },
+    "Email Validation": {
+      "status": "✅ PASS",
+      "details": "POST endpoints correctly reject empty payloads with 400 status"
+    }
+  },
+  "api_endpoints_verified": {
+    "GET /api/commercialista/config": "✅ Returns email config with smtp_configured=true",
+    "GET /api/commercialista/prima-nota-cassa/2025/1": "✅ Returns monthly prima nota data",
+    "GET /api/commercialista/prima-nota-cassa/2025/12": "✅ Returns December 2025 data",
+    "GET /api/commercialista/fatture-cassa/2025/1": "✅ Returns 29 fatture, €4818.65 total",
+    "GET /api/commercialista/alert-status": "✅ Returns alert info with deadline",
+    "GET /api/commercialista/log": "✅ Returns send history",
+    "GET /api/assegni": "✅ Returns assegni list for carnet grouping",
+    "GET /api/assegni/stats": "✅ Returns assegni statistics",
+    "POST /api/commercialista/invia-prima-nota": "✅ Validates input (rejects empty)",
+    "POST /api/commercialista/invia-fatture-cassa": "✅ Validates input (rejects empty)",
+    "POST /api/commercialista/invia-carnet": "✅ Validates input (rejects empty)"
+  },
+  "frontend_components_verified": {
+    "GestioneAssegni.jsx": "✅ Each carnet has 'Stampa Carnet PDF' button with data-testid='stampa-carnet-{idx}'. handleStampaCarnet function generates PDF for single carnet only.",
+    "Commercialista.jsx": "✅ Email config section, period selector, 3 cards (Prima Nota, Fatture Cassa, Carnet), download/email buttons with data-testids"
+  },
+  "screenshots": [
+    ".screenshots/gestione_assegni_carnet.png - GestioneAssegni page showing carnet headers with individual Stampa Carnet PDF buttons",
+    ".screenshots/commercialista_page.png - Commercialista page with all components",
+    ".screenshots/commercialista_jan2025.png - Commercialista page with January 2025 selected",
+    ".screenshots/commercialista_carnet.png - Commercialista page with carnet selected showing details"
+  ]
+}
