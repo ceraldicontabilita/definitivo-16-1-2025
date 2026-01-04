@@ -270,6 +270,24 @@ export default function GestioneAssegni() {
         >
           ➕ Genera 10 Assegni
         </button>
+        
+        <button
+          onClick={handleAutoAssocia}
+          disabled={autoAssociating}
+          data-testid="auto-associa-btn"
+          style={{
+            padding: '10px 20px',
+            background: autoAssociating ? '#ccc' : '#2196f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            cursor: autoAssociating ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          {autoAssociating ? '⏳ Associando...' : '🔗 Auto-Associa Fatture'}
+        </button>
+        
         <button
           onClick={handleClearEmpty}
           data-testid="svuota-btn"
@@ -285,6 +303,42 @@ export default function GestioneAssegni() {
           Svuota assegni generati
         </button>
       </div>
+      
+      {/* Risultato Auto-Associazione */}
+      {autoAssocResult && (
+        <div style={{ 
+          marginBottom: 20, 
+          padding: 15, 
+          background: autoAssocResult.assegni_aggiornati > 0 ? '#e8f5e9' : '#fff3e0',
+          borderRadius: 8,
+          border: `1px solid ${autoAssocResult.assegni_aggiornati > 0 ? '#c8e6c9' : '#ffe0b2'}`
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <strong style={{ color: autoAssocResult.assegni_aggiornati > 0 ? '#2e7d32' : '#e65100' }}>
+                {autoAssocResult.assegni_aggiornati > 0 ? '✅' : '⚠️'} {autoAssocResult.message}
+              </strong>
+              {autoAssocResult.dettagli && autoAssocResult.dettagli.length > 0 && (
+                <div style={{ marginTop: 10, fontSize: 13 }}>
+                  <strong>Associazioni effettuate:</strong>
+                  <ul style={{ margin: '5px 0', paddingLeft: 20 }}>
+                    {autoAssocResult.dettagli.slice(0, 10).map((d, i) => (
+                      <li key={i}>
+                        Assegno {d.assegno_numero} → Fattura {d.fattura_numero} ({d.fornitore?.substring(0, 30)})
+                        {d.tipo === 'multiplo' && <span style={{ color: '#9c27b0' }}> [MULTIPLO]</span>}
+                      </li>
+                    ))}
+                    {autoAssocResult.dettagli.length > 10 && (
+                      <li>...e altri {autoAssocResult.dettagli.length - 10}</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setAutoAssocResult(null)} style={{ padding: '5px 10px' }}>✕</button>
+          </div>
+        </div>
+      )}
 
       {/* Assegni Table */}
       {loading ? (
