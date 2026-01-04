@@ -22,7 +22,7 @@ Applicazione ERP completa per la gestione aziendale con moduli per fatture, forn
 - Metodi di pagamento configurabili per fornitore
 - Statistiche e scadenze
 
-### 3. Prima Nota (NUOVO)
+### 3. Prima Nota (COMPLETATO)
 - Prima Nota Cassa e Banca separate
 - Registrazione automatica pagamenti da fatture
 - **Automazione Avanzata**:
@@ -43,17 +43,21 @@ Applicazione ERP completa per la gestione aziendale con moduli per fatture, forn
 - Parser multi-pagina
 - Estrazione netto, lordo, ore, contributi
 
-### 6. HACCP
-- Dashboard HACCP
-- Temperature frigo/congelatori
-- Sanificazioni
-- Equipaggiamenti
-- Scadenzario alimenti
+### 6. HACCP (COMPLETATO)
+- **Dashboard HACCP** con KPI (moduli attivi, conformità, scadenze)
+- **Temperature Frigoriferi** - Griglia calendario mensile, genera mese, autocompila
+- **Temperature Congelatori** - Griglia calendario mensile, range -22 a -18°C
+- **Sanificazioni** - Registro pulizie per area
+- **Scadenzario Alimenti** - Controllo scadenze prodotti
+- **Equipaggiamenti** - Gestione frigoriferi/congelatori
+- **Disinfestazioni** - Registro interventi
 
-### 7. Dipendenti
-- Anagrafica dipendenti
-- Portale dipendenti
-- Gestione contratti
+### 7. Gestione Dipendenti (COMPLETATO)
+- Anagrafica dipendenti completa
+- Gestione turni settimanali
+- Libretti sanitari con alert scadenze
+- Portale dipendenti (inviti)
+- CRUD completo con modal
 
 ### 8. Corrispettivi
 - Upload XML corrispettivi giornalieri
@@ -69,7 +73,36 @@ Applicazione ERP completa per la gestione aziendale con moduli per fatture, forn
 
 ## API Endpoints Principali
 
-### Prima Nota Automation (NUOVO)
+### HACCP Completo
+```
+GET  /api/haccp-completo/dashboard
+GET  /api/haccp-completo/equipaggiamenti
+GET  /api/haccp-completo/temperature/frigoriferi?mese=YYYY-MM
+POST /api/haccp-completo/temperature/frigoriferi
+POST /api/haccp-completo/temperature/frigoriferi/genera-mese
+POST /api/haccp-completo/temperature/frigoriferi/autocompila-oggi
+GET  /api/haccp-completo/temperature/congelatori?mese=YYYY-MM
+POST /api/haccp-completo/temperature/congelatori
+GET  /api/haccp-completo/sanificazioni?mese=YYYY-MM
+POST /api/haccp-completo/sanificazioni
+GET  /api/haccp-completo/scadenzario?days=30
+POST /api/haccp-completo/scadenzario
+```
+
+### Dipendenti
+```
+GET  /api/dipendenti
+POST /api/dipendenti
+GET  /api/dipendenti/{id}
+PUT  /api/dipendenti/{id}
+DELETE /api/dipendenti/{id}
+GET  /api/dipendenti/stats
+GET  /api/dipendenti/libretti/scadenze
+GET  /api/dipendenti/turni/settimana?data_inizio=YYYY-MM-DD
+POST /api/dipendenti/turni/salva
+```
+
+### Prima Nota Automation
 ```
 POST /api/prima-nota-auto/import-cassa-from-excel
 POST /api/prima-nota-auto/import-assegni-from-estratto-conto
@@ -78,128 +111,123 @@ POST /api/prima-nota-auto/match-assegni-to-invoices
 GET  /api/prima-nota-auto/stats
 ```
 
-### Prima Nota Base
-```
-GET  /api/prima-nota/cassa
-POST /api/prima-nota/cassa
-GET  /api/prima-nota/banca
-POST /api/prima-nota/banca
-GET  /api/prima-nota/stats
-```
-
-### Fatture
-```
-POST /api/fatture/upload-xml
-POST /api/fatture/upload-xml-bulk
-GET  /api/invoices
-```
-
-### Fornitori
-```
-GET  /api/suppliers
-POST /api/suppliers/upload-excel
-PUT  /api/suppliers/{id}
-```
-
-### Assegni
-```
-GET  /api/assegni
-POST /api/assegni/genera
-PUT  /api/assegni/{id}
-```
-
 ## Collections MongoDB
 
-### invoices
-```json
-{
-  "id": "uuid",
-  "invoice_key": "numero_piva_data",
-  "numero_fattura": "string",
-  "data_fattura": "YYYY-MM-DD",
-  "cedente_piva": "string",
-  "cedente_denominazione": "string",
-  "importo_totale": "float",
-  "metodo_pagamento": "string",
-  "pagato": "boolean",
-  "prima_nota_cassa_id": "string",
-  "prima_nota_banca_id": "string"
-}
-```
-
-### suppliers
-```json
-{
-  "id": "uuid",
-  "partita_iva": "string",
-  "denominazione": "string",
-  "metodo_pagamento": "contanti|bonifico|assegno|...",
-  "termini_pagamento": "30GG|60GG|...",
-  "giorni_pagamento": "int"
-}
-```
-
-### prima_nota_cassa / prima_nota_banca
+### haccp_temperature_frigoriferi / haccp_temperature_congelatori
 ```json
 {
   "id": "uuid",
   "data": "YYYY-MM-DD",
-  "tipo": "entrata|uscita",
-  "importo": "float",
-  "descrizione": "string",
-  "categoria": "string",
-  "riferimento": "numero fattura",
-  "fornitore_piva": "string",
-  "fattura_id": "string",
-  "assegno_collegato": "string (solo banca)"
+  "ora": "HH:MM",
+  "equipaggiamento": "Frigo Cucina",
+  "temperatura": "float",
+  "conforme": "boolean",
+  "operatore": "string",
+  "note": "string"
 }
 ```
 
-### assegni
+### haccp_sanificazioni
 ```json
 {
   "id": "uuid",
-  "numero": "string",
-  "stato": "vuoto|compilato|emesso|incassato|annullato",
-  "importo": "float",
-  "beneficiario": "string",
-  "data_emissione": "string",
-  "fattura_collegata": "string",
-  "fornitore_piva": "string"
+  "data": "YYYY-MM-DD",
+  "ora": "HH:MM",
+  "area": "Cucina",
+  "operatore": "string",
+  "prodotto_utilizzato": "string",
+  "esito": "OK"
+}
+```
+
+### haccp_scadenzario
+```json
+{
+  "id": "uuid",
+  "prodotto": "string",
+  "lotto": "string",
+  "data_scadenza": "YYYY-MM-DD",
+  "quantita": "int",
+  "fornitore": "string",
+  "consumato": "boolean"
+}
+```
+
+### employees
+```json
+{
+  "id": "uuid",
+  "nome_completo": "string",
+  "codice_fiscale": "string",
+  "email": "string",
+  "mansione": "string",
+  "tipo_contratto": "string",
+  "data_assunzione": "YYYY-MM-DD",
+  "libretto_scadenza": "YYYY-MM-DD",
+  "portale_invitato": "boolean",
+  "attivo": "boolean"
 }
 ```
 
 ## Completato nella Sessione Corrente (4 Gennaio 2026)
 
 ### Automazione Prima Nota
-1. ✅ Creato nuovo router `/app/app/routers/prima_nota_automation.py`
-2. ✅ Import fatture Excel → Prima Nota Cassa (634 fatture importate)
-3. ✅ Import estratto conto CSV → Assegni (134 assegni estratti)
-4. ✅ Elaborazione fatture per fornitore (495 fatture → 26 cassa, 469 banca)
-5. ✅ Associazione assegni a fatture per importo (106 associazioni)
-6. ✅ UI pannello automazione nel frontend PrimaNota.jsx
-7. ✅ Colonna assegni nella tabella Prima Nota Banca
+1. ✅ Import fatture Excel → Prima Nota Cassa (634 fatture)
+2. ✅ Import estratto conto CSV → Assegni (134 assegni)
+3. ✅ Elaborazione automatica fatture (495 → 26 cassa, 469 banca)
+4. ✅ Associazione assegni a fatture (106 associazioni)
+5. ✅ UI pannello automazione in PrimaNota.jsx
+
+### HACCP Modulo Completo
+1. ✅ Dashboard con KPI
+2. ✅ Temperature Frigoriferi con griglia calendario
+3. ✅ Temperature Congelatori con griglia calendario
+4. ✅ Sanificazioni con generazione mese
+5. ✅ Scadenzario alimenti
+6. ✅ Equipaggiamenti
+7. ✅ Routes frontend configurate
+
+### Gestione Dipendenti
+1. ✅ Lista dipendenti con ricerca e filtri
+2. ✅ Modal creazione nuovo dipendente
+3. ✅ Modal dettagli dipendente
+4. ✅ Alert libretti sanitari in scadenza
+5. ✅ Invito portale dipendenti
+6. ✅ Statistiche dipendenti
+
+### Test
+- ✅ 26 test backend passati (pytest)
+- ✅ Test frontend UI passati
+- ✅ 100% success rate
 
 ## Backlog
 
 ### P1 - Alta Priorità
-- [ ] Refactoring completo public_api.py (spostare logica nei router modulari)
-- [ ] UI configurazione HACCP
-- [ ] Completamento moduli Gestione Dipendenti
+- [ ] Refactoring completo public_api.py (2665 righe → router modulari)
 
 ### P2 - Media Priorità
 - [ ] Frontend alert F24
 - [ ] Bug prezzo ricerca prodotti
 - [ ] Export Prima Nota Excel
+- [ ] Portale Dipendenti separato
 
 ### P3 - Bassa Priorità
 - [ ] Email service (richiede SMTP)
 - [ ] Generazione contratti dipendenti
+- [ ] HACCP moduli aggiuntivi (Oli Frittura, Ricezione Merci, Non Conformità)
 
-## File Principali Modificati
-- `/app/app/routers/prima_nota_automation.py` (NUOVO)
-- `/app/app/main.py` (registrato nuovo router)
-- `/app/frontend/src/pages/PrimaNota.jsx` (pannello automazione)
+## File Principali
+- `/app/app/routers/haccp_completo.py` - HACCP API (671 righe)
+- `/app/app/routers/dipendenti.py` - Dipendenti API (399 righe)
+- `/app/app/routers/prima_nota_automation.py` - Automazione Prima Nota
+- `/app/frontend/src/pages/HACCPDashboard.jsx`
+- `/app/frontend/src/pages/HACCPTemperatureFrigo.jsx`
+- `/app/frontend/src/pages/HACCPTemperaturaCongelatori.jsx`
+- `/app/frontend/src/pages/HACCPSanificazioni.jsx`
+- `/app/frontend/src/pages/HACCPScadenzario.jsx`
+- `/app/frontend/src/pages/HACCPEquipaggiamenti.jsx`
+- `/app/frontend/src/pages/GestioneDipendenti.jsx`
+- `/app/frontend/src/pages/PrimaNota.jsx`
 
 ## Note Tecniche
 - Hot reload attivo per frontend e backend
