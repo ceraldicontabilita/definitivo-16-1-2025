@@ -4,7 +4,8 @@ import {
   PrimaNotaSummaryCards, 
   PrimaNotaAutomationPanel, 
   PrimaNotaMovementsTable,
-  PrimaNotaNewMovementModal 
+  PrimaNotaNewMovementModal,
+  QuickEntryPanel
 } from '../components/prima-nota';
 
 // Constants
