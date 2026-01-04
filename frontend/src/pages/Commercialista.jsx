@@ -1,0 +1,900 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '../api';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+const MESI = [
+  '', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+];
+
+export default function Commercialista() {
+  const [config, setConfig] = useState({
+    email: 'rosaria.marotta@email.it',
+    nome: 'Dott.ssa Rosaria Marotta',
+    alert_giorni: 2,
+    smtp_configured: false
+  });
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(null);
+  const [message, setMessage] = useState(null);
+  const [alertStatus, setAlertStatus] = useState(null);
+  const [log, setLog] = useState([]);
+  
+  // Selection states
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth()); // 0-indexed for prev month
+  
+  // Data states
+  const [primaNotaData, setPrimaNotaData] = useState(null);
+  const [fattureCassaData, setFattureCassaData] = useState(null);
+  const [carnets, setCarnets] = useState([]);
+  const [selectedCarnet, setSelectedCarnet] = useState(null);
+
+  const loadConfig = useCallback(async () => {
+    try {
+      const [configRes, alertRes, logRes] = await Promise.all([
+        api.get('/api/commercialista/config'),
+        api.get('/api/commercialista/alert-status'),
+        api.get('/api/commercialista/log?limit=20')
+      ]);
+      setConfig(configRes.data);
+      setAlertStatus(alertRes.data);
+      setLog(logRes.data.log || []);
+    } catch (e) {
+      console.error('Error loading config:', e);
+    }
+  }, []);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const month = selectedMonth + 1; // Convert to 1-indexed
+      
+      const [primaNotaRes, fattureCassaRes, assegniRes] = await Promise.all([
+        api.get(`/api/commercialista/prima-nota-cassa/${selectedYear}/${month}`),
+        api.get(`/api/commercialista/fatture-cassa/${selectedYear}/${month}`),
+        api.get('/api/assegni')
+      ]);
+      
+      setPrimaNotaData(primaNotaRes.data);
+      setFattureCassaData(fattureCassaRes.data);
+      
+      // Group assegni by carnet
+      const assegni = assegniRes.data || [];
+      const carnetGroups = {};
+      assegni.forEach(a => {
+        const prefix = a.numero?.split('-')[0] || 'Senza Carnet';
+        if (!carnetGroups[prefix]) {
+          carnetGroups[prefix] = {
+            id: prefix,
+            assegni: [],
+            totale: 0
+          };
+        }
+        carnetGroups[prefix].assegni.push(a);
+        carnetGroups[prefix].totale += parseFloat(a.importo || 0);
+      });
+      setCarnets(Object.values(carnetGroups));
+      
+    } catch (e) {
+      console.error('Error loading data:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedYear, selectedMonth]);
+
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const showMessage = (text, type = 'success') => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 5000);
+  };
+
+  // Generate Prima Nota Cassa PDF
+  const generatePrimaNotaPDF = () => {
+    if (!primaNotaData) return null;
+    
+    const doc = new jsPDF();
+    const meseNome = MESI[selectedMonth + 1];
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(30, 58, 95);
+    doc.text('Prima Nota Cassa', 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text(`${meseNome} ${selectedYear}`, 14, 30);
+    
+    // Summary
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text(`Totale Entrate: € ${primaNotaData.totale_entrate?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, 45);
+    doc.text(`Totale Uscite: € ${primaNotaData.totale_uscite?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, 52);
+    doc.setFontSize(14);
+    doc.setTextColor(primaNotaData.saldo >= 0 ? 76 : 196, primaNotaData.saldo >= 0 ? 175 : 39, primaNotaData.saldo >= 0 ? 80 : 47);
+    doc.text(`Saldo: € ${primaNotaData.saldo?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, 62);
+    
+    // Table
+    if (primaNotaData.movimenti?.length > 0) {
+      const tableData = primaNotaData.movimenti.map(m => {
+        const data = m.date || m.data || '';
+        const tipo = (m.type || m.tipo || '').toLowerCase();
+        const importo = parseFloat(m.amount || m.importo || 0);
+        
+        return [
+          data.substring(0, 10),
+          tipo === 'entrata' ? 'Entrata' : 'Uscita',
+          `€ ${importo.toLocaleString('it-IT', {minimumFractionDigits: 2})}`,
+          m.description || m.descrizione || '-',
+          m.category || m.categoria || '-'
+        ];
+      });
+      
+      doc.autoTable({
+        startY: 75,
+        head: [['Data', 'Tipo', 'Importo', 'Descrizione', 'Categoria']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [30, 58, 95] },
+        styles: { fontSize: 9 }
+      });
+    }
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128);
+      doc.text(
+        `Ceraldi Group S.R.L. - Generato il ${new Date().toLocaleDateString('it-IT')} - Pagina ${i}/${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    return doc;
+  };
+
+  // Generate Fatture Cassa PDF
+  const generateFattureCassaPDF = () => {
+    if (!fattureCassaData) return null;
+    
+    const doc = new jsPDF();
+    const meseNome = MESI[selectedMonth + 1];
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(255, 152, 0);
+    doc.text('Fatture Pagate in Contanti', 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text(`${meseNome} ${selectedYear}`, 14, 30);
+    
+    // Summary
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text(`Totale Fatture: ${fattureCassaData.totale_fatture}`, 14, 45);
+    doc.setFontSize(14);
+    doc.setTextColor(255, 152, 0);
+    doc.text(`Totale: € ${fattureCassaData.totale_importo?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, 55);
+    
+    // Table
+    if (fattureCassaData.fatture?.length > 0) {
+      const tableData = fattureCassaData.fatture.map(f => {
+        const numero = f.invoice_number || f.numero_fattura || '-';
+        const data = (f.invoice_date || f.data_fattura || '').substring(0, 10);
+        const fornitore = f.supplier_name || f.cedente_denominazione || '-';
+        const importo = parseFloat(f.total_amount || f.importo_totale || 0);
+        
+        return [
+          numero,
+          data,
+          fornitore.substring(0, 30),
+          `€ ${importo.toLocaleString('it-IT', {minimumFractionDigits: 2})}`
+        ];
+      });
+      
+      doc.autoTable({
+        startY: 65,
+        head: [['N. Fattura', 'Data', 'Fornitore', 'Importo']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [255, 152, 0] },
+        styles: { fontSize: 9 }
+      });
+    }
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128);
+      doc.text(
+        `Ceraldi Group S.R.L. - Generato il ${new Date().toLocaleDateString('it-IT')} - Pagina ${i}/${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    return doc;
+  };
+
+  // Generate Carnet PDF
+  const generateCarnetPDF = (carnet) => {
+    if (!carnet) return null;
+    
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(76, 175, 80);
+    doc.text('Carnet Assegni', 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text(`ID: ${carnet.id}`, 14, 30);
+    
+    // Summary
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text(`Numero Assegni: ${carnet.assegni.length}`, 14, 45);
+    doc.setFontSize(14);
+    doc.setTextColor(76, 175, 80);
+    doc.text(`Totale: € ${carnet.totale?.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, 55);
+    
+    // Table
+    if (carnet.assegni?.length > 0) {
+      const tableData = carnet.assegni.map(a => [
+        a.numero || '-',
+        a.stato || '-',
+        a.beneficiario || '-',
+        `€ ${(a.importo || 0).toLocaleString('it-IT', {minimumFractionDigits: 2})}`,
+        a.data_fattura?.substring(0, 10) || '-',
+        a.numero_fattura || '-'
+      ]);
+      
+      doc.autoTable({
+        startY: 65,
+        head: [['N. Assegno', 'Stato', 'Beneficiario', 'Importo', 'Data Fatt.', 'N. Fattura']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [76, 175, 80] },
+        styles: { fontSize: 8 },
+        columnStyles: {
+          2: { cellWidth: 40 }
+        }
+      });
+    }
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128);
+      doc.text(
+        `Ceraldi Group S.R.L. - Generato il ${new Date().toLocaleDateString('it-IT')} - Pagina ${i}/${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    return doc;
+  };
+
+  // Download PDF
+  const downloadPDF = (type, carnet = null) => {
+    let doc;
+    let filename;
+    const meseNome = MESI[selectedMonth + 1];
+    
+    switch (type) {
+      case 'prima_nota':
+        doc = generatePrimaNotaPDF();
+        filename = `Prima_Nota_Cassa_${meseNome}_${selectedYear}.pdf`;
+        break;
+      case 'fatture_cassa':
+        doc = generateFattureCassaPDF();
+        filename = `Fatture_Contanti_${meseNome}_${selectedYear}.pdf`;
+        break;
+      case 'carnet':
+        doc = generateCarnetPDF(carnet);
+        filename = `Carnet_Assegni_${carnet?.id || 'export'}.pdf`;
+        break;
+      default:
+        return;
+    }
+    
+    if (doc) {
+      doc.save(filename);
+      showMessage(`PDF "${filename}" scaricato con successo!`);
+    }
+  };
+
+  // Send email with PDF
+  const sendEmail = async (type, carnet = null) => {
+    setSending(type);
+    
+    try {
+      let doc;
+      let endpoint;
+      let payload = { email: config.email };
+      
+      switch (type) {
+        case 'prima_nota':
+          doc = generatePrimaNotaPDF();
+          endpoint = '/api/commercialista/invia-prima-nota';
+          payload.anno = selectedYear;
+          payload.mese = selectedMonth + 1;
+          break;
+        case 'fatture_cassa':
+          doc = generateFattureCassaPDF();
+          endpoint = '/api/commercialista/invia-fatture-cassa';
+          payload.anno = selectedYear;
+          payload.mese = selectedMonth + 1;
+          break;
+        case 'carnet':
+          doc = generateCarnetPDF(carnet);
+          endpoint = '/api/commercialista/invia-carnet';
+          payload.carnet_id = carnet.id;
+          payload.assegni_count = carnet.assegni.length;
+          payload.totale_importo = carnet.totale;
+          break;
+        default:
+          return;
+      }
+      
+      if (doc) {
+        // Convert PDF to base64
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+        payload.pdf_base64 = pdfBase64;
+      }
+      
+      const res = await api.post(endpoint, payload);
+      
+      if (res.data.success) {
+        showMessage(`✅ ${res.data.message}`);
+        loadConfig(); // Refresh log and alert status
+      } else {
+        showMessage(`❌ Errore: ${res.data.message}`, 'error');
+      }
+    } catch (e) {
+      showMessage(`❌ Errore invio: ${e.response?.data?.detail || e.message}`, 'error');
+    } finally {
+      setSending(null);
+    }
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+      <h1 style={{ marginBottom: 5, color: '#1a365d' }}>👩‍💼 Area Commercialista</h1>
+      <p style={{ color: '#666', marginBottom: 25 }}>
+        Genera e invia documenti PDF al commercialista via email
+      </p>
+
+      {/* Alert Banner */}
+      {alertStatus?.show_alert && (
+        <div style={{
+          background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+          color: 'white',
+          padding: 20,
+          borderRadius: 12,
+          marginBottom: 25,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 15,
+          boxShadow: '0 4px 15px rgba(255, 152, 0, 0.3)'
+        }}>
+          <span style={{ fontSize: 32 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ fontSize: 16 }}>{alertStatus.message}</strong>
+            <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: 14 }}>
+              Scadenza: {formatDate(alertStatus.deadline)}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedYear(alertStatus.anno_pendente);
+              setSelectedMonth(alertStatus.mese_pendente - 1);
+            }}
+            style={{
+              padding: '10px 20px',
+              background: 'white',
+              color: '#f57c00',
+              border: 'none',
+              borderRadius: 8,
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            Vai al mese
+          </button>
+        </div>
+      )}
+
+      {/* Message */}
+      {message && (
+        <div style={{
+          padding: 15,
+          borderRadius: 8,
+          marginBottom: 20,
+          background: message.type === 'error' ? '#ffebee' : '#e8f5e9',
+          color: message.type === 'error' ? '#c62828' : '#2e7d32',
+          border: `1px solid ${message.type === 'error' ? '#ffcdd2' : '#c8e6c9'}`
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      {/* Config Card */}
+      <div style={{
+        background: 'white',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 25,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#1a365d' }}>📧 Configurazione Email</h3>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>
+              Email Commercialista
+            </label>
+            <input
+              type="email"
+              value={config.email}
+              onChange={(e) => setConfig({ ...config, email: e.target.value })}
+              style={{
+                padding: '10px 15px',
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                width: 280,
+                fontSize: 14
+              }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>
+              Nome Commercialista
+            </label>
+            <input
+              type="text"
+              value={config.nome}
+              onChange={(e) => setConfig({ ...config, nome: e.target.value })}
+              style={{
+                padding: '10px 15px',
+                borderRadius: 8,
+                border: '1px solid #ddd',
+                width: 200,
+                fontSize: 14
+              }}
+            />
+          </div>
+          <div style={{ 
+            padding: '8px 15px', 
+            borderRadius: 8, 
+            background: config.smtp_configured ? '#e8f5e9' : '#ffebee',
+            color: config.smtp_configured ? '#2e7d32' : '#c62828',
+            fontSize: 13
+          }}>
+            {config.smtp_configured ? '✅ SMTP Configurato' : '❌ SMTP Non Configurato'}
+          </div>
+        </div>
+      </div>
+
+      {/* Period Selector */}
+      <div style={{
+        background: 'white',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 25,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}>
+        <h3 style={{ margin: '0 0 15px 0', color: '#1a365d' }}>📅 Seleziona Periodo</h3>
+        <div style={{ display: 'flex', gap: 15, flexWrap: 'wrap' }}>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            style={{
+              padding: '10px 15px',
+              borderRadius: 8,
+              border: '1px solid #ddd',
+              fontSize: 14,
+              minWidth: 150
+            }}
+          >
+            {MESI.slice(1).map((m, idx) => (
+              <option key={idx} value={idx}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            style={{
+              padding: '10px 15px',
+              borderRadius: 8,
+              border: '1px solid #ddd',
+              fontSize: 14,
+              minWidth: 100
+            }}
+          >
+            {[2023, 2024, 2025, 2026].map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 40 }}>Caricamento...</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 20 }}>
+          
+          {/* Prima Nota Cassa Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)',
+              color: 'white',
+              padding: 20
+            }}>
+              <h3 style={{ margin: 0 }}>📒 Prima Nota Cassa</h3>
+              <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: 14 }}>
+                {MESI[selectedMonth + 1]} {selectedYear}
+              </p>
+            </div>
+            <div style={{ padding: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 20 }}>
+                <div style={{ background: '#e8f5e9', padding: 15, borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, color: '#666' }}>Entrate</div>
+                  <div style={{ fontSize: 18, fontWeight: 'bold', color: '#4caf50' }}>
+                    {formatCurrency(primaNotaData?.totale_entrate)}
+                  </div>
+                </div>
+                <div style={{ background: '#ffebee', padding: 15, borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, color: '#666' }}>Uscite</div>
+                  <div style={{ fontSize: 18, fontWeight: 'bold', color: '#f44336' }}>
+                    {formatCurrency(primaNotaData?.totale_uscite)}
+                  </div>
+                </div>
+              </div>
+              <div style={{ 
+                background: '#f5f5f5', 
+                padding: 15, 
+                borderRadius: 8, 
+                textAlign: 'center',
+                marginBottom: 20
+              }}>
+                <div style={{ fontSize: 12, color: '#666' }}>Saldo</div>
+                <div style={{ 
+                  fontSize: 24, 
+                  fontWeight: 'bold', 
+                  color: (primaNotaData?.saldo || 0) >= 0 ? '#4caf50' : '#f44336'
+                }}>
+                  {formatCurrency(primaNotaData?.saldo)}
+                </div>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 5 }}>
+                  {primaNotaData?.totale_movimenti || 0} movimenti
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={() => downloadPDF('prima_nota')}
+                  data-testid="download-prima-nota-pdf"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: '#f5f5f5',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                >
+                  📥 Scarica PDF
+                </button>
+                <button
+                  onClick={() => sendEmail('prima_nota')}
+                  disabled={sending === 'prima_nota' || !config.smtp_configured}
+                  data-testid="send-prima-nota-email"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: sending === 'prima_nota' ? '#ccc' : '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: sending === 'prima_nota' ? 'wait' : 'pointer',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                >
+                  {sending === 'prima_nota' ? '⏳ Invio...' : '📧 Invia Email'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Fatture Cassa Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+              color: 'white',
+              padding: 20
+            }}>
+              <h3 style={{ margin: 0 }}>💵 Fatture Pagate in Contanti</h3>
+              <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: 14 }}>
+                {MESI[selectedMonth + 1]} {selectedYear}
+              </p>
+            </div>
+            <div style={{ padding: 20 }}>
+              <div style={{ 
+                background: '#fff3e0', 
+                padding: 20, 
+                borderRadius: 8, 
+                textAlign: 'center',
+                marginBottom: 20
+              }}>
+                <div style={{ fontSize: 12, color: '#666' }}>Totale Fatture</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold', color: '#f57c00' }}>
+                  {formatCurrency(fattureCassaData?.totale_importo)}
+                </div>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 5 }}>
+                  {fattureCassaData?.totale_fatture || 0} fatture
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={() => downloadPDF('fatture_cassa')}
+                  data-testid="download-fatture-cassa-pdf"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: '#f5f5f5',
+                    color: '#333',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                >
+                  📥 Scarica PDF
+                </button>
+                <button
+                  onClick={() => sendEmail('fatture_cassa')}
+                  disabled={sending === 'fatture_cassa' || !config.smtp_configured}
+                  data-testid="send-fatture-cassa-email"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: sending === 'fatture_cassa' ? '#ccc' : '#f57c00',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: sending === 'fatture_cassa' ? 'wait' : 'pointer',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                >
+                  {sending === 'fatture_cassa' ? '⏳ Invio...' : '📧 Invia Email'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Carnet Assegni Card */}
+          <div style={{
+            background: 'white',
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            gridColumn: 'span 1'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)',
+              color: 'white',
+              padding: 20
+            }}>
+              <h3 style={{ margin: 0 }}>📝 Carnet Assegni</h3>
+              <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: 14 }}>
+                Seleziona un carnet da inviare
+              </p>
+            </div>
+            <div style={{ padding: 20 }}>
+              {carnets.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>
+                  Nessun carnet disponibile
+                </div>
+              ) : (
+                <>
+                  <select
+                    value={selectedCarnet?.id || ''}
+                    onChange={(e) => {
+                      const carnet = carnets.find(c => c.id === e.target.value);
+                      setSelectedCarnet(carnet);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: 8,
+                      border: '1px solid #ddd',
+                      marginBottom: 15,
+                      fontSize: 14
+                    }}
+                  >
+                    <option value="">-- Seleziona Carnet --</option>
+                    {carnets.map(c => (
+                      <option key={c.id} value={c.id}>
+                        Carnet {c.id} - {c.assegni.length} assegni - {formatCurrency(c.totale)}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {selectedCarnet && (
+                    <>
+                      <div style={{ 
+                        background: '#e8f5e9', 
+                        padding: 15, 
+                        borderRadius: 8, 
+                        marginBottom: 15 
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                          <span>Assegni:</span>
+                          <strong>{selectedCarnet.assegni.length}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Totale:</span>
+                          <strong style={{ color: '#2e7d32' }}>{formatCurrency(selectedCarnet.totale)}</strong>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        <button
+                          onClick={() => downloadPDF('carnet', selectedCarnet)}
+                          data-testid="download-carnet-pdf"
+                          style={{
+                            flex: 1,
+                            padding: '12px',
+                            background: '#f5f5f5',
+                            color: '#333',
+                            border: 'none',
+                            borderRadius: 8,
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          📥 Scarica PDF
+                        </button>
+                        <button
+                          onClick={() => sendEmail('carnet', selectedCarnet)}
+                          disabled={sending === 'carnet' || !config.smtp_configured}
+                          data-testid="send-carnet-email"
+                          style={{
+                            flex: 1,
+                            padding: '12px',
+                            background: sending === 'carnet' ? '#ccc' : '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 8,
+                            cursor: sending === 'carnet' ? 'wait' : 'pointer',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {sending === 'carnet' ? '⏳ Invio...' : '📧 Invia Email'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Section */}
+      {log.length > 0 && (
+        <div style={{
+          background: 'white',
+          borderRadius: 12,
+          padding: 20,
+          marginTop: 25,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', color: '#1a365d' }}>📋 Storico Invii</h3>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ padding: 12, textAlign: 'left' }}>Data Invio</th>
+                  <th style={{ padding: 12, textAlign: 'left' }}>Tipo</th>
+                  <th style={{ padding: 12, textAlign: 'left' }}>Periodo/ID</th>
+                  <th style={{ padding: 12, textAlign: 'left' }}>Email</th>
+                  <th style={{ padding: 12, textAlign: 'center' }}>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                {log.map((entry, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: 12 }}>{formatDate(entry.data_invio)}</td>
+                    <td style={{ padding: 12 }}>
+                      {entry.tipo === 'prima_nota_cassa' && '📒 Prima Nota'}
+                      {entry.tipo === 'fatture_cassa' && '💵 Fatture Cassa'}
+                      {entry.tipo === 'carnet_assegni' && '📝 Carnet'}
+                    </td>
+                    <td style={{ padding: 12 }}>
+                      {entry.carnet_id || `${MESI[entry.mese]} ${entry.anno}`}
+                    </td>
+                    <td style={{ padding: 12 }}>{entry.email}</td>
+                    <td style={{ padding: 12, textAlign: 'center' }}>
+                      <span style={{
+                        padding: '4px 12px',
+                        borderRadius: 12,
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        background: entry.success ? '#e8f5e9' : '#ffebee',
+                        color: entry.success ? '#2e7d32' : '#c62828'
+                      }}>
+                        {entry.success ? '✓ Inviato' : '✕ Errore'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
