@@ -283,19 +283,19 @@ export default function PrimaNota() {
             </p>
           </div>
 
-          {/* Summary Cards Cassa */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-            <SummaryCard title="Totale Entrate (DARE)" value={formatCurrency(cassaData.totale_entrate)} color="#10b981" icon="📈" subtitle="Corrispettivi + Finanziamenti" />
-            <SummaryCard title="Totale Uscite (AVERE)" value={formatCurrency(cassaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="POS + Versamenti + Fatture" />
-            <SummaryCard title="Saldo Cassa" value={formatCurrency(cassaData.saldo)} color={cassaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
+          {/* Summary Cards Cassa - Compatti */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 16 }}>
+            <MiniCard title="Entrate (DARE)" value={formatCurrency(cassaData.totale_entrate)} color="#10b981" />
+            <MiniCard title="Uscite (AVERE)" value={formatCurrency(cassaData.totale_uscite)} color="#ef4444" />
+            <MiniCard title="Saldo" value={formatCurrency(cassaData.saldo)} color={cassaData.saldo >= 0 ? '#10b981' : '#ef4444'} highlight />
           </div>
 
-          {/* Dettaglio Uscite */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-            <MiniStatCard title="Corrispettivi" value={formatCurrency(totaleCorrispettivi)} color="#f59e0b" />
-            <MiniStatCard title="POS" value={formatCurrency(totalePOS)} color="#3b82f6" />
-            <MiniStatCard title="Versamenti" value={formatCurrency(totaleVersamenti)} color="#10b981" />
-            <MiniStatCard title="Fatture Contanti" value={formatCurrency(totaleFattureCassa)} color="#ef4444" />
+          {/* Dettaglio - Compatto */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 16 }}>
+            <TinyStatCard title="Corrispettivi" value={formatCurrency(totaleCorrispettivi)} color="#f59e0b" />
+            <TinyStatCard title="POS" value={formatCurrency(totalePOS)} color="#3b82f6" />
+            <TinyStatCard title="Versamenti" value={formatCurrency(totaleVersamenti)} color="#10b981" />
+            <TinyStatCard title="Fatture" value={formatCurrency(totaleFattureCassa)} color="#ef4444" />
           </div>
 
           {/* Chiusure Giornaliere Serali */}
