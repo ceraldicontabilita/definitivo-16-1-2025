@@ -630,7 +630,8 @@ async def create_temperature(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]
 async def list_invoices(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
     """List invoices - public endpoint. Nessun limite pratico. Ordinate per data fattura DESC."""
     db = Database.get_db()
-    invoices = await db[Collections.INVOICES].find({}, {"_id": 0}).sort("invoice_date", -1).skip(skip).limit(limit).to_list(limit)
+    # MongoDB sort su stringa ISO-8601 (YYYY-MM-DD) funziona correttamente per ordine cronologico
+    invoices = await db[Collections.INVOICES].find({}, {"_id": 0}).sort([("invoice_date", -1), ("created_at", -1)]).skip(skip).limit(limit).to_list(limit)
     return invoices
 
 
