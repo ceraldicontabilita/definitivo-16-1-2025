@@ -436,8 +436,8 @@ async def create_temperature(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]
 
 # ============== INVOICES ==============
 @router.get("/invoices")
-async def list_invoices(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-    """List invoices - public endpoint."""
+async def list_invoices(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
+    """List invoices - public endpoint. Nessun limite pratico."""
     db = Database.get_db()
     invoices = await db[Collections.INVOICES].find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     return invoices
@@ -474,8 +474,8 @@ async def delete_invoice(invoice_id: str) -> Dict[str, Any]:
 
 # ============== SUPPLIERS ==============
 @router.get("/suppliers")
-async def list_suppliers(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-    """List suppliers - public endpoint."""
+async def list_suppliers(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
+    """List suppliers - public endpoint. Nessun limite pratico."""
     db = Database.get_db()
     suppliers = await db[Collections.SUPPLIERS].find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     return suppliers
@@ -501,8 +501,8 @@ async def create_supplier(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
 
 # ============== EMPLOYEES ==============
 @router.get("/employees")
-async def list_employees(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-    """List employees - public endpoint."""
+async def list_employees(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
+    """List employees - public endpoint. Nessun limite pratico."""
     db = Database.get_db()
     employees = await db[Collections.EMPLOYEES].find({}, {"_id": 0}).skip(skip).limit(limit).to_list(limit)
     return employees
@@ -655,8 +655,8 @@ async def delete_all_employees() -> Dict[str, Any]:
 
 # ============== CASH ==============
 @router.get("/cash")
-async def list_cash_movements(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-    """List cash movements - public endpoint."""
+async def list_cash_movements(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
+    """List cash movements - public endpoint. Nessun limite pratico."""
     db = Database.get_db()
     movements = await db[Collections.CASH_MOVEMENTS].find({}, {"_id": 0}).sort("date", -1).skip(skip).limit(limit).to_list(limit)
     return movements
@@ -682,8 +682,8 @@ async def create_cash_movement(data: Dict[str, Any] = Body(...)) -> Dict[str, An
 
 # ============== BANK ==============
 @router.get("/bank/statements")
-async def list_bank_statements(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-    """List bank statements - public endpoint."""
+async def list_bank_statements(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
+    """List bank statements - public endpoint. Nessun limite pratico."""
     db = Database.get_db()
     statements = await db[Collections.BANK_STATEMENTS].find({}, {"_id": 0}).sort("date", -1).skip(skip).limit(limit).to_list(limit)
     return statements
@@ -830,8 +830,8 @@ async def get_financial_summary() -> Dict[str, Any]:
 
 # ============== CORRISPETTIVI ==============
 @router.get("/corrispettivi")
-async def list_corrispettivi(skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
-    """List corrispettivi - public endpoint."""
+async def list_corrispettivi(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
+    """List corrispettivi - public endpoint. Nessun limite pratico."""
     db = Database.get_db()
     corrispettivi = await db["corrispettivi"].find({}, {"_id": 0}).sort("data", -1).skip(skip).limit(limit).to_list(limit)
     return corrispettivi
