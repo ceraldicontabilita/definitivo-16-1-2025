@@ -57,10 +57,15 @@ async def delete_warehouse_product(product_id: str) -> Dict[str, Any]:
 # ============== CATALOGO CON BEST PRICE ==============
 
 @router.get("/catalog")
-async def get_catalog(category: Optional[str] = None, search: Optional[str] = None, days: int = 30) -> List[Dict[str, Any]]:
+async def get_catalog(
+    category: Optional[str] = None, 
+    search: Optional[str] = None, 
+    days: int = 30,
+    exact: bool = Query(False, description="Se True, cerca match esatto")
+) -> List[Dict[str, Any]]:
     """Catalogo prodotti con miglior prezzo ultimi N giorni."""
     db = Database.get_db()
-    return await get_product_catalog(db, category=category, search=search, days=days)
+    return await get_product_catalog(db, category=category, search=search, days=days, exact=exact)
 
 
 @router.get("/search")
