@@ -330,7 +330,7 @@ def parse_libro_unico_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                 employee_name = None
                 codice_fiscale = None
                 
-                # Pattern 1: matricola + name + CF (page 2 format)
+                # Pattern 1: matricola + name + CF (page 2 format Zucchetti)
                 for line in lines:
                     match = re.match(r'(\d{7})\s+([A-Z]+\s+[A-Z]+)\s+([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])', line)
                     if match:
@@ -339,7 +339,33 @@ def parse_libro_unico_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                         logger.info(f"Found employee (pattern 1): {employee_name}, CF: {codice_fiscale}")
                         break
                 
-                # Pattern 2: just name on its own line (page 1 format)
+                # Pattern 2: Smart Forms format - "DD/MM/YYYY NAME SURNAME DD/MM/YYYY CF"
+                if not employee_name:
+                    for line in lines:
+                        # Pattern: date + NAME + date + CF (Smart Forms)
+                        match = re.match(r'\d{1,2}/\s*\d{1,2}/\d{4}\s+([A-Z]+\s+[A-Z]+)\s+\d{1,2}/\d{1,2}/\d{4}\s+([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])', line)
+                        if match:
+                            employee_name = match.group(1).strip()
+                            codice_fiscale = match.group(2)
+                            logger.info(f"Found employee (Smart Forms): {employee_name}, CF: {codice_fiscale}")
+                            break
+                
+                # Pattern 3: "DATA EMISSIONE" line followed by name on same line
+                if not employee_name:
+                    full_text = page_text.upper()
+                    if 'DATA EMISSIONE' in full_text:
+                        for i, line in enumerate(lines):
+                            # Look for lines with date + name + birthdate + CF
+                            if re.search(r'\d{2}/\d{2}/\d{4}', line):
+                                # Try to extract name between dates
+                                match = re.search(r'(\d{2}/\d{2}/\d{4})\s+([A-Z]+\s+[A-Z]+)\s+(\d{2}/\d{2}/\d{4})\s+([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])', line)
+                                if match:
+                                    employee_name = match.group(2).strip()
+                                    codice_fiscale = match.group(4)
+                                    logger.info(f"Found employee (pattern 3 Smart): {employee_name}, CF: {codice_fiscale}")
+                                    break
+                
+                # Pattern 4: just name on its own line (page 1 format)
                 if not employee_name:
                     for i, line in enumerate(lines):
                         line_clean = line.strip()
@@ -349,16 +375,16 @@ def parse_libro_unico_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                             prev_lines = ' '.join(lines[max(0, i-3):i]).upper()
                             if 'COGNOME' in prev_lines or 'NOME' in prev_lines or 'INDIRIZZO' in prev_lines:
                                 employee_name = line_clean
-                                logger.info(f"Found employee (pattern 2): {employee_name}")
+                                logger.info(f"Found employee (pattern 4): {employee_name}")
                                 break
                 
-                # Pattern 3: matricola + name (no CF)
+                # Pattern 5: matricola + name (no CF)
                 if not employee_name:
                     for line in lines:
                         match = re.match(r'(\d{7})\s+([A-Z]+\s+[A-Z]+)', line)
                         if match:
                             employee_name = match.group(2).strip()
-                            logger.info(f"Found employee (pattern 3): {employee_name}")
+                            logger.info(f"Found employee (pattern 5): {employee_name}")
                             break
                 
                 # Extract codice fiscale if not found yet
