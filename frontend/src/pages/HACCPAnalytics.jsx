@@ -364,8 +364,108 @@ function AnomaliaRow({ anomalia, tipo, formatTemp }) {
 }
 
 function YearlyView({ stats, getConformityColor }) {
+  // Prepara dati per i grafici
+  const chartData = stats.mesi?.map(m => ({
+    mese: m.mese_nome?.substring(0, 3),
+    Frigoriferi: m.frigoriferi,
+    Congelatori: m.congelatori,
+    Sanificazioni: m.sanificazioni,
+    totale: m.totale,
+    conformita: m.conformita_percent
+  })) || [];
+
+  // Dati per pie chart
+  const pieData = [
+    { name: 'Frigoriferi', value: stats.mesi?.reduce((sum, m) => sum + m.frigoriferi, 0) || 0 },
+    { name: 'Congelatori', value: stats.mesi?.reduce((sum, m) => sum + m.congelatori, 0) || 0 },
+    { name: 'Sanificazioni', value: stats.mesi?.reduce((sum, m) => sum + m.sanificazioni, 0) || 0 },
+  ];
+
   return (
     <>
+      {/* Grafici */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 20, marginBottom: 20 }}>
+        
+        {/* Bar Chart - Rilevazioni per mese */}
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 12, 
+          padding: 20, 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0' }}>📊 Rilevazioni per Mese</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mese" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="Frigoriferi" fill="#2196f3" />
+              <Bar dataKey="Congelatori" fill="#00bcd4" />
+              <Bar dataKey="Sanificazioni" fill="#4caf50" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Line Chart - Trend Conformità */}
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 12, 
+          padding: 20, 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0' }}>📈 Trend Conformità %</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mese" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip formatter={(value) => `${value}%`} />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="conformita" 
+                stroke="#4caf50" 
+                strokeWidth={3}
+                dot={{ fill: '#4caf50', strokeWidth: 2 }}
+                name="Conformità %"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Pie Chart - Distribuzione */}
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 12, 
+          padding: 20, 
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0' }}>🥧 Distribuzione Rilevazioni</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={5}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={['#2196f3', '#00bcd4', '#4caf50'][index]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Tabella dettagliata */}
       <div style={{ 
         background: 'white', 
         borderRadius: 12, 
