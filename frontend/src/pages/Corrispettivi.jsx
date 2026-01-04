@@ -503,7 +503,7 @@ export default function Corrispettivi() {
             </div>
             <div>
               <strong>Pagamenti</strong>
-              <div className="small">💵 Contanti: € {(selectedItem.pagato_contanti || 0).toFixed(2)}</div>
+              <div className="small">💵 Cassa: € {(selectedItem.pagato_contanti || 0).toFixed(2)}</div>
               <div className="small">💳 Elettronico: € {(selectedItem.pagato_elettronico || 0).toFixed(2)}</div>
               <div className="small" style={{ fontWeight: "bold", marginTop: 5 }}>
                 Totale: € {(selectedItem.totale || 0).toFixed(2)}
