@@ -12,6 +12,7 @@ import traceback
 from app.database import Database, Collections
 from app.parsers.fattura_elettronica_parser import parse_fattura_xml
 from app.parsers.payslip_parser import extract_payslips_from_pdf, create_employee_from_payslip
+from app.parsers.corrispettivi_parser import parse_corrispettivo_xml, generate_corrispettivo_key
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
