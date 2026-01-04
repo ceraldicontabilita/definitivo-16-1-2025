@@ -76,11 +76,15 @@ FATTURA XML → Parse → FATTURE DB
 ## Changelog
 
 ### 2026-01-04
+- **Refactoring P0**: Eliminati file backup (public_api_BACKUP, public_api_ORIGINAL_FULL)
+- **Refactoring P0**: Rimossa cartella /app/app/routes/ duplicata
+- **Refactoring P1**: Rimossi file API obsoleti (employees_api, iva_daily_api, comparatore_routes)
+- **Refactoring P1**: Rimossi parser duplicati dalla root (già presenti in /parsers/)
+- **Refactoring P2**: Pulita cache Python (__pycache__, .pyc)
 - **Fatture**: Aggiunto filtro anno, bottone PAGA con registrazione Prima Nota
-- **Fornitori**: Import Excel funzionante (endpoint `/api/suppliers/import-excel`)
+- **Fornitori**: Import Excel funzionante, Modal Inventario prodotti
 - **Assegni**: Auto-associazione fatture implementata
 - **Fix**: Rimossi 104 duplicati fatture 2025 (ora 1328 fatture)
-- **Fix**: Filtro anno bypassato da public_api.py - corretto
 
 ### 2026-01-03
 - Reset dati Prima Nota da file Excel
