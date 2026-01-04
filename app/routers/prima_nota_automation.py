@@ -863,3 +863,315 @@ async def get_automation_stats() -> Dict[str, Any]:
             "senza_metodo_pagamento": fornitori_totali - fornitori_con_metodo
         }
     }
+
+
+# ============== IMPORT VERSAMENTI ==============
+
+@router.post("/import-versamenti")
+async def import_versamenti(
+    file: UploadFile = File(..., description="File Excel con versamenti")
+) -> Dict[str, Any]:
+    """
+    Importa versamenti in banca da file Excel.
+    
+    Colonne attese: data, importo, descrizione (opzionale)
+    """
+    import pandas as pd
+    
+    if not file.filename.lower().endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(status_code=400, detail="Solo file Excel o CSV supportati")
+    
+    content = await file.read()
+    db = Database.get_db()
+    now = datetime.utcnow().isoformat()
+    
+    results = {
+        "imported": 0,
+        "skipped": 0,
+        "errors": [],
+        "versamenti": []
+    }
+    
+    try:
+        if file.filename.lower().endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        else:
+            df = pd.read_excel(io.BytesIO(content))
+        
+        df.columns = df.columns.str.lower().str.strip()
+        
+        for idx, row in df.iterrows():
+            try:
+                # Trova colonna data
+                data = None
+                for col in ['data', 'date', 'giorno']:
+                    if col in df.columns and pd.notna(row.get(col)):
+                        data = parse_italian_date(str(row[col]))
+                        break
+                
+                # Trova colonna importo
+                importo = 0
+                for col in ['importo', 'amount', 'valore', 'versamento']:
+                    if col in df.columns and pd.notna(row.get(col)):
+                        importo = parse_italian_amount(str(row[col]))
+                        break
+                
+                if not data or importo <= 0:
+                    results["skipped"] += 1
+                    continue
+                
+                descrizione = str(row.get('descrizione', row.get('description', 'Versamento'))) if pd.notna(row.get('descrizione', row.get('description'))) else f"Versamento del {data}"
+                
+                # Crea movimento in banca (entrata) e cassa (uscita)
+                movimento_banca = {
+                    "id": str(uuid.uuid4()),
+                    "data": data,
+                    "tipo": "entrata",
+                    "importo": importo,
+                    "descrizione": descrizione,
+                    "categoria": "Versamento",
+                    "source": "excel_import",
+                    "filename": file.filename,
+                    "created_at": now
+                }
+                
+                movimento_cassa = {
+                    "id": str(uuid.uuid4()),
+                    "data": data,
+                    "tipo": "uscita",
+                    "importo": importo,
+                    "descrizione": f"Versamento in banca - {descrizione}",
+                    "categoria": "Versamento",
+                    "source": "excel_import",
+                    "filename": file.filename,
+                    "linked_banca_id": movimento_banca["id"],
+                    "created_at": now
+                }
+                
+                await db[COLLECTION_PRIMA_NOTA_BANCA].insert_one(movimento_banca)
+                await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento_cassa)
+                
+                results["imported"] += 1
+                results["versamenti"].append({
+                    "data": data,
+                    "importo": importo,
+                    "descrizione": descrizione[:50]
+                })
+                
+            except Exception as e:
+                results["errors"].append({"row": idx + 2, "error": str(e)})
+        
+        return {
+            "success": True,
+            "message": f"Importati {results['imported']} versamenti",
+            **results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error importing versamenti: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============== IMPORT POS ==============
+
+@router.post("/import-pos")
+async def import_pos(
+    file: UploadFile = File(..., description="File Excel con incassi POS")
+) -> Dict[str, Any]:
+    """
+    Importa incassi POS giornalieri da file Excel.
+    
+    Colonne attese: data, pos1, pos2, pos3 (opzionali), totale (opzionale)
+    """
+    import pandas as pd
+    
+    if not file.filename.lower().endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(status_code=400, detail="Solo file Excel o CSV supportati")
+    
+    content = await file.read()
+    db = Database.get_db()
+    now = datetime.utcnow().isoformat()
+    
+    results = {
+        "imported": 0,
+        "skipped": 0,
+        "errors": [],
+        "pos_entries": []
+    }
+    
+    try:
+        if file.filename.lower().endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        else:
+            df = pd.read_excel(io.BytesIO(content))
+        
+        df.columns = df.columns.str.lower().str.strip()
+        
+        for idx, row in df.iterrows():
+            try:
+                # Trova colonna data
+                data = None
+                for col in ['data', 'date', 'giorno']:
+                    if col in df.columns and pd.notna(row.get(col)):
+                        data = parse_italian_date(str(row[col]))
+                        break
+                
+                if not data:
+                    results["skipped"] += 1
+                    continue
+                
+                # Extract POS values
+                pos1 = parse_italian_amount(str(row.get('pos1', row.get('pos 1', 0)))) if pd.notna(row.get('pos1', row.get('pos 1'))) else 0
+                pos2 = parse_italian_amount(str(row.get('pos2', row.get('pos 2', 0)))) if pd.notna(row.get('pos2', row.get('pos 2'))) else 0
+                pos3 = parse_italian_amount(str(row.get('pos3', row.get('pos 3', 0)))) if pd.notna(row.get('pos3', row.get('pos 3'))) else 0
+                
+                # Try to get total or calculate
+                totale = parse_italian_amount(str(row.get('totale', row.get('total', 0)))) if pd.notna(row.get('totale', row.get('total'))) else 0
+                
+                if totale == 0:
+                    totale = pos1 + pos2 + pos3
+                
+                if totale <= 0:
+                    results["skipped"] += 1
+                    continue
+                
+                # Create movement in banca
+                movimento = {
+                    "id": str(uuid.uuid4()),
+                    "data": data,
+                    "tipo": "entrata",
+                    "importo": totale,
+                    "descrizione": f"Incasso POS giornaliero del {data}",
+                    "categoria": "Incasso POS",
+                    "source": "manual_pos",
+                    "pos_details": {
+                        "pos1": pos1,
+                        "pos2": pos2,
+                        "pos3": pos3
+                    },
+                    "filename": file.filename,
+                    "created_at": now
+                }
+                
+                await db[COLLECTION_PRIMA_NOTA_BANCA].insert_one(movimento)
+                
+                results["imported"] += 1
+                results["pos_entries"].append({
+                    "data": data,
+                    "pos1": pos1,
+                    "pos2": pos2,
+                    "pos3": pos3,
+                    "totale": totale
+                })
+                
+            except Exception as e:
+                results["errors"].append({"row": idx + 2, "error": str(e)})
+        
+        return {
+            "success": True,
+            "message": f"Importati {results['imported']} movimenti POS",
+            **results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error importing POS: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============== IMPORT CORRISPETTIVI ==============
+
+@router.post("/import-corrispettivi")
+async def import_corrispettivi(
+    file: UploadFile = File(..., description="File Excel con corrispettivi")
+) -> Dict[str, Any]:
+    """
+    Importa corrispettivi giornalieri da file Excel.
+    
+    Colonne attese: data, importo, imponibile (opzionale), imposta (opzionale)
+    """
+    import pandas as pd
+    
+    if not file.filename.lower().endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(status_code=400, detail="Solo file Excel o CSV supportati")
+    
+    content = await file.read()
+    db = Database.get_db()
+    now = datetime.utcnow().isoformat()
+    
+    results = {
+        "imported": 0,
+        "skipped": 0,
+        "errors": [],
+        "corrispettivi": []
+    }
+    
+    try:
+        if file.filename.lower().endswith('.csv'):
+            df = pd.read_csv(io.BytesIO(content))
+        else:
+            df = pd.read_excel(io.BytesIO(content))
+        
+        df.columns = df.columns.str.lower().str.strip()
+        
+        for idx, row in df.iterrows():
+            try:
+                # Trova colonna data
+                data = None
+                for col in ['data', 'date', 'giorno']:
+                    if col in df.columns and pd.notna(row.get(col)):
+                        data = parse_italian_date(str(row[col]))
+                        break
+                
+                # Trova colonna importo
+                importo = 0
+                for col in ['importo', 'amount', 'totale', 'vendite', 'ammontare']:
+                    if col in df.columns and pd.notna(row.get(col)):
+                        importo = parse_italian_amount(str(row[col]))
+                        break
+                
+                if not data or importo <= 0:
+                    results["skipped"] += 1
+                    continue
+                
+                # Optional: imponibile e imposta
+                imponibile = parse_italian_amount(str(row.get('imponibile', 0))) if pd.notna(row.get('imponibile')) else 0
+                imposta = parse_italian_amount(str(row.get('imposta', row.get('iva', 0)))) if pd.notna(row.get('imposta', row.get('iva'))) else 0
+                
+                # Create movement in cassa
+                movimento = {
+                    "id": str(uuid.uuid4()),
+                    "data": data,
+                    "tipo": "entrata",
+                    "importo": importo,
+                    "descrizione": f"Corrispettivo giornaliero del {data}",
+                    "categoria": "Corrispettivi",
+                    "source": "manual_entry",
+                    "imponibile": imponibile,
+                    "imposta": imposta,
+                    "filename": file.filename,
+                    "created_at": now
+                }
+                
+                await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento)
+                
+                results["imported"] += 1
+                results["corrispettivi"].append({
+                    "data": data,
+                    "importo": importo,
+                    "imponibile": imponibile,
+                    "imposta": imposta
+                })
+                
+            except Exception as e:
+                results["errors"].append({"row": idx + 2, "error": str(e)})
+        
+        return {
+            "success": True,
+            "message": f"Importati {results['imported']} corrispettivi",
+            **results
+        }
+        
+    except Exception as e:
+        logger.error(f"Error importing corrispettivi: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
