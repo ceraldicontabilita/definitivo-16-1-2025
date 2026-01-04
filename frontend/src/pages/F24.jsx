@@ -72,7 +72,7 @@ export default function F24() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await api.post("/api/f24/upload-pdf", formData);
+      const res = await api.post("/api/f24-public/upload", formData);
       setOut(res.data);
       setFile(null);
       // Reset file input
