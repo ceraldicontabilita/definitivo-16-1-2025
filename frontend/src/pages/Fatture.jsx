@@ -8,6 +8,7 @@ export default function Fatture() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, phase: "" });
   const [uploadResult, setUploadResult] = useState(null);
   const [err, setErr] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -15,6 +16,7 @@ export default function Fatture() {
   const [payingInvoice, setPayingInvoice] = useState(null);
   const fileInputRef = useRef(null);
   const bulkFileInputRef = useRef(null);
+  const zipFileInputRef = useRef(null);
   
   // Anno selezionato (default: anno corrente)
   const [selectedYear, setSelectedYear] = useState(currentYear);
