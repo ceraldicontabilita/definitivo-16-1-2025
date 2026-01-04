@@ -348,3 +348,169 @@ async def clear_generated_assegni(stato: str = Query("vuoto")) -> Dict[str, Any]
         "message": f"Eliminati {result.deleted_count} assegni con stato '{stato}'",
         "deleted_count": result.deleted_count
     }
+
+
+@router.post("/auto-associa")
+async def auto_associa_assegni() -> Dict[str, Any]:
+    """
+    Auto-associa gli assegni alle fatture basandosi sugli importi.
+    
+    Logica:
+    1. Per ogni assegno senza beneficiario, cerca fattura con stesso importo
+    2. Se non trova match esatto, conta quanti assegni hanno lo stesso importo
+    3. Cerca fatture con importo = N × importo_assegno (per assegni multipli)
+    
+    Esempio: 3 assegni da €1663.26 → cerca fattura da €4989.78 (1663.26 × 3)
+    """
+    db = Database.get_db()
+    from app.database import Collections
+    
+    # Carica tutti gli assegni senza beneficiario valido
+    assegni_da_associare = await db[COLLECTION_ASSEGNI].find({
+        "$or": [
+            {"beneficiario": None},
+            {"beneficiario": ""},
+            {"beneficiario": "N/A"}
+        ],
+        "importo": {"$gt": 0}
+    }, {"_id": 0}).to_list(1000)
+    
+    # Carica tutte le fatture non pagate
+    fatture = await db[Collections.INVOICES].find({
+        "status": {"$ne": "paid"},
+        "total_amount": {"$gt": 0}
+    }, {"_id": 0}).to_list(5000)
+    
+    logger.info(f"Auto-associazione: {len(assegni_da_associare)} assegni, {len(fatture)} fatture")
+    
+    # Conta assegni per importo
+    from collections import Counter
+    importi_assegni = Counter()
+    for a in assegni_da_associare:
+        imp = round(a.get("importo", 0), 2)
+        if imp > 0:
+            importi_assegni[imp] += 1
+    
+    associazioni = []
+    assegni_associati = set()
+    
+    # 1. Prima cerca match esatti (1 assegno = 1 fattura)
+    for fattura in fatture:
+        importo_fattura = round(fattura.get("total_amount", 0), 2)
+        if importo_fattura <= 0:
+            continue
+            
+        # Cerca assegni con stesso importo
+        for assegno in assegni_da_associare:
+            if assegno["id"] in assegni_associati:
+                continue
+            importo_assegno = round(assegno.get("importo", 0), 2)
+            
+            # Match esatto (tolleranza 0.5€)
+            if abs(importo_fattura - importo_assegno) < 0.5:
+                associazioni.append({
+                    "tipo": "esatto",
+                    "assegno_id": assegno["id"],
+                    "assegno_numero": assegno.get("numero"),
+                    "fattura_id": fattura.get("id"),
+                    "fattura_numero": fattura.get("invoice_number"),
+                    "fornitore": fattura.get("supplier_name"),
+                    "importo": importo_fattura
+                })
+                assegni_associati.add(assegno["id"])
+                break
+    
+    # 2. Cerca match multipli (N assegni = 1 fattura grande)
+    for importo_assegno, count in importi_assegni.items():
+        if count <= 1:
+            continue
+        
+        # Cerca fattura con importo = importo_assegno × count
+        importo_target = round(importo_assegno * count, 2)
+        
+        for fattura in fatture:
+            importo_fattura = round(fattura.get("total_amount", 0), 2)
+            
+            # Tolleranza proporzionale (1% dell'importo o 5€ minimo)
+            tolleranza = max(5, importo_target * 0.01)
+            
+            if abs(importo_fattura - importo_target) <= tolleranza:
+                # Trova tutti gli assegni con questo importo
+                assegni_match = [a for a in assegni_da_associare 
+                               if abs(round(a.get("importo", 0), 2) - importo_assegno) < 0.5
+                               and a["id"] not in assegni_associati]
+                
+                if len(assegni_match) >= count:
+                    for assegno in assegni_match[:count]:
+                        associazioni.append({
+                            "tipo": "multiplo",
+                            "assegno_id": assegno["id"],
+                            "assegno_numero": assegno.get("numero"),
+                            "fattura_id": fattura.get("id"),
+                            "fattura_numero": fattura.get("invoice_number"),
+                            "fornitore": fattura.get("supplier_name"),
+                            "importo": importo_assegno,
+                            "nota": f"Fattura €{importo_fattura:.2f} divisa in {count} assegni da €{importo_assegno:.2f}"
+                        })
+                        assegni_associati.add(assegno["id"])
+                break
+    
+    # 3. Applica le associazioni
+    updated = 0
+    for assoc in associazioni:
+        try:
+            nota = assoc.get("nota", f"Pagamento fattura {assoc['fattura_numero']}")
+            result = await db[COLLECTION_ASSEGNI].update_one(
+                {"id": assoc["assegno_id"]},
+                {"$set": {
+                    "beneficiario": f"Pagamento fattura {assoc['fattura_numero']} - {assoc['fornitore'][:40]}",
+                    "numero_fattura": assoc["fattura_numero"],
+                    "fattura_collegata": assoc["fattura_id"],
+                    "note": nota,
+                    "stato": "compilato",
+                    "updated_at": datetime.utcnow().isoformat()
+                }}
+            )
+            if result.modified_count > 0:
+                updated += 1
+        except Exception as e:
+            logger.error(f"Errore associazione assegno {assoc['assegno_numero']}: {e}")
+    
+    return {
+        "success": True,
+        "message": f"Associati {updated} assegni su {len(assegni_da_associare)} totali",
+        "associazioni_trovate": len(associazioni),
+        "assegni_aggiornati": updated,
+        "dettagli": associazioni[:50]  # Primi 50 per debug
+    }
+
+
+@router.get("/senza-associazione")
+async def get_assegni_senza_associazione() -> Dict[str, Any]:
+    """
+    Restituisce assegni che hanno importo ma nessun beneficiario/fattura associata.
+    Utile per debug e verifica manuale.
+    """
+    db = Database.get_db()
+    
+    assegni = await db[COLLECTION_ASSEGNI].find({
+        "$or": [
+            {"beneficiario": None},
+            {"beneficiario": ""},
+            {"beneficiario": "N/A"}
+        ],
+        "importo": {"$gt": 0}
+    }, {"_id": 0}).to_list(500)
+    
+    # Raggruppa per importo
+    from collections import defaultdict
+    per_importo = defaultdict(list)
+    for a in assegni:
+        imp = round(a.get("importo", 0), 2)
+        per_importo[imp].append(a.get("numero"))
+    
+    return {
+        "totale": len(assegni),
+        "per_importo": {f"€{k:.2f}": {"count": len(v), "numeri": v[:10]} for k, v in sorted(per_importo.items(), key=lambda x: -len(x[1]))}
+    }
+
