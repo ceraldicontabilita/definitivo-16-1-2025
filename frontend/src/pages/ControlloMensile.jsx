@@ -703,23 +703,23 @@ export default function ControlloMensile() {
                     }}>
                       {formatCurrency(row.saldoCassa)}
                     </td>
-                    <td style={{ padding: 12, borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>
+                    <td style={{ padding: 10, borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>
                       {row.hasData && (
                         <button
                           onClick={() => handleMonthClick(row.month)}
                           style={{
-                            padding: '6px 12px',
+                            padding: '4px 8px',
                             background: '#3b82f6',
                             color: 'white',
                             border: 'none',
                             borderRadius: 6,
                             cursor: 'pointer',
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: 'bold'
                           }}
                           data-testid={`view-month-${row.month}`}
                         >
-                          👁️ Vedi
+                          👁️
                         </button>
                       )}
                     </td>
@@ -728,29 +728,30 @@ export default function ControlloMensile() {
               )}
             </tbody>
             <tfoot>
-              <tr style={{ background: '#1e293b', color: 'white', fontWeight: 'bold' }}>
-                <td style={{ padding: 12 }}>TOTALE {anno}</td>
-                <td style={{ padding: 12, textAlign: 'right' }}>{formatCurrency(yearTotals.posAuto)}</td>
-                <td style={{ padding: 12, textAlign: 'right' }}>{formatCurrency(yearTotals.posManual)}</td>
+              <tr style={{ background: '#1e293b', color: 'white', fontWeight: 'bold', fontSize: 12 }}>
+                <td style={{ padding: 10 }}>TOTALE {anno}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.posAuto)}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.posManual)}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.posBanca || 0)}</td>
                 <td style={{ 
-                  padding: 12, 
+                  padding: 10, 
                   textAlign: 'right',
-                  color: Math.abs(yearTotals.posAuto - yearTotals.posManual) > 1 ? '#fbbf24' : '#22c55e'
+                  color: Math.abs((yearTotals.posBanca || 0) - yearTotals.posAuto) > 1 ? '#fbbf24' : '#22c55e'
                 }}>
-                  {formatCurrency(yearTotals.posAuto - yearTotals.posManual)}
+                  {formatCurrency((yearTotals.posBanca || 0) - yearTotals.posAuto)}
                 </td>
-                <td style={{ padding: 12, textAlign: 'right' }}>{formatCurrency(yearTotals.corrispettiviAuto)}</td>
-                <td style={{ padding: 12, textAlign: 'right' }}>{formatCurrency(yearTotals.corrispettiviManual)}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.corrispettiviAuto)}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.corrispettiviManual)}</td>
                 <td style={{ 
-                  padding: 12, 
+                  padding: 10, 
                   textAlign: 'right',
                   color: Math.abs(yearTotals.corrispettiviAuto - yearTotals.corrispettiviManual) > 1 ? '#fbbf24' : '#22c55e'
                 }}>
                   {formatCurrency(yearTotals.corrispettiviAuto - yearTotals.corrispettiviManual)}
                 </td>
-                <td style={{ padding: 12, textAlign: 'right' }}>{formatCurrency(yearTotals.versamenti)}</td>
-                <td style={{ padding: 12, textAlign: 'right' }}>{formatCurrency(yearTotals.saldoCassa)}</td>
-                <td style={{ padding: 12 }}></td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.versamenti)}</td>
+                <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.saldoCassa)}</td>
+                <td style={{ padding: 10 }}></td>
               </tr>
             </tfoot>
           </table>
