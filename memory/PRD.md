@@ -73,11 +73,24 @@
 - [x] Refactoring public_api.py
 - [x] Pulizia endpoint duplicati
 - [x] Organizzazione modulare
+- [x] Report PDF HACCP per ispezioni ASL (04/01/2026)
+- [x] Fix aggiornamento nomi dipendenti in employees_payroll.py
 
-## Prossimi Miglioramenti (Opzionali)
-- [ ] Estrarre nomi dipendenti dal parser payslip
+## Report PDF HACCP (Completato 04/01/2026)
+| Endpoint | Descrizione |
+|----------|-------------|
+| `/api/haccp-report/completo-pdf?mese=YYYY-MM` | Report completo per ASL |
+| `/api/haccp-report/temperature-pdf?mese=YYYY-MM&tipo=frigoriferi` | Temperature frigoriferi |
+| `/api/haccp-report/temperature-pdf?mese=YYYY-MM&tipo=congelatori` | Temperature congelatori |
+| `/api/haccp-report/sanificazioni-pdf?mese=YYYY-MM` | Registro sanificazioni |
+
+UI aggiunta in `HACCPDashboard.jsx` con sezione "Stampa Report PDF per Ispezioni ASL"
+
+## Prossimi Miglioramenti
+- [ ] Refactoring frontend (PrimaNota.jsx 816 righe)
+- [ ] UI Alert F24
 - [ ] Email service
-- [ ] Report PDF HACCP
+- [ ] Generazione contratti dipendenti
 
 ---
 
