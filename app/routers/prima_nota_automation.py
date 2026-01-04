@@ -349,46 +349,91 @@ async def import_cassa_from_excel(file: UploadFile = File(...)) -> Dict[str, Any
 @router.post("/import-assegni-from-estratto-conto")
 async def import_assegni_from_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
-    Parsa estratto conto CSV/Excel per trovare prelievi assegno.
+    Parsa estratto conto CSV/Excel/PDF per trovare prelievi assegno.
     
-    Cerca righe con "PRELIEVO ASSEGNO" e estrae:
-    - Numero assegno (NUM: XXXXXXXXXX)
+    Cerca righe con "VOSTRO ASSEGNO" o "PRELIEVO ASSEGNO" e estrae:
+    - Numero assegno
     - Importo
     - Data
     
+    Se l'assegno esiste già, aggiorna solo i dati mancanti.
     Crea gli assegni nel database e associa alle fatture banca per importo.
     """
-    if not file.filename.endswith(('.csv', '.xls', '.xlsx')):
-        raise HTTPException(status_code=400, detail="Il file deve essere CSV o Excel")
+    filename = file.filename.lower()
+    if not filename.endswith(('.csv', '.xls', '.xlsx', '.pdf')):
+        raise HTTPException(status_code=400, detail="Il file deve essere CSV, Excel o PDF")
     
     try:
         import pandas as pd
         
         content = await file.read()
+        rows_data = []
         
-        # Leggi file
-        if file.filename.endswith('.csv'):
-            # Prova diverse codifiche
+        # Parse based on file type
+        if filename.endswith('.pdf'):
+            # Parse PDF
+            import pdfplumber
+            
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    tables = page.extract_tables()
+                    for table in tables:
+                        if not table:
+                            continue
+                        # Skip header row if present
+                        for row in table:
+                            if row and len(row) >= 3:
+                                # Try to extract data - format varies
+                                row_text = ' '.join([str(c) if c else '' for c in row])
+                                rows_data.append({
+                                    "raw_text": row_text,
+                                    "cells": row
+                                })
+                    
+                    # Also extract text for non-table content
+                    text = page.extract_text()
+                    if text:
+                        for line in text.split('\n'):
+                            if 'ASSEGNO' in line.upper():
+                                rows_data.append({
+                                    "raw_text": line,
+                                    "cells": None
+                                })
+            
+            logger.info(f"PDF estratto conto: trovate {len(rows_data)} righe")
+        
+        elif filename.endswith('.csv'):
             for encoding in ['utf-8', 'latin-1', 'cp1252']:
                 try:
                     df = pd.read_csv(io.BytesIO(content), sep=';', encoding=encoding)
+                    for idx, row in df.iterrows():
+                        rows_data.append({
+                            "raw_text": str(row.to_dict()),
+                            "row_dict": row.to_dict(),
+                            "cells": None
+                        })
                     break
                 except:
                     continue
-        elif file.filename.endswith('.xls'):
-            df = pd.read_excel(io.BytesIO(content), engine='xlrd')
         else:
-            df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
-        
-        logger.info(f"Estratto conto colonne: {df.columns.tolist()}")
+            # Excel
+            engine = 'xlrd' if filename.endswith('.xls') else 'openpyxl'
+            df = pd.read_excel(io.BytesIO(content), engine=engine)
+            for idx, row in df.iterrows():
+                rows_data.append({
+                    "raw_text": str(row.to_dict()),
+                    "row_dict": row.to_dict(),
+                    "cells": None
+                })
         
         db = Database.get_db()
         
         results = {
-            "total_rows": len(df),
+            "total_rows": len(rows_data),
             "assegni_found": 0,
             "assegni_created": 0,
-            "assegni_already_exist": 0,
+            "assegni_updated": 0,
+            "assegni_already_complete": 0,
             "fatture_matched": 0,
             "assegni": [],
             "errors": []
@@ -396,58 +441,122 @@ async def import_assegni_from_estratto_conto(file: UploadFile = File(...)) -> Di
         
         now = datetime.utcnow().isoformat()
         
-        # Cerca righe con PRELIEVO ASSEGNO
-        for idx, row in df.iterrows():
+        # Process rows looking for checks
+        for idx, row_data in enumerate(rows_data):
             try:
-                descrizione = str(row.get("Descrizione", ""))
+                raw_text = row_data.get("raw_text", "")
+                row_dict = row_data.get("row_dict", {})
+                cells = row_data.get("cells", [])
                 
-                if "PRELIEVO ASSEGNO" not in descrizione.upper():
+                # Skip if no check reference
+                if "ASSEGNO" not in raw_text.upper():
                     continue
                 
                 results["assegni_found"] += 1
                 
-                # Estrai numero assegno (NUM: XXXXXXXXXX)
-                match = re.search(r'NUM:\s*(\d+)', descrizione)
-                if not match:
+                # Extract check number - multiple patterns
+                numero_assegno = None
+                patterns = [
+                    r'VOSTRO ASSEGNO N\.\s*(\d+)',
+                    r'ASSEGNO N\.\s*(\d+)',
+                    r'NUM:\s*(\d+)',
+                    r'N\.\s*(\d{8,})',
+                    r'(\d{10,})'  # Fallback: long number
+                ]
+                
+                for pattern in patterns:
+                    match = re.search(pattern, raw_text, re.IGNORECASE)
+                    if match:
+                        numero_assegno = match.group(1)
+                        break
+                
+                if not numero_assegno:
                     results["errors"].append({
-                        "row": idx + 2,
+                        "row": idx + 1,
                         "error": "Numero assegno non trovato",
-                        "descrizione": descrizione[:100]
+                        "text": raw_text[:100]
                     })
                     continue
                 
-                numero_assegno = match.group(1)
+                # Extract amount
+                importo = 0.0
+                if row_dict:
+                    importo_raw = row_dict.get("Importo") or row_dict.get("USCITE") or row_dict.get("Uscite", 0)
+                    importo = abs(parse_italian_amount(str(importo_raw)))
                 
-                # Estrai importo (negativo = uscita)
-                importo_raw = row.get("Importo", 0)
-                importo = abs(parse_italian_amount(str(importo_raw)))
+                if importo == 0 and cells:
+                    # Try to find amount in cells
+                    for cell in cells:
+                        if cell and re.match(r'^-?\d+[.,]\d+$', str(cell).strip().replace('.', '').replace(' ', '')):
+                            importo = abs(parse_italian_amount(str(cell)))
+                            if importo > 0:
+                                break
                 
-                # Estrai data
-                data_contabile = row.get("Data contabile", "")
-                data_valuta = row.get("Data valuta", "")
-                data = parse_italian_date(str(data_valuta or data_contabile))
+                if importo == 0:
+                    # Try to find amount in raw text
+                    amount_match = re.search(r'-?\d{1,3}(?:\.\d{3})*,\d{2}', raw_text)
+                    if amount_match:
+                        importo = abs(parse_italian_amount(amount_match.group()))
                 
-                # Verifica se assegno esiste già
+                # Extract date
+                data = ""
+                if row_dict:
+                    data_raw = row_dict.get("Data contabile") or row_dict.get("DATA CONTABILE (*1)") or row_dict.get("Data valuta", "")
+                    data = parse_italian_date(str(data_raw))
+                
+                if not data:
+                    # Try to find date in raw text (DD/MM/YY or DD/MM/YYYY)
+                    date_match = re.search(r'(\d{2}/\d{2}/\d{2,4})', raw_text)
+                    if date_match:
+                        data = parse_italian_date(date_match.group(1))
+                
+                # Check if assegno exists
                 existing = await db[COLLECTION_ASSEGNI].find_one({"numero": numero_assegno})
                 
                 if existing:
-                    results["assegni_already_exist"] += 1
+                    # Update only missing fields
+                    update_data = {}
+                    if importo > 0 and (not existing.get("importo") or existing.get("importo") == 0):
+                        update_data["importo"] = importo
+                    if data and not existing.get("data_emissione"):
+                        update_data["data_emissione"] = data
+                        update_data["data_incasso"] = data
+                    if not existing.get("source"):
+                        update_data["source"] = "estratto_conto"
+                    
+                    if update_data:
+                        update_data["updated_at"] = now
+                        await db[COLLECTION_ASSEGNI].update_one(
+                            {"numero": numero_assegno},
+                            {"$set": update_data}
+                        )
+                        results["assegni_updated"] += 1
+                        results["assegni"].append({
+                            "numero": numero_assegno,
+                            "action": "updated",
+                            "fields_updated": list(update_data.keys())
+                        })
+                    else:
+                        results["assegni_already_complete"] += 1
                     continue
                 
-                # Crea assegno
+                # Create new assegno
                 assegno = {
                     "id": str(uuid.uuid4()),
                     "numero": numero_assegno,
-                    "stato": "incassato",  # Da estratto conto = già incassato
+                    "stato": "incassato",
                     "importo": importo,
                     "data_emissione": data,
                     "data_incasso": data,
                     "beneficiario": None,
-                    "causale": f"Da estratto conto: {descrizione[:100]}",
+                    "causale": f"Da estratto conto: {raw_text[:100]}",
                     "fattura_collegata": None,
                     "fornitore_piva": None,
                     "source": "estratto_conto",
                     "filename": file.filename,
+                    "created_at": now,
+                    "updated_at": now
+                }
                     "created_at": now,
                     "updated_at": now
                 }
