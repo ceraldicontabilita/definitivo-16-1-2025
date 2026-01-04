@@ -40,6 +40,7 @@ const MOBILE_NAV = [
 export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notificheNonLette, setNotificheNonLette] = useState(0);
+  const [alertCommercialista, setAlertCommercialista] = useState(null);
 
   // Carica notifiche non lette all'avvio e ogni 60 secondi
   useEffect(() => {
@@ -52,7 +53,20 @@ export default function App() {
       }
     };
     
+    // Carica alert commercialista
+    const loadAlertCommercialista = async () => {
+      try {
+        const res = await api.get('/api/commercialista/alert-status');
+        if (res.data.show_alert) {
+          setAlertCommercialista(res.data);
+        }
+      } catch (e) {
+        // Silently fail
+      }
+    };
+    
     loadNotifiche();
+    loadAlertCommercialista();
     const interval = setInterval(loadNotifiche, 60000); // ogni 60 secondi
     
     return () => clearInterval(interval);
