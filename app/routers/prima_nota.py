@@ -94,7 +94,7 @@ async def get_anni_disponibili() -> Dict[str, Any]:
 @router.get("/cassa")
 async def list_prima_nota_cassa(
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=2500),
+    limit: int = Query(100, ge=1, le=10000),
     anno: Optional[int] = Query(None, description="Anno (es. 2024, 2025)"),
     data_da: Optional[str] = Query(None, description="Data inizio (YYYY-MM-DD)"),
     data_a: Optional[str] = Query(None, description="Data fine (YYYY-MM-DD)"),
