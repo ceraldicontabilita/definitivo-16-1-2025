@@ -154,24 +154,24 @@ async def list_invoices(
     db = Database.get_db()
     query = {}
     
-    logger.info(f"list_invoices called with anno={anno}, limit={limit}")
+    print(f"DEBUG list_invoices: anno={anno}, type={type(anno)}, limit={limit}")
     
     # Se anno è specificato, filtra per anno
     if anno is not None:
         anno_start = f"{anno}-01-01"
         anno_end = f"{anno}-12-31"
         query["invoice_date"] = {"$gte": anno_start, "$lte": anno_end}
-        logger.info(f"Filtering by year: {anno_start} to {anno_end}")
+        print(f"DEBUG: Filtering by year: {anno_start} to {anno_end}")
     
     if supplier_vat:
         query["supplier_vat"] = supplier_vat
     if status:
         query["status"] = status
     
-    logger.info(f"Final query: {query}")
+    print(f"DEBUG: Final query: {query}")
     
     invoices = await db[Collections.INVOICES].find(query, {"_id": 0}).sort("invoice_date", -1).skip(skip).limit(limit).to_list(limit)
-    logger.info(f"Found {len(invoices)} invoices")
+    print(f"DEBUG: Found {len(invoices)} invoices")
     return invoices
 
 
