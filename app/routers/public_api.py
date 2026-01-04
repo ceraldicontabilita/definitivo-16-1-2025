@@ -431,6 +431,142 @@ async def delete_product(product_id: str) -> Dict[str, Any]:
     return {"success": True, "deleted_id": product_id}
 
 
+# ============== CATALOGO PRODOTTI CON BEST PRICE ==============
+@router.get("/products/catalog")
+async def get_catalog(
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    days: int = 30
+) -> List[Dict[str, Any]]:
+    """
+    Catalogo prodotti con miglior prezzo ultimi N giorni.
+    Auto-popolato dalle fatture XML.
+    """
+    db = Database.get_db()
+    return await get_product_catalog(db, category=category, search=search, days=days)
+
+
+@router.get("/products/search")
+async def search_products(q: str = "", limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Ricerca predittiva prodotti con matching intelligente.
+    Restituisce suggerimenti mentre si digita.
+    """
+    db = Database.get_db()
+    return await search_products_predictive(db, query=q, limit=limit)
+
+
+@router.get("/products/{product_id}/suppliers")
+async def get_product_suppliers(product_id: str, days: int = 90) -> List[Dict[str, Any]]:
+    """
+    Fornitori e prezzi per un prodotto specifico.
+    Mostra storico prezzi ultimi N giorni aggregato per fornitore.
+    """
+    db = Database.get_db()
+    return await get_suppliers_for_product(db, product_id=product_id, days=days)
+
+
+@router.get("/products/categories")
+async def get_categories() -> List[str]:
+    """Lista categorie prodotti distinte."""
+    db = Database.get_db()
+    categories = await db["warehouse_inventory"].distinct("categoria")
+    return sorted([c for c in categories if c])
+
+
+@router.get("/price-history")
+async def get_price_history(
+    product_id: Optional[str] = None,
+    supplier_name: Optional[str] = None,
+    days: int = 90
+) -> List[Dict[str, Any]]:
+    """Storico prezzi con filtri opzionali."""
+    db = Database.get_db()
+    
+    from datetime import timedelta
+    date_threshold = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    
+    query = {"created_at": {"$gte": date_threshold}}
+    if product_id:
+        query["product_id"] = product_id
+    if supplier_name:
+        query["supplier_name"] = {"$regex": supplier_name, "$options": "i"}
+    
+    records = await db["price_history"].find(query, {"_id": 0}).sort("created_at", -1).limit(1000).to_list(1000)
+    return records
+
+
+@router.delete("/products/clear-all")
+async def clear_all_product_data() -> Dict[str, Any]:
+    """
+    ATTENZIONE: Elimina TUTTI i dati prodotti e storico prezzi.
+    Usa per reset completo del sistema.
+    """
+    db = Database.get_db()
+    
+    inv_result = await db["warehouse_inventory"].delete_many({})
+    price_result = await db["price_history"].delete_many({})
+    
+    # Reset flag sulle fatture
+    await db["invoices"].update_many(
+        {"warehouse_registered": True},
+        {"$set": {"warehouse_registered": False}}
+    )
+    
+    return {
+        "success": True,
+        "products_deleted": inv_result.deleted_count,
+        "price_records_deleted": price_result.deleted_count
+    }
+
+
+@router.post("/products/reprocess-invoices")
+async def reprocess_all_invoices() -> Dict[str, Any]:
+    """
+    Riprocessa TUTTE le fatture per rigenerare il catalogo prodotti.
+    Utile dopo un reset o per aggiornare il mapping.
+    """
+    db = Database.get_db()
+    
+    # Prendi tutte le fatture non ancora processate
+    invoices = await db["invoices"].find(
+        {"warehouse_registered": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    total_created = 0
+    total_updated = 0
+    total_price_records = 0
+    errors = []
+    
+    for invoice in invoices:
+        try:
+            result = await auto_populate_warehouse_from_invoice(
+                db, 
+                {
+                    "linee": invoice.get("linee", []),
+                    "fornitore": invoice.get("fornitore", {}),
+                    "numero_fattura": invoice.get("invoice_number", ""),
+                    "data_fattura": invoice.get("invoice_date", "")
+                },
+                invoice.get("id", "")
+            )
+            total_created += result.get("products_created", 0)
+            total_updated += result.get("products_updated", 0)
+            total_price_records += result.get("price_records", 0)
+        except Exception as e:
+            errors.append(f"Fattura {invoice.get('invoice_number')}: {str(e)}")
+    
+    return {
+        "success": True,
+        "invoices_processed": len(invoices),
+        "products_created": total_created,
+        "products_updated": total_updated,
+        "price_records": total_price_records,
+        "errors": errors[:10]  # Max 10 errori
+    }
+
+
 # ============== HACCP TEMPERATURES ==============
 @router.get("/haccp/temperatures")
 async def list_temperatures(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
