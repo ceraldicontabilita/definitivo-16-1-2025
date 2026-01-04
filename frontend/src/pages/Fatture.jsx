@@ -226,6 +226,11 @@ export default function Fatture() {
                 <div style={{ background: "#c8e6c9", padding: 10, borderRadius: 8 }}>
                   <strong style={{ color: "#2e7d32" }}>✓ Importate: {uploadResult.data.imported}</strong>
                 </div>
+                <div style={{ background: uploadResult.data.skipped_duplicates > 0 ? "#fff3e0" : "#f5f5f5", padding: 10, borderRadius: 8 }}>
+                  <strong style={{ color: uploadResult.data.skipped_duplicates > 0 ? "#e65100" : "#666" }}>
+                    ⚠ Duplicati: {uploadResult.data.skipped_duplicates || 0}
+                  </strong>
+                </div>
                 <div style={{ background: uploadResult.data.failed > 0 ? "#ffcdd2" : "#f5f5f5", padding: 10, borderRadius: 8 }}>
                   <strong style={{ color: uploadResult.data.failed > 0 ? "#c62828" : "#666" }}>
                     ✗ Errori: {uploadResult.data.failed}
@@ -233,7 +238,7 @@ export default function Fatture() {
                 </div>
               </div>
               
-              {uploadResult.data.success.length > 0 && (
+              {uploadResult.data.success && uploadResult.data.success.length > 0 && (
                 <div style={{ marginTop: 10 }}>
                   <strong>Fatture importate:</strong>
                   <ul style={{ paddingLeft: 20, marginTop: 5 }}>
@@ -246,7 +251,20 @@ export default function Fatture() {
                 </div>
               )}
               
-              {uploadResult.data.errors.length > 0 && (
+              {uploadResult.data.duplicates && uploadResult.data.duplicates.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <strong style={{ color: "#e65100" }}>Fatture già presenti (saltate):</strong>
+                  <ul style={{ paddingLeft: 20, marginTop: 5 }}>
+                    {uploadResult.data.duplicates.map((d, i) => (
+                      <li key={i} style={{ color: "#e65100" }}>
+                        {d.invoice_number} - {d.supplier} - {d.date}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {uploadResult.data.errors && uploadResult.data.errors.length > 0 && (
                 <div style={{ marginTop: 10 }}>
                   <strong style={{ color: "#c62828" }}>Errori:</strong>
                   <ul style={{ paddingLeft: 20, marginTop: 5 }}>
