@@ -125,6 +125,30 @@ export default function HACCPAnalytics() {
         >
           🔄 Aggiorna
         </button>
+        
+        {/* Export PDF Button */}
+        {activeTab === 'mensile' && (
+          <button
+            onClick={() => {
+              const url = `${process.env.REACT_APP_BACKEND_URL}/api/haccp-completo/export/pdf/mensile?mese=${selectedMonth}`;
+              window.open(url, '_blank');
+            }}
+            style={{
+              padding: '10px 16px',
+              background: '#f44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+            data-testid="export-pdf-btn"
+          >
+            📄 Esporta PDF
+          </button>
+        )}
       </div>
 
       {loading ? (
