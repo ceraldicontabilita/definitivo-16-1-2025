@@ -307,7 +307,24 @@ export default function RicercaProdotti() {
             </div>
           ))}
           
-          <button onClick={() => setCart({})} style={{ marginTop: 10 }}>Svuota Carrello</button>
+          <div style={{ display: 'flex', gap: 10, marginTop: 15 }}>
+            <button onClick={() => setCart({})} style={{ flex: 1 }}>🗑️ Svuota Carrello</button>
+            <button 
+              onClick={handleSendOrder}
+              disabled={sendingOrder}
+              data-testid="send-order-btn"
+              style={{ 
+                flex: 2, 
+                background: sendingOrder ? '#ccc' : 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)', 
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: 16,
+                cursor: sendingOrder ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {sendingOrder ? '⏳ Invio in corso...' : `📤 Invia Ordine (€${cartTotal.toFixed(2)})`}
+            </button>
+          </div>
         </div>
       )}
 
