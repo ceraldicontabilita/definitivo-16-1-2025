@@ -476,33 +476,58 @@ export default function Fatture() {
               onChange={handleUploadXML}
               style={{ display: "none" }}
               id="xml-upload"
+              data-testid="fatture-single-upload"
             />
             <button 
               className="primary" 
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
+              data-testid="fatture-single-upload-btn"
             >
               📄 Carica XML Singolo
             </button>
           </div>
           
-          {/* Upload massivo - XML multipli o ZIP */}
+          {/* Upload massivo - XML multipli */}
           <div>
             <input
               ref={bulkFileInputRef}
               type="file"
-              accept=".xml,.zip"
+              accept=".xml"
               multiple
               onChange={handleBulkUploadXML}
               style={{ display: "none" }}
               id="xml-bulk-upload"
+              data-testid="fatture-bulk-upload"
             />
             <button 
               onClick={() => bulkFileInputRef.current?.click()}
               disabled={uploading}
-              style={{ background: "#ff9800", color: "white", fontWeight: "bold" }}
+              style={{ background: "#4caf50", color: "white", fontWeight: "bold" }}
+              data-testid="fatture-bulk-upload-btn"
             >
-              📦 Upload ZIP/XML Massivo
+              📁 Upload XML Multipli
+            </button>
+          </div>
+          
+          {/* Upload ZIP */}
+          <div>
+            <input
+              ref={zipFileInputRef}
+              type="file"
+              accept=".zip"
+              onChange={handleZipUpload}
+              style={{ display: "none" }}
+              id="zip-upload"
+              data-testid="fatture-zip-upload"
+            />
+            <button 
+              onClick={() => zipFileInputRef.current?.click()}
+              disabled={uploading}
+              style={{ background: "#ff9800", color: "white", fontWeight: "bold" }}
+              data-testid="fatture-zip-upload-btn"
+            >
+              📦 Upload ZIP Massivo
             </button>
           </div>
           
@@ -510,7 +535,7 @@ export default function Fatture() {
             ✏️ Nuova Manuale
           </button>
           
-          <button onClick={loadInvoices}>
+          <button onClick={loadInvoices} disabled={uploading}>
             🔄 Aggiorna
           </button>
           
@@ -525,6 +550,15 @@ export default function Fatture() {
             🔍 Filtri {activeFiltersCount > 0 && `(${activeFiltersCount})`}
           </button>
         </div>
+        
+        {/* Barra di Progresso */}
+        {uploading && <ProgressBar progress={uploadProgress} />}
+        
+        {err && (
+          <div style={{ marginTop: 10, color: "#c00", padding: 10, background: "#ffebee", borderRadius: 4 }} data-testid="fatture-error">
+            ❌ {err}
+          </div>
+        )}
         
         {/* Sezione Filtri */}
         {showFilters && (
