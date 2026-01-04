@@ -303,11 +303,20 @@ async def upload_fatture_xml_bulk(files: List[UploadFile] = File(...)) -> Dict[s
                     results["failed"] += 1
                 continue
             
+            # AUTO-POPOLAMENTO MAGAZZINO
+            try:
+                warehouse_result = await auto_populate_warehouse_from_invoice(db, parsed, invoice["id"])
+                products_mapped = warehouse_result.get("products_created", 0) + warehouse_result.get("products_updated", 0)
+            except Exception as e:
+                logger.error(f"Errore auto-popolamento magazzino {filename}: {e}")
+                products_mapped = 0
+            
             results["success"].append({
                 "filename": filename,
                 "invoice_number": parsed.get("invoice_number"),
                 "supplier": parsed.get("supplier_name"),
-                "total": float(parsed.get("total_amount", 0) or 0)
+                "total": float(parsed.get("total_amount", 0) or 0),
+                "products_mapped": products_mapped
             })
             results["imported"] += 1
             
