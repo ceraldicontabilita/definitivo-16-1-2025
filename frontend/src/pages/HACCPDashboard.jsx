@@ -4,6 +4,13 @@ import api from '../api';
 
 const HACCP_MODULI = [
   {
+    id: 'analytics',
+    title: 'Analytics',
+    icon: '📊',
+    color: '#667eea',
+    description: 'Statistiche mensili e conformità HACCP'
+  },
+  {
     id: 'temperature-frigoriferi',
     title: 'Temperature Frigoriferi',
     icon: '🌡️',
