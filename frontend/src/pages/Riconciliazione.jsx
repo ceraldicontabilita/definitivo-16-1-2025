@@ -122,6 +122,52 @@ export default function Riconciliazione() {
         </div>
       )}
 
+      {/* Actions Bar */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+        <a
+          href={`${API_URL}/api/exports/riconciliazione?format=xlsx`}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="export-excel-btn"
+          style={{
+            padding: "10px 20px",
+            background: "#059669",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+            fontWeight: "bold",
+            cursor: "pointer",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8
+          }}
+        >
+          📊 Export Excel
+        </a>
+        <a
+          href={`${API_URL}/api/exports/riconciliazione?format=xlsx&solo_non_riconciliati=true`}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="export-non-reconciled-btn"
+          style={{
+            padding: "10px 20px",
+            background: "#d97706",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+            fontWeight: "bold",
+            cursor: "pointer",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8
+          }}
+        >
+          ⚠️ Export Non Riconciliati
+        </a>
+      </div>
+
       {/* Tabs */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
         <button
