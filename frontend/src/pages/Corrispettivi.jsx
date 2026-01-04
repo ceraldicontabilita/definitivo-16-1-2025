@@ -333,12 +333,40 @@ export default function Corrispettivi() {
   return (
     <>
       <div className="card">
-        <div className="h1">Corrispettivi Elettronici</div>
-        <div className="small" style={{ marginBottom: 15 }}>
-          Carica i file XML dei corrispettivi giornalieri dal registratore di cassa telematico (formato COR10).
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <div className="h1">Corrispettivi Elettronici</div>
+            <div className="small">
+              Carica i file XML dei corrispettivi giornalieri dal registratore di cassa telematico (formato COR10).
+            </div>
+          </div>
+          
+          {/* Selettore Anno */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <label style={{ fontWeight: "bold" }}>📅 Anno:</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              style={{ 
+                padding: "10px 16px", 
+                borderRadius: 8, 
+                border: "2px solid #1565c0", 
+                fontSize: 16,
+                fontWeight: "bold",
+                cursor: "pointer",
+                minWidth: 100,
+                background: "#e3f2fd"
+              }}
+              data-testid="corrispettivi-year-selector"
+            >
+              {availableYears.map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
         </div>
         
-        <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+        <div className="row" style={{ gap: 10, flexWrap: "wrap", marginTop: 15 }}>
           {/* Upload Singolo XML */}
           <div>
             <input
