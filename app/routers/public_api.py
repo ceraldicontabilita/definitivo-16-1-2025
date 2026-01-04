@@ -539,8 +539,9 @@ async def delete_employee(employee_id: str) -> Dict[str, Any]:
 @router.post("/paghe/upload-pdf")
 async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
-    Upload e parse di buste paga da PDF.
-    Estrae i dati dei dipendenti e li salva nel database.
+    Upload e parse di buste paga da PDF (LUL Zucchetti).
+    Estrae: nome, codice fiscale, qualifica, netto, ore lavorate, contributi INPS.
+    Salva sia i dipendenti (anagrafica) che le buste paga (cedolini).
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Il file deve essere in formato PDF")
@@ -551,15 +552,27 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
         if not content:
             raise HTTPException(status_code=400, detail="File vuoto")
         
-        # Parse PDF
+        # Salva temporaneamente il file per pdfplumber
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+        
         try:
-            payslips = extract_payslips_from_pdf(content)
-        except Exception as e:
-            logger.error(f"Errore parsing PDF: {e}")
-            raise HTTPException(status_code=400, detail=f"Errore parsing PDF: {str(e)}")
+            # Parse PDF
+            payslips = extract_payslips_from_pdf(tmp_path)
+        finally:
+            # Rimuovi file temporaneo
+            os.unlink(tmp_path)
         
         if not payslips:
             raise HTTPException(status_code=400, detail="Nessuna busta paga trovata nel PDF")
+        
+        # Controlla se c'è errore nel parsing
+        if len(payslips) == 1 and payslips[0].get("error"):
+            raise HTTPException(status_code=400, detail=payslips[0]["error"])
         
         db = Database.get_db()
         
@@ -578,60 +591,121 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                 codice_fiscale = payslip.get("codice_fiscale", "")
                 if not codice_fiscale:
                     results["errors"].append({
-                        "nome": payslip.get("nome", "Sconosciuto"),
+                        "nome": payslip.get("nome_completo", "Sconosciuto"),
                         "error": "Codice fiscale mancante"
                     })
                     results["failed"] += 1
                     continue
                 
-                # Controllo duplicato
-                existing = await db[Collections.EMPLOYEES].find_one(
+                nome_completo = payslip.get("nome_completo", "")
+                if not nome_completo:
+                    nome_completo = f"{payslip.get('cognome', '')} {payslip.get('nome', '')}".strip()
+                
+                periodo = payslip.get("periodo", "")
+                
+                # Controlla se dipendente esiste già
+                existing_employee = await db[Collections.EMPLOYEES].find_one(
                     {"codice_fiscale": codice_fiscale},
+                    {"_id": 0, "id": 1}
+                )
+                
+                employee_id = None
+                is_new_employee = False
+                
+                if existing_employee:
+                    employee_id = existing_employee.get("id")
+                    # Aggiorna dati dipendente se necessario
+                    update_data = {}
+                    if payslip.get("qualifica"):
+                        update_data["qualifica"] = payslip["qualifica"]
+                    if payslip.get("matricola"):
+                        update_data["matricola"] = payslip["matricola"]
+                    if update_data:
+                        await db[Collections.EMPLOYEES].update_one(
+                            {"codice_fiscale": codice_fiscale},
+                            {"$set": update_data}
+                        )
+                else:
+                    # Crea nuovo dipendente
+                    is_new_employee = True
+                    employee_id = str(uuid.uuid4())
+                    employee = {
+                        "id": employee_id,
+                        "nome_completo": nome_completo,
+                        "nome": payslip.get("nome", ""),
+                        "cognome": payslip.get("cognome", ""),
+                        "matricola": payslip.get("matricola", ""),
+                        "codice_fiscale": codice_fiscale,
+                        "qualifica": payslip.get("qualifica", ""),
+                        "livello": payslip.get("livello", ""),
+                        "tipo_contratto": "Tempo Indeterminato",
+                        "status": "active",
+                        "source": "pdf_upload",
+                        "filename": file.filename,
+                        "created_at": datetime.utcnow().isoformat()
+                    }
+                    await db[Collections.EMPLOYEES].insert_one(employee)
+                
+                # Controlla se busta paga per questo periodo esiste già
+                payslip_key = f"{codice_fiscale}_{periodo}"
+                existing_payslip = await db["payslips"].find_one(
+                    {"payslip_key": payslip_key},
                     {"_id": 1}
                 )
                 
-                if existing:
+                if existing_payslip:
                     results["duplicates"].append({
-                        "nome": payslip.get("nome", ""),
-                        "codice_fiscale": codice_fiscale
+                        "nome": nome_completo,
+                        "codice_fiscale": codice_fiscale,
+                        "periodo": periodo
                     })
                     results["skipped_duplicates"] += 1
                     continue
                 
-                # Crea record dipendente
-                employee = {
+                # Salva busta paga
+                payslip_record = {
                     "id": str(uuid.uuid4()),
-                    "name": payslip.get("nome", ""),
+                    "payslip_key": payslip_key,
+                    "employee_id": employee_id,
                     "codice_fiscale": codice_fiscale,
-                    "role": payslip.get("qualifica", ""),
-                    "livello": payslip.get("livello", ""),
-                    "salary": payslip.get("retribuzione_lorda", 0),
-                    "netto": payslip.get("netto", 0),
-                    "ore_lavorate": payslip.get("ore_lavorate", 0),
-                    "giorni_lavorati": payslip.get("giorni_lavorati", ""),
-                    "contract_type": "dipendente",
-                    "hire_date": payslip.get("data_assunzione", ""),
-                    "azienda": payslip.get("azienda", ""),
-                    "periodo_riferimento": payslip.get("periodo", ""),
+                    "nome_completo": nome_completo,
+                    "matricola": payslip.get("matricola", ""),
+                    "qualifica": payslip.get("qualifica", ""),
+                    "periodo": periodo,
+                    "mese": payslip.get("mese", ""),
+                    "anno": payslip.get("anno", ""),
+                    "ore_ordinarie": float(payslip.get("ore_ordinarie", 0) or 0),
+                    "ore_straordinarie": float(payslip.get("ore_straordinarie", 0) or 0),
+                    "ore_totali": float(payslip.get("ore_totali", 0) or 0),
+                    "retribuzione_lorda": float(payslip.get("retribuzione_lorda", 0) or 0),
+                    "retribuzione_netta": float(payslip.get("retribuzione_netta", 0) or 0),
+                    "contributi_inps": float(payslip.get("contributi_inps", 0) or 0),
+                    "irpef": float(payslip.get("irpef", 0) or 0),
+                    "tfr": float(payslip.get("tfr", 0) or 0),
                     "source": "pdf_upload",
                     "filename": file.filename,
                     "created_at": datetime.utcnow().isoformat()
                 }
                 
-                await db[Collections.EMPLOYEES].insert_one(employee)
+                await db["payslips"].insert_one(payslip_record)
                 
                 results["success"].append({
-                    "nome": employee["name"],
+                    "nome": nome_completo,
                     "codice_fiscale": codice_fiscale,
-                    "qualifica": employee["role"],
-                    "netto": employee["netto"]
+                    "qualifica": payslip.get("qualifica", ""),
+                    "periodo": periodo,
+                    "netto": payslip.get("retribuzione_netta", 0),
+                    "ore": payslip.get("ore_totali", 0),
+                    "is_new_employee": is_new_employee
                 })
                 results["imported"] += 1
                 
             except Exception as e:
-                logger.error(f"Errore inserimento dipendente: {e}")
+                logger.error(f"Errore inserimento busta paga: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
                 results["errors"].append({
-                    "nome": payslip.get("nome", "Sconosciuto"),
+                    "nome": payslip.get("nome_completo", "Sconosciuto"),
                     "error": str(e)
                 })
                 results["failed"] += 1
@@ -642,6 +716,8 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error(f"Errore upload buste paga: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Errore durante l'elaborazione: {str(e)}")
 
 
