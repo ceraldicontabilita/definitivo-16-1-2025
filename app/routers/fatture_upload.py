@@ -25,6 +25,45 @@ def generate_invoice_key(invoice_number: str, supplier_vat: str, invoice_date: s
     return key.replace(" ", "").replace("/", "-").upper()
 
 
+def extract_xml_from_zip(zip_content: bytes, zip_filename: str = "archive.zip") -> List[Dict[str, Any]]:
+    """
+    Estrae tutti i file XML da un archivio ZIP.
+    Supporta ZIP annidati (ZIP dentro ZIP).
+    
+    Returns:
+        Lista di dict con {"filename": str, "content": bytes}
+    """
+    xml_files = []
+    
+    try:
+        with zipfile.ZipFile(io.BytesIO(zip_content), 'r') as zf:
+            for name in zf.namelist():
+                # Salta directory
+                if name.endswith('/'):
+                    continue
+                
+                try:
+                    file_content = zf.read(name)
+                    
+                    if name.lower().endswith('.xml'):
+                        # File XML trovato
+                        xml_files.append({
+                            "filename": f"{zip_filename}/{name}",
+                            "content": file_content
+                        })
+                    elif name.lower().endswith('.zip'):
+                        # ZIP annidato - estrai ricorsivamente
+                        nested_xmls = extract_xml_from_zip(file_content, f"{zip_filename}/{name}")
+                        xml_files.extend(nested_xmls)
+                except Exception as e:
+                    logger.warning(f"Errore estrazione {name}: {str(e)}")
+                    continue
+    except zipfile.BadZipFile:
+        raise ValueError(f"File ZIP corrotto o non valido: {zip_filename}")
+    
+    return xml_files
+
+
 @router.post("/upload-xml")
 async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
     """Upload e parse di una singola fattura elettronica XML."""
