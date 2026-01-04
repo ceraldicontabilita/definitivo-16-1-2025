@@ -94,7 +94,7 @@ export default function HACCPAnalytics() {
       </div>
 
       {/* Filters */}
-      <div style={{ marginBottom: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div style={{ marginBottom: 20, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         {activeTab === 'mensile' ? (
           <input
             type="month"
