@@ -423,6 +423,83 @@ export default function Fornitori() {
           </div>
         </div>
       )}
+      
+      {/* Inventario Modal */}
+      {showInventario && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20
+        }} onClick={() => setShowInventario(false)}>
+          <div style={{
+            background: 'white', borderRadius: 12, padding: 24, maxWidth: 800, width: '100%', maxHeight: '80vh', overflow: 'auto'
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, color: '#1a365d' }}>
+                📦 Inventario - {selectedSupplierInventario?.denominazione || 'Fornitore'}
+              </h2>
+              <button onClick={() => setShowInventario(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
+            </div>
+            
+            {loadingInventario ? (
+              <div style={{ textAlign: 'center', padding: 40 }}>⏳ Caricamento prodotti...</div>
+            ) : inventarioData?.error ? (
+              <div style={{ color: '#c62828', padding: 20 }}>❌ {inventarioData.error}</div>
+            ) : inventarioData ? (
+              <>
+                {/* Stats */}
+                <div style={{ display: 'flex', gap: 15, marginBottom: 20, flexWrap: 'wrap' }}>
+                  <div style={{ background: '#e3f2fd', padding: 15, borderRadius: 8, flex: 1, minWidth: 120 }}>
+                    <div style={{ fontSize: 12, color: '#1565c0' }}>Fatture</div>
+                    <div style={{ fontSize: 28, fontWeight: 'bold', color: '#1565c0' }}>{inventarioData.fatture_totali || 0}</div>
+                  </div>
+                  <div style={{ background: '#e8f5e9', padding: 15, borderRadius: 8, flex: 1, minWidth: 120 }}>
+                    <div style={{ fontSize: 12, color: '#2e7d32' }}>Prodotti Unici</div>
+                    <div style={{ fontSize: 28, fontWeight: 'bold', color: '#2e7d32' }}>{inventarioData.prodotti_unici || 0}</div>
+                  </div>
+                </div>
+                
+                {/* Products Table */}
+                {inventarioData.prodotti && inventarioData.prodotti.length > 0 ? (
+                  <div style={{ maxHeight: 400, overflow: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#f5f5f5', position: 'sticky', top: 0 }}>
+                          <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #ddd' }}>Prodotto</th>
+                          <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #ddd' }}>Prezzo Ultimo</th>
+                          <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #ddd' }}>Qtà Tot.</th>
+                          <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #ddd' }}>N. Fatture</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inventarioData.prodotti.map((p, i) => (
+                          <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                            <td style={{ padding: 10, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {p.descrizione}
+                            </td>
+                            <td style={{ padding: 10, textAlign: 'right', fontWeight: 'bold' }}>
+                              € {(p.prezzo_ultimo || 0).toFixed(2)}
+                            </td>
+                            <td style={{ padding: 10, textAlign: 'right' }}>
+                              {p.quantita_totale || '-'}
+                            </td>
+                            <td style={{ padding: 10, textAlign: 'right' }}>
+                              {p.fatture_count || 0}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
+                    Nessun prodotto trovato nelle fatture di questo fornitore.
+                  </div>
+                )}
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
