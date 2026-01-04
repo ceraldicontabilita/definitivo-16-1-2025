@@ -97,7 +97,7 @@ export default function Paghe() {
   }
 
   // Calcola statistiche
-  const totalSalary = employees.reduce((sum, e) => sum + (e.salary || 0), 0);
+  const totalSalary = employees.reduce((sum, e) => sum + (e.lordo || e.salary || 0), 0);
   const totalNetto = employees.reduce((sum, e) => sum + (e.netto || 0), 0);
 
   return (
