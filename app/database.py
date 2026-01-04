@@ -36,9 +36,27 @@ class Database:
             await cls.client.admin.command('ping')
             logger.info(f"✅ Connected to MongoDB database: {settings.DB_NAME}")
             
+            # Create indexes for unique constraints
+            await cls._create_indexes()
+            
         except Exception as e:
             logger.error(f"❌ Error connecting to MongoDB: {e}")
             raise
+
+    @classmethod
+    async def _create_indexes(cls) -> None:
+        """Create database indexes for unique constraints and performance."""
+        try:
+            # Unique index for invoices (numero + p.iva + data)
+            await cls.db[Collections.INVOICES].create_index(
+                "invoice_key",
+                unique=True,
+                sparse=True,
+                name="idx_invoice_key_unique"
+            )
+            logger.info("✅ Database indexes created")
+        except Exception as e:
+            logger.warning(f"Index creation warning (may already exist): {e}")
 
     @classmethod
     async def close_db(cls) -> None:
