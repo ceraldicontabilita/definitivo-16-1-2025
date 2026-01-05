@@ -468,66 +468,7 @@ async def get_portale_stats() -> Dict[str, Any]:
     }
 
 
-
-# ============== BUSTE PAGA ==============
-
-@router.get("/buste-paga")
-async def get_buste_paga(
-    anno: int = Query(...),
-    mese: str = Query(...)
-) -> List[Dict[str, Any]]:
-    """
-    Ottiene le buste paga per un determinato mese.
-    Le buste paga vengono create automaticamente dai movimenti salari.
-    """
-    db = Database.get_db()
-    
-    periodo = f"{anno}-{mese}"
-    
-    # Cerca buste paga esistenti
-    buste = await db["buste_paga"].find(
-        {"periodo": periodo},
-        {"_id": 0}
-    ).to_list(1000)
-    
-    return buste
-
-
-@router.post("/buste-paga")
-async def create_busta_paga(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
-    """Crea o aggiorna una busta paga."""
-    db = Database.get_db()
-    
-    required = ["dipendente_id", "periodo"]
-    for field in required:
-        if not data.get(field):
-            raise HTTPException(status_code=400, detail=f"Campo {field} obbligatorio")
-    
-    # Cerca busta esistente
-    existing = await db["buste_paga"].find_one({
-        "dipendente_id": data["dipendente_id"],
-        "periodo": data["periodo"]
-    })
-    
-    busta = {
-        "dipendente_id": data["dipendente_id"],
-        "periodo": data["periodo"],
-        "lordo": float(data.get("lordo", 0) or 0),
-        "netto": float(data.get("netto", 0) or 0),
-        "contributi": float(data.get("contributi", 0) or 0),
-        "trattenute": float(data.get("trattenute", 0) or 0),
-        "pagata": bool(data.get("pagata", False)),
-        "data_pagamento": data.get("data_pagamento"),
-        "note": data.get("note", ""),
-        "updated_at": datetime.utcnow().isoformat()
-    }
-    
-    if existing:
-        await db["buste_paga"].update_one(
-            {"id": existing["id"]},
-            {"$set": busta}
-        )
-        busta["id"] = existing["id"]
+# Note: buste-paga routes are defined earlier in the file to avoid route conflict with /{dipendente_id}
     else:
         busta["id"] = str(uuid.uuid4())
         busta["created_at"] = datetime.utcnow().isoformat()
