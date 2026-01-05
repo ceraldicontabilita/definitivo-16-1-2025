@@ -347,7 +347,7 @@ export default function GestioneDipendenti() {
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}
             >
-              {[2024, 2025, 2026].map(y => (
+              {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(y => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
@@ -510,7 +510,7 @@ export default function GestioneDipendenti() {
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}
             >
-              {[2024, 2025, 2026].map(y => (
+              {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(y => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
