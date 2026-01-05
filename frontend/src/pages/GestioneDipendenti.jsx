@@ -596,80 +596,131 @@ export default function GestioneDipendenti() {
             <span style={{ fontWeight: 'bold', color: '#475569' }}>📅 Periodo:</span>
             <select
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              onChange={(e) => setSelectedMonth(e.target.value ? parseInt(e.target.value) : '')}
               style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}
             >
+              <option value="">Tutti i mesi</option>
               {mesiNomi.map((m, i) => (
                 <option key={i} value={i + 1}>{m}</option>
               ))}
             </select>
-            <span style={{ 
-              padding: '8px 12px', 
-              borderRadius: 6, 
-              background: '#e3f2fd',
-              fontWeight: 'bold',
-              color: '#1565c0'
-            }}>
-              {selectedYear}
-            </span>
             
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-              {/* Import Excel */}
-              <label style={{
-                padding: '8px 16px',
-                background: '#4caf50',
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#e3f2fd', fontWeight: 'bold' }}
+            >
+              {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            
+            <span style={{ fontWeight: 'bold', color: '#475569', marginLeft: 12 }}>👤 Dipendente:</span>
+            <select
+              value={filtroDipendente}
+              onChange={(e) => setFiltroDipendente(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', minWidth: 180 }}
+            >
+              <option value="">Tutti i dipendenti</option>
+              {dipendentiLista.map((d, i) => (
+                <option key={i} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Pulsanti Importazione */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 12, 
+            marginBottom: 20, 
+            flexWrap: 'wrap'
+          }}>
+            {/* Import Excel Salari */}
+            <label style={{
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #4caf50, #2e7d32)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: importingSalari ? 'wait' : 'pointer',
+              opacity: importingSalari ? 0.7 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 'bold',
+              boxShadow: '0 2px 8px rgba(76,175,80,0.3)'
+            }}>
+              {importingSalari ? '⏳ Importando...' : '📊 Importa Buste Paga (Excel)'}
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleImportSalari}
+                disabled={importingSalari}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            {/* Import Estratto Conto per Riconciliazione */}
+            <label style={{
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #2196f3, #1565c0)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: importingEstratto ? 'wait' : 'pointer',
+              opacity: importingEstratto ? 0.7 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 'bold',
+              boxShadow: '0 2px 8px rgba(33,150,243,0.3)'
+            }}>
+              {importingEstratto ? '⏳ Riconciliando...' : '🏦 Importa Estratto Conto (Riconcilia)'}
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleImportEstrattoConto}
+                disabled={importingEstratto}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            {/* Elimina anno */}
+            <button
+              onClick={handleDeleteSalariAnno}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #ef5350, #c62828)',
                 color: 'white',
                 border: 'none',
-                borderRadius: 6,
-                cursor: importingSalari ? 'wait' : 'pointer',
-                opacity: importingSalari ? 0.7 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6
-              }}>
-                {importingSalari ? '⏳ Importando...' : '📥 Importa Excel'}
-                <input
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleImportSalari}
-                  disabled={importingSalari}
-                  style={{ display: 'none' }}
-                />
-              </label>
-              
-              {/* Elimina anno */}
-              <button
-                onClick={handleDeleteSalariAnno}
-                style={{
-                  padding: '8px 16px',
-                  background: '#ef5350',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer'
-                }}
-                title={`Elimina tutti i salari del ${selectedYear}`}
-              >
-                🗑️ Elimina Anno
-              </button>
-              
-              <button
-                onClick={loadPrimaNotaSalari}
-                style={{
-                  padding: '8px 16px',
-                  background: '#ff9800',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer'
-                }}
-              >
-                🔄 Aggiorna
-              </button>
-            </div>
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgba(239,83,80,0.3)'
+              }}
+              title={`Elimina tutti i salari del ${selectedYear}`}
+            >
+              🗑️ Elimina Anno
+            </button>
+            
+            <button
+              onClick={loadPrimaNotaSalari}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #ff9800, #f57c00)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgba(255,152,0,0.3)'
+              }}
+            >
+              🔄 Aggiorna
+            </button>
           </div>
 
-          {/* Risultato importazione */}
+          {/* Risultato importazione buste paga */}
           {importResult && (
             <div style={{
               padding: 16,
