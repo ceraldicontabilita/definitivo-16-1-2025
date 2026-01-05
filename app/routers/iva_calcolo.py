@@ -183,8 +183,14 @@ async def get_iva_monthly(year: int, month: int) -> Dict[str, Any]:
             corr = await db["corrispettivi"].find({"data": date_str}, {"_id": 0, "totale_iva": 1}).to_list(1000)
             iva_deb = sum(float(c.get('totale_iva', 0) or 0) for c in corr)
             
-            # Fatture con gestione Note Credito
-            fatt = await db["invoices"].find({"invoice_date": date_str}, {"_id": 0}).to_list(1000)
+            # Fatture RICEVUTE nel giorno (usa data_ricezione, fallback a invoice_date)
+            fatt = await db["invoices"].find({
+                "$or": [
+                    {"data_ricezione": date_str},
+                    {"$and": [{"data_ricezione": {"$exists": False}}, {"invoice_date": date_str}]}
+                ]
+            }, {"_id": 0}).to_list(1000)
+            
             iva_cred = 0
             iva_nc = 0
             imponibile = 0
@@ -194,10 +200,12 @@ async def get_iva_monthly(year: int, month: int) -> Dict[str, Any]:
                 tipo_doc = f.get('tipo_documento', '')
                 is_nota_credito = tipo_doc in NOTE_CREDITO_TYPES
                 
-                f_iva = float(f.get('iva', 0) or f.get('totale_iva', 0) or 0)
+                # Usa IVA e imponibile dal database (già calcolati correttamente)
+                f_iva = float(f.get('iva', 0) or 0)
                 total = float(f.get('total_amount', 0) or f.get('importo_totale', 0) or 0)
-                f_imponibile = float(f.get('imponibile', 0) or f.get('importo_imponibile', 0) or 0)
+                f_imponibile = float(f.get('imponibile', 0) or 0)
                 
+                # Fallback: stima IVA al 22% solo se mancante
                 if f_iva == 0 and total > 0:
                     f_iva = total - (total / 1.22)
                 if f_imponibile == 0 and total > 0:
