@@ -1,0 +1,69 @@
+{
+  "summary": "Frontend testing completed for Controllo Mensile page - POS Banca integration and Annulli card. All requested features are working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    ".screenshots/controllo_mensile_2025.png",
+    ".screenshots/controllo_mensile_full_table.png",
+    ".screenshots/controllo_mensile_january_detail.png"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A - frontend only testing",
+    "frontend": "100%"
+  },
+  "test_credentials": "None required",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Controllo Mensile page fully tested. POS Banca integration working correctly with data from estratto_conto collection. Annulli card shows 0 with 'N/D negli XML' subtitle as expected.",
+  "features_tested": {
+    "POS Banca card": {
+      "status": "✅ PASS",
+      "details": "Card shows '🏦 POS Banca (Accrediti)' with value €1.001.000,20 for year 2025 (expected ~€1.001.000)"
+    },
+    "POS BANCA column in table": {
+      "status": "✅ PASS",
+      "details": "Column shows values for all 12 months of 2025. January shows €63.370,09 (expected ~€63.370)"
+    },
+    "Annulli card": {
+      "status": "✅ PASS",
+      "details": "Card shows '🚫 Annulli' with value '0' and subtitle 'N/D negli XML' as expected"
+    },
+    "Year selector": {
+      "status": "✅ PASS",
+      "details": "Year selector works correctly - selecting 2025 loads data for that year"
+    },
+    "Monthly detail view": {
+      "status": "✅ PASS",
+      "details": "Clicking on month detail button shows daily breakdown with all columns"
+    }
+  },
+  "api_endpoints_verified": {
+    "GET /api/bank-statement/movements": "✅ Returns POS movements from estratto_conto collection with correct filtering by date range"
+  },
+  "monthly_pos_banca_values_2025": {
+    "Gennaio": "€63.370,09",
+    "Febbraio": "€71.144,72",
+    "Marzo": "€74.315,09",
+    "Aprile": "€98.667,49",
+    "Maggio": "€89.235,01",
+    "Giugno": "€87.267,95",
+    "Luglio": "€70.340,80",
+    "Agosto": "€38.360,87",
+    "Settembre": "€84.580,81",
+    "Ottobre": "€115.155,52",
+    "Novembre": "€85.408,96",
+    "Dicembre": "€123.152,89",
+    "TOTALE": "€1.001.000,20"
+  }
+}
