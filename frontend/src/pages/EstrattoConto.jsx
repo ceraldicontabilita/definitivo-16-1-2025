@@ -14,7 +14,7 @@ export default function EstrattoConto() {
   const [fornitori, setFornitori] = useState([]);
   
   // Filtri
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(2025);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('');
   const [selectedFornitore, setSelectedFornitore] = useState('');
