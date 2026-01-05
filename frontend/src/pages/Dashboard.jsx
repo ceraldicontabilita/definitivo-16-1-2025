@@ -317,6 +317,300 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Nuova sezione: Grafici Avanzati */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+        gap: 20, 
+        marginTop: 20 
+      }}>
+        {/* Grafico a Torta - Spese per Categoria */}
+        {speseCategoria && speseCategoria.categorie && speseCategoria.categorie.length > 0 && (
+          <div className="card">
+            <div className="h1" style={{ fontSize: 18, margin: '0 0 15px 0' }}>🥧 Distribuzione Spese {anno}</div>
+            <div style={{ height: 280, display: 'flex', alignItems: 'center' }}>
+              <ResponsiveContainer width="60%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={speseCategoria.categorie}
+                    dataKey="valore"
+                    nameKey="nome"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    label={({ nome, percentuale }) => `${percentuale}%`}
+                    labelLine={false}
+                  >
+                    {speseCategoria.categorie.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatEuro(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ width: '40%', fontSize: 11, maxHeight: 250, overflow: 'auto' }}>
+                {speseCategoria.categorie.slice(0, 6).map((cat, idx) => (
+                  <div key={idx} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 6, 
+                    marginBottom: 8,
+                    padding: '4px 8px',
+                    background: '#f8fafc',
+                    borderRadius: 4
+                  }}>
+                    <span style={{ 
+                      width: 10, 
+                      height: 10, 
+                      borderRadius: 2, 
+                      background: PIE_COLORS[idx % PIE_COLORS.length],
+                      flexShrink: 0
+                    }}></span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {cat.nome}
+                      </div>
+                      <div style={{ color: '#6b7280' }}>{formatEuro(cat.valore)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ 
+              textAlign: 'center', 
+              marginTop: 10, 
+              padding: 10, 
+              background: '#f0fdf4', 
+              borderRadius: 8 
+            }}>
+              <span style={{ color: '#6b7280' }}>Totale Spese: </span>
+              <strong style={{ color: '#dc2626' }}>{formatEuro(speseCategoria.totale_spese)}</strong>
+            </div>
+          </div>
+        )}
+
+        {/* Widget Stato Riconciliazione */}
+        {statoRiconciliazione && (
+          <div className="card">
+            <div className="h1" style={{ fontSize: 18, margin: '0 0 15px 0' }}>✅ Stato Riconciliazione {anno}</div>
+            
+            {/* Barra progresso globale */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                <span style={{ fontSize: 13, color: '#6b7280' }}>Progresso Globale</span>
+                <span style={{ fontWeight: 'bold', color: statoRiconciliazione.riepilogo.percentuale_globale >= 80 ? '#16a34a' : '#f59e0b' }}>
+                  {statoRiconciliazione.riepilogo.percentuale_globale}%
+                </span>
+              </div>
+              <div style={{ height: 12, background: '#e5e7eb', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ 
+                  height: '100%', 
+                  width: `${statoRiconciliazione.riepilogo.percentuale_globale}%`,
+                  background: statoRiconciliazione.riepilogo.percentuale_globale >= 80 
+                    ? 'linear-gradient(90deg, #10b981, #34d399)' 
+                    : 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                  borderRadius: 6,
+                  transition: 'width 0.5s ease'
+                }}></div>
+              </div>
+            </div>
+
+            {/* Dettaglio Fatture */}
+            <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontWeight: 600 }}>📄 Fatture Fornitori</span>
+                <span style={{ 
+                  padding: '2px 8px', 
+                  borderRadius: 10, 
+                  fontSize: 12,
+                  background: statoRiconciliazione.fatture.percentuale_pagate >= 80 ? '#dcfce7' : '#fef3c7',
+                  color: statoRiconciliazione.fatture.percentuale_pagate >= 80 ? '#16a34a' : '#d97706'
+                }}>
+                  {statoRiconciliazione.fatture.percentuale_pagate}%
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 13 }}>
+                <div>
+                  <div style={{ color: '#6b7280' }}>Pagate</div>
+                  <div style={{ fontWeight: 'bold', color: '#16a34a' }}>
+                    {statoRiconciliazione.fatture.pagate} / {statoRiconciliazione.fatture.totali}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280' }}>Da pagare</div>
+                  <div style={{ fontWeight: 'bold', color: '#dc2626' }}>
+                    {formatEuro(statoRiconciliazione.fatture.importo_da_pagare)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dettaglio Salari */}
+            <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <span style={{ fontWeight: 600 }}>💰 Salari Dipendenti</span>
+                <span style={{ 
+                  padding: '2px 8px', 
+                  borderRadius: 10, 
+                  fontSize: 12,
+                  background: statoRiconciliazione.salari.percentuale_riconciliati >= 80 ? '#dcfce7' : '#fef3c7',
+                  color: statoRiconciliazione.salari.percentuale_riconciliati >= 80 ? '#16a34a' : '#d97706'
+                }}>
+                  {statoRiconciliazione.salari.percentuale_riconciliati}%
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 13 }}>
+                <div>
+                  <div style={{ color: '#6b7280' }}>Riconciliati</div>
+                  <div style={{ fontWeight: 'bold', color: '#16a34a' }}>
+                    {statoRiconciliazione.salari.riconciliati} / {statoRiconciliazione.salari.totali}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#6b7280' }}>Da verificare</div>
+                  <div style={{ fontWeight: 'bold', color: '#f59e0b' }}>
+                    {statoRiconciliazione.salari.da_riconciliare}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Link to="/riconciliazione" style={{
+              display: 'block',
+              marginTop: 15,
+              padding: '10px 16px',
+              background: '#3b82f6',
+              color: 'white',
+              borderRadius: 8,
+              textAlign: 'center',
+              textDecoration: 'none',
+              fontWeight: 'bold',
+              fontSize: 13
+            }}>
+              Vai a Riconciliazione →
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Confronto Anno Precedente */}
+      {confrontoAnnuale && (
+        <div className="card" style={{ marginTop: 20 }}>
+          <div className="h1" style={{ fontSize: 18, margin: '0 0 15px 0' }}>
+            📊 Confronto {anno} vs {anno - 1}
+          </div>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gap: 15 
+          }}>
+            {/* Entrate */}
+            <div style={{ background: '#f0fdf4', borderRadius: 12, padding: 15 }}>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 5 }}>Entrate</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#16a34a' }}>
+                {formatEuro(confrontoAnnuale.anno_corrente.entrate)}
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 4, 
+                marginTop: 5,
+                fontSize: 13
+              }}>
+                <span style={{ 
+                  color: confrontoAnnuale.variazioni_percentuali.entrate >= 0 ? '#16a34a' : '#dc2626',
+                  fontWeight: 'bold'
+                }}>
+                  {confrontoAnnuale.variazioni_percentuali.entrate >= 0 ? '↑' : '↓'} 
+                  {Math.abs(confrontoAnnuale.variazioni_percentuali.entrate)}%
+                </span>
+                <span style={{ color: '#6b7280' }}>vs {anno - 1}</span>
+              </div>
+            </div>
+
+            {/* Uscite */}
+            <div style={{ background: '#fef2f2', borderRadius: 12, padding: 15 }}>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 5 }}>Uscite</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626' }}>
+                {formatEuro(confrontoAnnuale.anno_corrente.uscite)}
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 4, 
+                marginTop: 5,
+                fontSize: 13
+              }}>
+                <span style={{ 
+                  color: confrontoAnnuale.variazioni_percentuali.uscite <= 0 ? '#16a34a' : '#dc2626',
+                  fontWeight: 'bold'
+                }}>
+                  {confrontoAnnuale.variazioni_percentuali.uscite >= 0 ? '↑' : '↓'} 
+                  {Math.abs(confrontoAnnuale.variazioni_percentuali.uscite)}%
+                </span>
+                <span style={{ color: '#6b7280' }}>vs {anno - 1}</span>
+              </div>
+            </div>
+
+            {/* Saldo */}
+            <div style={{ 
+              background: confrontoAnnuale.anno_corrente.saldo >= 0 ? '#f0fdf4' : '#fef2f2', 
+              borderRadius: 12, 
+              padding: 15 
+            }}>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 5 }}>Saldo</div>
+              <div style={{ 
+                fontSize: 24, 
+                fontWeight: 'bold', 
+                color: confrontoAnnuale.anno_corrente.saldo >= 0 ? '#16a34a' : '#dc2626' 
+              }}>
+                {formatEuro(confrontoAnnuale.anno_corrente.saldo)}
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 4, 
+                marginTop: 5,
+                fontSize: 13
+              }}>
+                <span style={{ 
+                  color: confrontoAnnuale.variazioni_percentuali.saldo >= 0 ? '#16a34a' : '#dc2626',
+                  fontWeight: 'bold'
+                }}>
+                  {confrontoAnnuale.variazioni_percentuali.saldo >= 0 ? '↑' : '↓'} 
+                  {Math.abs(confrontoAnnuale.variazioni_percentuali.saldo)}%
+                </span>
+                <span style={{ color: '#6b7280' }}>vs {anno - 1}</span>
+              </div>
+            </div>
+
+            {/* Numero Fatture */}
+            <div style={{ background: '#f0f9ff', borderRadius: 12, padding: 15 }}>
+              <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 5 }}>N. Fatture</div>
+              <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0284c7' }}>
+                {confrontoAnnuale.anno_corrente.num_fatture}
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 4, 
+                marginTop: 5,
+                fontSize: 13
+              }}>
+                <span style={{ 
+                  color: '#6b7280',
+                  fontWeight: 'bold'
+                }}>
+                  {confrontoAnnuale.variazioni_percentuali.num_fatture >= 0 ? '↑' : '↓'} 
+                  {Math.abs(confrontoAnnuale.variazioni_percentuali.num_fatture)}%
+                </span>
+                <span style={{ color: '#6b7280' }}>vs {anno - 1}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Quick Actions */}
       <div className="card" style={{ marginTop: 20 }}>
         <div className="h1" style={{ fontSize: 18 }}>🚀 Azioni Rapide</div>
