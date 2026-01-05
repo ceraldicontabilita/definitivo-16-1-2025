@@ -419,22 +419,37 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
             # Determina il tipo di PDF
             if "Elenco Esiti Pagamenti" in full_text or "Stipendi SEPA" in full_text:
                 # Formato "Elenco Esiti Pagamenti" - struttura: Nome, Data, Tipo, Num, Importo EUR
+                # Pattern da escludere (parole chiave del documento, non nomi)
+                exclude_patterns = [
+                    'EUR', 'SEPA', 'CERALDI GROUP', 'CONFERMATA', 'ADDEBITATA',
+                    'ESITO', 'ORDINANTE', 'BENEFICIARIO', 'TIPO', 'PAGAMENTO',
+                    'NUMERO', 'IMPORTO', 'STATO', 'BANCO', 'BPM', 'PAGINA',
+                    'PARAMETRI', 'RICERCA', 'RAPPORTO', 'DATA', 'BANCA',
+                    'YOUBUSINESS', 'ELENCO', 'DISP', 'NUM', 'ORD', 'DISPOSIZIONE',
+                    'S.R.L', 'S.P.A', 'SRL', 'SPA'
+                ]
+                
                 i = 0
                 while i < len(lines) - 8:
-                    line = lines[i]
+                    line = lines[i].strip()
                     
                     # Cerca pattern: Nome -> Data -> "Stipendi SEPA" -> Num -> Importo EUR
                     # Il nome è una riga con lettere (non numeri, non EUR)
+                    line_upper = line.upper()
+                    
+                    # Verifica che non sia una parola chiave del documento
+                    is_excluded = any(excl in line_upper for excl in exclude_patterns)
+                    
                     if (not re.match(r'^\d', line) and 
-                        'EUR' not in line and 
-                        'SEPA' not in line and
-                        'CERALDI' not in line.upper() and
-                        'CONFERMATA' not in line.upper() and
-                        'ADDEBITATA' not in line.upper() and
-                        len(line) > 3 and len(line) < 50):
+                        not is_excluded and
+                        len(line) > 3 and len(line) < 60 and
+                        # Deve contenere almeno una lettera
+                        any(c.isalpha() for c in line) and
+                        # Non deve essere solo maiuscole brevi (es. "SI", "NO")
+                        not (line.isupper() and len(line) < 5)):
                         
                         # Verifica se le righe successive hanno il pattern atteso
-                        next_lines = lines[i+1:i+8]
+                        next_lines = lines[i+1:i+10]
                         
                         # Cerca data (DD/MM/YYYY)
                         data_found = None
@@ -442,6 +457,7 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
                         importo_found = None
                         
                         for nl in next_lines:
+                            nl = nl.strip()
                             # Data
                             date_match = re.match(r'^(\d{2}/\d{2}/\d{4})$', nl)
                             if date_match:
@@ -451,7 +467,7 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
                             if 'Stipendi SEPA' in nl:
                                 tipo_found = 'stipendio'
                             
-                            # Importo (formato: 1.234,56 EUR)
+                            # Importo (formato: 1.234,56 EUR o 1234,56 EUR)
                             imp_match = re.match(r'^([\d.,]+)\s*EUR$', nl)
                             if imp_match:
                                 imp_str = imp_match.group(1).replace('.', '').replace(',', '.')
