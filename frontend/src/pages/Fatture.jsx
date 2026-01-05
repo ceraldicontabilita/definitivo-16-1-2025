@@ -1013,9 +1013,8 @@ export default function Fatture() {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: 8, whiteSpace: 'nowrap' }}>{formatDateIT(inv.invoice_date) || "-"}</td>
                   <td style={{ padding: 8, fontWeight: "bold", whiteSpace: 'nowrap' }}>
-                    € {(inv.total_amount || 0).toFixed(2)}
+                    {formatEuro(inv.total_amount || 0)}
                   </td>
                   <td style={{ padding: 8 }} onClick={(e) => e.stopPropagation()}>
                     {updatingPayment === inv.id ? (
