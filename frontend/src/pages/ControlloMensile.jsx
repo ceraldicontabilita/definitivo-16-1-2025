@@ -130,6 +130,8 @@ export default function ControlloMensile() {
    * Include: POS Agenzia (XML), POS Chiusura (Cassa), POS Banca (da Estratto Conto Bancario)
    */
   const processYearData = (cassa, corrispettivi, estrattoConto = []) => {
+    console.log(`[processYearData] Estratto conto ricevuti: ${estrattoConto.length} movimenti`);
+    
     const monthly = [];
     let yearPosAuto = 0, yearPosManual = 0, yearPosBanca = 0;
     let yearCorrispAuto = 0, yearCorrispManual = 0;
@@ -164,7 +166,7 @@ export default function ControlloMensile() {
       // - INC.POS = Incasso POS carte credit
       // - INCAS. TRAMITE P.O.S = Incasso tramite terminale
       // - Categoria "POS" già categorizzata durante import
-      const posBanca = monthEstratto
+      const posBancaMovimenti = monthEstratto
         .filter(m => {
           const desc = (m.descrizione || '').toUpperCase();
           const cat = (m.categoria || '').toUpperCase();
@@ -177,8 +179,12 @@ export default function ControlloMensile() {
             desc.includes('P.O.S.') ||
             cat.includes('POS')
           );
-        })
-        .reduce((sum, m) => sum + (parseFloat(m.importo) || 0), 0);
+        });
+      const posBanca = posBancaMovimenti.reduce((sum, m) => sum + (parseFloat(m.importo) || 0), 0);
+      
+      if (month === 1) {
+        console.log(`[processYearData] Gennaio ${anno}: estratto=${monthEstratto.length}, POS banca movimenti=${posBancaMovimenti.length}, totale=${posBanca}`);
+      }
 
       // ============ CORRISPETTIVI AUTO (da XML) ============
       // Totale incassi giornalieri dai corrispettivi XML
