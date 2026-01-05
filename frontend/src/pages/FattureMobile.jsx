@@ -148,7 +148,7 @@ export default function FattureMobile() {
           ];
         });
         
-        doc.autoTable({
+        autoTable(doc, {
           startY: 130,
           head: [['#', 'Descrizione', 'Q.tà', 'U.M.', 'Prezzo Unit.', 'IVA', 'Importo']],
           body: tableData,
