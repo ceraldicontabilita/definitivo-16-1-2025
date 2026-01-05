@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://azienda-simple-1.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://azienda-simple-1.preview.emergentagent.com/prima-nota",
-    "IVA": "https://azienda-simple-1.preview.emergentagent.com/iva",
-    "Dipendenti": "https://azienda-simple-1.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://accountmatch-3.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://accountmatch-3.preview.emergentagent.com/prima-nota",
+    "IVA": "https://accountmatch-3.preview.emergentagent.com/iva",
+    "Dipendenti": "https://accountmatch-3.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",
