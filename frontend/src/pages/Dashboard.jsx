@@ -177,7 +177,7 @@ export default function Dashboard() {
                 <XAxis dataKey="mese_nome" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(v) => `€${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
                 <Tooltip 
-                  formatter={(value) => formatCurrency(value)}
+                  formatter={(value) => formatEuro(value)}
                   labelStyle={{ fontWeight: 'bold' }}
                   contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }}
                 />
@@ -233,7 +233,7 @@ export default function Dashboard() {
                 <XAxis dataKey="mese_nome" tick={{ fontSize: 12 }} />
                 <YAxis tickFormatter={(v) => `€${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
                 <Tooltip 
-                  formatter={(value) => formatCurrency(value)}
+                  formatter={(value) => formatEuro(value)}
                   contentStyle={{ borderRadius: 8 }}
                 />
                 <Legend />
@@ -250,14 +250,14 @@ export default function Dashboard() {
             fontSize: 14 
           }}>
             <div>
-              IVA Debito Totale: <strong style={{ color: '#f59e0b' }}>{formatCurrency(trendData.totali?.iva_debito)}</strong>
+              IVA Debito Totale: <strong style={{ color: '#f59e0b' }}>{formatEuro(trendData.totali?.iva_debito)}</strong>
             </div>
             <div>
-              IVA Credito Totale: <strong style={{ color: '#3b82f6' }}>{formatCurrency(trendData.totali?.iva_credito)}</strong>
+              IVA Credito Totale: <strong style={{ color: '#3b82f6' }}>{formatEuro(trendData.totali?.iva_credito)}</strong>
             </div>
             <div>
               Saldo IVA: <strong style={{ color: trendData.totali?.saldo_iva >= 0 ? '#ef4444' : '#10b981' }}>
-                {formatCurrency(Math.abs(trendData.totali?.saldo_iva))} {trendData.totali?.saldo_iva >= 0 ? '(da versare)' : '(a credito)'}
+                {formatEuro(Math.abs(trendData.totali?.saldo_iva))} {trendData.totali?.saldo_iva >= 0 ? '(da versare)' : '(a credito)'}
               </strong>
             </div>
           </div>

@@ -512,7 +512,7 @@ function PrimaNotaDesktop() {
             ))}
             {giornoRecord && (
               <span style={{ marginLeft: 'auto', fontSize: 11, color: '#92400e', background: '#fef3c7', padding: '4px 8px', borderRadius: 4 }}>
-                🏆 Record: {formatDate(giornoRecord.data)} - {formatCurrency(giornoRecord.importo)}
+                🏆 Record: {formatDate(giornoRecord.data)} - {formatEuro(giornoRecord.importo)}
               </span>
             )}
           </div>
@@ -522,7 +522,7 @@ function PrimaNotaDesktop() {
             movimenti={cassaData.movimenti || []}
             tipo="cassa"
             loading={loading}
-            formatCurrency={formatCurrency}
+            formatEuro={formatEuro}
             formatDate={formatDate}
             onDelete={(id) => handleDeleteMovimento('cassa', id)}
           />
@@ -543,8 +543,8 @@ function PrimaNotaDesktop() {
 
           {/* Summary Cards Banca */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-            <SummaryCard title="Totale Uscite (AVERE)" value={formatCurrency(bancaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="Fatture pagate bonifico/assegno" />
-            <SummaryCard title="Saldo Banca" value={formatCurrency(bancaData.saldo)} color={bancaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
+            <SummaryCard title="Totale Uscite (AVERE)" value={formatEuro(bancaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="Fatture pagate bonifico/assegno" />
+            <SummaryCard title="Saldo Banca" value={formatEuro(bancaData.saldo)} color={bancaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
           </div>
 
           {/* Info Box */}
@@ -600,7 +600,7 @@ function PrimaNotaDesktop() {
             movimenti={bancaData.movimenti || []}
             tipo="banca"
             loading={loading}
-            formatCurrency={formatCurrency}
+            formatEuro={formatEuro}
             formatDate={formatDate}
             onDelete={(id) => handleDeleteMovimento('banca', id)}
           />
@@ -694,7 +694,7 @@ function QuickEntryCard({ title, color, children }) {
   );
 }
 
-function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, onDelete }) {
+function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMovimento, setSelectedMovimento] = useState(null);
   const itemsPerPage = 50;
@@ -724,7 +724,7 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
         <TransactionDetailModal 
           movimento={selectedMovimento} 
           tipo={tipo}
-          formatCurrency={formatCurrency}
+          formatEuro={formatEuro}
           formatDate={formatDate}
           onClose={() => setSelectedMovimento(null)}
         />
@@ -802,13 +802,13 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
                   {mov.descrizione || '-'}
                 </td>
                 <td style={{ padding: 10, textAlign: 'right', color: '#166534', fontWeight: mov.tipo === 'entrata' ? 'bold' : 'normal' }}>
-                  {mov.tipo === 'entrata' ? formatCurrency(mov.importo) : '-'}
+                  {mov.tipo === 'entrata' ? formatEuro(mov.importo) : '-'}
                 </td>
                 <td style={{ padding: 10, textAlign: 'right', color: '#991b1b', fontWeight: mov.tipo === 'uscita' ? 'bold' : 'normal' }}>
-                  {mov.tipo === 'uscita' ? formatCurrency(mov.importo) : '-'}
+                  {mov.tipo === 'uscita' ? formatEuro(mov.importo) : '-'}
                 </td>
                 <td style={{ padding: 10, textAlign: 'right', fontWeight: 'bold', color: mov.saldoProgressivo >= 0 ? '#166534' : '#991b1b' }}>
-                  {formatCurrency(mov.saldoProgressivo)}
+                  {formatEuro(mov.saldoProgressivo)}
                 </td>
                 <td style={{ padding: 10, textAlign: 'center' }}>
                   <button 
@@ -843,7 +843,7 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
 }
 
 // Componente Modal Dettaglio Transazione
-function TransactionDetailModal({ movimento, tipo, formatCurrency, formatDate, onClose }) {
+function TransactionDetailModal({ movimento, tipo, formatEuro, formatDate, onClose }) {
   if (!movimento) return null;
   
   const isEntrata = movimento.tipo === 'entrata';
@@ -925,7 +925,7 @@ function TransactionDetailModal({ movimento, tipo, formatCurrency, formatDate, o
             fontWeight: 'bold', 
             color: isEntrata ? '#166534' : '#991b1b'
           }}>
-            {isEntrata ? '+' : '-'}{formatCurrency(movimento.importo)}
+            {isEntrata ? '+' : '-'}{formatEuro(movimento.importo)}
           </div>
           <div style={{ fontSize: 14, color: '#6b7280', marginTop: 4 }}>
             {formatDate(movimento.data)}
@@ -969,15 +969,15 @@ function TransactionDetailModal({ movimento, tipo, formatCurrency, formatDate, o
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: '#6b7280' }}>POS 1</div>
-                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatCurrency(movimento.pos_details.pos1 || 0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatEuro(movimento.pos_details.pos1 || 0)}</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: '#6b7280' }}>POS 2</div>
-                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatCurrency(movimento.pos_details.pos2 || 0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatEuro(movimento.pos_details.pos2 || 0)}</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: '#6b7280' }}>POS 3</div>
-                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatCurrency(movimento.pos_details.pos3 || 0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatEuro(movimento.pos_details.pos3 || 0)}</div>
                   </div>
                 </div>
               </div>
@@ -997,15 +997,15 @@ function TransactionDetailModal({ movimento, tipo, formatCurrency, formatDate, o
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: '#6b7280' }}>Contanti</div>
-                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatCurrency(movimento.dettaglio.contanti || 0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatEuro(movimento.dettaglio.contanti || 0)}</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: '#6b7280' }}>Elettronico</div>
-                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatCurrency(movimento.dettaglio.elettronico || 0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatEuro(movimento.dettaglio.elettronico || 0)}</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 11, color: '#6b7280' }}>IVA</div>
-                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatCurrency(movimento.dettaglio.totale_iva || 0)}</div>
+                    <div style={{ fontSize: 14, fontWeight: 'bold' }}>{formatEuro(movimento.dettaglio.totale_iva || 0)}</div>
                   </div>
                 </div>
               </div>
