@@ -225,8 +225,14 @@ async def get_iva_monthly(year: int, month: int) -> Dict[str, Any]:
 
 @router.get("/annual/{year}")
 async def get_iva_annual(year: int) -> Dict[str, Any]:
-    """Riepilogo IVA annuale."""
+    """Riepilogo IVA annuale.
+    
+    Le Note Credito (TD04, TD08) vengono SOTTRATTE dal totale IVA credito.
+    """
     db = Database.get_db()
+    
+    # Tipi documento Note Credito
+    NOTE_CREDITO_TYPES = ["TD04", "TD08"]
     
     try:
         monthly_data = []
@@ -234,21 +240,61 @@ async def get_iva_annual(year: int) -> Dict[str, Any]:
         for month in range(1, 13):
             month_prefix = f"{year}-{month:02d}"
             
-            # Fatture (credito)
+            # Fatture normali (credito)
             fatt_pipe = [
-                {"$match": {"invoice_date": {"$regex": f"^{month_prefix}"}}},
-                {"$group": {"_id": None, "total_iva": {"$sum": "$iva"}, "total_amount": {"$sum": "$total_amount"}, "count": {"$sum": 1}}}
+                {"$match": {
+                    "invoice_date": {"$regex": f"^{month_prefix}"},
+                    "tipo_documento": {"$nin": NOTE_CREDITO_TYPES}
+                }},
+                {"$group": {
+                    "_id": None, 
+                    "total_iva": {"$sum": "$iva"}, 
+                    "total_amount": {"$sum": "$total_amount"},
+                    "total_imponibile": {"$sum": "$imponibile"},
+                    "count": {"$sum": 1}
+                }}
             ]
             fatt_res = await db["invoices"].aggregate(fatt_pipe).to_list(1)
             
             if fatt_res:
                 iva_cred = float(fatt_res[0].get('total_iva', 0) or 0)
                 tot_fatt = float(fatt_res[0].get('total_amount', 0) or 0)
+                imponibile_fatt = float(fatt_res[0].get('total_imponibile', 0) or 0)
                 fatt_count = fatt_res[0].get('count', 0)
                 if iva_cred == 0 and tot_fatt > 0:
                     iva_cred = tot_fatt - (tot_fatt / 1.22)
+                if imponibile_fatt == 0 and tot_fatt > 0:
+                    imponibile_fatt = tot_fatt / 1.22
             else:
-                iva_cred, fatt_count = 0, 0
+                iva_cred, fatt_count, imponibile_fatt = 0, 0, 0
+            
+            # Note Credito (da sottrarre)
+            nc_pipe = [
+                {"$match": {
+                    "invoice_date": {"$regex": f"^{month_prefix}"},
+                    "tipo_documento": {"$in": NOTE_CREDITO_TYPES}
+                }},
+                {"$group": {
+                    "_id": None, 
+                    "total_iva": {"$sum": "$iva"}, 
+                    "total_amount": {"$sum": "$total_amount"},
+                    "total_imponibile": {"$sum": "$imponibile"},
+                    "count": {"$sum": 1}
+                }}
+            ]
+            nc_res = await db["invoices"].aggregate(nc_pipe).to_list(1)
+            
+            if nc_res:
+                iva_nc = float(nc_res[0].get('total_iva', 0) or 0)
+                tot_nc = float(nc_res[0].get('total_amount', 0) or 0)
+                imponibile_nc = float(nc_res[0].get('total_imponibile', 0) or 0)
+                nc_count = nc_res[0].get('count', 0)
+                if iva_nc == 0 and tot_nc > 0:
+                    iva_nc = tot_nc - (tot_nc / 1.22)
+                if imponibile_nc == 0 and tot_nc > 0:
+                    imponibile_nc = tot_nc / 1.22
+            else:
+                iva_nc, nc_count, imponibile_nc = 0, 0, 0
             
             # Corrispettivi (debito)
             corr_pipe = [
@@ -260,19 +306,30 @@ async def get_iva_annual(year: int) -> Dict[str, Any]:
             iva_deb = float(corr_res[0].get('total_iva', 0) or 0) if corr_res else 0
             corr_count = corr_res[0].get('count', 0) if corr_res else 0
             
-            saldo = iva_deb - iva_cred
+            # IVA Credito Netta = Fatture - Note Credito
+            iva_cred_netta = iva_cred - iva_nc
+            imponibile_netto = imponibile_fatt - imponibile_nc
+            saldo = iva_deb - iva_cred_netta
+            
             monthly_data.append({
                 "mese": month,
                 "mese_nome": MESI_ITALIANI[month],
-                "iva_credito": round(iva_cred, 2),
+                "iva_credito_lordo": round(iva_cred, 2),
+                "iva_note_credito": round(iva_nc, 2),
+                "iva_credito": round(iva_cred_netta, 2),  # Netto
                 "iva_debito": round(iva_deb, 2),
+                "imponibile_fatture": round(imponibile_fatt, 2),
+                "imponibile_note_credito": round(imponibile_nc, 2),
+                "imponibile_netto": round(imponibile_netto, 2),
                 "saldo": round(saldo, 2),
                 "stato": "Da versare" if saldo > 0 else "A credito" if saldo < 0 else "Pareggio",
                 "fatture_count": fatt_count,
+                "note_credito_count": nc_count,
                 "corrispettivi_count": corr_count
             })
         
         tot_cred = sum(m['iva_credito'] for m in monthly_data)
+        tot_nc = sum(m['iva_note_credito'] for m in monthly_data)
         tot_deb = sum(m['iva_debito'] for m in monthly_data)
         tot_saldo = tot_deb - tot_cred
         
@@ -280,7 +337,9 @@ async def get_iva_annual(year: int) -> Dict[str, Any]:
             "anno": year,
             "monthly_data": monthly_data,
             "totali": {
-                "iva_credito": round(tot_cred, 2),
+                "iva_credito_lordo": round(tot_cred + tot_nc, 2),
+                "iva_note_credito": round(tot_nc, 2),
+                "iva_credito": round(tot_cred, 2),  # Netto
                 "iva_debito": round(tot_deb, 2),
                 "saldo": round(tot_saldo, 2),
                 "stato": "Da versare" if tot_saldo > 0 else "A credito"
