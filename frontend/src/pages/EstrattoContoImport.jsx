@@ -279,25 +279,25 @@ export default function EstrattoContoImport() {
             <div style={{ padding: 16, background: '#e3f2fd', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: '#1565c0' }}>Saldo Iniziale</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#1565c0' }}>
-                {formatCurrency(parseResult.data.saldo_iniziale)}
+                {formatEuro(parseResult.data.saldo_iniziale)}
               </div>
             </div>
             <div style={{ padding: 16, background: '#e8f5e9', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: '#2e7d32' }}>Totale Entrate</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#2e7d32' }}>
-                {formatCurrency(parseResult.data.totale_entrate)}
+                {formatEuro(parseResult.data.totale_entrate)}
               </div>
             </div>
             <div style={{ padding: 16, background: '#ffebee', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: '#c62828' }}>Totale Uscite</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#c62828' }}>
-                {formatCurrency(parseResult.data.totale_uscite)}
+                {formatEuro(parseResult.data.totale_uscite)}
               </div>
             </div>
             <div style={{ padding: 16, background: '#fff3e0', borderRadius: 8, textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: '#e65100' }}>Saldo Finale</div>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#e65100' }}>
-                {formatCurrency(parseResult.data.saldo_finale)}
+                {formatEuro(parseResult.data.saldo_finale)}
               </div>
             </div>
           </div>
@@ -334,10 +334,10 @@ export default function EstrattoContoImport() {
                       </div>
                     </td>
                     <td style={{ padding: 10, textAlign: 'right', color: '#c62828', fontWeight: mov.uscita ? 600 : 400 }}>
-                      {mov.uscita ? formatCurrency(mov.uscita) : '-'}
+                      {mov.uscita ? formatEuro(mov.uscita) : '-'}
                     </td>
                     <td style={{ padding: 10, textAlign: 'right', color: '#2e7d32', fontWeight: mov.entrata ? 600 : 400 }}>
-                      {mov.entrata ? formatCurrency(mov.entrata) : '-'}
+                      {mov.entrata ? formatEuro(mov.entrata) : '-'}
                     </td>
                   </tr>
                 ))}

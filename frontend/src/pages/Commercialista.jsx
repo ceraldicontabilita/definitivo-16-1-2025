@@ -630,7 +630,7 @@ export default function Commercialista() {
     }
   };
 
-  const formatCurrency = (value) => {
+  const formatEuro = (value) => {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
 
@@ -827,13 +827,13 @@ export default function Commercialista() {
                 <div style={{ background: '#e8f5e9', padding: 15, borderRadius: 8, textAlign: 'center' }}>
                   <div style={{ fontSize: 12, color: '#666' }}>Entrate</div>
                   <div style={{ fontSize: 18, fontWeight: 'bold', color: '#4caf50' }}>
-                    {formatCurrency(primaNotaData?.totale_entrate)}
+                    {formatEuro(primaNotaData?.totale_entrate)}
                   </div>
                 </div>
                 <div style={{ background: '#ffebee', padding: 15, borderRadius: 8, textAlign: 'center' }}>
                   <div style={{ fontSize: 12, color: '#666' }}>Uscite</div>
                   <div style={{ fontSize: 18, fontWeight: 'bold', color: '#f44336' }}>
-                    {formatCurrency(primaNotaData?.totale_uscite)}
+                    {formatEuro(primaNotaData?.totale_uscite)}
                   </div>
                 </div>
               </div>
@@ -850,7 +850,7 @@ export default function Commercialista() {
                   fontWeight: 'bold', 
                   color: (primaNotaData?.saldo || 0) >= 0 ? '#4caf50' : '#f44336'
                 }}>
-                  {formatCurrency(primaNotaData?.saldo)}
+                  {formatEuro(primaNotaData?.saldo)}
                 </div>
                 <div style={{ fontSize: 12, color: '#999', marginTop: 5 }}>
                   {primaNotaData?.totale_movimenti || 0} movimenti
@@ -929,7 +929,7 @@ export default function Commercialista() {
               }}>
                 <div style={{ fontSize: 12, color: '#666' }}>Totale Fatture</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold', color: '#f57c00' }}>
-                  {formatCurrency(fattureCassaData?.totale_importo)}
+                  {formatEuro(fattureCassaData?.totale_importo)}
                 </div>
                 <div style={{ fontSize: 12, color: '#999', marginTop: 5 }}>
                   {fattureCassaData?.totale_fatture || 0} fatture
@@ -1073,7 +1073,7 @@ export default function Commercialista() {
                               Carnet {c.id}
                             </div>
                             <div style={{ fontSize: 12, color: '#64748b' }}>
-                              {c.assegni.length} assegni • {formatCurrency(c.totale)}
+                              {c.assegni.length} assegni • {formatEuro(c.totale)}
                             </div>
                           </div>
                         </label>
@@ -1103,7 +1103,7 @@ export default function Commercialista() {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>Importo Totale:</span>
                         <strong style={{ color: '#2e7d32' }}>
-                          {formatCurrency(
+                          {formatEuro(
                             carnets
                               .filter(c => selectedCarnets.includes(c.id))
                               .reduce((sum, c) => sum + c.totale, 0)

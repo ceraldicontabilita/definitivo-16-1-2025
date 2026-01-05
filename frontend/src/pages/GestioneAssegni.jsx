@@ -224,7 +224,7 @@ export default function GestioneAssegni() {
     }
   };
 
-  const formatCurrency = (value) => {
+  const formatEuro = (value) => {
     if (!value) return '-';
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value);
   };
@@ -262,14 +262,14 @@ export default function GestioneAssegni() {
     doc.text(`Numero Assegni: ${carnetAssegni.length}`, 14, 45);
     doc.setFontSize(14);
     doc.setTextColor(76, 175, 80);
-    doc.text(`Totale: ${formatCurrency(totale)}`, 14, 55);
+    doc.text(`Totale: ${formatEuro(totale)}`, 14, 55);
     
     // Table
     const tableData = carnetAssegni.map(a => [
       a.numero || '-',
       STATI_ASSEGNO[a.stato]?.label || a.stato || '-',
       (a.beneficiario || '-').substring(0, 25),
-      formatCurrency(a.importo),
+      formatEuro(a.importo),
       a.data_fattura?.substring(0, 10) || '-',
       a.numero_fattura || '-',
       (a.note || '-').substring(0, 20)
@@ -452,7 +452,7 @@ export default function GestioneAssegni() {
                       <td colSpan={6} style={{ padding: '10px 12px' }}>
                         <strong>Carnet {carnetIdx + 1}</strong>
                         <span style={{ color: '#666', marginLeft: 10 }}>
-                          (Assegni {carnetAssegni.length} - Totale: {formatCurrency(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
+                          (Assegni {carnetAssegni.length} - Totale: {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
                         </span>
                       </td>
                       <td colSpan={2} style={{ padding: '10px 12px', textAlign: 'right' }}>
@@ -533,7 +533,7 @@ export default function GestioneAssegni() {
                             />
                           ) : (
                             <span style={{ fontWeight: 'bold' }}>
-                              {formatCurrency(assegno.importo)}
+                              {formatEuro(assegno.importo)}
                             </span>
                           )}
                         </td>
@@ -761,7 +761,7 @@ export default function GestioneAssegni() {
                       borderBottom: '1px solid #c8e6c9'
                     }}>
                       <span>{f.numero} - {f.fornitore}</span>
-                      <span style={{ fontWeight: 'bold' }}>{formatCurrency(f.importo)}</span>
+                      <span style={{ fontWeight: 'bold' }}>{formatEuro(f.importo)}</span>
                     </div>
                   ))}
                   <div style={{ 
@@ -775,7 +775,7 @@ export default function GestioneAssegni() {
                   }}>
                     <span>TOTALE ASSEGNO:</span>
                     <span style={{ color: '#2e7d32' }}>
-                      {formatCurrency(selectedFatture.reduce((sum, f) => sum + (f.importo || 0), 0))}
+                      {formatEuro(selectedFatture.reduce((sum, f) => sum + (f.importo || 0), 0))}
                     </span>
                   </div>
                 </div>
@@ -824,7 +824,7 @@ export default function GestioneAssegni() {
                           </div>
                         </div>
                         <div style={{ fontWeight: 'bold', color: '#1a365d' }}>
-                          {formatCurrency(parseFloat(f.total_amount || f.importo_totale || 0))}
+                          {formatEuro(parseFloat(f.total_amount || f.importo_totale || 0))}
                         </div>
                       </div>
                     );

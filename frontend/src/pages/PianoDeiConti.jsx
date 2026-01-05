@@ -87,7 +87,7 @@ export default function PianoDeiConti() {
     }
   };
 
-  const formatCurrency = (value) => {
+  const formatEuro = (value) => {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
 
@@ -113,25 +113,25 @@ export default function PianoDeiConti() {
           <div style={{ background: '#e3f2fd', borderRadius: 12, padding: 15, borderLeft: '4px solid #2196f3' }}>
             <div style={{ fontSize: 12, color: '#1565c0', marginBottom: 5 }}>Totale Attivo</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0d47a1' }}>
-              {formatCurrency(bilancio.stato_patrimoniale.attivo.totale)}
+              {formatEuro(bilancio.stato_patrimoniale.attivo.totale)}
             </div>
           </div>
           <div style={{ background: '#ffebee', borderRadius: 12, padding: 15, borderLeft: '4px solid #f44336' }}>
             <div style={{ fontSize: 12, color: '#c62828', marginBottom: 5 }}>Totale Passivo</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#b71c1c' }}>
-              {formatCurrency(bilancio.stato_patrimoniale.passivo.totale)}
+              {formatEuro(bilancio.stato_patrimoniale.passivo.totale)}
             </div>
           </div>
           <div style={{ background: '#e8f5e9', borderRadius: 12, padding: 15, borderLeft: '4px solid #4caf50' }}>
             <div style={{ fontSize: 12, color: '#2e7d32', marginBottom: 5 }}>Totale Ricavi</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1b5e20' }}>
-              {formatCurrency(bilancio.conto_economico.ricavi.totale)}
+              {formatEuro(bilancio.conto_economico.ricavi.totale)}
             </div>
           </div>
           <div style={{ background: '#fff3e0', borderRadius: 12, padding: 15, borderLeft: '4px solid #ff9800' }}>
             <div style={{ fontSize: 12, color: '#e65100', marginBottom: 5 }}>Totale Costi</div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: '#bf360c' }}>
-              {formatCurrency(bilancio.conto_economico.costi.totale)}
+              {formatEuro(bilancio.conto_economico.costi.totale)}
             </div>
           </div>
           <div style={{ 
@@ -144,7 +144,7 @@ export default function PianoDeiConti() {
               {bilancio.conto_economico.risultato >= 0 ? 'Utile' : 'Perdita'}
             </div>
             <div style={{ fontSize: 24, fontWeight: 'bold', color: bilancio.conto_economico.risultato >= 0 ? '#1b5e20' : '#b71c1c' }}>
-              {formatCurrency(Math.abs(bilancio.conto_economico.risultato))}
+              {formatEuro(Math.abs(bilancio.conto_economico.risultato))}
             </div>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function PianoDeiConti() {
                                 fontWeight: 'bold',
                                 color: conto.saldo >= 0 ? '#2e7d32' : '#c62828'
                               }}>
-                                {formatCurrency(conto.saldo)}
+                                {formatEuro(conto.saldo)}
                               </td>
                             </tr>
                           ))}
