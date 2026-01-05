@@ -385,6 +385,345 @@ async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
     }
 
 
+@router.post("/import-estratto-conto")
+async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Importa estratto conto bancario (CSV, Excel o PDF) e riconcilia con i salari.
+    
+    Formati supportati:
+    - CSV (separatore ;): Data, Importo, Descrizione, Categoria
+    - Excel (.xlsx, .xls): Colonne simili
+    - PDF: "Elenco Esiti Pagamenti" (BANCO BPM) o estratti conto standard
+    """
+    db = Database.get_db()
+    
+    filename = file.filename.lower()
+    contents = await file.read()
+    
+    movimenti_banca = []
+    
+    if filename.endswith('.pdf'):
+        # Parse PDF usando PyMuPDF
+        try:
+            import fitz  # PyMuPDF
+            import re
+            
+            doc = fitz.open(stream=contents, filetype="pdf")
+            full_text = ""
+            for page in doc:
+                full_text += page.get_text()
+            doc.close()
+            
+            lines = [l.strip() for l in full_text.split('\n') if l.strip()]
+            
+            # Determina il tipo di PDF
+            if "Elenco Esiti Pagamenti" in full_text or "Stipendi SEPA" in full_text:
+                # Formato "Elenco Esiti Pagamenti" - struttura: Nome, Data, Tipo, Num, Importo EUR
+                i = 0
+                while i < len(lines) - 8:
+                    line = lines[i]
+                    
+                    # Cerca pattern: Nome -> Data -> "Stipendi SEPA" -> Num -> Importo EUR
+                    # Il nome è una riga con lettere (non numeri, non EUR)
+                    if (not re.match(r'^\d', line) and 
+                        'EUR' not in line and 
+                        'SEPA' not in line and
+                        'CERALDI' not in line.upper() and
+                        'CONFERMATA' not in line.upper() and
+                        'ADDEBITATA' not in line.upper() and
+                        len(line) > 3 and len(line) < 50):
+                        
+                        # Verifica se le righe successive hanno il pattern atteso
+                        next_lines = lines[i+1:i+8]
+                        
+                        # Cerca data (DD/MM/YYYY)
+                        data_found = None
+                        tipo_found = None
+                        importo_found = None
+                        
+                        for nl in next_lines:
+                            # Data
+                            date_match = re.match(r'^(\d{2}/\d{2}/\d{4})$', nl)
+                            if date_match:
+                                data_found = date_match.group(1)
+                            
+                            # Tipo pagamento
+                            if 'Stipendi SEPA' in nl:
+                                tipo_found = 'stipendio'
+                            
+                            # Importo (formato: 1.234,56 EUR)
+                            imp_match = re.match(r'^([\d.,]+)\s*EUR$', nl)
+                            if imp_match:
+                                imp_str = imp_match.group(1).replace('.', '').replace(',', '.')
+                                try:
+                                    importo_found = float(imp_str)
+                                except:
+                                    pass
+                        
+                        if data_found and importo_found and tipo_found:
+                            # Parse data
+                            parts = data_found.split('/')
+                            data_obj = date(int(parts[2]), int(parts[1]), int(parts[0]))
+                            
+                            movimenti_banca.append({
+                                "data": data_obj,
+                                "importo": importo_found,
+                                "descrizione": f"Stipendio SEPA - {line}",
+                                "nome_estratto": line
+                            })
+                            i += 6  # Salta le righe già processate
+                            continue
+                    
+                    i += 1
+            
+            else:
+                # Formato estratto conto standard - cerca pattern FAVORE
+                current_date = None
+                
+                for i, line in enumerate(lines):
+                    # Cerca data formato DD/MM/YY
+                    date_match = re.search(r'(\d{2}/\d{2}/\d{2,4})', line)
+                    if date_match:
+                        date_str = date_match.group(1)
+                        try:
+                            parts = date_str.split('/')
+                            year = int(parts[2])
+                            if year < 100:
+                                year += 2000
+                            current_date = date(year, int(parts[1]), int(parts[0]))
+                        except:
+                            pass
+                    
+                    # Cerca pattern FAVORE per bonifici stipendi
+                    if 'FAVORE' in line.upper() and current_date:
+                        # Cerca importo nelle righe vicine
+                        search_lines = lines[max(0,i-2):min(len(lines),i+5)]
+                        search_text = ' '.join(search_lines)
+                        
+                        importo_matches = re.findall(r'[-]?\s*([\d.]+,\d{2})', search_text)
+                        
+                        for imp_str in importo_matches:
+                            try:
+                                imp_val = float(imp_str.replace('.', '').replace(',', '.'))
+                                if imp_val > 50:  # Ignora importi troppo piccoli
+                                    movimenti_banca.append({
+                                        "data": current_date,
+                                        "importo": imp_val,
+                                        "descrizione": line[:200],
+                                        "nome_estratto": None  # Non abbiamo il nome in questo formato
+                                    })
+                                    break
+                            except:
+                                continue
+            
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Errore parsing PDF: {str(e)}")
+    
+    elif filename.endswith('.csv'):
+        # Parse CSV
+        import csv
+        text = contents.decode('utf-8-sig')  # Handle BOM
+        reader = csv.DictReader(io.StringIO(text), delimiter=';')
+        
+        for row in reader:
+            # Filtra solo bonifici stipendi
+            categoria = row.get('Categoria/sottocategoria', '') or row.get('Categoria', '')
+            descrizione = row.get('Descrizione', '')
+            
+            # Accetta sia "Risorse Umane - Salari" che descrizioni con "stip" o "FAVORE"
+            is_stipendio = (
+                'salari' in categoria.lower() or 
+                'stipendi' in categoria.lower() or
+                'stip' in descrizione.lower() or
+                'favore' in descrizione.lower()
+            )
+            
+            if not is_stipendio:
+                continue
+            
+            # Parse data
+            data_str = row.get('Data contabile') or row.get('Data valuta') or row.get('Data')
+            if not data_str:
+                continue
+            
+            # Parse importo (formato italiano: -1.234,56 o -1234,56)
+            importo_str = row.get('Importo', '0')
+            importo_str = importo_str.replace('.', '').replace(',', '.')
+            try:
+                importo = abs(float(importo_str))  # Prendi valore assoluto
+            except:
+                continue
+            
+            # Parse data (DD/MM/YYYY)
+            try:
+                if '/' in data_str:
+                    parts = data_str.split('/')
+                    data_obj = date(int(parts[2]), int(parts[1]), int(parts[0]))
+                else:
+                    data_obj = date.fromisoformat(data_str)
+            except:
+                continue
+            
+            movimenti_banca.append({
+                "data": data_obj,
+                "importo": importo,
+                "descrizione": descrizione,
+                "nome_estratto": estrai_nome_da_descrizione(descrizione)
+            })
+    
+    elif filename.endswith('.xlsx') or filename.endswith('.xls'):
+        # Parse Excel
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(contents))
+            sheet = wb.active
+            
+            # Trova header
+            headers = [str(cell.value or '').lower() for cell in sheet[1]]
+            
+            for row_num in range(2, sheet.max_row + 1):
+                row_data = [sheet.cell(row=row_num, column=i+1).value for i in range(len(headers))]
+                
+                # Cerca colonne rilevanti
+                importo = None
+                data_val = None
+                descrizione = ""
+                
+                for i, h in enumerate(headers):
+                    val = row_data[i]
+                    if 'importo' in h and val:
+                        if isinstance(val, (int, float)):
+                            importo = abs(val)
+                        else:
+                            importo_str = str(val).replace('.', '').replace(',', '.')
+                            try:
+                                importo = abs(float(importo_str))
+                            except:
+                                pass
+                    elif 'data' in h and val:
+                        if isinstance(val, datetime):
+                            data_val = val.date()
+                        elif isinstance(val, date):
+                            data_val = val
+                    elif 'descri' in h and val:
+                        descrizione = str(val)
+                
+                if importo and data_val:
+                    movimenti_banca.append({
+                        "data": data_val,
+                        "importo": importo,
+                        "descrizione": descrizione,
+                        "nome_estratto": estrai_nome_da_descrizione(descrizione)
+                    })
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Errore parsing Excel: {str(e)}")
+    else:
+        raise HTTPException(status_code=400, detail="Formato file non supportato. Usa CSV o Excel.")
+    
+    # Carica tutti i salari non riconciliati
+    salari = await db["prima_nota_salari"].find(
+        {"riconciliato": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    # Crea indice per matching veloce
+    salari_index = {}
+    for s in salari:
+        key = (normalizza_nome(s.get("dipendente", "")), s.get("importo_erogato") or s.get("importo"))
+        if key not in salari_index:
+            salari_index[key] = []
+        salari_index[key].append(s)
+    
+    # Riconcilia
+    riconciliati = 0
+    non_trovati = []
+    gia_riconciliati = 0
+    
+    for mov in movimenti_banca:
+        nome_banca = mov.get("nome_estratto")
+        if isinstance(nome_banca, list):
+            nome_banca = " ".join(nome_banca)
+        
+        if not nome_banca:
+            non_trovati.append(mov)
+            continue
+        
+        nome_norm = normalizza_nome(nome_banca)
+        importo = mov["importo"]
+        
+        # Cerca match esatto (nome + importo)
+        found = False
+        for (key_nome, key_importo), salari_list in salari_index.items():
+            if abs(key_importo - importo) < 0.01:  # Tolleranza di 1 centesimo
+                # Verifica match nome (parziale)
+                if key_nome in nome_norm or nome_norm in key_nome:
+                    for salario in salari_list:
+                        if salario.get("riconciliato"):
+                            continue
+                        
+                        # Aggiorna salario come riconciliato
+                        await db["prima_nota_salari"].update_one(
+                            {"id": salario["id"]},
+                            {"$set": {
+                                "riconciliato": True,
+                                "data_riconciliazione": datetime.utcnow().isoformat(),
+                                "riferimento_banca": mov["descrizione"][:200],
+                                "data_banca": mov["data"].isoformat()
+                            }}
+                        )
+                        salario["riconciliato"] = True
+                        riconciliati += 1
+                        found = True
+                        break
+                
+                if found:
+                    break
+        
+        if not found:
+            # Controlla se è già stato riconciliato in precedenza
+            existing = await db["estratto_conto_salari"].find_one({
+                "data": mov["data"].isoformat(),
+                "importo": importo,
+                "descrizione": mov["descrizione"][:100]
+            })
+            if existing:
+                gia_riconciliati += 1
+            else:
+                non_trovati.append({
+                    "data": mov["data"].isoformat(),
+                    "importo": importo,
+                    "descrizione": mov["descrizione"][:100],
+                    "nome": nome_banca
+                })
+    
+    # Salva movimenti banca importati
+    for mov in movimenti_banca:
+        mov_record = {
+            "id": f"EC-{mov['data'].isoformat()}-{mov['importo']:.2f}",
+            "data": mov["data"].isoformat(),
+            "importo": mov["importo"],
+            "descrizione": mov["descrizione"][:200] if mov.get("descrizione") else "",
+            "nome_dipendente": mov.get("nome_estratto") if isinstance(mov.get("nome_estratto"), str) else " ".join(mov.get("nome_estratto", [])),
+            "imported_at": datetime.utcnow().isoformat()
+        }
+        
+        # Upsert per evitare duplicati
+        await db["estratto_conto_salari"].update_one(
+            {"id": mov_record["id"]},
+            {"$set": mov_record},
+            upsert=True
+        )
+    
+    return {
+        "message": "Importazione e riconciliazione completate",
+        "movimenti_banca": len(movimenti_banca),
+        "riconciliati": riconciliati,
+        "gia_riconciliati": gia_riconciliati,
+        "non_trovati": len(non_trovati),
+        "dettaglio_non_trovati": non_trovati[:20]
+    }
+
+
 @router.get("/salari")
 async def get_salari(
     anno: Optional[int] = Query(None),
