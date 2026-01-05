@@ -374,7 +374,7 @@ export default function Commercialista() {
         a.stato || '-'
       ]);
       
-      doc.autoTable({
+      autoTable(doc, {
         startY: currentY,
         head: [['Numero', 'Data', 'Beneficiario', 'Importo', 'Stato']],
         body: tableData,
