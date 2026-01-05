@@ -1083,3 +1083,114 @@ async def get_corrispettivi_sync_status() -> Dict[str, Any]:
         "totale_in_prima_nota_euro": totals_pn[0].get("totale", 0) if totals_pn else 0
     }
 
+
+
+# ============== PRIMA NOTA SALARI ==============
+
+@router.get("/salari")
+async def get_prima_nota_salari(
+    data_da: str = Query(None),
+    data_a: str = Query(None),
+    anno: int = Query(None)
+) -> Dict[str, Any]:
+    """
+    Ottiene i movimenti della Prima Nota Salari.
+    Filtra per periodo o anno.
+    """
+    db = Database.get_db()
+    
+    query = {"categoria": {"$in": ["Stipendi", "Salari", "TFR", "Contributi"]}}
+    
+    if data_da and data_a:
+        query["data"] = {"$gte": data_da, "$lte": data_a}
+    elif anno:
+        query["data"] = {"$regex": f"^{anno}"}
+    
+    # Cerca nei movimenti banca (dove si pagano stipendi)
+    movimenti = await db[COLLECTION_PRIMA_NOTA_BANCA].find(
+        query,
+        {"_id": 0}
+    ).sort("data", -1).to_list(1000)
+    
+    # Calcola totale
+    totale = sum(m.get("importo", 0) for m in movimenti)
+    
+    return {
+        "movimenti": movimenti,
+        "totale": totale,
+        "count": len(movimenti)
+    }
+
+
+@router.post("/salari")
+async def create_movimento_salario(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    """
+    Crea un nuovo movimento salario nella Prima Nota Banca.
+    Aggiorna automaticamente anche la busta paga del dipendente.
+    """
+    db = Database.get_db()
+    
+    required = ["data", "importo"]
+    for field in required:
+        if not data.get(field):
+            raise HTTPException(status_code=400, detail=f"Campo {field} obbligatorio")
+    
+    movimento = {
+        "id": str(uuid.uuid4()),
+        "data": data["data"],
+        "tipo": "uscita",
+        "categoria": data.get("categoria", "Stipendi"),
+        "descrizione": data.get("descrizione", "Pagamento stipendio"),
+        "importo": float(data["importo"]),
+        "nome_dipendente": data.get("nome_dipendente", ""),
+        "codice_fiscale": data.get("codice_fiscale", ""),
+        "employee_id": data.get("employee_id"),
+        "periodo": data.get("periodo", ""),
+        "riferimento": f"SAL-{data['data'][:7]}",
+        "source": "prima_nota_salari",
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    await db[COLLECTION_PRIMA_NOTA_BANCA].insert_one(movimento)
+    movimento.pop("_id", None)
+    
+    # Se c'è un dipendente associato, crea/aggiorna la busta paga
+    if data.get("employee_id") and data.get("periodo"):
+        busta = await db["buste_paga"].find_one({
+            "dipendente_id": data["employee_id"],
+            "periodo": data["periodo"]
+        })
+        
+        if busta:
+            # Aggiorna: somma all'importo esistente
+            new_netto = float(busta.get("netto", 0)) + float(data["importo"])
+            await db["buste_paga"].update_one(
+                {"id": busta["id"]},
+                {"$set": {
+                    "netto": new_netto,
+                    "pagata": True,
+                    "data_pagamento": data["data"],
+                    "updated_at": datetime.utcnow().isoformat()
+                }}
+            )
+        else:
+            # Crea nuova busta paga
+            new_busta = {
+                "id": str(uuid.uuid4()),
+                "dipendente_id": data["employee_id"],
+                "periodo": data["periodo"],
+                "lordo": float(data["importo"]) * 1.3,  # Stima lordo
+                "netto": float(data["importo"]),
+                "contributi": float(data["importo"]) * 0.3,  # Stima contributi
+                "trattenute": 0,
+                "pagata": True,
+                "data_pagamento": data["data"],
+                "created_at": datetime.utcnow().isoformat()
+            }
+            await db["buste_paga"].insert_one(new_busta)
+    
+    return {
+        "success": True,
+        "movimento": movimento,
+        "message": "Movimento salario registrato"
+    }
