@@ -4,7 +4,7 @@ API endpoints for all modules.
 """
 from . import (
     auth, invoices, suppliers, warehouse, accounting, haccp,
-    employees, cash, bank,
+    cash, bank,
     chart_of_accounts, exports, finanziaria
 )
 
@@ -15,7 +15,6 @@ __all__ = [
     "warehouse",
     "accounting",
     "haccp",
-    "employees",
     "cash",
     "bank",
     "chart_of_accounts",
