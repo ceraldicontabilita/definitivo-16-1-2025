@@ -237,7 +237,7 @@ export default function ControlloMensile() {
         // Debug info
         _debug: {
           cassaCount: monthCassa.length,
-          bancaCount: monthBanca.length,
+          estrattoCount: monthEstratto.length,
           corrispCount: monthCorrisp.length
         }
       });
