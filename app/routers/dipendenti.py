@@ -404,12 +404,13 @@ async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
 @router.post("/import-estratto-conto")
 async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
-    Importa estratto conto bancario (CSV, Excel o PDF) e riconcilia con i salari.
+    Importa estratto conto bancario (CSV o Excel) e riconcilia con i salari.
     
     Formati supportati:
     - CSV (separatore ;): Data, Importo, Descrizione, Categoria
     - Excel (.xlsx, .xls): Colonne simili
-    - PDF: "Elenco Esiti Pagamenti" (BANCO BPM) o estratti conto standard
+    
+    Nota: PDF non più supportato per attendibilità dati.
     """
     db = Database.get_db()
     
@@ -418,140 +419,7 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
     
     movimenti_banca = []
     
-    if filename.endswith('.pdf'):
-        # Parse PDF usando PyMuPDF
-        try:
-            import fitz  # PyMuPDF
-            import re
-            
-            doc = fitz.open(stream=contents, filetype="pdf")
-            full_text = ""
-            for page in doc:
-                full_text += page.get_text()
-            doc.close()
-            
-            lines = [l.strip() for l in full_text.split('\n') if l.strip()]
-            
-            # Determina il tipo di PDF
-            if "Elenco Esiti Pagamenti" in full_text or "Stipendi SEPA" in full_text:
-                # Formato "Elenco Esiti Pagamenti" - struttura: Nome, Data, Tipo, Num, Importo EUR
-                # Pattern da escludere (parole chiave del documento, non nomi)
-                exclude_patterns = [
-                    'EUR', 'SEPA', 'CERALDI GROUP', 'CONFERMATA', 'ADDEBITATA',
-                    'ESITO', 'ORDINANTE', 'BENEFICIARIO', 'TIPO', 'PAGAMENTO',
-                    'NUMERO', 'IMPORTO', 'STATO', 'BANCO', 'BPM', 'PAGINA',
-                    'PARAMETRI', 'RICERCA', 'RAPPORTO', 'DATA', 'BANCA',
-                    'YOUBUSINESS', 'ELENCO', 'DISP', 'NUM', 'ORD', 'DISPOSIZIONE',
-                    'S.R.L', 'S.P.A', 'SRL', 'SPA'
-                ]
-                
-                i = 0
-                while i < len(lines) - 8:
-                    line = lines[i].strip()
-                    
-                    # Cerca pattern: Nome -> Data -> "Stipendi SEPA" -> Num -> Importo EUR
-                    # Il nome è una riga con lettere (non numeri, non EUR)
-                    line_upper = line.upper()
-                    
-                    # Verifica che non sia una parola chiave del documento
-                    is_excluded = any(excl in line_upper for excl in exclude_patterns)
-                    
-                    if (not re.match(r'^\d', line) and 
-                        not is_excluded and
-                        len(line) > 3 and len(line) < 60 and
-                        # Deve contenere almeno una lettera
-                        any(c.isalpha() for c in line) and
-                        # Non deve essere solo maiuscole brevi (es. "SI", "NO")
-                        not (line.isupper() and len(line) < 5)):
-                        
-                        # Verifica se le righe successive hanno il pattern atteso
-                        next_lines = lines[i+1:i+10]
-                        
-                        # Cerca data (DD/MM/YYYY)
-                        data_found = None
-                        tipo_found = None
-                        importo_found = None
-                        
-                        for nl in next_lines:
-                            nl = nl.strip()
-                            # Data
-                            date_match = re.match(r'^(\d{2}/\d{2}/\d{4})$', nl)
-                            if date_match:
-                                data_found = date_match.group(1)
-                            
-                            # Tipo pagamento
-                            if 'Stipendi SEPA' in nl:
-                                tipo_found = 'stipendio'
-                            
-                            # Importo (formato: 1.234,56 EUR o 1234,56 EUR)
-                            imp_match = re.match(r'^([\d.,]+)\s*EUR$', nl)
-                            if imp_match:
-                                imp_str = imp_match.group(1).replace('.', '').replace(',', '.')
-                                try:
-                                    importo_found = float(imp_str)
-                                except:
-                                    pass
-                        
-                        if data_found and importo_found and tipo_found:
-                            # Parse data
-                            parts = data_found.split('/')
-                            data_obj = date(int(parts[2]), int(parts[1]), int(parts[0]))
-                            
-                            movimenti_banca.append({
-                                "data": data_obj,
-                                "importo": importo_found,
-                                "descrizione": f"Stipendio SEPA - {line}",
-                                "nome_estratto": line
-                            })
-                            i += 6  # Salta le righe già processate
-                            continue
-                    
-                    i += 1
-            
-            else:
-                # Formato estratto conto standard - cerca pattern FAVORE
-                current_date = None
-                
-                for i, line in enumerate(lines):
-                    # Cerca data formato DD/MM/YY
-                    date_match = re.search(r'(\d{2}/\d{2}/\d{2,4})', line)
-                    if date_match:
-                        date_str = date_match.group(1)
-                        try:
-                            parts = date_str.split('/')
-                            year = int(parts[2])
-                            if year < 100:
-                                year += 2000
-                            current_date = date(year, int(parts[1]), int(parts[0]))
-                        except:
-                            pass
-                    
-                    # Cerca pattern FAVORE per bonifici stipendi
-                    if 'FAVORE' in line.upper() and current_date:
-                        # Cerca importo nelle righe vicine
-                        search_lines = lines[max(0,i-2):min(len(lines),i+5)]
-                        search_text = ' '.join(search_lines)
-                        
-                        importo_matches = re.findall(r'[-]?\s*([\d.]+,\d{2})', search_text)
-                        
-                        for imp_str in importo_matches:
-                            try:
-                                imp_val = float(imp_str.replace('.', '').replace(',', '.'))
-                                if imp_val > 50:  # Ignora importi troppo piccoli
-                                    movimenti_banca.append({
-                                        "data": current_date,
-                                        "importo": imp_val,
-                                        "descrizione": line[:200],
-                                        "nome_estratto": None  # Non abbiamo il nome in questo formato
-                                    })
-                                    break
-                            except:
-                                continue
-            
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Errore parsing PDF: {str(e)}")
-    
-    elif filename.endswith('.csv'):
+    if filename.endswith('.csv'):
         # Parse CSV
         import csv
         text = contents.decode('utf-8-sig')  # Handle BOM
