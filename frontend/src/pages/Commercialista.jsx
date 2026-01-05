@@ -296,7 +296,7 @@ export default function Commercialista() {
   };
 
   // Download PDF
-  const downloadPDF = (type, carnet = null) => {
+  const downloadPDF = (type, carnetData = null) => {
     let doc;
     let filename;
     const meseNome = MESI[selectedMonth + 1];
@@ -311,8 +311,13 @@ export default function Commercialista() {
         filename = `Fatture_Cassa_${meseNome}_${selectedYear}.pdf`;
         break;
       case 'carnet':
-        doc = generateCarnetPDF(carnet);
-        filename = `Carnet_Assegni_${carnet?.id || 'export'}.pdf`;
+        doc = generateCarnetPDF(carnetData);
+        filename = `Carnet_Assegni_${carnetData?.id || 'export'}.pdf`;
+        break;
+      case 'carnet_multi':
+        // Genera PDF con tutti i carnet selezionati
+        doc = generateCarnetMultiPDF(carnetData);
+        filename = `Carnet_Assegni_${carnetData?.length || 0}_carnet.pdf`;
         break;
       default:
         return;
@@ -324,9 +329,83 @@ export default function Commercialista() {
     }
   };
 
+  // Generate PDF for multiple carnets
+  const generateCarnetMultiPDF = (carnetsArray) => {
+    if (!carnetsArray || carnetsArray.length === 0) return null;
+    
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(76, 175, 80);
+    doc.text('Carnet Assegni Selezionati', 14, 20);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`${carnetsArray.length} carnet - ${carnetsArray.reduce((sum, c) => sum + c.assegni.length, 0)} assegni`, 14, 30);
+    
+    // Summary
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    const totaleImporto = carnetsArray.reduce((sum, c) => sum + c.totale, 0);
+    doc.text(`Totale Generale: € ${totaleImporto.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, 42);
+    
+    // Tabella con tutti gli assegni raggruppati per carnet
+    let currentY = 55;
+    
+    carnetsArray.forEach((carnet, idx) => {
+      // Titolo carnet
+      if (currentY > 250) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.setFontSize(12);
+      doc.setTextColor(76, 175, 80);
+      doc.text(`Carnet ${carnet.id} - ${carnet.assegni.length} assegni - € ${carnet.totale.toLocaleString('it-IT', {minimumFractionDigits: 2})}`, 14, currentY);
+      currentY += 8;
+      
+      // Tabella assegni
+      const tableData = carnet.assegni.map(a => [
+        a.numero || '-',
+        a.data || '-',
+        a.beneficiario || '-',
+        `€ ${parseFloat(a.importo || 0).toLocaleString('it-IT', {minimumFractionDigits: 2})}`,
+        a.stato || '-'
+      ]);
+      
+      doc.autoTable({
+        startY: currentY,
+        head: [['Numero', 'Data', 'Beneficiario', 'Importo', 'Stato']],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [76, 175, 80] },
+        styles: { fontSize: 8 },
+        margin: { left: 14, right: 14 }
+      });
+      
+      currentY = doc.lastAutoTable.finalY + 15;
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128);
+      doc.text(
+        `Ceraldi Group S.R.L. - Generato il ${new Date().toLocaleDateString('it-IT')} - Pagina ${i}/${pageCount}`,
+        14,
+        doc.internal.pageSize.height - 10
+      );
+    }
+    
+    return doc;
+  };
+
   // Send email with PDF
-  const sendEmail = async (type, carnet = null) => {
-    setSending(type);
+  const sendEmail = async (type, carnetData = null) => {
+    setSending(type === 'carnet_multi' ? 'carnet' : type);
     
     try {
       let doc;
@@ -347,11 +426,18 @@ export default function Commercialista() {
           payload.mese = selectedMonth + 1;
           break;
         case 'carnet':
-          doc = generateCarnetPDF(carnet);
+          doc = generateCarnetPDF(carnetData);
           endpoint = '/api/commercialista/invia-carnet';
-          payload.carnet_id = carnet.id;
-          payload.assegni_count = carnet.assegni.length;
-          payload.totale_importo = carnet.totale;
+          payload.carnet_id = carnetData.id;
+          payload.assegni_count = carnetData.assegni.length;
+          payload.totale_importo = carnetData.totale;
+          break;
+        case 'carnet_multi':
+          doc = generateCarnetMultiPDF(carnetData);
+          endpoint = '/api/commercialista/invia-carnet';
+          payload.carnet_id = carnetData.map(c => c.id).join(', ');
+          payload.assegni_count = carnetData.reduce((sum, c) => sum + c.assegni.length, 0);
+          payload.totale_importo = carnetData.reduce((sum, c) => sum + c.totale, 0);
           break;
         default:
           return;
