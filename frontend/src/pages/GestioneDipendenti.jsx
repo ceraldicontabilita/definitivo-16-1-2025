@@ -107,20 +107,6 @@ export default function GestioneDipendenti() {
     }
   };
 
-  const loadBustePaga = async () => {
-    try {
-      setLoadingBuste(true);
-      const monthStr = String(selectedMonth).padStart(2, '0');
-      const res = await api.get(`/api/dipendenti/buste-paga?anno=${selectedYear}&mese=${monthStr}`).catch(() => ({ data: [] }));
-      setBustePaga(res.data || []);
-    } catch (error) {
-      console.error('Error loading buste paga:', error);
-      setBustePaga([]);
-    } finally {
-      setLoadingBuste(false);
-    }
-  };
-
   const loadPrimaNotaSalari = async () => {
     try {
       setLoadingSalari(true);
