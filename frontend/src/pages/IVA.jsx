@@ -283,6 +283,207 @@ export default function IVA() {
             </div>
           )}
 
+          {/* Vista Trimestrale */}
+          {viewMode === "quarterly" && annualData && (
+            <div className="card">
+              <div className="h1">Riepilogo IVA Trimestrale {selectedYear}</div>
+              
+              {/* Calcola totali trimestrali */}
+              {(() => {
+                const quarters = [
+                  { name: "Q1 - Gen/Feb/Mar", months: [1, 2, 3] },
+                  { name: "Q2 - Apr/Mag/Giu", months: [4, 5, 6] },
+                  { name: "Q3 - Lug/Ago/Set", months: [7, 8, 9] },
+                  { name: "Q4 - Ott/Nov/Dic", months: [10, 11, 12] }
+                ];
+                
+                const quarterlyData = quarters.map(q => {
+                  const monthsData = annualData.monthly_data?.filter(m => q.months.includes(m.mese)) || [];
+                  const iva_debito = monthsData.reduce((sum, m) => sum + (m.iva_debito || 0), 0);
+                  const iva_credito = monthsData.reduce((sum, m) => sum + (m.iva_credito || 0), 0);
+                  const saldo = iva_debito - iva_credito;
+                  const fatture_count = monthsData.reduce((sum, m) => sum + (m.fatture_count || 0), 0);
+                  const corrispettivi_count = monthsData.reduce((sum, m) => sum + (m.corrispettivi_count || 0), 0);
+                  return {
+                    ...q,
+                    iva_debito,
+                    iva_credito,
+                    saldo,
+                    stato: saldo > 0 ? "Da versare" : saldo < 0 ? "A credito" : "Neutro",
+                    fatture_count,
+                    corrispettivi_count,
+                    monthsData
+                  };
+                });
+                
+                return (
+                  <>
+                    {/* Totali Annuali */}
+                    <div className="grid" style={{ marginBottom: 20 }}>
+                      <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8, textAlign: "center" }}>
+                        <div className="small">Totale IVA Debito</div>
+                        <div style={{ fontSize: 28, fontWeight: "bold", color: "#e65100" }}>
+                          € {annualData.totali?.iva_debito?.toLocaleString('it-IT', {minimumFractionDigits: 2})}
+                        </div>
+                      </div>
+                      <div style={{ background: "#e8f5e9", padding: 15, borderRadius: 8, textAlign: "center" }}>
+                        <div className="small">Totale IVA Credito</div>
+                        <div style={{ fontSize: 28, fontWeight: "bold", color: "#2e7d32" }}>
+                          € {annualData.totali?.iva_credito?.toLocaleString('it-IT', {minimumFractionDigits: 2})}
+                        </div>
+                      </div>
+                      <div style={{ 
+                        background: annualData.totali?.saldo > 0 ? "#ffcdd2" : "#c8e6c9", 
+                        padding: 15, 
+                        borderRadius: 8, 
+                        textAlign: "center" 
+                      }}>
+                        <div className="small">Saldo Annuale</div>
+                        <div style={{ 
+                          fontSize: 28, 
+                          fontWeight: "bold", 
+                          color: getSaldoColor(annualData.totali?.saldo) 
+                        }}>
+                          € {annualData.totali?.saldo?.toLocaleString('it-IT', {minimumFractionDigits: 2})}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card per ogni trimestre */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 15, marginBottom: 20 }}>
+                      {quarterlyData.map((q, i) => {
+                        const badge = getSaldoBadge(q.stato);
+                        return (
+                          <div key={i} style={{ 
+                            border: '2px solid #e2e8f0', 
+                            borderRadius: 12, 
+                            padding: 15,
+                            background: 'white'
+                          }}>
+                            <div style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 12, color: '#1e293b' }}>
+                              {q.name}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                              <span className="small">IVA Debito:</span>
+                              <span style={{ color: "#e65100", fontWeight: 'bold' }}>€ {q.iva_debito.toFixed(2)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                              <span className="small">IVA Credito:</span>
+                              <span style={{ color: "#2e7d32", fontWeight: 'bold' }}>€ {q.iva_credito.toFixed(2)}</span>
+                            </div>
+                            <div style={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              padding: '8px 0', 
+                              borderTop: '1px solid #e2e8f0',
+                              marginTop: 8
+                            }}>
+                              <span style={{ fontWeight: 'bold' }}>Saldo:</span>
+                              <span style={{ 
+                                color: getSaldoColor(q.saldo), 
+                                fontWeight: 'bold',
+                                fontSize: 18
+                              }}>
+                                € {q.saldo.toFixed(2)}
+                              </span>
+                            </div>
+                            <div style={{ textAlign: 'center', marginTop: 8 }}>
+                              <span style={{ 
+                                background: badge.bg, 
+                                color: badge.color,
+                                padding: "4px 12px",
+                                borderRadius: 12,
+                                fontSize: 12,
+                                fontWeight: 'bold'
+                              }}>
+                                {q.stato}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 10, fontSize: 11, color: '#64748b' }}>
+                              <span>📄 {q.fatture_count} fatture</span>
+                              <span>🧾 {q.corrispettivi_count} corrisp.</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Tabella dettaglio per trimestre */}
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left" }}>
+                          <th style={{ padding: 10 }}>Trimestre</th>
+                          <th style={{ padding: 10, textAlign: "right" }}>IVA Debito</th>
+                          <th style={{ padding: 10, textAlign: "right" }}>IVA Credito</th>
+                          <th style={{ padding: 10, textAlign: "right" }}>Saldo</th>
+                          <th style={{ padding: 10, textAlign: "center" }}>Stato</th>
+                          <th style={{ padding: 10, textAlign: "center" }}>Fatture</th>
+                          <th style={{ padding: 10, textAlign: "center" }}>Corrisp.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {quarterlyData.map((q, i) => {
+                          const badge = getSaldoBadge(q.stato);
+                          return (
+                            <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+                              <td style={{ padding: 10, fontWeight: "bold" }}>{q.name}</td>
+                              <td style={{ padding: 10, textAlign: "right", color: "#e65100" }}>
+                                € {q.iva_debito.toFixed(2)}
+                              </td>
+                              <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
+                                € {q.iva_credito.toFixed(2)}
+                              </td>
+                              <td style={{ 
+                                padding: 10, 
+                                textAlign: "right", 
+                                fontWeight: "bold",
+                                color: getSaldoColor(q.saldo)
+                              }}>
+                                € {q.saldo.toFixed(2)}
+                              </td>
+                              <td style={{ padding: 10, textAlign: "center" }}>
+                                <span style={{ 
+                                  background: badge.bg, 
+                                  color: badge.color,
+                                  padding: "3px 10px",
+                                  borderRadius: 12,
+                                  fontSize: 12
+                                }}>
+                                  {q.stato}
+                                </span>
+                              </td>
+                              <td style={{ padding: 10, textAlign: "center" }}>{q.fatture_count}</td>
+                              <td style={{ padding: 10, textAlign: "center" }}>{q.corrispettivi_count}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ background: "#f5f5f5", fontWeight: "bold" }}>
+                          <td style={{ padding: 10 }}>TOTALE ANNO</td>
+                          <td style={{ padding: 10, textAlign: "right", color: "#e65100" }}>
+                            € {annualData.totali?.iva_debito?.toFixed(2)}
+                          </td>
+                          <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
+                            € {annualData.totali?.iva_credito?.toFixed(2)}
+                          </td>
+                          <td style={{ 
+                            padding: 10, 
+                            textAlign: "right",
+                            color: getSaldoColor(annualData.totali?.saldo)
+                          }}>
+                            € {annualData.totali?.saldo?.toFixed(2)}
+                          </td>
+                          <td colSpan={3}></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
           {/* Vista Mensile Progressiva */}
           {viewMode === "monthly" && monthlyData && (
             <div className="card">
