@@ -14,7 +14,7 @@ export default function Fatture() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, phase: "" });
   const [uploadResult, setUploadResult] = useState(null);
-  const [viewingInvoiceId, setViewingInvoiceId] = useState(null);
+  const [viewingInvoice, setViewingInvoice] = useState(null);
   const [err, setErr] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [updatingPayment, setUpdatingPayment] = useState(null);
