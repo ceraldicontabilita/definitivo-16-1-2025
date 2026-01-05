@@ -148,6 +148,17 @@ async def upload_suppliers_excel(file: UploadFile = File(...)) -> Dict[str, Any]
                     await db[Collections.SUPPLIERS].insert_one(supplier_doc)
                     results["imported"] += 1
                     
+                    # === ASSOCIAZIONE AUTOMATICA FATTURE ===
+                    if partita_iva:
+                        await db[Collections.INVOICES].update_many(
+                            {"cedente_piva": partita_iva, "supplier_id": {"$exists": False}},
+                            {"$set": {
+                                "supplier_id": supplier_doc["id"],
+                                "supplier_name": supplier_doc.get("denominazione", ""),
+                                "updated_at": datetime.utcnow().isoformat()
+                            }}
+                        )
+                    
             except Exception as e:
                 results["errors"].append(f"Riga {idx+2}: {str(e)}")
         
