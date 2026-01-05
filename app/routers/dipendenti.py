@@ -251,14 +251,16 @@ MESI_MAP = {
 @router.post("/import-salari")
 async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
-    Importa salari da file Excel.
+    Importa salari da file Excel con aggregazione per dipendente/mese.
     
     Formato atteso:
     - Colonna 1: Dipendente (nome completo)
     - Colonna 2: Mese (italiano: Gennaio, Febbraio, etc.)
     - Colonna 3: Anno
-    - Colonna 4: Stipendio Netto (importo busta)
-    - Colonna 5: Importo Erogato (bonifico)
+    - Colonna 4: Stipendio Netto (importo busta) - può essere su riga separata
+    - Colonna 5: Importo Erogato (bonifico) - può essere su riga separata o multipli
+    
+    Il sistema aggrega automaticamente più righe dello stesso dipendente/mese.
     """
     try:
         import openpyxl
@@ -272,32 +274,115 @@ async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
     wb = openpyxl.load_workbook(io.BytesIO(contents))
     sheet = wb.active
     
+    # Prima passata: aggrega dati per dipendente/mese/anno
+    aggregati = {}  # key: (dipendente, mese, anno) -> {stipendio_netto, importo_erogato}
+    
+    for row_num in range(2, sheet.max_row + 1):
+        dipendente_nome = sheet.cell(row=row_num, column=1).value
+        mese_str = sheet.cell(row=row_num, column=2).value
+        anno = sheet.cell(row=row_num, column=3).value
+        stipendio_netto = sheet.cell(row=row_num, column=4).value
+        importo_erogato = sheet.cell(row=row_num, column=5).value
+        
+        if not dipendente_nome or not mese_str or not anno:
+            continue
+        
+        # Converti mese
+        mese_lower = str(mese_str).lower().strip()
+        mese = MESI_MAP.get(mese_lower)
+        if not mese:
+            continue
+        
+        # Chiave univoca
+        key = (str(dipendente_nome).strip(), mese, int(anno))
+        
+        if key not in aggregati:
+            aggregati[key] = {"stipendio_netto": 0, "importo_erogato": 0}
+        
+        # Aggrega i valori (somma se ci sono più righe)
+        if stipendio_netto and float(stipendio_netto) > 0:
+            # Per stipendio netto, prendi il MAX (non sommare)
+            aggregati[key]["stipendio_netto"] = max(
+                aggregati[key]["stipendio_netto"],
+                float(stipendio_netto)
+            )
+        
+        if importo_erogato and float(importo_erogato) > 0:
+            # Per bonifici, SOMMA (potrebbero essere pagamenti multipli)
+            aggregati[key]["importo_erogato"] += float(importo_erogato)
+    
+    # Seconda passata: inserisci/aggiorna nel DB
     imported = 0
+    updated = 0
     skipped = 0
     errors = []
     
-    # Salta la riga di intestazione
-    for row_num in range(2, sheet.max_row + 1):
+    for (dipendente_nome, mese, anno), valori in aggregati.items():
         try:
-            dipendente_nome = sheet.cell(row=row_num, column=1).value
-            mese_str = sheet.cell(row=row_num, column=2).value
-            anno = sheet.cell(row=row_num, column=3).value
-            stipendio_netto = sheet.cell(row=row_num, column=4).value
-            importo_erogato = sheet.cell(row=row_num, column=5).value
+            stipendio = valori["stipendio_netto"]
+            erogato = valori["importo_erogato"]
             
-            # Validazione
-            if not dipendente_nome or not mese_str or not anno:
+            # Se entrambi sono 0, salta
+            if stipendio == 0 and erogato == 0:
                 skipped += 1
                 continue
             
-            # Converti mese in numero
-            mese_lower = str(mese_str).lower().strip()
-            mese = MESI_MAP.get(mese_lower)
-            if not mese:
-                errors.append(f"Riga {row_num}: Mese non valido '{mese_str}'")
-                skipped += 1
-                continue
+            # Se stipendio è 0, usa erogato
+            if stipendio == 0:
+                stipendio = erogato
             
+            # Crea data per il movimento (ultimo giorno del mese)
+            from calendar import monthrange
+            _, last_day = monthrange(int(anno), mese)
+            data_movimento = f"{anno}-{mese:02d}-{last_day:02d}"
+            
+            # Crea ID univoco
+            movimento_id = f"SAL-{anno}-{mese:02d}-{dipendente_nome.replace(' ', '-')}"
+            
+            # Cerca se esiste già
+            existing = await db["prima_nota_salari"].find_one({"id": movimento_id})
+            
+            movimento = {
+                "id": movimento_id,
+                "dipendente": dipendente_nome,
+                "mese": mese,
+                "mese_nome": list(MESI_MAP.keys())[mese-1].capitalize(),
+                "anno": int(anno),
+                "data": data_movimento,
+                "stipendio_netto": round(stipendio, 2),
+                "importo_erogato": round(erogato, 2) if erogato > 0 else round(stipendio, 2),
+                "importo": round(erogato, 2) if erogato > 0 else round(stipendio, 2),
+                "tipo": "uscita",
+                "categoria": "SALARIO",
+                "descrizione": f"Stipendio {list(MESI_MAP.keys())[mese-1].capitalize()} {anno} - {dipendente_nome}",
+                "imported": True
+            }
+            
+            if existing:
+                # Aggiorna
+                await db["prima_nota_salari"].update_one(
+                    {"id": movimento_id},
+                    {"$set": movimento}
+                )
+                updated += 1
+            else:
+                movimento["created_at"] = datetime.utcnow().isoformat()
+                await db["prima_nota_salari"].insert_one(movimento)
+                imported += 1
+            
+        except Exception as e:
+            errors.append(f"{dipendente_nome} {mese}/{anno}: {str(e)}")
+            skipped += 1
+    
+    return {
+        "message": f"Importazione completata",
+        "imported": imported,
+        "updated": updated,
+        "skipped": skipped,
+        "errors": errors[:20] if errors else [],
+        "total_rows": sheet.max_row - 1,
+        "aggregati": len(aggregati)
+    }
             # Converti importi
             stipendio = float(stipendio_netto or 0)
             erogato = float(importo_erogato or stipendio)
