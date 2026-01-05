@@ -3,7 +3,7 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 2.0.0  
+**Versione**: 2.1.0  
 **Ultimo aggiornamento**: 5 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
@@ -12,9 +12,13 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 ## Architettura Post-Refactoring
 
 ### Statistiche Codebase
-- **Router Backend**: 71 (ridotti da 86)
-- **Pagine Frontend**: 38 (ridotte da 40)
+- **Router Backend**: 72 (ridotti da 86)
+- **Pagine Frontend**: 39 (ridotte da 40, +1 nuova)
 - **File eliminati**: 17 (router non usati, pagine mobile obsolete)
+
+### Nuove Funzionalità (5 Gen 2026)
+- **Parser PDF Estratto Conto BANCO BPM**: Import automatico movimenti bancari
+- **Fix anni dinamici**: Selettori anno ora usano anno corrente ± 2 anni
 
 ### Struttura Directory
 ```
