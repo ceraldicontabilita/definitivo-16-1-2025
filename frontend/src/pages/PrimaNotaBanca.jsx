@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { formatDateIT } from "../lib/utils";
+import { formatDateIT, formatEuro } from "../lib/utils";
 
 export default function PrimaNotaBanca() {
   const [statements, setStatements] = useState([]);
@@ -139,7 +139,7 @@ export default function PrimaNotaBanca() {
                     </span>
                   </td>
                   <td style={{ padding: 8, color: s.type === "accredito" ? "#2e7d32" : "#c62828", fontWeight: "bold" }}>
-                    {s.type === "accredito" ? "+" : "-"} € {(s.amount || 0).toFixed(2)}
+                    {s.type === "accredito" ? "+" : "-"} {formatEuro(s.amount)}
                   </td>
                   <td style={{ padding: 8 }}>{s.description}</td>
                   <td style={{ padding: 8 }}>{s.bank_account || "-"}</td>
