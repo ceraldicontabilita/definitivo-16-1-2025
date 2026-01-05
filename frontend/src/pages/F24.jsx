@@ -131,7 +131,7 @@ export default function F24() {
     }
   }
 
-  const formatCurrency = (value) => {
+  const formatEuro = (value) => {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
 
@@ -232,10 +232,10 @@ export default function F24() {
                   {t.mese_riferimento || t.mese || ''}/{t.anno || ''}
                 </td>
                 <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: t.debito > 0 ? '#dc2626' : '#64748b' }}>
-                  {t.debito > 0 ? formatCurrency(t.debito) : '-'}
+                  {t.debito > 0 ? formatEuro(t.debito) : '-'}
                 </td>
                 <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: t.credito > 0 ? '#16a34a' : '#64748b' }}>
-                  {t.credito > 0 ? formatCurrency(t.credito) : '-'}
+                  {t.credito > 0 ? formatEuro(t.credito) : '-'}
                 </td>
               </tr>
             ))}
@@ -244,10 +244,10 @@ export default function F24() {
             <tr style={{ background: '#f1f5f9', fontWeight: 'bold' }}>
               <td colSpan={4} style={{ padding: '10px', textAlign: 'right' }}>TOTALI:</td>
               <td style={{ padding: '10px', textAlign: 'right', color: '#dc2626' }}>
-                {formatCurrency(allTributi.reduce((sum, t) => sum + (t.debito || 0), 0))}
+                {formatEuro(allTributi.reduce((sum, t) => sum + (t.debito || 0), 0))}
               </td>
               <td style={{ padding: '10px', textAlign: 'right', color: '#16a34a' }}>
-                {formatCurrency(allTributi.reduce((sum, t) => sum + (t.credito || 0), 0))}
+                {formatEuro(allTributi.reduce((sum, t) => sum + (t.credito || 0), 0))}
               </td>
             </tr>
           </tfoot>
@@ -278,12 +278,12 @@ export default function F24() {
           <div style={{ background: '#e8f5e9', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #4caf50' }}>
             <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>✅ Pagati</div>
             <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#4caf50' }}>{dashboard.pagati?.count || 0}</div>
-            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatCurrency(dashboard.pagati?.totale)}</div>
+            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatEuro(dashboard.pagati?.totale)}</div>
           </div>
           <div style={{ background: '#fff3e0', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #ff9800' }}>
             <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>⏳ Da Pagare</div>
             <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#ff9800' }}>{dashboard.da_pagare?.count || 0}</div>
-            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatCurrency(dashboard.da_pagare?.totale)}</div>
+            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatEuro(dashboard.da_pagare?.totale)}</div>
           </div>
           <div style={{ 
             background: dashboard.alert_attivi > 0 ? '#ffebee' : '#f5f5f5', 
@@ -351,7 +351,7 @@ export default function F24() {
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 120 }}>
                   <div style={{ fontSize: 18, fontWeight: 'bold', color: getSeverityColor(alert.severity) }}>
-                    {formatCurrency(alert.importo)}
+                    {formatEuro(alert.importo)}
                   </div>
                   <button
                     onClick={() => handleMarkAsPaid(alert.f24_id)}
@@ -554,7 +554,7 @@ export default function F24() {
                         )}
                       </td>
                       <td style={{ padding: 12, textAlign: "right", fontWeight: 'bold' }}>
-                        {formatCurrency(f.importo || f.saldo_finale || f.amount || 0)}
+                        {formatEuro(f.importo || f.saldo_finale || f.amount || 0)}
                       </td>
                       <td style={{ padding: 12, textAlign: "center" }}>
                         <span style={{

@@ -92,7 +92,7 @@ export default function Scadenze() {
     }
   };
 
-  const formatCurrency = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
+  const formatEuro = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
   const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleDateString('it-IT') : '-';
 
   const getPriorityStyle = (priorita, urgente) => {
@@ -160,8 +160,8 @@ export default function Scadenze() {
               }}>
                 <div style={{ fontWeight: 'bold', marginBottom: 8 }}>{s.periodo}</div>
                 <div style={{ fontSize: 13, opacity: 0.9 }}>
-                  <div>Debito: {formatCurrency(s.iva_debito)}</div>
-                  <div>Credito: {formatCurrency(s.iva_credito)}</div>
+                  <div>Debito: {formatEuro(s.iva_debito)}</div>
+                  <div>Credito: {formatEuro(s.iva_credito)}</div>
                 </div>
                 <div style={{ 
                   marginTop: 10, 
@@ -173,7 +173,7 @@ export default function Scadenze() {
                   fontSize: 14,
                   textAlign: 'center'
                 }}>
-                  {s.da_versare ? `Versare ${formatCurrency(s.importo_versamento)}` : 'A credito'}
+                  {s.da_versare ? `Versare ${formatEuro(s.importo_versamento)}` : 'A credito'}
                 </div>
                 <div style={{ fontSize: 11, marginTop: 8, opacity: 0.8 }}>
                   Scadenza: {formatDate(s.data_scadenza)}
@@ -188,7 +188,7 @@ export default function Scadenze() {
           </div>
           {scadenzeIva.totale_da_versare > 0 && (
             <div style={{ marginTop: 15, textAlign: 'right', fontSize: 18 }}>
-              Totale da versare: <strong>{formatCurrency(scadenzeIva.totale_da_versare)}</strong>
+              Totale da versare: <strong>{formatEuro(scadenzeIva.totale_da_versare)}</strong>
             </div>
           )}
         </div>
@@ -295,7 +295,7 @@ export default function Scadenze() {
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     {s.importo > 0 && (
                       <div style={{ fontWeight: 'bold', fontSize: 16, color: style.text }}>
-                        {formatCurrency(s.importo)}
+                        {formatEuro(s.importo)}
                       </div>
                     )}
                     <div style={{ 

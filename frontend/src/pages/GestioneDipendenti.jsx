@@ -194,7 +194,7 @@ export default function GestioneDipendenti() {
   // Helpers
   const uniqueMansioni = [...new Set(dipendenti.map(d => d.mansione).filter(Boolean))];
   const completeCount = dipendenti.filter(d => d.codice_fiscale && d.email && d.telefono).length;
-  const formatCurrency = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
+  const formatEuro = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
   const mesiNomi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
   return (
@@ -377,13 +377,13 @@ export default function GestioneDipendenti() {
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Lordo</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold' }}>
-                  {formatCurrency(bustePaga.reduce((sum, b) => sum + (b.lordo || 0), 0))}
+                  {formatEuro(bustePaga.reduce((sum, b) => sum + (b.lordo || 0), 0))}
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Netto</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold' }}>
-                  {formatCurrency(bustePaga.reduce((sum, b) => sum + (b.netto || 0), 0))}
+                  {formatEuro(bustePaga.reduce((sum, b) => sum + (b.netto || 0), 0))}
                 </div>
               </div>
             </div>
@@ -429,13 +429,13 @@ export default function GestioneDipendenti() {
                         </td>
                         <td style={{ padding: 12, color: '#6b7280' }}>{dip.mansione || '-'}</td>
                         <td style={{ padding: 12, textAlign: 'right', fontWeight: '500' }}>
-                          {busta ? formatCurrency(busta.lordo) : '-'}
+                          {busta ? formatEuro(busta.lordo) : '-'}
                         </td>
                         <td style={{ padding: 12, textAlign: 'right', color: '#ef4444' }}>
-                          {busta ? formatCurrency(busta.contributi) : '-'}
+                          {busta ? formatEuro(busta.contributi) : '-'}
                         </td>
                         <td style={{ padding: 12, textAlign: 'right', fontWeight: 'bold', color: '#10b981' }}>
-                          {busta ? formatCurrency(busta.netto) : '-'}
+                          {busta ? formatEuro(busta.netto) : '-'}
                         </td>
                         <td style={{ padding: 12, textAlign: 'center' }}>
                           {busta ? (
@@ -551,7 +551,7 @@ export default function GestioneDipendenti() {
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Uscite</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold' }}>
-                  {formatCurrency(salariMovimenti.reduce((sum, m) => sum + (m.importo || 0), 0))}
+                  {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo || 0), 0))}
                 </div>
               </div>
             </div>
@@ -601,7 +601,7 @@ export default function GestioneDipendenti() {
                       <td style={{ padding: 12 }}>{mov.nome_dipendente || '-'}</td>
                       <td style={{ padding: 12, color: '#6b7280' }}>{mov.descrizione}</td>
                       <td style={{ padding: 12, textAlign: 'right', fontWeight: 'bold', color: '#ef4444' }}>
-                        {formatCurrency(mov.importo)}
+                        {formatEuro(mov.importo)}
                       </td>
                     </tr>
                   ))}
@@ -610,7 +610,7 @@ export default function GestioneDipendenti() {
                   <tr style={{ background: '#f9fafb', fontWeight: 'bold' }}>
                     <td colSpan={3} style={{ padding: 12 }}>TOTALE</td>
                     <td style={{ padding: 12, textAlign: 'right', color: '#ef4444' }}>
-                      {formatCurrency(salariMovimenti.reduce((sum, m) => sum + (m.importo || 0), 0))}
+                      {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo || 0), 0))}
                     </td>
                   </tr>
                 </tfoot>

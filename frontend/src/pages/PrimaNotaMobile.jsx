@@ -53,7 +53,7 @@ export default function PrimaNotaMobile() {
     }
   };
 
-  const formatCurrency = (value) => {
+  const formatEuro = (value) => {
     return new Intl.NumberFormat('it-IT', {
       style: 'currency',
       currency: 'EUR'
@@ -174,7 +174,7 @@ export default function PrimaNotaMobile() {
           }}>
             <div style={{ fontSize: '10px', color: '#166534' }}>Entrate</div>
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#166534' }}>
-              {formatCurrency(currentTotali.totale_entrate || currentTotali.entrate)}
+              {formatEuro(currentTotali.totale_entrate || currentTotali.entrate)}
             </div>
           </div>
           <div style={{
@@ -185,7 +185,7 @@ export default function PrimaNotaMobile() {
           }}>
             <div style={{ fontSize: '10px', color: '#dc2626' }}>Uscite</div>
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#dc2626' }}>
-              {formatCurrency(currentTotali.totale_uscite || currentTotali.uscite)}
+              {formatEuro(currentTotali.totale_uscite || currentTotali.uscite)}
             </div>
           </div>
           <div style={{
@@ -196,7 +196,7 @@ export default function PrimaNotaMobile() {
           }}>
             <div style={{ fontSize: '10px', color: '#0369a1' }}>Saldo</div>
             <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#0369a1' }}>
-              {formatCurrency(currentTotali.saldo)}
+              {formatEuro(currentTotali.saldo)}
             </div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function PrimaNotaMobile() {
                   color: mov.tipo_movimento === 'entrata' ? '#166534' : '#dc2626',
                   flexShrink: 0
                 }}>
-                  {mov.tipo_movimento === 'entrata' ? '+' : '-'}{formatCurrency(mov.importo)}
+                  {mov.tipo_movimento === 'entrata' ? '+' : '-'}{formatEuro(mov.importo)}
                 </div>
               </div>
             ))
