@@ -428,7 +428,7 @@ export default function Riconciliazione() {
           <div style={{ display: "flex", gap: 15, flexWrap: "wrap", alignItems: "center" }}>
             <input 
               type="file" 
-              accept=".xlsx,.xls,.csv,.pdf" 
+              accept=".xlsx,.xls,.csv" 
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               data-testid="file-input"
               style={{
