@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { formatEuro } from '../lib/utils';
 
 const CATEGORIE = {
   attivo: { nome: "ATTIVO", color: "#2196f3", icon: "📊" },

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { formatEuro } from '../lib/utils';
 
 const STATI_ASSEGNO = {
   vuoto: { label: "Valido", color: "#4caf50" },

@@ -1,13 +1,7 @@
 import React, { useState, useRef } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(value || 0);
-};
+import { formatEuro } from '../lib/utils';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
