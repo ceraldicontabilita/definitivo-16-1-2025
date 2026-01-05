@@ -121,7 +121,7 @@ export default function IVA() {
             </button>
             <button 
               className={viewMode === "today" ? "primary" : ""} 
-              onClick={() => setViewMode("today")}}
+              onClick={() => setViewMode("today")}
             >
               Oggi
             </button>
