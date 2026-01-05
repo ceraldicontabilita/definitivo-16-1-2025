@@ -445,3 +445,149 @@ function POSCalendarWidget({ data }) {
     </div>
   );
 }
+
+
+// Widget Scadenze Component
+function ScadenzeWidget({ scadenze }) {
+  if (!scadenze || !scadenze.scadenze || scadenze.scadenze.length === 0) return null;
+  
+  const getPriorityColor = (priorita, urgente) => {
+    if (urgente) return { bg: '#fef2f2', border: '#fecaca', text: '#dc2626' };
+    switch (priorita) {
+      case 'critica': return { bg: '#fef2f2', border: '#fecaca', text: '#dc2626' };
+      case 'alta': return { bg: '#fff7ed', border: '#fed7aa', text: '#ea580c' };
+      case 'media': return { bg: '#fefce8', border: '#fef08a', text: '#ca8a04' };
+      default: return { bg: '#f0fdf4', border: '#bbf7d0', text: '#16a34a' };
+    }
+  };
+  
+  const getTipoIcon = (tipo) => {
+    switch (tipo) {
+      case 'IVA': return '🧾';
+      case 'F24': return '📋';
+      case 'FATTURA': return '📄';
+      case 'INPS': return '🏛️';
+      default: return '📌';
+    }
+  };
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
+  };
+  
+  const urgenti = scadenze.scadenze.filter(s => s.urgente);
+  
+  return (
+    <div style={{ 
+      background: 'white', 
+      borderRadius: 12, 
+      padding: 20,
+      marginBottom: 20,
+      border: urgenti.length > 0 ? '2px solid #fecaca' : '1px solid #e5e7eb',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 15
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 24 }}>📅</span>
+          <div>
+            <div style={{ fontWeight: 'bold', fontSize: 16 }}>Prossime Scadenze</div>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>
+              {scadenze.totale} scadenze nei prossimi 30 giorni
+              {urgenti.length > 0 && (
+                <span style={{ color: '#dc2626', fontWeight: 'bold', marginLeft: 8 }}>
+                  ⚠️ {urgenti.length} urgenti
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        {scadenze.prossima_scadenza && (
+          <div style={{ 
+            textAlign: 'right',
+            background: getPriorityColor(scadenze.prossima_scadenza.priorita, scadenze.prossima_scadenza.urgente).bg,
+            padding: '8px 12px',
+            borderRadius: 8
+          }}>
+            <div style={{ fontSize: 11, color: '#6b7280' }}>Prossima</div>
+            <div style={{ fontWeight: 'bold', color: getPriorityColor(scadenze.prossima_scadenza.priorita, scadenze.prossima_scadenza.urgente).text }}>
+              {scadenze.prossima_scadenza.giorni_mancanti === 0 ? 'OGGI' : 
+               scadenze.prossima_scadenza.giorni_mancanti === 1 ? 'DOMANI' :
+               `tra ${scadenze.prossima_scadenza.giorni_mancanti} giorni`}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {scadenze.scadenze.slice(0, 6).map((s, idx) => {
+          const colors = getPriorityColor(s.priorita, s.urgente);
+          return (
+            <div 
+              key={idx}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '10px 12px',
+                background: colors.bg,
+                borderRadius: 8,
+                borderLeft: `4px solid ${colors.border}`
+              }}
+            >
+              <span style={{ fontSize: 18 }}>{getTipoIcon(s.tipo)}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ 
+                  fontWeight: '500', 
+                  fontSize: 13,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {s.descrizione}
+                </div>
+                {s.importo > 0 && (
+                  <div style={{ fontSize: 12, color: colors.text, fontWeight: 'bold' }}>
+                    € {s.importo.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                  </div>
+                )}
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 'bold', color: colors.text }}>
+                  {formatDate(s.data)}
+                </div>
+                <div style={{ fontSize: 10, color: '#6b7280' }}>
+                  {s.giorni_mancanti === 0 ? 'Oggi' :
+                   s.giorni_mancanti === 1 ? 'Domani' :
+                   s.giorni_mancanti < 0 ? 'Scaduta' :
+                   `${s.giorni_mancanti}g`}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      
+      {scadenze.totale > 6 && (
+        <div style={{ textAlign: 'center', marginTop: 12 }}>
+          <Link 
+            to="/scadenze" 
+            style={{ 
+              fontSize: 13, 
+              color: '#3b82f6',
+              textDecoration: 'none'
+            }}
+          >
+            Vedi tutte le {scadenze.totale} scadenze →
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
