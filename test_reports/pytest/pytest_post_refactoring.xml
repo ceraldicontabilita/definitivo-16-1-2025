@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="27" time="1.840" timestamp="2026-01-05T17:05:06.720347+00:00" hostname="agent-env-26467a20-f0fc-4cfd-a6cb-3aa157c9120a"><testcase classname="tests.test_post_refactoring.TestHealthAndBasicAPIs" name="test_health_check" time="0.100" /><testcase classname="tests.test_post_refactoring.TestHealthAndBasicAPIs" name="test_root_endpoint" time="0.047"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests/test_post_refactoring.py:27: in test_root_endpoint
+    data = response.json()
+           ^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_post_refactoring.TestDashboardAPIs" name="test_dashboard_stats" time="0.040" /><testcase classname="tests.test_post_refactoring.TestDashboardAPIs" name="test_dashboard_summary" time="0.046" /><testcase classname="tests.test_post_refactoring.TestDashboardAPIs" name="test_dashboard_trend_mensile" time="0.095" /><testcase classname="tests.test_post_refactoring.TestScadenzeAPIs" name="test_scadenze_prossime" time="0.036" /><testcase classname="tests.test_post_refactoring.TestScadenzeAPIs" name="test_scadenze_iva" time="0.109" /><testcase classname="tests.test_post_refactoring.TestScadenzeAPIs" name="test_scadenze_tutte" time="0.047" /><testcase classname="tests.test_post_refactoring.TestFattureAPIs" name="test_fatture_list" time="0.037" /><testcase classname="tests.test_post_refactoring.TestFattureAPIs" name="test_fatture_anni_disponibili" time="0.045" /><testcase classname="tests.test_post_refactoring.TestPrimaNotaAPIs" name="test_prima_nota_cassa" time="0.051" /><testcase classname="tests.test_post_refactoring.TestPrimaNotaAPIs" name="test_prima_nota_banca" time="0.242" /><testcase classname="tests.test_post_refactoring.TestPrimaNotaAPIs" name="test_prima_nota_riepilogo" time="0.045"><failure message="assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">tests/test_post_refactoring.py:134: in test_prima_nota_riepilogo
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.test_post_refactoring.TestIVAAPIs" name="test_iva_today" time="0.046" /><testcase classname="tests.test_post_refactoring.TestIVAAPIs" name="test_iva_annual" time="0.091" /><testcase classname="tests.test_post_refactoring.TestIVAAPIs" name="test_iva_monthly" time="0.093" /><testcase classname="tests.test_post_refactoring.TestDipendentiAPIs" name="test_dipendenti_list" time="0.035" /><testcase classname="tests.test_post_refactoring.TestDipendentiAPIs" name="test_contract_types" time="0.034" /><testcase classname="tests.test_post_refactoring.TestFornitoriAPIs" name="test_fornitori_list" time="0.035" /><testcase classname="tests.test_post_refactoring.TestMagazzinoAPIs" name="test_magazzino_products" time="0.039"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_post_refactoring.py:202: in test_magazzino_products
+    assert response.status_code == 200
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_post_refactoring.TestHACCPAPIs" name="test_haccp_dashboard" time="0.045" /><testcase classname="tests.test_post_refactoring.TestHACCPAPIs" name="test_haccp_notifiche" time="0.037" /><testcase classname="tests.test_post_refactoring.TestBilancioAPIs" name="test_bilancio_stato_patrimoniale" time="0.085" /><testcase classname="tests.test_post_refactoring.TestBilancioAPIs" name="test_bilancio_conto_economico" time="0.042" /><testcase classname="tests.test_post_refactoring.TestCorrispettiviAPIs" name="test_corrispettivi_list" time="0.035" /><testcase classname="tests.test_post_refactoring.TestF24APIs" name="test_f24_list" time="0.032"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_post_refactoring.py:260: in test_f24_list
+    assert response.status_code == 200
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_post_refactoring.TestPOSAccreditoAPIs" name="test_pos_calendario" time="0.034" /></testsuite></testsuites>
