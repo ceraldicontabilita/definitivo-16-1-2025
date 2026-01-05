@@ -193,6 +193,7 @@ app.include_router(commercialista.router, prefix="/api/commercialista", tags=["C
 app.include_router(bilancio.router, prefix="/api/bilancio", tags=["Bilancio"])
 app.include_router(pos_accredito.router, prefix="/api/pos-accredito", tags=["POS Accredito"])
 app.include_router(scadenze.router, prefix="/api/scadenze", tags=["Scadenze e Notifiche"])
+app.include_router(bank_statement_parser.router, prefix="/api/estratto-conto", tags=["Estratto Conto Parser"])
 
 @app.get("/")
 async def root():
