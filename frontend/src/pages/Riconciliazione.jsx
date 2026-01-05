@@ -6,13 +6,16 @@ export default function Riconciliazione() {
   const [file, setFile] = useState(null);
   const [results, setResults] = useState(null);
   const [stats, setStats] = useState(null);
+  const [fornitoriStats, setFornitoriStats] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("import");
+  const [tipoRiconciliazione, setTipoRiconciliazione] = useState("banca"); // "banca" | "fornitori"
   const [addingToPrimaNota, setAddingToPrimaNota] = useState(null);
 
   useEffect(() => {
     loadStats();
+    loadFornitoriStats();
   }, []);
 
   const loadStats = async () => {
@@ -21,6 +24,15 @@ export default function Riconciliazione() {
       setStats(res.data);
     } catch (e) {
       console.error("Error loading stats:", e);
+    }
+  };
+
+  const loadFornitoriStats = async () => {
+    try {
+      const res = await api.get("/api/riconciliazione-fornitori/riepilogo-fornitori");
+      setFornitoriStats(res.data);
+    } catch (e) {
+      console.error("Error loading fornitori stats:", e);
     }
   };
 
@@ -68,14 +80,38 @@ export default function Riconciliazione() {
       const formData = new FormData();
       formData.append("file", file);
       
-      const res = await api.post("/api/bank-statement/import", formData, {
+      // Scegli endpoint in base al tipo
+      const endpoint = tipoRiconciliazione === "fornitori" 
+        ? "/api/riconciliazione-fornitori/import-estratto-conto-fornitori"
+        : "/api/bank-statement/import";
+      
+      const res = await api.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       
-      setResults(res.data);
-      loadStats(); // Refresh stats after import
+      // Normalizza la risposta
+      const normalizedResults = tipoRiconciliazione === "fornitori" 
+        ? {
+            success: true,
+            movements_found: res.data.movimenti_banca,
+            reconciled: res.data.riconciliati,
+            not_found: res.data.non_trovati,
+            not_found_details: res.data.dettaglio_non_trovati?.map(d => ({
+              data: d.data,
+              descrizione: d.descrizione,
+              importo: d.importo,
+              nome: d.nome,
+              tipo: "uscita"
+            })),
+            message: res.data.message
+          }
+        : res.data;
       
-      if (res.data.success || res.data.total > 0) {
+      setResults(normalizedResults);
+      loadStats();
+      loadFornitoriStats();
+      
+      if (res.data.success || res.data.riconciliati > 0 || res.data.total > 0) {
         setFile(null);
       }
     } catch (e) {
@@ -85,6 +121,18 @@ export default function Riconciliazione() {
     }
   }
 
+  const handleResetFornitori = async () => {
+    if (!window.confirm("Reset riconciliazione fornitori? Le fatture torneranno 'non pagate'.")) return;
+    
+    try {
+      const res = await api.delete("/api/riconciliazione-fornitori/reset-riconciliazione-fornitori");
+      alert(`Reset completato: ${res.data.fatture_resettate} fatture resettate`);
+      loadFornitoriStats();
+    } catch (e) {
+      setErr("Errore reset: " + (e.response?.data?.detail || e.message));
+    }
+  };
+
   return (
     <div style={{ padding: "clamp(12px, 3vw, 20px)" }}>
       {/* Header */}
@@ -93,12 +141,54 @@ export default function Riconciliazione() {
           🏦 Riconciliazione Bancaria
         </h1>
         <p style={{ color: "#666", margin: "8px 0 0 0" }}>
-          Importa estratto conto e riconcilia automaticamente con Prima Nota Banca
+          Importa estratto conto e riconcilia automaticamente
         </p>
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
+      {/* Tipo Riconciliazione Toggle */}
+      <div style={{ 
+        display: "flex", 
+        gap: 10, 
+        marginBottom: 20,
+        padding: 5,
+        background: "#f1f5f9",
+        borderRadius: 10,
+        width: "fit-content"
+      }}>
+        <button
+          onClick={() => setTipoRiconciliazione("banca")}
+          data-testid="tipo-banca"
+          style={{
+            padding: "10px 20px",
+            background: tipoRiconciliazione === "banca" ? "#3b82f6" : "transparent",
+            color: tipoRiconciliazione === "banca" ? "white" : "#64748b",
+            border: "none",
+            borderRadius: 8,
+            fontWeight: "bold",
+            cursor: "pointer"
+          }}
+        >
+          🏦 Prima Nota Banca
+        </button>
+        <button
+          onClick={() => setTipoRiconciliazione("fornitori")}
+          data-testid="tipo-fornitori"
+          style={{
+            padding: "10px 20px",
+            background: tipoRiconciliazione === "fornitori" ? "#8b5cf6" : "transparent",
+            color: tipoRiconciliazione === "fornitori" ? "white" : "#64748b",
+            border: "none",
+            borderRadius: 8,
+            fontWeight: "bold",
+            cursor: "pointer"
+          }}
+        >
+          📦 Fatture Fornitori
+        </button>
+      </div>
+
+      {/* Stats Cards - Banca */}
+      {tipoRiconciliazione === "banca" && stats && (
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
@@ -156,50 +246,130 @@ export default function Riconciliazione() {
         </div>
       )}
 
+      {/* Stats Cards - Fornitori */}
+      {tipoRiconciliazione === "fornitori" && fornitoriStats && (
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
+          gap: 15, 
+          marginBottom: 25 
+        }}>
+          <div style={{ 
+            background: "#faf5ff", 
+            borderRadius: 12, 
+            padding: 15, 
+            textAlign: "center",
+            border: "1px solid #e9d5ff"
+          }}>
+            <div style={{ fontSize: 28, fontWeight: "bold", color: "#7c3aed" }}>
+              {fornitoriStats.totale_fatture}
+            </div>
+            <div style={{ fontSize: 12, color: "#6d28d9" }}>Fatture Totali</div>
+          </div>
+          <div style={{ 
+            background: "#f0fdf4", 
+            borderRadius: 12, 
+            padding: 15, 
+            textAlign: "center",
+            border: "1px solid #bbf7d0"
+          }}>
+            <div style={{ fontSize: 28, fontWeight: "bold", color: "#16a34a" }}>
+              {fornitoriStats.fatture_pagate}
+            </div>
+            <div style={{ fontSize: 12, color: "#15803d" }}>Fatture Pagate</div>
+          </div>
+          <div style={{ 
+            background: "#fef3c7", 
+            borderRadius: 12, 
+            padding: 15, 
+            textAlign: "center",
+            border: "1px solid #fde68a"
+          }}>
+            <div style={{ fontSize: 28, fontWeight: "bold", color: "#d97706" }}>
+              {fornitoriStats.fatture_non_pagate}
+            </div>
+            <div style={{ fontSize: 12, color: "#b45309" }}>Da Pagare</div>
+          </div>
+          <div style={{ 
+            background: "#fee2e2", 
+            borderRadius: 12, 
+            padding: 15, 
+            textAlign: "center",
+            border: "1px solid #fecaca"
+          }}>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#dc2626" }}>
+              {formatEuro(fornitoriStats.importo_da_pagare)}
+            </div>
+            <div style={{ fontSize: 12, color: "#b91c1c" }}>Tot. Da Pagare</div>
+          </div>
+        </div>
+      )}
+
       {/* Actions Bar */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-        <a
-          href="/api/exports/riconciliazione?format=xlsx"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid="export-excel-btn"
-          style={{
-            padding: "10px 20px",
-            background: "#059669",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            fontWeight: "bold",
-            cursor: "pointer",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8
-          }}
-        >
-          📊 Export Excel
-        </a>
-        <a
-          href="/api/exports/riconciliazione?format=xlsx&solo_non_riconciliati=true"
-          target="_blank"
-          rel="noopener noreferrer"
-          data-testid="export-non-reconciled-btn"
-          style={{
-            padding: "10px 20px",
-            background: "#d97706",
-            color: "white",
-            border: "none",
-            borderRadius: 8,
-            fontWeight: "bold",
-            cursor: "pointer",
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8
-          }}
-        >
-          ⚠️ Export Non Riconciliati
-        </a>
+        {tipoRiconciliazione === "banca" && (
+          <>
+            <a
+              href="/api/exports/riconciliazione?format=xlsx"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="export-excel-btn"
+              style={{
+                padding: "10px 20px",
+                background: "#059669",
+                color: "white",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: "bold",
+                cursor: "pointer",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8
+              }}
+            >
+              📊 Export Excel
+            </a>
+            <a
+              href="/api/exports/riconciliazione?format=xlsx&solo_non_riconciliati=true"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="export-non-reconciled-btn"
+              style={{
+                padding: "10px 20px",
+                background: "#d97706",
+                color: "white",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: "bold",
+                cursor: "pointer",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8
+              }}
+            >
+              ⚠️ Export Non Riconciliati
+            </a>
+          </>
+        )}
+        {tipoRiconciliazione === "fornitori" && (
+          <button
+            onClick={handleResetFornitori}
+            data-testid="reset-fornitori-btn"
+            style={{
+              padding: "10px 20px",
+              background: "#9333ea",
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            🔄 Reset Riconciliazione
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -249,7 +419,10 @@ export default function Riconciliazione() {
             📄 Carica Estratto Conto
           </h2>
           <p style={{ color: "#666", marginBottom: 20, fontSize: 14 }}>
-            Carica l'estratto conto bancario per la riconciliazione automatica con i movimenti in Prima Nota Banca.
+            {tipoRiconciliazione === "banca" 
+              ? "Carica l'estratto conto bancario per la riconciliazione automatica con i movimenti in Prima Nota Banca."
+              : "Carica l'estratto conto per abbinare automaticamente i bonifici alle fatture fornitori non pagate."
+            }
           </p>
           
           <div style={{ display: "flex", gap: 15, flexWrap: "wrap", alignItems: "center" }}>
@@ -273,7 +446,7 @@ export default function Riconciliazione() {
               data-testid="upload-btn"
               style={{
                 padding: "12px 30px",
-                background: loading || !file ? "#9ca3af" : "#3b82f6",
+                background: loading || !file ? "#9ca3af" : tipoRiconciliazione === "fornitori" ? "#8b5cf6" : "#3b82f6",
                 color: "white",
                 border: "none",
                 borderRadius: 8,
@@ -282,7 +455,7 @@ export default function Riconciliazione() {
                 minWidth: 200
               }}
             >
-              {loading ? "⏳ Elaborazione..." : "📤 Carica e Riconcilia"}
+              {loading ? "⏳ Elaborazione..." : tipoRiconciliazione === "fornitori" ? "📦 Riconcilia Fornitori" : "📤 Carica e Riconcilia"}
             </button>
           </div>
           
@@ -311,41 +484,59 @@ export default function Riconciliazione() {
         }}>
           <h2 style={{ margin: "0 0 15px 0", fontSize: 18 }}>📋 Istruzioni per la Riconciliazione</h2>
           
-          <div style={{ display: "grid", gap: 20 }}>
-            <div style={{ background: "#f8fafc", padding: 15, borderRadius: 8 }}>
-              <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#1e40af" }}>
-                📁 Formati Supportati
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: 20, color: "#475569" }}>
-                <li><strong>PDF</strong> - Estratto conto in formato PDF (preferito)</li>
-                <li><strong>Excel (.xlsx, .xls)</strong> - Fogli Excel esportati dalla banca</li>
-                <li><strong>CSV</strong> - File CSV con separatore punto e virgola</li>
-              </ul>
+          {tipoRiconciliazione === "banca" ? (
+            <div style={{ display: "grid", gap: 20 }}>
+              <div style={{ background: "#f8fafc", padding: 15, borderRadius: 8 }}>
+                <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#1e40af" }}>
+                  📁 Formati Supportati
+                </h3>
+                <ul style={{ margin: 0, paddingLeft: 20, color: "#475569" }}>
+                  <li><strong>PDF</strong> - Estratto conto in formato PDF (preferito)</li>
+                  <li><strong>Excel (.xlsx, .xls)</strong> - Fogli Excel esportati dalla banca</li>
+                  <li><strong>CSV</strong> - File CSV con separatore punto e virgola</li>
+                </ul>
+              </div>
+              
+              <div style={{ background: "#f8fafc", padding: 15, borderRadius: 8 }}>
+                <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#059669" }}>
+                  🔄 Come Funziona
+                </h3>
+                <ol style={{ margin: 0, paddingLeft: 20, color: "#475569" }}>
+                  <li>Il sistema estrae automaticamente i movimenti dal file</li>
+                  <li>Ogni movimento viene confrontato con Prima Nota Banca</li>
+                  <li>I movimenti con stessa data, tipo e importo (±1%) vengono riconciliati</li>
+                  <li>I movimenti riconciliati vengono marcati nel database</li>
+                </ol>
+              </div>
             </div>
-            
-            <div style={{ background: "#f8fafc", padding: 15, borderRadius: 8 }}>
-              <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#059669" }}>
-                🔄 Come Funziona
-              </h3>
-              <ol style={{ margin: 0, paddingLeft: 20, color: "#475569" }}>
-                <li>Il sistema estrae automaticamente i movimenti dal file</li>
-                <li>Ogni movimento viene confrontato con Prima Nota Banca</li>
-                <li>I movimenti con stessa data, tipo e importo (±1%) vengono riconciliati</li>
-                <li>I movimenti riconciliati vengono marcati nel database</li>
-              </ol>
+          ) : (
+            <div style={{ display: "grid", gap: 20 }}>
+              <div style={{ background: "#faf5ff", padding: 15, borderRadius: 8 }}>
+                <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#7c3aed" }}>
+                  📦 Riconciliazione Fornitori
+                </h3>
+                <ol style={{ margin: 0, paddingLeft: 20, color: "#475569" }}>
+                  <li>Carica l&apos;estratto conto bancario (CSV o Excel)</li>
+                  <li>Il sistema cerca i bonifici con categoria &quot;Fornitori&quot;</li>
+                  <li>Abbina automaticamente con le fatture non pagate</li>
+                  <li>Matching basato su: nome fornitore + importo + data</li>
+                  <li>Le fatture abbinate vengono marcate come &quot;pagate&quot;</li>
+                </ol>
+              </div>
+              
+              <div style={{ background: "#fef3c7", padding: 15, borderRadius: 8 }}>
+                <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#b45309" }}>
+                  ⚠️ Note
+                </h3>
+                <ul style={{ margin: 0, paddingLeft: 20, color: "#78350f" }}>
+                  <li>Il file deve contenere la categoria &quot;Fornitori&quot; per filtrare i bonifici</li>
+                  <li>Il nome fornitore viene estratto dalla descrizione (pattern &quot;FAVORE NomeFornitore&quot;)</li>
+                  <li>Tolleranza importo: 1% o €5</li>
+                  <li>Usa &quot;Reset Riconciliazione&quot; per ri-testare</li>
+                </ul>
+              </div>
             </div>
-            
-            <div style={{ background: "#fef3c7", padding: 15, borderRadius: 8 }}>
-              <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#b45309" }}>
-                ⚠️ Note Importanti
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: 20, color: "#78350f" }}>
-                <li>Assicurati che l'estratto conto contenga: data, descrizione, importo</li>
-                <li>Il sistema cerca corrispondenze esatte per data e importo</li>
-                <li>I movimenti non trovati possono essere riconciliati manualmente</li>
-              </ul>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -360,7 +551,7 @@ export default function Riconciliazione() {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <h2 style={{ margin: 0, fontSize: 18 }}>
-              📊 Risultato Riconciliazione
+              📊 Risultato Riconciliazione {tipoRiconciliazione === "fornitori" ? "Fornitori" : ""}
             </h2>
             <button
               onClick={() => setResults(null)}
@@ -399,7 +590,9 @@ export default function Riconciliazione() {
               <div style={{ fontSize: 24, fontWeight: "bold", color: "#16a34a" }}>
                 {results.reconciled || 0}
               </div>
-              <div style={{ fontSize: 12, color: "#15803d" }}>Riconciliati</div>
+              <div style={{ fontSize: 12, color: "#15803d" }}>
+                {tipoRiconciliazione === "fornitori" ? "Fatture Pagate" : "Riconciliati"}
+              </div>
             </div>
             <div style={{ background: "#fef3c7", padding: 15, borderRadius: 8, textAlign: "center" }}>
               <div style={{ fontSize: 24, fontWeight: "bold", color: "#d97706" }}>
@@ -418,7 +611,7 @@ export default function Riconciliazione() {
               marginBottom: 20,
               color: results.success ? "#166534" : "#dc2626"
             }}>
-              {results.success ? "✅" : "❌"} {results.message}
+              ✅ {results.message}
             </div>
           )}
 
@@ -461,57 +654,53 @@ export default function Riconciliazione() {
           {results.not_found_details?.length > 0 && (
             <div>
               <h3 style={{ margin: "0 0 10px 0", fontSize: 16, color: "#d97706" }}>
-                ⚠️ Movimenti Non Trovati in Prima Nota ({results.not_found_details.length})
+                ⚠️ {tipoRiconciliazione === "fornitori" ? "Bonifici Non Abbinati" : "Movimenti Non Trovati"} ({results.not_found_details.length})
               </h3>
               <div style={{ maxHeight: 400, overflow: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, tableLayout: "fixed" }}>
                   <thead>
                     <tr style={{ background: "#fef3c7" }}>
-                      <th style={{ padding: 8, textAlign: "left", borderBottom: "1px solid #ddd", width: "100px" }}>Data</th>
-                      <th style={{ padding: 8, textAlign: "left", borderBottom: "1px solid #ddd", width: "55%" }}>Descrizione</th>
-                      <th style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #ddd", width: "100px" }}>Importo</th>
-                      <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "80px" }}>Tipo</th>
-                      <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "100px" }}>Azione</th>
+                      <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "100px" }}>Data</th>
+                      <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "150px" }}>Fornitore</th>
+                      <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "45%" }}>Descrizione</th>
+                      <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "100px" }}>Importo</th>
+                      {tipoRiconciliazione === "banca" && (
+                        <th style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #ddd", width: "100px" }}>Azione</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
                     {results.not_found_details.map((item, idx) => (
                       <tr key={idx} style={{ background: idx % 2 ? "#fafafa" : "white" }}>
-                        <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{item.data}</td>
-                        <td style={{ padding: 8, borderBottom: "1px solid #eee", wordWrap: "break-word", whiteSpace: "normal" }}>
-                          {item.descrizione}
+                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>{item.data}</td>
+                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee", fontWeight: 500 }}>
+                          {item.nome || "-"}
                         </td>
-                        <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #eee" }}>
+                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee", wordWrap: "break-word", whiteSpace: "normal" }}>
+                          {item.descrizione?.substring(0, 80)}
+                        </td>
+                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>
                           {formatEuro(item.importo)}
                         </td>
-                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>
-                          <span style={{
-                            padding: "2px 8px",
-                            borderRadius: 4,
-                            fontSize: 11,
-                            background: item.tipo === "entrata" ? "#dcfce7" : "#fee2e2",
-                            color: item.tipo === "entrata" ? "#166534" : "#dc2626"
-                          }}>
-                            {item.tipo === "entrata" ? "↑ Entrata" : "↓ Uscita"}
-                          </span>
-                        </td>
-                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>
-                          <button
-                            onClick={() => handleAddToPrimaNota(item)}
-                            style={{
-                              padding: "4px 8px",
-                              background: "#3b82f6",
-                              color: "white",
-                              border: "none",
-                              borderRadius: 4,
-                              fontSize: 11,
-                              cursor: "pointer"
-                            }}
-                            title="Aggiungi a Prima Nota Banca"
-                          >
-                            + Prima Nota
-                          </button>
-                        </td>
+                        {tipoRiconciliazione === "banca" && (
+                          <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>
+                            <button
+                              onClick={() => handleAddToPrimaNota(item)}
+                              style={{
+                                padding: "4px 8px",
+                                background: "#3b82f6",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 4,
+                                fontSize: 11,
+                                cursor: "pointer"
+                              }}
+                              title="Aggiungi a Prima Nota Banca"
+                            >
+                              + Prima Nota
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
