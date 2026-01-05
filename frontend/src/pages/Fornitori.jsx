@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { useAnnoGlobale } from '../contexts/AnnoContext';
+import { formatEuro } from '../lib/utils';
 
 // Metodi pagamento per pulsanti rapidi
 const METODI_RAPIDI = [
