@@ -75,6 +75,23 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-05 (Sessione 10 - Fix Calcolo IVA Note Credito)
+- **BUG FIX CRITICO - Registro IVA**:
+  - ❌ **Problema**: Le Note Credito (TD04, TD08) venivano SOMMATE all'IVA credito invece di essere SOTTRATTE
+  - ✅ **Soluzione**: Modificato `iva_calcolo.py` per:
+    - Identificare Note Credito per tipo documento (TD04, TD08)
+    - Calcolare IVA Credito Lordo (solo fatture normali)
+    - Calcolare IVA Note Credito (da sottrarre)
+    - **IVA Credito Netto = Fatture - Note Credito**
+  - 📊 **Esempio 2025**: IVA Credito Lordo €84.606 - Note Credito €2.923 = **IVA Netto €81.683**
+  - 📝 **Endpoint aggiornati**: `/api/iva/daily`, `/api/iva/monthly`, `/api/iva/annual`
+  - 🔢 **Nuovi campi nella risposta**:
+    - `iva_credito_lordo`: IVA da fatture normali
+    - `iva_note_credito`: IVA da note credito (da sottrarre)
+    - `iva_credito`: IVA netta (lordo - NC)
+    - `imponibile_fatture`, `imponibile_note_credito`, `imponibile_netto`
+    - `note_credito_count`: numero note credito
+
 ### 2026-01-05 (Sessione 9 - Bug Fix + Task P1 + Task P2)
 - **BUG FIX CRITICO - Controllo Mensile**:
   - ❌ **Problema**: La colonna "Diff." POS mostrava `posBancaDiff` invece di `posDiff`
