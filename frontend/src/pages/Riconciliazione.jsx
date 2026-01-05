@@ -27,6 +27,84 @@ export default function Riconciliazione() {
     loadFornitoriStats();
   }, []);
 
+  // Carica dati per riconciliazione manuale quando si apre il tab
+  useEffect(() => {
+    if (activeTab === "manuale") {
+      loadMovimentiNonRiconciliati();
+      loadFattureNonPagate();
+    }
+  }, [activeTab]);
+
+  const loadMovimentiNonRiconciliati = async () => {
+    try {
+      setLoadingManuale(true);
+      // Carica movimenti dall'estratto conto che non sono stati riconciliati
+      const res = await api.get("/api/estratto-conto-movimenti/movimenti?tipo=uscita&limit=500");
+      setMovimentiNonRiconciliati(res.data.movimenti || []);
+    } catch (e) {
+      console.error("Errore caricamento movimenti:", e);
+    } finally {
+      setLoadingManuale(false);
+    }
+  };
+
+  const loadFattureNonPagate = async () => {
+    try {
+      const res = await api.get("/api/invoices/list?paid=false&limit=500");
+      setFattureNonPagate(res.data.invoices || res.data || []);
+    } catch (e) {
+      console.error("Errore caricamento fatture:", e);
+    }
+  };
+
+  // Quando si seleziona un movimento, trova fatture con importo simile
+  const handleSelectMovimento = (mov) => {
+    setSelectedMovimento(mov);
+    const importoMov = Math.abs(mov.importo);
+    
+    // Trova fatture con importo simile (±10% o ±€50)
+    const tolleranza = Math.max(importoMov * 0.1, 50);
+    const matching = fattureNonPagate.filter(f => {
+      const importoFattura = parseFloat(f.total_amount || f.importo || 0);
+      return Math.abs(importoFattura - importoMov) <= tolleranza;
+    }).sort((a, b) => {
+      // Ordina per similarità di importo
+      const diffA = Math.abs(parseFloat(a.total_amount || a.importo || 0) - importoMov);
+      const diffB = Math.abs(parseFloat(b.total_amount || b.importo || 0) - importoMov);
+      return diffA - diffB;
+    });
+    
+    setMatchingFatture(matching);
+  };
+
+  // Riconcilia manualmente movimento e fattura
+  const handleRiconciliaManuale = async (fattura) => {
+    if (!selectedMovimento || !fattura) return;
+    
+    setRiconciliazioneInCorso(true);
+    try {
+      await api.post("/api/riconciliazione-fornitori/riconcilia-manuale", {
+        movimento_id: selectedMovimento.id,
+        fattura_id: fattura._id || fattura.id,
+        importo_movimento: selectedMovimento.importo,
+        data_movimento: selectedMovimento.data
+      });
+      
+      // Aggiorna le liste
+      setSelectedMovimento(null);
+      setMatchingFatture([]);
+      loadFattureNonPagate();
+      loadMovimentiNonRiconciliati();
+      loadFornitoriStats();
+      
+      alert("✅ Riconciliazione completata!");
+    } catch (e) {
+      alert("❌ Errore: " + (e.response?.data?.detail || e.message));
+    } finally {
+      setRiconciliazioneInCorso(false);
+    }
+  };
+
   const loadStats = async () => {
     try {
       const res = await api.get("/api/bank-statement/stats");
