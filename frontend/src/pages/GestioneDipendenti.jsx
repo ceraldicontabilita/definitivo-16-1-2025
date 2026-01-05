@@ -971,16 +971,27 @@ export default function GestioneDipendenti() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
                 <tfoot>
                   <tr style={{ background: '#f9fafb', fontWeight: 'bold' }}>
-                    <td colSpan={2} style={{ padding: 12 }}>TOTALE ({salariMovimenti.length} movimenti)</td>
+                    <td colSpan={2} style={{ padding: 12, textAlign: 'center' }}>TOTALE ({salariMovimenti.length} movimenti)</td>
                     <td style={{ padding: 12, textAlign: 'right' }}>
                       {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.stipendio_netto || m.importo || 0), 0))}
                     </td>
                     <td style={{ padding: 12, textAlign: 'right', color: '#ef4444' }}>
                       {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo_erogato || m.importo || 0), 0))}
+                    </td>
+                    <td style={{ padding: 12, textAlign: 'right', color: '#f57c00' }}>
+                      {formatEuro(salariMovimenti.reduce((sum, m) => {
+                        const busta = m.stipendio_netto || m.importo || 0;
+                        const bonifico = m.importo_erogato || m.importo || 0;
+                        return sum + (busta - bonifico);
+                      }, 0))}
+                    </td>
+                    <td style={{ padding: 12, textAlign: 'center', fontSize: 12 }}>
+                      {salariMovimenti.filter(m => m.riconciliato).length} / {salariMovimenti.length}
                     </td>
                     <td></td>
                   </tr>
