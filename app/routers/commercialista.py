@@ -204,39 +204,25 @@ async def get_fatture_pagate_cassa(anno: int, mese: int) -> Dict[str, Any]:
     """Get invoices paid by cash for a specific month."""
     db = Database.get_db()
     
-    start_date = datetime(anno, mese, 1, 0, 0, 0, tzinfo=timezone.utc)
-    _, last_day = monthrange(anno, mese)
-    end_date = datetime(anno, mese, last_day, 23, 59, 59, tzinfo=timezone.utc)
+    month_prefix = f"{anno}-{mese:02d}"
     
-    # Query fatture with payment method = contanti/cassa
-    fatture = []
-    
-    # Look for invoices paid by cash
+    # Query fatture with payment method = contanti/cassa and date in month
     cursor = db["invoices"].find({
-        "$or": [
-            {"metodo_pagamento": {"$regex": "contant|cassa", "$options": "i"}},
-            {"payment_method": {"$regex": "contant|cassa|cash", "$options": "i"}},
-            {"modalita_pagamento": {"$regex": "contant|cassa", "$options": "i"}}
+        "$and": [
+            {"$or": [
+                {"metodo_pagamento": {"$regex": "contant|cassa", "$options": "i"}},
+                {"payment_method": {"$regex": "contant|cassa|cash", "$options": "i"}},
+                {"modalita_pagamento": {"$regex": "contant|cassa", "$options": "i"}}
+            ]},
+            {"$or": [
+                {"data_pagamento": {"$regex": f"^{month_prefix}"}},
+                {"invoice_date": {"$regex": f"^{month_prefix}"}},
+                {"data_fattura": {"$regex": f"^{month_prefix}"}}
+            ]}
         ]
     }, {"_id": 0})
     
-    all_fatture = await cursor.to_list(10000)
-    
-    # Filter by date
-    for f in all_fatture:
-        data_str = f.get("invoice_date") or f.get("data_fattura") or f.get("data_pagamento") or ""
-        if data_str:
-            try:
-                if "T" in str(data_str):
-                    data = datetime.fromisoformat(str(data_str).replace("Z", "+00:00"))
-                else:
-                    data = datetime.strptime(str(data_str)[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                
-                if start_date <= data <= end_date:
-                    fatture.append(f)
-            except:
-                pass
-    
+    fatture = await cursor.to_list(10000)
     totale = sum(float(f.get("total_amount") or f.get("importo_totale") or 0) for f in fatture)
     
     return {
@@ -246,7 +232,7 @@ async def get_fatture_pagate_cassa(anno: int, mese: int) -> Dict[str, Any]:
                      "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"][mese],
         "fatture": fatture,
         "totale_fatture": len(fatture),
-        "totale_importo": totale
+        "totale_importo": round(totale, 2)
     }
 
 
