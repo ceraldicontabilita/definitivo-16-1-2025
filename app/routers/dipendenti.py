@@ -1620,4 +1620,3 @@ async def get_portale_stats() -> Dict[str, Any]:
     }
 
 
-# Note: salari and buste-paga routes are defined earlier in the file to avoid route conflict with /{dipendente_id}
