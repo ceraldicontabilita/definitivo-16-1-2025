@@ -659,7 +659,7 @@ export default function IVA() {
                         }}>
                           <strong>{f.supplier_name}</strong>
                           <div className="small">
-                            N° {f.invoice_number} - Totale € {f.total_amount?.toFixed(2)} - IVA € {f.iva?.toFixed(2)}
+                            N° {f.invoice_number} - Totale {formatEuro(f.total_amount)} - IVA {formatEuro(f.iva)}
                           </div>
                         </div>
                       ))}
@@ -681,7 +681,7 @@ export default function IVA() {
                   fontWeight: "bold",
                   color: getSaldoColor(todayData.saldo)
                 }}>
-                  € {todayData.saldo?.toFixed(2)}
+                  {formatEuro(todayData.saldo)}
                 </div>
                 <div style={{ fontSize: 16, marginTop: 5 }}>{todayData.stato}</div>
               </div>
