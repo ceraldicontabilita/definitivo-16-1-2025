@@ -707,6 +707,7 @@ function QuickEntryCard({ title, color, children }) {
 
 function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMovimento, setSelectedMovimento] = useState(null);
   const itemsPerPage = 50;
   
   if (loading) {
