@@ -392,3 +392,141 @@ async def export_bilancio_pdf(anno: int = Query(None)):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=bilancio_{anno}.pdf"}
     )
+
+
+
+@router.get("/confronto-annuale")
+async def get_confronto_annuale(
+    anno_corrente: int = Query(..., description="Anno corrente"),
+    anno_precedente: int = Query(None, description="Anno precedente (default: anno_corrente - 1)")
+) -> Dict[str, Any]:
+    """
+    Confronto anno su anno del Conto Economico.
+    Mostra variazioni assolute e percentuali tra due anni.
+    """
+    if not anno_precedente:
+        anno_precedente = anno_corrente - 1
+    
+    # Ottieni dati per entrambi gli anni
+    ce_corrente = await get_conto_economico(anno=anno_corrente)
+    ce_precedente = await get_conto_economico(anno=anno_precedente)
+    
+    sp_corrente = await get_stato_patrimoniale(anno=anno_corrente)
+    sp_precedente = await get_stato_patrimoniale(anno=anno_precedente)
+    
+    def calc_variazione(attuale: float, precedente: float) -> Dict[str, Any]:
+        """Calcola variazione assoluta e percentuale."""
+        variazione_abs = attuale - precedente
+        variazione_pct = ((attuale - precedente) / precedente * 100) if precedente != 0 else 0
+        return {
+            "attuale": round(attuale, 2),
+            "precedente": round(precedente, 2),
+            "variazione": round(variazione_abs, 2),
+            "variazione_pct": round(variazione_pct, 1),
+            "trend": "up" if variazione_abs > 0 else ("down" if variazione_abs < 0 else "stable")
+        }
+    
+    # Confronto Conto Economico
+    confronto_ce = {
+        "ricavi": {
+            "corrispettivi": calc_variazione(
+                ce_corrente["ricavi"]["corrispettivi"],
+                ce_precedente["ricavi"]["corrispettivi"]
+            ),
+            "altri_ricavi": calc_variazione(
+                ce_corrente["ricavi"]["altri_ricavi"],
+                ce_precedente["ricavi"]["altri_ricavi"]
+            ),
+            "totale_ricavi": calc_variazione(
+                ce_corrente["ricavi"]["totale"],
+                ce_precedente["ricavi"]["totale"]
+            )
+        },
+        "costi": {
+            "acquisti": calc_variazione(
+                ce_corrente["costi"]["acquisti"],
+                ce_precedente["costi"]["acquisti"]
+            ),
+            "costi_operativi": calc_variazione(
+                ce_corrente["costi"]["costi_operativi"],
+                ce_precedente["costi"]["costi_operativi"]
+            ),
+            "totale_costi": calc_variazione(
+                ce_corrente["costi"]["totale"],
+                ce_precedente["costi"]["totale"]
+            )
+        },
+        "risultato": {
+            "risultato_operativo": calc_variazione(
+                ce_corrente["risultato"]["risultato_operativo"],
+                ce_precedente["risultato"]["risultato_operativo"]
+            ),
+            "utile_lordo": calc_variazione(
+                ce_corrente["risultato"]["utile_lordo"],
+                ce_precedente["risultato"]["utile_lordo"]
+            ),
+            "utile_netto": calc_variazione(
+                ce_corrente["risultato"]["utile_netto"],
+                ce_precedente["risultato"]["utile_netto"]
+            )
+        }
+    }
+    
+    # Confronto Stato Patrimoniale
+    confronto_sp = {
+        "attivo": {
+            "cassa": calc_variazione(
+                sp_corrente["attivo"]["disponibilita_liquide"]["cassa"],
+                sp_precedente["attivo"]["disponibilita_liquide"]["cassa"]
+            ),
+            "banca": calc_variazione(
+                sp_corrente["attivo"]["disponibilita_liquide"]["banca"],
+                sp_precedente["attivo"]["disponibilita_liquide"]["banca"]
+            ),
+            "crediti": calc_variazione(
+                sp_corrente["attivo"]["crediti"]["totale"],
+                sp_precedente["attivo"]["crediti"]["totale"]
+            ),
+            "totale_attivo": calc_variazione(
+                sp_corrente["attivo"]["totale_attivo"],
+                sp_precedente["attivo"]["totale_attivo"]
+            )
+        },
+        "passivo": {
+            "debiti": calc_variazione(
+                sp_corrente["passivo"]["debiti"]["totale"],
+                sp_precedente["passivo"]["debiti"]["totale"]
+            ),
+            "patrimonio_netto": calc_variazione(
+                sp_corrente["passivo"]["patrimonio_netto"],
+                sp_precedente["passivo"]["patrimonio_netto"]
+            )
+        }
+    }
+    
+    # KPI di performance
+    margine_lordo_corrente = (ce_corrente["risultato"]["utile_lordo"] / ce_corrente["ricavi"]["totale"] * 100) if ce_corrente["ricavi"]["totale"] > 0 else 0
+    margine_lordo_precedente = (ce_precedente["risultato"]["utile_lordo"] / ce_precedente["ricavi"]["totale"] * 100) if ce_precedente["ricavi"]["totale"] > 0 else 0
+    
+    roi_corrente = (ce_corrente["risultato"]["utile_netto"] / sp_corrente["attivo"]["totale_attivo"] * 100) if sp_corrente["attivo"]["totale_attivo"] > 0 else 0
+    roi_precedente = (ce_precedente["risultato"]["utile_netto"] / sp_precedente["attivo"]["totale_attivo"] * 100) if sp_precedente["attivo"]["totale_attivo"] > 0 else 0
+    
+    kpi = {
+        "margine_lordo_pct": calc_variazione(margine_lordo_corrente, margine_lordo_precedente),
+        "roi_pct": calc_variazione(roi_corrente, roi_precedente),
+        "crescita_ricavi_pct": round(confronto_ce["ricavi"]["totale_ricavi"]["variazione_pct"], 1),
+        "crescita_costi_pct": round(confronto_ce["costi"]["totale_costi"]["variazione_pct"], 1)
+    }
+    
+    return {
+        "anno_corrente": anno_corrente,
+        "anno_precedente": anno_precedente,
+        "conto_economico": confronto_ce,
+        "stato_patrimoniale": confronto_sp,
+        "kpi": kpi,
+        "sintesi": {
+            "ricavi_trend": "📈 In crescita" if confronto_ce["ricavi"]["totale_ricavi"]["trend"] == "up" else ("📉 In calo" if confronto_ce["ricavi"]["totale_ricavi"]["trend"] == "down" else "➡️ Stabile"),
+            "utile_trend": "📈 In crescita" if confronto_ce["risultato"]["utile_netto"]["trend"] == "up" else ("📉 In calo" if confronto_ce["risultato"]["utile_netto"]["trend"] == "down" else "➡️ Stabile"),
+            "liquidita_trend": "📈 In crescita" if confronto_sp["attivo"]["totale_attivo"]["trend"] == "up" else ("📉 In calo" if confronto_sp["attivo"]["totale_attivo"]["trend"] == "down" else "➡️ Stabile")
+        }
+    }
