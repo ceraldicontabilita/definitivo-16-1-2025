@@ -3,15 +3,9 @@ import api from "../api";
 import { useAnnoGlobale } from "../contexts/AnnoContext";
 
 export default function Finanziaria() {
-  const { anno: annoGlobale } = useAnnoGlobale();
+  const { anno: selectedYear } = useAnnoGlobale();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState(annoGlobale);
-
-  // Sincronizza con anno globale
-  useEffect(() => {
-    setSelectedYear(annoGlobale);
-  }, [annoGlobale]);
 
   useEffect(() => {
     loadSummary();
