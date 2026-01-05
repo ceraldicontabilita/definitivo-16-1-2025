@@ -444,7 +444,7 @@ export default function Riconciliazione() {
                         <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{item.estratto_conto?.data}</td>
                         <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{item.estratto_conto?.descrizione}</td>
                         <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #eee" }}>
-                          €{item.estratto_conto?.importo?.toFixed(2)}
+                          {formatEuro(item.estratto_conto?.importo)}
                         </td>
                         <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
                           {item.prima_nota?.descrizione}
@@ -482,7 +482,7 @@ export default function Riconciliazione() {
                           {item.descrizione}
                         </td>
                         <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #eee" }}>
-                          €{item.importo?.toFixed(2)}
+                          {formatEuro(item.importo)}
                         </td>
                         <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>
                           <span style={{
