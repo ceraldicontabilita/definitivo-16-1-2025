@@ -299,8 +299,6 @@ export default function ControlloMensile() {
       const cassa = cassaRes.data.movimenti || [];
       const corrispettivi = Array.isArray(corrispRes.data) ? corrispRes.data : (corrispRes.data.corrispettivi || []);
       
-      console.log(`[ControlloMensile] Mese ${month}: ${cassa.length} movimenti cassa, ${corrispettivi.length} corrispettivi`);
-      
       processDailyData(cassa, corrispettivi, month);
       
       // Estrai dettaglio versamenti del mese
