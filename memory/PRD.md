@@ -75,6 +75,20 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-05 (Sessione 7 - Ristrutturazione Architettura - FASE 1)
+- **NUOVO Services Layer** con Business Rules centralizzate:
+  - `business_rules.py`: Regole di validazione per tutte le operazioni CRUD
+  - `invoice_service_v2.py`: Servizio fatture con controlli sicurezza
+  - `corrispettivi_service.py`: Servizio corrispettivi con propagazione Prima Nota
+- **Controlli di Sicurezza implementati**:
+  - ❌ Non eliminare fatture pagate → BLOCCATO con errore
+  - ❌ Non eliminare fatture registrate in Prima Nota → BLOCCATO
+  - ✅ Soft-delete invece di hard-delete (entity_status = "deleted")
+- **Documentazione Architettura**: `/app/memory/ARCHITETTURA.md`
+  - Flusso dati completo da XML a report
+  - Diagrammi relazioni tra entità
+  - Stati e transizioni per ogni entità
+
 ### 2026-01-04 (Sessione 6 - Vista Mobile Prima Nota)
 - **NUOVA Vista Mobile Prima Nota**: Interfaccia semplificata per smartphone
   - Header con saldi rapidi (Entrate, Uscite, Saldo)
