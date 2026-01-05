@@ -110,27 +110,40 @@ async def get_financial_summary(
         ]).to_list(1)
         payables = float(fatture_da_pagare[0]["total"]) if fatture_da_pagare else 0
         
+        # ============ CALCOLO TOTALI (evitando doppie contabilizzazioni) ============
+        # I salari sono GIÀ inclusi nelle uscite banca (sono partite di giro)
+        # Quindi NON li sommiamo di nuovo
+        # 
+        # Logica corretta:
+        # - Entrate totali = Entrate Cassa + Entrate Banca (no duplicazioni)
+        # - Uscite totali = Uscite Cassa + Uscite Banca (salari già inclusi in banca)
+        #
+        # Nota: I versamenti da Cassa a Banca sono partite di giro interne
+        # e non modificano il totale complessivo
+        
         total_income = cassa_entrate + banca_entrate
-        total_expenses = cassa_uscite + banca_uscite + salari_totale
+        # NON sommare salari perché sono già in banca_uscite
+        total_expenses = cassa_uscite + banca_uscite
         saldo_iva = iva_debito - iva_credito
         
         return {
             "anno": anno,
-            "total_income": total_income,
-            "total_expenses": total_expenses,
-            "balance": total_income - total_expenses,
+            "total_income": round(total_income, 2),
+            "total_expenses": round(total_expenses, 2),
+            "balance": round(total_income - total_expenses, 2),
             "cassa": {
-                "entrate": cassa_entrate,
-                "uscite": cassa_uscite,
-                "saldo": cassa_entrate - cassa_uscite
+                "entrate": round(cassa_entrate, 2),
+                "uscite": round(cassa_uscite, 2),
+                "saldo": round(cassa_entrate - cassa_uscite, 2)
             },
             "banca": {
-                "entrate": banca_entrate,
-                "uscite": banca_uscite,
-                "saldo": banca_entrate - banca_uscite
+                "entrate": round(banca_entrate, 2),
+                "uscite": round(banca_uscite, 2),  # Include già salari e F24
+                "saldo": round(banca_entrate - banca_uscite, 2)
             },
             "salari": {
-                "totale": salari_totale
+                "totale": round(salari_totale, 2),
+                "nota": "Già inclusi in uscite Banca"
             },
             # IVA Section
             "vat_debit": round(iva_debito, 2),
