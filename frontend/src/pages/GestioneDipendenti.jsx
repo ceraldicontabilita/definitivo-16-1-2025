@@ -507,15 +507,15 @@ export default function GestioneDipendenti() {
                 <option key={i} value={i + 1}>{m}</option>
               ))}
             </select>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}
-            >
-              {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
+            <span style={{ 
+              padding: '8px 12px', 
+              borderRadius: 6, 
+              background: '#e3f2fd',
+              fontWeight: 'bold',
+              color: '#1565c0'
+            }}>
+              {selectedYear}
+            </span>
             
             <button
               onClick={loadPrimaNotaSalari}
