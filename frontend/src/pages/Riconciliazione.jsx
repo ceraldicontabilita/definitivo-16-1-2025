@@ -8,6 +8,7 @@ export default function Riconciliazione() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("import");
+  const [addingToPrimaNota, setAddingToPrimaNota] = useState(null);
 
   useEffect(() => {
     loadStats();
@@ -19,6 +20,40 @@ export default function Riconciliazione() {
       setStats(res.data);
     } catch (e) {
       console.error("Error loading stats:", e);
+    }
+  };
+
+  // Funzione per aggiungere movimento non trovato a Prima Nota
+  const handleAddToPrimaNota = async (item) => {
+    setAddingToPrimaNota(item.descrizione);
+    try {
+      const data = {
+        data: item.data,
+        tipo: "banca",
+        tipo_movimento: item.tipo,
+        importo: item.importo,
+        descrizione: item.descrizione,
+        fonte: "estratto_conto_import",
+        riconciliato: true
+      };
+      
+      await api.post("/api/prima-nota/movimento", data);
+      
+      // Rimuovi dalla lista not_found_details
+      setResults(prev => ({
+        ...prev,
+        not_found_details: prev.not_found_details.filter(i => 
+          !(i.data === item.data && i.importo === item.importo && i.descrizione === item.descrizione)
+        ),
+        not_found: (prev.not_found || 0) - 1,
+        reconciled: (prev.reconciled || 0) + 1
+      }));
+      
+      loadStats();
+    } catch (e) {
+      setErr(`Errore aggiunta Prima Nota: ${e.response?.data?.detail || e.message}`);
+    } finally {
+      setAddingToPrimaNota(null);
     }
   };
 
