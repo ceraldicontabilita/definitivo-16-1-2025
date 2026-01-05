@@ -11,27 +11,38 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 
 ## Ultime Implementazioni (6 Gen 2026)
 
-### Riorganizzazione Menu Navigazione - COMPLETATA
+### 1. Riorganizzazione Menu Navigazione - COMPLETATA
 Il menu di navigazione principale è stato riorganizzato con sottomenu espandibili per migliorare l'usabilità.
 
 **Nuova struttura menu:**
+- **Sottomenu "Dipendenti" (👥)**: Anagrafica, Paghe/Salari
+- **Sottomenu "Import/Export" (📤)**: Import/Export Dati, Import Estratto Conto, Movimenti Banca
 
-1. **Sottomenu "Dipendenti" (👥)**
-   - Anagrafica (👤) → `/dipendenti`
-   - Paghe / Salari (💰) → `/paghe`
+### 2. Export Excel Estratto Conto - COMPLETATA
+Aggiunta funzionalità per esportare i movimenti dell'estratto conto in formato Excel.
 
-2. **Sottomenu "Import/Export" (📤)**
-   - Import/Export Dati (📁) → `/import-export`
-   - Import Estratto Conto (📥) → `/estratto-conto`
-   - Movimenti Banca (🏦) → `/estratto-conto-movimenti`
+**Caratteristiche:**
+- Pulsante "📊 Esporta Excel" nella pagina `/estratto-conto-movimenti`
+- Applica gli stessi filtri della visualizzazione (anno, mese, categoria, tipo, fornitore)
+- File Excel formattato con colori per entrate/uscite
+- Riga totali con riepilogo entrate, uscite e saldo
+- Nome file dinamico (es: `estratto_conto_2025_nov.xlsx`)
+
+**Endpoint:** `GET /api/estratto-conto-movimenti/export-excel`
+
+### 3. UI Riconciliazione Manuale - COMPLETATA
+Nuova interfaccia per abbinare manualmente movimenti bancari a fatture.
 
 **Funzionalità:**
-- I sottomenu si espandono/collassano al click
-- Si aprono automaticamente quando si naviga su una pagina al loro interno
-- Le voci attive sono evidenziate in blu
-- Supporto completo per mobile (menu a griglia con header di categoria)
+- Tab "🔗 Riconciliazione Manuale" nella pagina Riconciliazione
+- Layout a due pannelli:
+  - Sinistra: lista movimenti banca (uscite) con filtro per fornitore
+  - Destra: fatture suggerite con importo simile (±10%)
+- Click su movimento → mostra fatture corrispondenti
+- Pulsante "✓ Riconcilia questa fattura" per abbinamento manuale
+- Aggiornamento automatico delle statistiche dopo riconciliazione
 
-**File modificato:** `/app/frontend/src/App.jsx`
+**Endpoint:** `POST /api/riconciliazione-fornitori/riconcilia-manuale`
 
 ---
 
