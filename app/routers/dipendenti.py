@@ -880,6 +880,17 @@ async def delete_salario(salario_id: str) -> Dict[str, str]:
 
 # ============== RICONCILIAZIONE BANCARIA SALARI ==============
 
+# Dizionario alias dipendenti: nome_variante -> nome_standard
+# Questo viene popolato dinamicamente + alias manuali
+DIPENDENTI_ALIAS = {
+    # Alias manuali per casi noti
+    "dissanayaka": "sankapala arachchilage jananie ayachana dissanayaka",
+    "sankapala jananie ayachana": "sankapala arachchilage jananie ayachana dissanayaka",
+    "murolo": "murolo mario",
+    "carotenuto": "carotenuto antonella",
+    "capezzuto": "capezzuto alessandro",
+}
+
 def normalizza_nome(nome: str) -> str:
     """Normalizza un nome per il matching (rimuove accenti, lowercase, etc.)"""
     if not nome:
@@ -889,7 +900,25 @@ def normalizza_nome(nome: str) -> str:
     nfkd = unicodedata.normalize('NFKD', nome)
     nome_norm = ''.join([c for c in nfkd if not unicodedata.combining(c)])
     # Lowercase e rimuovi spazi extra
-    return ' '.join(nome_norm.lower().split())
+    nome_norm = ' '.join(nome_norm.lower().split())
+    # Rimuovi "notprovide", "notprovided", etc.
+    nome_norm = re.sub(r'\s*notprovid\w*', '', nome_norm)
+    # Rimuovi forme societarie
+    for forma in ['s.r.l.', 'srl', 's.p.a.', 'spa', 's.n.c.', 'snc', 's.a.s.', 'sas']:
+        nome_norm = nome_norm.replace(forma, '')
+    return ' '.join(nome_norm.split())
+
+
+def estrai_cognome(nome: str) -> str:
+    """Estrae il cognome (ultima parola significativa) da un nome."""
+    nome_norm = normalizza_nome(nome)
+    if not nome_norm:
+        return ""
+    words = nome_norm.split()
+    # Per nomi italiani, il cognome è spesso la prima parola
+    # Ma per stranieri può essere l'ultima
+    # Restituiamo entrambe le possibilità
+    return words[-1] if words else ""
 
 
 def match_nomi_fuzzy(nome1: str, nome2: str) -> bool:
@@ -899,6 +928,7 @@ def match_nomi_fuzzy(nome1: str, nome2: str) -> bool:
     - Ordine cognome/nome invertito
     - Nomi parziali (solo cognome)
     - Nomi composti lunghi vs abbreviati
+    - Alias noti
     """
     if not nome1 or not nome2:
         return False
@@ -906,13 +936,23 @@ def match_nomi_fuzzy(nome1: str, nome2: str) -> bool:
     n1 = normalizza_nome(nome1)
     n2 = normalizza_nome(nome2)
     
+    if not n1 or not n2:
+        return False
+    
     # Match esatto
     if n1 == n2:
         return True
     
-    # Uno contenuto nell'altro
-    if n1 in n2 or n2 in n1:
+    # Controlla alias
+    n1_canonical = DIPENDENTI_ALIAS.get(n1, n1)
+    n2_canonical = DIPENDENTI_ALIAS.get(n2, n2)
+    if n1_canonical == n2_canonical:
         return True
+    
+    # Uno contenuto nell'altro (per nomi lunghi)
+    if len(n1) > 5 and len(n2) > 5:
+        if n1 in n2 or n2 in n1:
+            return True
     
     # Split in parole
     words1 = set(n1.split())
@@ -923,20 +963,37 @@ def match_nomi_fuzzy(nome1: str, nome2: str) -> bool:
     if len(common) >= 2:
         return True
     
-    # Se hanno il cognome in comune (prima parola di uno = ultima parola dell'altro o viceversa)
-    if words1 and words2:
-        list1 = n1.split()
-        list2 = n2.split()
+    # Match per singola parola significativa (cognome)
+    # Se uno dei due è una singola parola (solo cognome)
+    if len(words1) == 1 or len(words2) == 1:
+        single = list(words1)[0] if len(words1) == 1 else list(words2)[0]
+        other = words2 if len(words1) == 1 else words1
         
-        # Cognome match (prima o ultima parola)
-        cognomi1 = {list1[0], list1[-1]} if len(list1) > 1 else {list1[0]}
-        cognomi2 = {list2[0], list2[-1]} if len(list2) > 1 else {list2[0]}
+        # Il cognome singolo deve matchare una parola dell'altro nome
+        if len(single) >= 4:  # Almeno 4 caratteri per evitare falsi positivi
+            for w in other:
+                if len(w) >= 4 and (single == w or single in w or w in single):
+                    return True
+    
+    # Match cognome: prima o ultima parola di uno con prima o ultima dell'altro
+    list1 = n1.split()
+    list2 = n2.split()
+    
+    if list1 and list2:
+        # Cognomi possibili (prima e ultima parola)
+        cognomi1 = {list1[0], list1[-1]}
+        cognomi2 = {list2[0], list2[-1]}
         
-        # Se cognomi matchano e hanno almeno 4 caratteri
         for c1 in cognomi1:
             for c2 in cognomi2:
-                if len(c1) >= 4 and len(c2) >= 4 and (c1 == c2 or c1 in c2 or c2 in c1):
-                    return True
+                if len(c1) >= 4 and len(c2) >= 4:
+                    # Match esatto o parziale
+                    if c1 == c2:
+                        return True
+                    # Uno contenuto nell'altro (per cognomi composti)
+                    if len(c1) >= 6 and len(c2) >= 6:
+                        if c1 in c2 or c2 in c1:
+                            return True
     
     return False
 
