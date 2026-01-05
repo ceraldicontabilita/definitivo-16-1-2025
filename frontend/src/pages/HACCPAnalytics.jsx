@@ -127,7 +127,7 @@ export default function HACCPAnalytics() {
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
             style={{ padding: 10, borderRadius: 6, border: '1px solid #ddd', fontSize: 14 }}
           >
-            {[2024, 2025, 2026].map(y => (
+            {[new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
