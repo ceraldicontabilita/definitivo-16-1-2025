@@ -408,3 +408,173 @@ async def clear_estratto_conto(anno: Optional[int] = Query(None)) -> Dict[str, A
     result = await db["estratto_conto_movimenti"].delete_many(query)
     
     return {"message": f"Eliminati {result.deleted_count} movimenti"}
+
+
+@router.get("/export-excel")
+async def export_estratto_conto_excel(
+    anno: Optional[int] = Query(None),
+    mese: Optional[int] = Query(None),
+    categoria: Optional[str] = Query(None),
+    fornitore: Optional[str] = Query(None),
+    tipo: Optional[str] = Query(None)
+):
+    """
+    Esporta i movimenti dell'estratto conto in formato Excel.
+    Applica gli stessi filtri della visualizzazione.
+    """
+    from fastapi.responses import StreamingResponse
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    
+    db = Database.get_db()
+    
+    # Costruisci query con filtri
+    query = {}
+    
+    if anno:
+        query["data"] = {"$regex": f"^{anno}"}
+        if mese:
+            query["data"] = {"$regex": f"^{anno}-{mese:02d}"}
+    
+    if categoria:
+        query["categoria"] = {"$regex": categoria, "$options": "i"}
+    
+    if fornitore:
+        query["fornitore"] = {"$regex": fornitore, "$options": "i"}
+    
+    if tipo:
+        query["tipo"] = tipo
+    
+    # Recupera tutti i movimenti (senza paginazione per export)
+    movimenti = await db["estratto_conto_movimenti"].find(
+        query,
+        {"_id": 0}
+    ).sort("data", -1).to_list(10000)
+    
+    # Crea workbook Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Estratto Conto"
+    
+    # Stili
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="1E3A5F", end_color="1E3A5F", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    cell_alignment = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Headers
+    headers = ["Data", "Fornitore", "Importo (€)", "Tipo", "N. Fattura", "Data Pag.", "Categoria"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Larghezze colonne
+    col_widths = [12, 35, 15, 10, 30, 12, 40]
+    for i, width in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(i)].width = width
+    
+    # Dati
+    entrata_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
+    uscita_fill = PatternFill(start_color="FFEBEE", end_color="FFEBEE", fill_type="solid")
+    
+    totale_entrate = 0
+    totale_uscite = 0
+    
+    for row_num, mov in enumerate(movimenti, 2):
+        # Formatta data
+        data_str = mov.get("data", "")
+        if data_str:
+            try:
+                parts = data_str.split("-")
+                data_formatted = f"{parts[2]}/{parts[1]}/{parts[0]}"
+            except:
+                data_formatted = data_str
+        else:
+            data_formatted = ""
+        
+        data_pag = mov.get("data_pagamento", "")
+        if data_pag:
+            try:
+                parts = data_pag.split("-")
+                data_pag_formatted = f"{parts[2]}/{parts[1]}/{parts[0]}"
+            except:
+                data_pag_formatted = data_pag
+        else:
+            data_pag_formatted = ""
+        
+        importo = mov.get("importo", 0)
+        tipo_mov = "Entrata" if importo >= 0 else "Uscita"
+        
+        if importo >= 0:
+            totale_entrate += importo
+        else:
+            totale_uscite += abs(importo)
+        
+        row_data = [
+            data_formatted,
+            mov.get("fornitore") or "",
+            abs(importo),
+            tipo_mov,
+            mov.get("numero_fattura") or "",
+            data_pag_formatted,
+            mov.get("categoria") or ""
+        ]
+        
+        row_fill = entrata_fill if importo >= 0 else uscita_fill
+        
+        for col, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col, value=value)
+            cell.alignment = cell_alignment
+            cell.border = thin_border
+            cell.fill = row_fill
+            
+            # Formato numerico per importo
+            if col == 3:
+                cell.number_format = '#,##0.00'
+    
+    # Riga totali
+    last_row = len(movimenti) + 2
+    totals_row = last_row + 1
+    
+    ws.cell(row=totals_row, column=1, value="TOTALI")
+    ws.cell(row=totals_row, column=1).font = Font(bold=True)
+    
+    ws.cell(row=totals_row, column=2, value=f"Entrate: € {totale_entrate:,.2f}")
+    ws.cell(row=totals_row, column=2).font = Font(bold=True, color="16A34A")
+    
+    ws.cell(row=totals_row, column=3, value=f"Uscite: € {totale_uscite:,.2f}")
+    ws.cell(row=totals_row, column=3).font = Font(bold=True, color="DC2626")
+    
+    saldo = totale_entrate - totale_uscite
+    ws.cell(row=totals_row, column=4, value=f"Saldo: € {saldo:,.2f}")
+    ws.cell(row=totals_row, column=4).font = Font(bold=True, color="16A34A" if saldo >= 0 else "DC2626")
+    
+    # Salva in memory buffer
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    # Nome file
+    filename_parts = ["estratto_conto"]
+    if anno:
+        filename_parts.append(str(anno))
+    if mese:
+        mesi_nomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic']
+        filename_parts.append(mesi_nomi[mese - 1])
+    filename = "_".join(filename_parts) + ".xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
