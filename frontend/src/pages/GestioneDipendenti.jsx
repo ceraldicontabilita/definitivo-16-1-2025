@@ -11,7 +11,7 @@ import { formatEuro } from '../lib/utils';
 
 /**
  * Pagina Gestione Dipendenti - Ristrutturata
- * Tab: Anagrafica | Paghe e Salari | Prima Nota Salari | Libro Unico | Libretti Sanitari
+ * Tab: Anagrafica | Prima Nota Salari | Libro Unico | Libretti Sanitari
  */
 export default function GestioneDipendenti() {
   const { anno: selectedYear, setAnno: setSelectedYear } = useAnnoGlobale();
@@ -36,10 +36,8 @@ export default function GestioneDipendenti() {
   const [newDipendente, setNewDipendente] = useState(DEFAULT_DIPENDENTE);
   const [generatingContract, setGeneratingContract] = useState(false);
 
-  // Paghe state
+  // Periodo state
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [bustePaga, setBustePaga] = useState([]);
-  const [loadingBuste, setLoadingBuste] = useState(false);
   
   // Prima Nota Salari state
   const [salariMovimenti, setSalariMovimenti] = useState([]);
