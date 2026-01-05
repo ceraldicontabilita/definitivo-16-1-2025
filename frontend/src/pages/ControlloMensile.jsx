@@ -799,9 +799,9 @@ export default function ControlloMensile() {
                 <td style={{ 
                   padding: 10, 
                   textAlign: 'right',
-                  color: Math.abs((yearTotals.posBanca || 0) - yearTotals.posAuto) > 1 ? '#fbbf24' : '#22c55e'
+                  color: Math.abs(yearTotals.posAuto - yearTotals.posManual) > 1 ? '#fbbf24' : '#22c55e'
                 }}>
-                  {formatCurrency((yearTotals.posBanca || 0) - yearTotals.posAuto)}
+                  {formatCurrency(yearTotals.posAuto - yearTotals.posManual)}
                 </td>
                 <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.corrispettiviAuto)}</td>
                 <td style={{ padding: 10, textAlign: 'right' }}>{formatCurrency(yearTotals.corrispettiviManual)}</td>
