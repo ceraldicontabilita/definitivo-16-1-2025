@@ -423,13 +423,17 @@ SALDO IVA:
 - [x] Fix Bug Controllo Mensile (Diff POS ~€30k errata → ~€300 corretta)
 - [x] Rinomina POS Auto → POS Agenzia, POS Manuale → POS Chiusura
 
-### P2 (Media) - COMPLETATI
+### P2 (Media) - IN CORSO
 - [x] Associazione automatica dati fornitore (nuovo fornitore → fatture esistenti)
 - [x] Export PDF Bilancio (pulsante nella pagina Bilancio)
 - [x] Riconoscimento POS in Riconciliazione ("INC.POS", "INCAS. TRAMITE P.O.S")
 - [x] Discrepanza Conteggio Fatture - Verificato: 1328 fatture uniche, nessun duplicato
+- [ ] **Fix errore re-importazione XML** (upsert invece di insert)
+- [ ] **Export PDF Riepilogo IVA trimestrale**
 
 ### P3 (Bassa) - BACKLOG
+- [ ] **Ristrutturazione GestioneDipendenti.jsx** (schede paghe, buste paga mensili, Prima Nota Salari)
+- [ ] **Popolare Magazzino da Fatture XML**
 - [ ] Confronto anno su anno nel Bilancio
 - [ ] Dashboard con grafici trend mensili
 - [ ] Notifiche in-app per scadenze
