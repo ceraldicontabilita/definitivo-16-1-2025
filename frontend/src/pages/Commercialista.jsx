@@ -266,7 +266,7 @@ export default function Commercialista() {
         a.numero_fattura || '-'
       ]);
       
-      doc.autoTable({
+      autoTable(doc, {
         startY: 65,
         head: [['N. Assegno', 'Stato', 'Beneficiario', 'Importo', 'Data Fatt.', 'N. Fattura']],
         body: tableData,
