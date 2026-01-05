@@ -44,6 +44,7 @@ import Commercialista from "./pages/Commercialista.jsx";
 import Bilancio from "./pages/Bilancio.jsx";
 import Scadenze from "./pages/Scadenze.jsx";
 import EstrattoContoImport from "./pages/EstrattoContoImport.jsx";
+import EstrattoConto from "./pages/EstrattoConto.jsx";
 
 const router = createBrowserRouter([
   {
@@ -58,6 +59,7 @@ const router = createBrowserRouter([
       { path: "prima-nota", element: <PrimaNota /> },
       { path: "riconciliazione", element: <Riconciliazione /> },
       { path: "estratto-conto", element: <EstrattoContoImport /> },
+      { path: "estratto-conto-movimenti", element: <EstrattoConto /> },
       { path: "magazzino", element: <Magazzino /> },
       { path: "ricerca-prodotti", element: <RicercaProdotti /> },
       { path: "haccp", element: <HACCPDashboard /> },
