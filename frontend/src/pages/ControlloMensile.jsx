@@ -125,9 +125,9 @@ export default function ControlloMensile() {
   /**
    * PROCESSA DATI ANNUALI
    * Aggrega i dati per mese calcolando tutti i totali
-   * Include: POS Agenzia (XML), POS Chiusura (Cassa), POS Banca (da Estratto Conto)
+   * Include: POS Agenzia (XML), POS Chiusura (Cassa), POS Banca (da Estratto Conto Bancario)
    */
-  const processYearData = (cassa, banca, corrispettivi, estrattoConto = []) => {
+  const processYearData = (cassa, corrispettivi, estrattoConto = []) => {
     const monthly = [];
     let yearPosAuto = 0, yearPosManual = 0, yearPosBanca = 0;
     let yearCorrispAuto = 0, yearCorrispManual = 0;
@@ -140,8 +140,8 @@ export default function ControlloMensile() {
       
       // Filtra dati per questo mese
       const monthCassa = cassa.filter(m => m.data?.startsWith(monthPrefix));
-      const monthBanca = banca.filter(m => m.data?.startsWith(monthPrefix));
       const monthCorrisp = corrispettivi.filter(c => c.data?.startsWith(monthPrefix));
+      const monthEstratto = estrattoConto.filter(m => m.data?.startsWith(monthPrefix));
 
       // ============ POS AUTO (da Corrispettivi XML) ============
       // Il POS automatico è il campo pagato_elettronico estratto dagli XML
@@ -157,19 +157,24 @@ export default function ControlloMensile() {
         .filter(m => m.categoria?.toUpperCase() === 'POS' || m.source === 'excel_pos')
         .reduce((sum, m) => sum + Math.abs(parseFloat(m.importo) || 0), 0);
 
-      // ============ POS BANCA (da Prima Nota Banca) ============
-      // Accrediti POS in banca: INC.POS, INCAS. TRAMITE P.O.S, ecc.
-      // Questi sono gli accrediti effettivi che la banca riceve dai pagamenti POS
-      const posBanca = monthBanca
+      // ============ POS BANCA (da Estratto Conto Bancario) ============
+      // Accrediti POS in banca identificati da descrizioni specifiche:
+      // - INC.POS = Incasso POS carte credit
+      // - INCAS. TRAMITE P.O.S = Incasso tramite terminale
+      // - Categoria "POS" già categorizzata durante import
+      const posBanca = monthEstratto
         .filter(m => {
           const desc = (m.descrizione || '').toUpperCase();
-          return (desc.includes('INC.POS') || 
-                  desc.includes('INCAS.') || 
-                  desc.includes('INCASSO POS') ||
-                  desc.includes('P.O.S') ||
-                  desc.includes('CARTE CREDIT') ||
-                  m.categoria?.toUpperCase() === 'POS') &&
-                 m.tipo === 'entrata';
+          const cat = (m.categoria || '').toUpperCase();
+          return m.tipo === 'entrata' && (
+            desc.includes('INC.POS') || 
+            desc.includes('INCAS.') || 
+            desc.includes('INC. POS') ||
+            desc.includes('INCASSO POS') ||
+            desc.includes('TRAMITE P.O.S') ||
+            desc.includes('P.O.S.') ||
+            cat.includes('POS')
+          );
         })
         .reduce((sum, m) => sum + (parseFloat(m.importo) || 0), 0);
 
