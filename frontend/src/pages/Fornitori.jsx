@@ -20,6 +20,7 @@ const METODI_PAGAMENTO = [
 ];
 
 export default function Fornitori() {
+  const { anno: selectedYear } = useAnnoGlobale();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
