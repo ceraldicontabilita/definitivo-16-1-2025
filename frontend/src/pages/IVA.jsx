@@ -105,6 +105,13 @@ export default function IVA() {
               Annuale
             </button>
             <button 
+              className={viewMode === "quarterly" ? "primary" : ""} 
+              onClick={() => setViewMode("quarterly")}
+              style={{ marginRight: 5 }}
+            >
+              Trimestrale
+            </button>
+            <button 
               className={viewMode === "monthly" ? "primary" : ""} 
               onClick={() => setViewMode("monthly")}
               style={{ marginRight: 5 }}
