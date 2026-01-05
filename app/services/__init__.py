@@ -24,6 +24,8 @@ from .email_service import EmailService
 from .business_rules import BusinessRules, ValidationResult, DataFlowManager
 from .corrispettivi_service import CorrispettiviService, get_corrispettivi_service
 
+from .data_propagation import DataPropagationService, get_propagation_service
+
 __all__ = [
     # Core Services
     "AuthService",
@@ -43,6 +45,9 @@ __all__ = [
     # V2 Services with Security
     "CorrispettiviService",
     "get_corrispettivi_service",
+    # Propagation
+    "DataPropagationService",
+    "get_propagation_service",
     # Business Rules
     "BusinessRules",
     "ValidationResult",
