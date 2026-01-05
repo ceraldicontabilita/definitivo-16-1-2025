@@ -730,6 +730,17 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
 
   return (
     <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+      {/* Modal Dettaglio Transazione */}
+      {selectedMovimento && (
+        <TransactionDetailModal 
+          movimento={selectedMovimento} 
+          tipo={tipo}
+          formatCurrency={formatCurrency}
+          formatDate={formatDate}
+          onClose={() => setSelectedMovimento(null)}
+        />
+      )}
+      
       {/* Pagination Header */}
       {totalPages > 1 && (
         <div style={{ 
