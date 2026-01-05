@@ -1092,6 +1092,14 @@ export default function Fatture() {
           </div>
         )}
       </div>
+      
+      {/* Visualizzatore Fattura XML */}
+      {viewingInvoiceId && (
+        <InvoiceXMLViewer 
+          invoiceId={viewingInvoiceId} 
+          onClose={() => setViewingInvoiceId(null)} 
+        />
+      )}
     </>
   );
 }
