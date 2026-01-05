@@ -89,6 +89,57 @@ Sistema di gestione e riconciliazione automatica degli stipendi con estratti con
 }
 ```
 
+---
+
+## Riconciliazione Automatica Bonifici Fornitori - NUOVA (5 Gen 2026)
+
+Sistema di riconciliazione automatica tra estratti conto bancari e fatture fornitori non pagate.
+
+**Funzionalità implementate:**
+
+1. **Import Estratto Conto Fornitori**
+   - Endpoint: `POST /api/riconciliazione-fornitori/import-estratto-conto-fornitori`
+   - Filtra movimenti per categoria "Fornitori" (esclude salari)
+   - Estrae nome fornitore dalla descrizione (pattern "FAVORE NomeFornitore")
+   - Matching fuzzy: nome normalizzato + importo (tolleranza 1% o €5)
+   - Aggiorna fatture come "pagate" quando abbinate
+
+2. **Riepilogo Stato Fatture**
+   - Endpoint: `GET /api/riconciliazione-fornitori/riepilogo-fornitori`
+   - Totale fatture, pagate, non pagate
+   - Importi aggregati
+
+3. **Reset Riconciliazione Fornitori**
+   - Endpoint: `DELETE /api/riconciliazione-fornitori/reset-riconciliazione-fornitori`
+   - Reset stato "pagato" per ri-testare
+
+4. **UI Pagina Riconciliazione (`/riconciliazione`)**
+   - Toggle: "Prima Nota Banca" / "Fatture Fornitori"
+   - Card statistiche dedicate per ogni tipo
+   - Istruzioni specifiche per riconciliazione fornitori
+   - Tabella risultati con dettaglio non abbinati
+
+**Risultati Test:**
+- 308 movimenti fornitori estratti dal CSV
+- 32 fatture riconciliate automaticamente
+- €46.927 importo riconciliato
+
+**Collezione MongoDB:**
+```javascript
+// estratto_conto_fornitori
+{
+  "id": "ECF-2025-01-07-1893.56-abc123",
+  "data": "2025-01-07",
+  "importo": 1893.56,
+  "descrizione": "FAVORE G.I.A.L. S.R.L",
+  "nome_fornitore": "G.I.A.L. S.R.L",
+  "categoria": "Fornitori - Generico",
+  "tipo": "fornitore"
+}
+```
+
+---
+
 ### Bug Fix Precedenti - IVA Finanziaria vs IVA
 - Allineato endpoint `/api/finanziaria/summary` con logica di `/api/iva/annual`
 - Entrambi usano `data_ricezione` con fallback a `invoice_date`
