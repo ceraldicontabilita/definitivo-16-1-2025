@@ -272,3 +272,123 @@ async def get_riepilogo_bilancio(anno: int = Query(None)) -> Dict[str, Any]:
         "stato_patrimoniale": stato_patrimoniale,
         "conto_economico": conto_economico
     }
+
+
+
+@router.get("/export-pdf")
+async def export_bilancio_pdf(anno: int = Query(None)):
+    """Esporta Bilancio in PDF."""
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.units import cm
+    except ImportError:
+        raise HTTPException(status_code=500, detail="reportlab non installato")
+    
+    if not anno:
+        anno = datetime.now().year
+    
+    # Carica dati
+    stato_patrimoniale = await get_stato_patrimoniale(anno=anno)
+    conto_economico = await get_conto_economico(anno=anno)
+    
+    # Crea PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=18, alignment=1, spaceAfter=20)
+    section_style = ParagraphStyle('Section', parent=styles['Heading2'], fontSize=14, spaceAfter=10, spaceBefore=15)
+    
+    elements = []
+    
+    # Titolo
+    elements.append(Paragraph(f"BILANCIO {anno}", title_style))
+    elements.append(Paragraph(f"Generato il {datetime.now().strftime('%d/%m/%Y')}", styles['Normal']))
+    elements.append(Spacer(1, 20))
+    
+    # === STATO PATRIMONIALE ===
+    elements.append(Paragraph("STATO PATRIMONIALE", section_style))
+    
+    sp = stato_patrimoniale
+    sp_data = [
+        ['ATTIVO', '', 'PASSIVO', ''],
+        ['Cassa', f"€ {sp['attivo']['disponibilita_liquide']['cassa']:,.2f}", 
+         'Debiti vs Fornitori', f"€ {sp['passivo']['debiti']['debiti_vs_fornitori']:,.2f}"],
+        ['Banca', f"€ {sp['attivo']['disponibilita_liquide']['banca']:,.2f}", '', ''],
+        ['Crediti vs Clienti', f"€ {sp['attivo']['crediti']['crediti_vs_clienti']:,.2f}", 
+         'Patrimonio Netto', f"€ {sp['passivo']['patrimonio_netto']:,.2f}"],
+        ['', '', '', ''],
+        ['TOTALE ATTIVO', f"€ {sp['attivo']['totale_attivo']:,.2f}", 
+         'TOTALE PASSIVO', f"€ {sp['passivo']['totale_passivo']:,.2f}"]
+    ]
+    
+    sp_table = Table(sp_data, colWidths=[5*cm, 4*cm, 5*cm, 4*cm])
+    sp_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#dcfce7')),
+        ('BACKGROUND', (2, 0), (3, 0), colors.HexColor('#fee2e2')),
+        ('BACKGROUND', (0, -1), (1, -1), colors.HexColor('#22c55e')),
+        ('BACKGROUND', (2, -1), (3, -1), colors.HexColor('#ef4444')),
+        ('TEXTCOLOR', (0, -1), (-1, -1), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(sp_table)
+    elements.append(Spacer(1, 30))
+    
+    # === CONTO ECONOMICO ===
+    elements.append(Paragraph("CONTO ECONOMICO", section_style))
+    
+    ce = conto_economico
+    ce_data = [
+        ['RICAVI', ''],
+        ['Corrispettivi (Vendite)', f"€ {ce['ricavi']['corrispettivi']:,.2f}"],
+        ['Altri Ricavi', f"€ {ce['ricavi']['altri_ricavi']:,.2f}"],
+        ['TOTALE RICAVI', f"€ {ce['ricavi']['totale_ricavi']:,.2f}"],
+        ['', ''],
+        ['COSTI', ''],
+        ['Acquisti (Fatture Fornitori)', f"€ {ce['costi']['acquisti']:,.2f}"],
+        ['Altri Costi Operativi', f"€ {ce['costi']['altri_costi']:,.2f}"],
+        ['TOTALE COSTI', f"€ {ce['costi']['totale_costi']:,.2f}"],
+        ['', ''],
+        ['RISULTATO', f"€ {ce['risultato']['utile_perdita']:,.2f}"]
+    ]
+    
+    ce_table = Table(ce_data, colWidths=[10*cm, 6*cm])
+    ce_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dcfce7')),
+        ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#22c55e')),
+        ('BACKGROUND', (0, 5), (-1, 5), colors.HexColor('#fee2e2')),
+        ('BACKGROUND', (0, 8), (-1, 8), colors.HexColor('#ef4444')),
+        ('BACKGROUND', (0, 10), (-1, 10), colors.HexColor('#1e293b') if ce['risultato']['utile_perdita'] >= 0 else colors.HexColor('#dc2626')),
+        ('TEXTCOLOR', (0, 3), (-1, 3), colors.white),
+        ('TEXTCOLOR', (0, 8), (-1, 8), colors.white),
+        ('TEXTCOLOR', (0, 10), (-1, 10), colors.white),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 5), (-1, 5), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 8), (-1, 8), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 10), (-1, 10), 'Helvetica-Bold'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('PADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(ce_table)
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=bilancio_{anno}.pdf"}
+    )
