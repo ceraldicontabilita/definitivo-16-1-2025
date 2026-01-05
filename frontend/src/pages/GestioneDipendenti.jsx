@@ -692,7 +692,7 @@ export default function GestioneDipendenti() {
               fontWeight: 'bold',
               boxShadow: '0 2px 8px rgba(33,150,243,0.3)'
             }}>
-              {importingEstratto ? '⏳ Riconciliando...' : '🏦 Importa Estratto Conto (PDF/CSV/Excel)'}
+              {importingEstratto ? '⏳ Riconciliando...' : '🏦 Importa Estratto Conto (CSV/Excel)'}
               <input
                 type="file"
                 accept=".xlsx,.xls,.csv"
