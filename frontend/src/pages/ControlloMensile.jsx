@@ -132,6 +132,7 @@ export default function ControlloMensile() {
     let yearPosAuto = 0, yearPosManual = 0, yearPosBanca = 0;
     let yearCorrispAuto = 0, yearCorrispManual = 0;
     let yearVersamenti = 0, yearSaldoCassa = 0;
+    let yearDocumentiCommerciali = 0;
 
     for (let month = 1; month <= 12; month++) {
       const monthStr = String(month).padStart(2, '0');
