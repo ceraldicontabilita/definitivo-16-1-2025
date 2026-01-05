@@ -53,13 +53,6 @@ export default function PrimaNotaMobile() {
     }
   };
 
-  const formatEuro = (value) => {
-    return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(value || 0);
-  };
-
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);

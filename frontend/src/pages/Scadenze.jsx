@@ -92,7 +92,6 @@ export default function Scadenze() {
     }
   };
 
-  const formatEuro = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
   const formatDate = (dateStr) => dateStr ? new Date(dateStr).toLocaleDateString('it-IT') : '-';
 
   const getPriorityStyle = (priorita, urgente) => {
