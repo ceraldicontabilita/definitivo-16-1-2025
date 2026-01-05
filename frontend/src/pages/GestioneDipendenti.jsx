@@ -80,6 +80,10 @@ export default function GestioneDipendenti() {
     } else if (activeTab === 'salari') {
       loadPrimaNotaSalari();
       loadDipendentiLista();
+    } else if (activeTab === 'libro-unico') {
+      loadLibroUnico();
+    } else if (activeTab === 'libretti') {
+      loadLibretti();
     }
   }, [activeTab, selectedYear, selectedMonth, filtroDipendente]);
 
