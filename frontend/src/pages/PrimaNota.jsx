@@ -27,11 +27,11 @@ export default function PrimaNota() {
 }
 
 function PrimaNotaDesktop() {
+  const { anno: selectedYear } = useAnnoGlobale();
   const today = new Date().toISOString().split('T')[0];
   const currentYear = new Date().getFullYear();
   
-  // Anno selezionato (default: anno corrente)
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  // Anno selezionato viene dal context globale
   const [availableYears, setAvailableYears] = useState([currentYear]);
   
   // Sezione attiva
