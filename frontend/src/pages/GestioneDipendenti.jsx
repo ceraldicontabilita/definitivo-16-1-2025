@@ -771,6 +771,65 @@ export default function GestioneDipendenti() {
             </div>
           )}
 
+          {/* Risultato importazione estratto conto */}
+          {estrattoResult && (
+            <div style={{
+              padding: 16,
+              marginBottom: 20,
+              borderRadius: 12,
+              background: estrattoResult.error ? '#ffebee' : '#e3f2fd',
+              border: `1px solid ${estrattoResult.error ? '#ef5350' : '#2196f3'}`
+            }}>
+              {estrattoResult.error ? (
+                <div style={{ color: '#c62828' }}>
+                  <strong>❌ Errore:</strong> {estrattoResult.message}
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 'bold', color: '#1565c0', marginBottom: 8 }}>
+                    🏦 {estrattoResult.message}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Movimenti Banca</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1565c0' }}>{estrattoResult.movimenti_banca}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Riconciliati</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2e7d32' }}>{estrattoResult.riconciliati}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Già Riconciliati</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#9e9e9e' }}>{estrattoResult.gia_riconciliati}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Non Trovati</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f57c00' }}>{estrattoResult.non_trovati}</div>
+                    </div>
+                  </div>
+                  {estrattoResult.dettaglio_non_trovati && estrattoResult.dettaglio_non_trovati.length > 0 && (
+                    <div style={{ marginTop: 12, fontSize: 12 }}>
+                      <strong>Bonifici non abbinati:</strong>
+                      <ul style={{ margin: '4px 0', paddingLeft: 20, maxHeight: 150, overflow: 'auto' }}>
+                        {estrattoResult.dettaglio_non_trovati.slice(0, 10).map((m, i) => (
+                          <li key={i} style={{ color: '#666' }}>
+                            {m.data} - {m.nome || 'N/D'} - {formatEuro(m.importo)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+              <button 
+                onClick={() => setEstrattoResult(null)} 
+                style={{ marginTop: 8, fontSize: 12, cursor: 'pointer' }}
+              >
+                ✕ Chiudi
+              </button>
+            </div>
+          )}
+
           {/* Riepilogo Prima Nota Salari */}
           <div style={{ 
             background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
@@ -779,11 +838,19 @@ export default function GestioneDipendenti() {
             color: 'white',
             marginBottom: 20
           }}>
-            <h3 style={{ margin: '0 0 12px 0' }}>📒 Prima Nota Salari - {mesiNomi[selectedMonth - 1]} {selectedYear}</h3>
+            <h3 style={{ margin: '0 0 12px 0' }}>📒 Prima Nota Salari - {selectedMonth ? mesiNomi[selectedMonth - 1] : 'Tutti i mesi'} {selectedYear}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Movimenti</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold' }}>{salariMovimenti.length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Riconciliati</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{salariMovimenti.filter(m => m.riconciliato).length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Da Riconciliare</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{salariMovimenti.filter(m => !m.riconciliato).length}</div>
               </div>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Uscite</div>
