@@ -75,6 +75,24 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-05 (Sessione 8 - Ristrutturazione Architettura - FASI 2, 3, 4 COMPLETE)
+- **FASE 2 - Consolidamento Controlli Sicurezza**:
+  - Rimossi endpoint duplicati in `prima_nota.py` che bypassavano i controlli di sicurezza
+  - Verificati e consolidati tutti i controlli in: corrispettivi, assegni, prima_nota
+  - ✅ DELETE fattura pagata → BLOCCATO (testato)
+  - ✅ DELETE assegno incassato → BLOCCATO (testato)
+  - ✅ DELETE corrispettivo sent_ade → BLOCCATO (codice verificato)
+  - ✅ DELETE movimento riconciliato → BLOCCATO (codice verificato)
+- **FASE 3 - Integrazione DataPropagationService**:
+  - `fatture_upload.py`: PUT /{id}/paga usa `DataPropagationService.propagate_invoice_payment()`
+  - `corrispettivi_router.py`: POST /upload-xml usa `DataPropagationService.propagate_corrispettivo_to_prima_nota()`
+  - Flusso automatico: Pagamento fattura → Movimento Prima Nota → Aggiornamento fornitore
+- **FASE 4 - Consolidamento Hook Frontend**:
+  - Rimosso `useIsMobile` duplicato da `Fatture.jsx` e `PrimaNota.jsx`
+  - Centralizzato in `/app/frontend/src/hooks/useData.js`
+  - Hook condivisi: `useFatture`, `usePrimaNota`, `useCorrispettivi`, `useAssegni`, `useFornitori`
+- **Testing Completo**: 100% success rate su tutti i controlli di sicurezza
+
 ### 2026-01-05 (Sessione 7 - Ristrutturazione Architettura - FASE 1)
 - **NUOVO Services Layer** con Business Rules centralizzate:
   - `business_rules.py`: Regole di validazione per tutte le operazioni CRUD
