@@ -283,6 +283,7 @@ export default function ControlloMensile() {
         posAuto,
         posManual,
         posBanca,
+        posBancaCommissioni,
         posDiff,
         posBancaDiff,
         corrispAuto,
@@ -305,6 +306,7 @@ export default function ControlloMensile() {
       yearPosAuto += posAuto;
       yearPosManual += posManual;
       yearPosBanca += posBanca;
+      yearPosBancaCommissioni += posBancaCommissioni;
       yearCorrispAuto += corrispAuto;
       yearCorrispManual += corrispManual;
       yearVersamenti += versamenti;
@@ -318,6 +320,7 @@ export default function ControlloMensile() {
       posAuto: yearPosAuto,
       posManual: yearPosManual,
       posBanca: yearPosBanca,
+      posBancaCommissioni: yearPosBancaCommissioni,
       corrispettiviAuto: yearCorrispAuto,
       corrispettiviManual: yearCorrispManual,
       versamenti: yearVersamenti,
