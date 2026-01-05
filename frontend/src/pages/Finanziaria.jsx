@@ -51,16 +51,6 @@ export default function Finanziaria() {
           </div>
         </div>
       </div>
-              data-testid="finanziaria-year-selector"
-            >
-              {availableYears.map(y => (
-                <option key={y} value={y}>{y}</option>
-              ))}
-            </select>
-            <button onClick={loadSummary} data-testid="finanziaria-refresh">🔄 Aggiorna</button>
-          </div>
-        </div>
-      </div>
 
       {loading ? (
         <div className="card">
