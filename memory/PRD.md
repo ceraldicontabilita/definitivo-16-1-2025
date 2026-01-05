@@ -439,13 +439,17 @@ SALDO IVA:
 - [x] Discrepanza Conteggio Fatture - Verificato: 1328 fatture uniche, nessun duplicato
 - [x] **Fix errore re-importazione XML** (upsert con force_update=true)
 
-### P3 (Bassa) - IN CORSO
+### P3 (Bassa) - COMPLETATI ✅
 - [x] **Ristrutturazione GestioneDipendenti.jsx** (3 tab: Anagrafica, Paghe e Salari, Prima Nota Salari)
-- [ ] **Logica sfasamento accrediti POS** (Lun→Mar, Ven→Lun, festivi)
-- [ ] **Popolare Magazzino da Fatture XML**
-- [ ] Confronto anno su anno nel Bilancio
-- [ ] Dashboard con grafici trend mensili
+- [x] **Logica sfasamento accrediti POS** - `/api/pos-accredito/*` con calendario festivi italiani
+- [x] **Popolare Magazzino da Fatture XML** - `/api/magazzino/popola-da-fatture`
+- [x] **Confronto anno su anno nel Bilancio** - `/api/bilancio/confronto-annuale`
+- [x] **Dashboard trend mensili** - `/api/dashboard/trend-mensile`
+
+### P4 (Future) - BACKLOG
 - [ ] Notifiche in-app per scadenze
+- [ ] Grafici interattivi frontend per trend
+- [ ] Report PDF bilancio comparativo
 
 ---
 
