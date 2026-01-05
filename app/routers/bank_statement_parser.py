@@ -14,124 +14,132 @@ router = APIRouter()
 
 
 def parse_date(date_str: str) -> Optional[str]:
-    """
-    Converte data da formato DD/MM/YY a YYYY-MM-DD
-    """
+    """Converte data da formato DD/MM/YY a YYYY-MM-DD"""
     if not date_str:
         return None
     try:
         date_str = date_str.strip()
-        
-        # Formato DD/MM/YY
         if re.match(r'^\d{2}/\d{2}/\d{2}$', date_str):
             parts = date_str.split('/')
             day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
             full_year = 2000 + year if year < 50 else 1900 + year
             return f"{full_year}-{month:02d}-{day:02d}"
-        
-        # Formato DD.MM.YYYY
         if re.match(r'^\d{2}\.\d{2}\.\d{4}$', date_str):
             parts = date_str.split('.')
             day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
             return f"{year}-{month:02d}-{day:02d}"
-            
         return None
-    except Exception as e:
-        logger.warning(f"Errore parsing data '{date_str}': {e}")
+    except:
         return None
 
 
 def parse_amount(amount_str: str) -> Optional[float]:
-    """
-    Converte importo da formato italiano (1.234,56 o - 1.234,56) a float
-    """
+    """Converte importo da formato italiano a float"""
     if not amount_str:
         return None
     try:
         amount_str = amount_str.strip()
-        amount_str = amount_str.replace('€', '').replace(' ', '')
-        
-        # Gestisci il segno negativo
-        is_negative = amount_str.startswith('-') or '- ' in amount_str
-        amount_str = amount_str.replace('-', '').strip()
-        
-        # Converti formato italiano
+        is_negative = amount_str.startswith('-') or amount_str.startswith('- ')
+        amount_str = amount_str.replace('-', '').replace(' ', '').replace('€', '')
         amount_str = amount_str.replace('.', '').replace(',', '.')
-        
         value = float(amount_str)
         return -value if is_negative else value
-    except Exception as e:
+    except:
         return None
+
+
+def is_date_line(line: str) -> bool:
+    """Verifica se la linea è una data DD/MM/YY"""
+    return bool(re.match(r'^\d{2}/\d{2}/\d{2}$', line.strip()))
+
+
+def is_amount_line(line: str) -> bool:
+    """Verifica se la linea è un importo"""
+    line = line.strip()
+    # Pattern: "- 1.234,56" o "1.234,56" o "- 12,34"
+    return bool(re.match(r'^-?\s*\d{1,3}(?:\.\d{3})*,\d{2}$', line))
 
 
 def extract_banco_bpm_transactions(text: str) -> List[Dict[str, Any]]:
     """
-    Estrae le transazioni dal testo dell'estratto conto BANCO BPM
+    Estrae le transazioni dal testo BANCO BPM.
     
-    Formato tipico delle righe:
-    DD/MM/YY DD/MM/YY DESCRIZIONE - importo (uscita)
-    DD/MM/YY DD/MM/YY DESCRIZIONE importo (entrata)
+    Struttura tipica (ogni transazione su più righe):
+    - DATA_CONTABILE (DD/MM/YY)
+    - DATA_VALUTA (DD/MM/YY)
+    - DESCRIZIONE (testo)
+    - IMPORTO (- X.XXX,XX per uscite, X.XXX,XX per entrate)
+    - DATA_DISPONIBILE (DD/MM/YY)
+    - [eventuali altre righe di descrizione]
     """
     transactions = []
     lines = text.split('\n')
-    
-    # Pattern: linea che inizia con una data
-    date_pattern = r'^(\d{2}/\d{2}/\d{2})'
+    lines = [l.strip() for l in lines if l.strip()]
     
     i = 0
-    while i < len(lines):
-        line = lines[i].strip()
+    while i < len(lines) - 4:  # Minimo 5 righe per una transazione
+        line = lines[i]
         
-        # Salta linee vuote o header
-        if not line or 'DATA CONTABILE' in line or 'DESCRIZIONE DELLE OPERAZIONI' in line:
-            i += 1
-            continue
-        
-        # Cerca linee che iniziano con una data
-        if re.match(date_pattern, line):
-            # Cerca tutte le date nella linea
-            dates = re.findall(r'\d{2}/\d{2}/\d{2}', line)
+        # Cerca una data come inizio di transazione
+        if is_date_line(line):
+            data_contabile = line
             
-            if len(dates) >= 2:
-                # Estrai l'importo (formato: 1.234,56 o - 1.234,56)
-                # L'importo è tipicamente alla fine della linea o su linee adiacenti
-                amount_match = re.search(r'(- ?\d{1,3}(?:\.\d{3})*,\d{2}|\d{1,3}(?:\.\d{3})*,\d{2})\s*$', line)
+            # Verifica se la prossima riga è anche una data (data valuta)
+            if i + 1 < len(lines) and is_date_line(lines[i + 1]):
+                data_valuta = lines[i + 1]
                 
-                if amount_match:
-                    amount_str = amount_match.group(1)
-                    amount = parse_amount(amount_str)
+                # Cerca la descrizione e l'importo nelle righe successive
+                descrizione_parts = []
+                importo = None
+                data_disponibile = None
+                j = i + 2
+                
+                while j < len(lines) and j < i + 10:  # Max 10 righe per transazione
+                    current_line = lines[j]
                     
-                    # Estrai la descrizione (tutto tra le date e l'importo)
-                    # Rimuovi le date dalla linea
-                    desc_line = line
-                    for date in dates[:3]:  # Max 3 date
-                        desc_line = desc_line.replace(date, '', 1)
-                    # Rimuovi l'importo
-                    desc_line = desc_line.replace(amount_str, '')
-                    description = ' '.join(desc_line.split()).strip()
+                    if is_amount_line(current_line):
+                        importo = parse_amount(current_line)
+                        j += 1
+                        # La prossima riga potrebbe essere data disponibile
+                        if j < len(lines) and is_date_line(lines[j]):
+                            data_disponibile = lines[j]
+                            j += 1
+                        break
+                    elif is_date_line(current_line):
+                        # Nuova transazione inizia qui
+                        break
+                    else:
+                        # È parte della descrizione
+                        # Ignora righe che sembrano header
+                        if current_line not in ['DATA', 'CONTABILE', 'VALUTA', 'DISPONIBILE', 
+                                                '*1', '*2', '*3', 'USCITE', 'ENTRATE',
+                                                'ATM', 'WEB', 'APP', 'DESCRIZIONE DELLE OPERAZIONI']:
+                            descrizione_parts.append(current_line)
+                    j += 1
+                
+                # Se abbiamo trovato un importo, crea la transazione
+                if importo is not None:
+                    descrizione = ' '.join(descrizione_parts)
                     
-                    # Se descrizione vuota, prendi dalla linea successiva
-                    if not description and i + 1 < len(lines):
-                        next_line = lines[i + 1].strip()
-                        if not re.match(date_pattern, next_line) and next_line:
-                            description = next_line
-                            i += 1
-                    
-                    # Determina se è entrata o uscita
-                    is_uscita = amount_str.strip().startswith('-') or '- ' in amount_str
+                    # Salta le righe "SALDO INIZIALE"
+                    if 'SALDO INIZIALE' in descrizione.upper():
+                        i = j
+                        continue
                     
                     transaction = {
-                        "data_contabile": parse_date(dates[0]),
-                        "data_valuta": parse_date(dates[1]) if len(dates) > 1 else None,
-                        "data_disponibile": parse_date(dates[2]) if len(dates) > 2 else None,
-                        "uscita": abs(amount) if is_uscita and amount else None,
-                        "entrata": amount if not is_uscita and amount else None,
-                        "descrizione": description[:500] if description else "Movimento",
+                        "data_contabile": parse_date(data_contabile),
+                        "data_valuta": parse_date(data_valuta),
+                        "data_disponibile": parse_date(data_disponibile) if data_disponibile else None,
+                        "uscita": abs(importo) if importo < 0 else None,
+                        "entrata": importo if importo > 0 else None,
+                        "descrizione": descrizione[:500] if descrizione else "Movimento",
                     }
                     
-                    # Verifica che la transazione abbia dati validi
-                    if transaction["data_contabile"] and (transaction["uscita"] or transaction["entrata"]):
+                    if transaction["data_contabile"]:
                         transactions.append(transaction)
+                    
+                    i = j
+                    continue
         
         i += 1
     
@@ -139,9 +147,7 @@ def extract_banco_bpm_transactions(text: str) -> List[Dict[str, Any]]:
 
 
 def parse_banco_bpm_statement(text: str) -> Dict[str, Any]:
-    """
-    Parser specifico per estratti conto BANCO BPM
-    """
+    """Parser per estratti conto BANCO BPM"""
     result = {
         "banca": "BANCO BPM",
         "tipo_documento": "ESTRATTO CONTO CORRENTE",
@@ -153,52 +159,35 @@ def parse_banco_bpm_statement(text: str) -> Dict[str, Any]:
         "movimenti": [],
         "totale_entrate": 0,
         "totale_uscite": 0,
-        "parse_warnings": []
     }
     
-    # Estrai intestatario - pattern BANCO BPM
-    # "Intestato a" seguito da nome azienda
-    intestatario_patterns = [
-        r'Intestato a\s*\n?\s*([A-Z][A-Z0-9\s.]+(?:S\.?R\.?L\.?|S\.?P\.?A\.?|S\.?A\.?S\.?|S\.?N\.?C\.?)?)',
-        r'CERALDI GROUP S\.R\.L\.',
-    ]
-    for pattern in intestatario_patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
+    # Estrai intestatario
+    if "CERALDI GROUP" in text.upper():
+        result["intestatario"] = "CERALDI GROUP S.R.L."
+    else:
+        match = re.search(r'Intestato a[:\s\n]+([A-Z][A-Z0-9\s.]+(?:S\.?R\.?L\.?|S\.?P\.?A\.?))', text, re.IGNORECASE)
         if match:
-            result["intestatario"] = match.group(1).strip() if '(' not in pattern else match.group(0).strip()
-            break
-    
-    # Se non trovato, cerca pattern specifico BANCO BPM
-    if not result["intestatario"]:
-        if "CERALDI GROUP" in text.upper():
-            result["intestatario"] = "CERALDI GROUP S.R.L."
+            result["intestatario"] = match.group(1).strip()
     
     # Estrai IBAN
-    iban_match = re.search(r'(?:IBAN|IT)\s*(\d{2})\s*([A-Z])\s*(\d{5})\s*(\d{5})\s*(\d+)', text)
+    iban_text = text.replace('\n', ' ')
+    iban_match = re.search(r'IT\s*\d{2}\s*[A-Z]\s*\d{5}\s*\d{5}\s*\d{12}', iban_text)
     if iban_match:
-        result["iban"] = f"IT{iban_match.group(1)}{iban_match.group(2)}{iban_match.group(3)}{iban_match.group(4)}{iban_match.group(5)}"
-    else:
-        # Pattern alternativo
-        iban_alt = re.search(r'IT\s*\d{2}\s*[A-Z]\s*\d{5}\s*\d{5}\s*\d{12}', text.replace('\n', ' '))
-        if iban_alt:
-            result["iban"] = iban_alt.group(0).replace(' ', '')
+        result["iban"] = iban_match.group(0).replace(' ', '')
     
-    # Estrai periodo riferimento
+    # Estrai periodo
     periodo_match = re.search(r'AL\s+(\d{2}\.\d{2}\.\d{4})', text)
     if periodo_match:
         result["periodo_riferimento"] = parse_date(periodo_match.group(1))
     
     # Estrai saldo iniziale
-    saldo_iniziale_match = re.search(r'SALDO\s+INIZIALE[^0-9]*([\d.,]+)', text, re.IGNORECASE)
-    if saldo_iniziale_match:
-        result["saldo_iniziale"] = parse_amount(saldo_iniziale_match.group(1))
+    saldo_match = re.search(r'SALDO\s+INIZIALE[^\d]*([\d.,]+)', text, re.IGNORECASE)
+    if saldo_match:
+        result["saldo_iniziale"] = parse_amount(saldo_match.group(1))
     
     # Estrai saldo finale
-    saldo_finale_patterns = [
-        r'Saldo\s+(?:liquido\s+)?finale[^0-9]*([\d.,]+)',
-        r'SALDO\s+CONTABILE\s+FINALE[^0-9]*([\d.,]+)',
-    ]
-    for pattern in saldo_finale_patterns:
+    for pattern in [r'Saldo\s+liquido\s+finale[^\d]*([\d.,]+)', 
+                    r'SALDO\s+CONTABILE\s+FINALE[^\d]*([\d.,]+)']:
         match = re.search(pattern, text, re.IGNORECASE)
         if match:
             result["saldo_finale"] = parse_amount(match.group(1))
@@ -217,42 +206,24 @@ def parse_banco_bpm_statement(text: str) -> Dict[str, Any]:
     return result
 
 
-@router.post(
-    "/parse",
-    summary="Parse bank statement PDF",
-    description="Carica e analizza un PDF di estratto conto BANCO BPM"
-)
-async def parse_bank_statement(
-    file: UploadFile = File(..., description="File PDF estratto conto")
-) -> Dict[str, Any]:
-    """
-    Analizza un PDF di estratto conto bancario e restituisce i dati strutturati
-    """
+@router.post("/parse", summary="Parse bank statement PDF")
+async def parse_bank_statement(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """Analizza un PDF di estratto conto bancario"""
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Il file deve essere un PDF")
     
     try:
         content = await file.read()
         
-        # Estrai testo dal PDF con PyMuPDF
-        try:
-            import fitz  # PyMuPDF
-            
-            pdf_document = fitz.open(stream=content, filetype="pdf")
-            text = ""
-            num_pages = len(pdf_document)
-            for page_num in range(num_pages):
-                page = pdf_document[page_num]
-                text += page.get_text() + "\n"
-            pdf_document.close()
-            
-        except ImportError:
-            raise HTTPException(
-                status_code=500, 
-                detail="PyMuPDF non installato. Esegui: pip install PyMuPDF"
-            )
+        import fitz
+        pdf_document = fitz.open(stream=content, filetype="pdf")
+        text = ""
+        num_pages = len(pdf_document)
+        for page_num in range(num_pages):
+            page = pdf_document[page_num]
+            text += page.get_text() + "\n"
+        pdf_document.close()
         
-        # Parse del testo estratto
         result = parse_banco_bpm_statement(text)
         result["filename"] = file.filename
         result["pagine_totali"] = num_pages
@@ -263,30 +234,20 @@ async def parse_bank_statement(
             "message": f"Estratte {len(result['movimenti'])} transazioni da {num_pages} pagine"
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Errore parsing PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Errore parsing PDF: {str(e)}")
 
 
-@router.post(
-    "/import",
-    summary="Import bank statement to Prima Nota",
-    description="Importa le transazioni dell'estratto conto nella Prima Nota Banca"
-)
+@router.post("/import", summary="Import bank statement to Prima Nota")
 async def import_bank_statement(
     file: UploadFile = File(...),
     anno: int = Query(..., description="Anno di riferimento"),
-    auto_riconcilia: bool = Query(False, description="Riconcilia automaticamente con fatture")
+    auto_riconcilia: bool = Query(False)
 ) -> Dict[str, Any]:
-    """
-    Importa l'estratto conto nella Prima Nota Banca
-    """
+    """Importa l'estratto conto nella Prima Nota Banca"""
     from app.database import Database
     
-    # Prima parsa il file
-    # Reset file position
     await file.seek(0)
     parse_result = await parse_bank_statement(file)
     
@@ -297,11 +258,7 @@ async def import_bank_statement(
     movimenti = data.get("movimenti", [])
     
     if not movimenti:
-        return {
-            "success": False,
-            "message": "Nessun movimento trovato nel documento",
-            "imported": 0
-        }
+        return {"success": False, "message": "Nessun movimento trovato", "imported": 0}
     
     db = Database.get_db()
     imported = 0
@@ -317,7 +274,6 @@ async def import_bank_statement(
                 skipped += 1
                 continue
             
-            # Controlla duplicati
             existing = await db["prima_nota"].find_one({
                 "data": data_contabile,
                 "importo": importo,
@@ -328,15 +284,9 @@ async def import_bank_statement(
                 skipped += 1
                 continue
             
-            # Determina tipo movimento
-            if mov.get("entrata"):
-                tipo_movimento = "entrata"
-                importo_finale = mov["entrata"]
-            else:
-                tipo_movimento = "uscita"
-                importo_finale = mov["uscita"]
+            tipo_movimento = "entrata" if mov.get("entrata") else "uscita"
+            importo_finale = mov.get("entrata") or mov.get("uscita")
             
-            # Crea il record prima nota
             prima_nota_record = {
                 "data": data_contabile,
                 "data_valuta": mov.get("data_valuta"),
@@ -356,7 +306,7 @@ async def import_bank_statement(
             imported += 1
             
         except Exception as e:
-            errors.append(f"Errore movimento {mov.get('descrizione', 'N/A')[:50]}: {str(e)}")
+            errors.append(f"Errore: {str(e)[:50]}")
     
     return {
         "success": True,
@@ -371,18 +321,10 @@ async def import_bank_statement(
     }
 
 
-@router.get(
-    "/preview",
-    summary="Preview parsed data",
-    description="Info sull'endpoint di parsing"
-)
+@router.get("/preview", summary="Info endpoint")
 async def preview_statement() -> Dict[str, Any]:
-    """
-    Endpoint informativo
-    """
     return {
         "message": "Usa POST /api/estratto-conto/parse per caricare un PDF",
         "supported_banks": ["BANCO BPM"],
-        "expected_format": "Estratto conto corrente ordinario PDF",
-        "columns_expected": ["DATA CONTABILE", "DATA VALUTA", "DATA DISPONIBILE", "USCITE", "ENTRATE", "DESCRIZIONE"]
+        "expected_format": "Estratto conto corrente ordinario PDF"
     }
