@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import api from "../api";
 import { formatDateIT } from "../lib/utils";
 import { UploadProgressBar } from "../components/UploadProgressBar";
+import { useAnnoGlobale } from "../contexts/AnnoContext";
 
 export default function Fatture() {
+  const { anno: selectedYear } = useAnnoGlobale();
   const currentYear = new Date().getFullYear();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,8 +21,7 @@ export default function Fatture() {
   const bulkFileInputRef = useRef(null);
   const zipFileInputRef = useRef(null);
   
-  // Anno selezionato (default: anno corrente)
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  // Anno selezionato viene dal context globale
   const [availableYears, setAvailableYears] = useState([currentYear]);
   
   // Filtri
