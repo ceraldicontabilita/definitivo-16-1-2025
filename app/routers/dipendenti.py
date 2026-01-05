@@ -884,11 +884,12 @@ async def delete_salario(salario_id: str) -> Dict[str, str]:
 # Dizionario alias dipendenti: nome_variante -> nome_standard
 # Questo viene popolato dinamicamente + alias manuali
 DIPENDENTI_ALIAS = {
-    # Alias manuali per casi noti
-    "dissanayaka": "sankapala arachchilage jananie ayachana dissanayaka",
-    "sankapala jananie ayachana": "sankapala arachchilage jananie ayachana dissanayaka",
-    "sankapala arachchilage jananie ayac": "sankapala arachchilage jananie ayachana dissanayaka",
-    "sankapala": "sankapala arachchilage jananie ayachana dissanayaka",
+    # Alias manuali per casi noti - TUTTE LE VARIANTI
+    "dissanayaka": "dissanayaka",
+    "sankapala arachchilage jananie ayachana dissanayaka": "dissanayaka",
+    "sankapala jananie ayachana": "dissanayaka",
+    "sankapala arachchilage jananie ayac": "dissanayaka",
+    "sankapala": "dissanayaka",  # Primo nome che mappa al cognome
     "murolo": "murolo mario",
     "carotenuto": "carotenuto antonella",
     "capezzuto": "capezzuto alessandro",
