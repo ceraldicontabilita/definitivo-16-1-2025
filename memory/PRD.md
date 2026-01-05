@@ -233,21 +233,30 @@ FATTURA XML → Parse → FATTURE DB
 
 ## TODO Priority
 
-### P0 (Urgente)
+### P0 (Urgente) - COMPLETATI
 - [x] Upload ZIP massivo Corrispettivi con barra progresso
 - [x] Controllo Mensile: POS Auto da XML, Saldo Cassa, Versamenti
 - [x] Area Commercialista con invio PDF via email
 - [x] Fix Stampa Carnet (singolo carnet, non tutti)
-- [ ] Fix pagina Prima Nota (regressione - non carica dati)
+- [x] Fix pagina Prima Nota (RISOLTO - funziona correttamente)
+- [x] **Ristrutturazione Architettura COMPLETA** (Fasi 1-4)
+  - [x] Service Layer con Business Rules centralizzate
+  - [x] Controlli sicurezza su tutti gli endpoint delete
+  - [x] DataPropagationService per flusso dati automatico
+  - [x] Hook frontend condivisi
 
 ### P1 (Alta)
 - [ ] Bilancio (Stato Patrimoniale, Conto Economico)
-- [ ] Associazione automatica fatture → fornitori all'import
+- [ ] Filtro Anno Globale nella Dashboard
 - [ ] Fix pagina Magazzino
 
 ### P2 (Media)
+- [ ] Associazione automatica dati fornitore (nuovo fornitore → fatture esistenti)
+- [ ] Popolare Magazzino da Fatture XML
 - [ ] Mapping prodotti descrizione → nome commerciale
 - [ ] Export PDF Bilancio
+- [ ] Discrepanza Conteggio Fatture (1326 vs 1328)
+- [ ] Riconoscimento POS in Riconciliazione ("INC.POS", "INCAS. TRAMITE P.O.S")
 - [ ] Ricerca Prodotti filtro esatto
 
 ---
