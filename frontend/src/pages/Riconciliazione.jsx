@@ -459,6 +459,23 @@ export default function Riconciliazione() {
                             {item.tipo === "entrata" ? "↑ Entrata" : "↓ Uscita"}
                           </span>
                         </td>
+                        <td style={{ padding: 8, textAlign: "center", borderBottom: "1px solid #eee" }}>
+                          <button
+                            onClick={() => handleAddToPrimaNota(item)}
+                            style={{
+                              padding: "4px 8px",
+                              background: "#3b82f6",
+                              color: "white",
+                              border: "none",
+                              borderRadius: 4,
+                              fontSize: 11,
+                              cursor: "pointer"
+                            }}
+                            title="Aggiungi a Prima Nota Banca"
+                          >
+                            + Prima Nota
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
