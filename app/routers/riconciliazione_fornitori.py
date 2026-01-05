@@ -115,24 +115,38 @@ def estrai_fornitore_da_descrizione(descrizione: str) -> Optional[str]:
     if "FAVORE" in desc_upper:
         idx = desc_upper.find("FAVORE")
         after = descrizione[idx + 7:].strip()
+        
         # Prendi fino a " - " o fine stringa
         if " - " in after:
-            return after.split(" - ")[0].strip()
-        # Prendi le prime 4-5 parole
-        words = after.split()
-        return " ".join(words[:5]) if len(words) >= 1 else after.strip()
+            nome = after.split(" - ")[0].strip()
+        else:
+            nome = after.strip()
+        
+        # Rimuovi "NOTPROVIDE", "NOTPROVIDED", etc.
+        nome = re.sub(r'\s*NOTPROVID\w*', '', nome, flags=re.IGNORECASE)
+        
+        # Rimuovi codici alla fine (es. "FT 123", numeri)
+        nome = re.sub(r'\s+FT\s*\d+.*$', '', nome, flags=re.IGNORECASE)
+        nome = re.sub(r'\s+\d+\s*$', '', nome)
+        
+        # Limita a max 6 parole (nomi aziendali lunghi)
+        words = nome.split()
+        if len(words) > 6:
+            nome = " ".join(words[:6])
+        
+        return nome.strip() if nome.strip() else None
     
-    # Pattern: SDD con nome alla fine
+    # Pattern: SDD con nome alla fine (addebito diretto)
     if "SDD" in desc_upper:
         # Cerca nome dopo il codice
         parts = descrizione.split()
         # Nome di solito è dopo i numeri
         nome_parts = []
         for p in parts:
-            if not re.match(r'^[\d:]+$', p) and len(p) > 2:
+            if not re.match(r'^[\d:]+$', p) and len(p) > 2 and p.upper() not in ['SDD', 'B2B']:
                 nome_parts.append(p)
         if nome_parts:
-            return " ".join(nome_parts[-3:])  # Ultime 3 parole significative
+            return " ".join(nome_parts[-4:])  # Ultime 4 parole significative
     
     return None
 
