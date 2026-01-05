@@ -111,7 +111,8 @@ from app.routers import (
     scadenze,
     bank_statement_parser,
     riconciliazione_fornitori,
-    estratto_conto
+    estratto_conto,
+    prima_nota_salari
 )
 
 # Include public API first (no auth required)
