@@ -562,16 +562,16 @@ export default function Corrispettivi() {
                     {c.matricola_rt || "-"}
                   </td>
                   <td style={{ padding: 8, color: "#2e7d32" }}>
-                    € {(c.pagato_contanti || 0).toFixed(2)}
+                    {formatEuro(c.pagato_contanti)}
                   </td>
                   <td style={{ padding: 8, color: "#9c27b0" }}>
-                    € {(c.pagato_elettronico || 0).toFixed(2)}
+                    {formatEuro(c.pagato_elettronico)}
                   </td>
                   <td style={{ padding: 8, fontWeight: "bold" }}>
-                    € {(c.totale || 0).toFixed(2)}
+                    {formatEuro(c.totale)}
                   </td>
                   <td style={{ padding: 8 }}>
-                    € {(c.totale_iva || 0).toFixed(2)}
+                    {formatEuro(c.totale_iva)}
                   </td>
                   <td style={{ padding: 8 }}>
                     <button 
