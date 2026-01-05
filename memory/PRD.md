@@ -107,9 +107,9 @@ SALDO IVA:
 └─────────────────────────────────────────────────────────────────────────┘
 
 📊 VERIFICA APRILE 2025 (vs Agenzia Entrate):
-   IVA Acquisti calcolata: €7.077,96
+   IVA Acquisti calcolata: €7.070,19
    IVA Acquisti AdE:       €7.070,19
-   Differenza:             €7,77 (0.1%) ✓
+   Differenza:             €0,00 ✅ PERFETTO!
 ```
 
 ---
@@ -125,13 +125,17 @@ SALDO IVA:
 - **RICALCOLO IVA/IMPONIBILE**:
   - Nuovo endpoint `POST /api/fatture/recalculate-iva` per ricalcolare tutte le fatture
   - IVA e imponibile estratti dal `riepilogo_iva` del XML (campi `imposta` e `imponibile`)
-  - Flag `iva_stimata: true` per fatture con IVA calcolata al 22% (quando non presente nel XML)
+  - Rimossa stima IVA al 22% - usa solo valori reali dal DB
 
 - **QUERY IVA AGGIORNATE**:
-  - `/api/iva/daily`, `/api/iva/monthly` ora filtrano per `data_ricezione`
+  - `/api/iva/daily`, `/api/iva/monthly`, `/api/iva/annual` ora filtrano per `data_ricezione`
   - Fallback a `invoice_date` se `data_ricezione` non presente
 
-- **VERIFICA APRILE 2025**: €7.077,96 vs AdE €7.070,19 (diff. 0.1%) ✓
+- **VERIFICA COMPLETA 2025**: ✅ Tutti i mesi ricalcolati e verificati
+  - Aprile 2025: €7.070,19 = AdE €7.070,19 (differenza €0,00)
+  - Totale IVA Credito 2025: €81.683,14
+  - Totale IVA Debito 2025: €85.715,39
+  - Saldo annuale: €4.032,25 (da versare)
 
 ### 2026-01-05 (Sessione 10 - Fix Calcolo IVA Note Credito)
 - **BUG FIX CRITICO - Registro IVA**:
