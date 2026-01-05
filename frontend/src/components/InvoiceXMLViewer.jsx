@@ -268,25 +268,7 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
     printWindow.document.close();
   };
 
-  if (loading) {
-    return (
-      <div style={{ 
-        position: 'fixed', 
-        inset: 0, 
-        background: 'rgba(0,0,0,0.5)', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        zIndex: 1000
-      }}>
-        <div style={{ background: 'white', padding: 40, borderRadius: 12 }}>
-          ⏳ Caricamento fattura...
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !invoice) {
+  if (!invoice) {
     return (
       <div style={{ 
         position: 'fixed', 
@@ -298,6 +280,12 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         zIndex: 1000
       }}>
         <div style={{ background: 'white', padding: 40, borderRadius: 12, textAlign: 'center' }}>
+          <p>❌ Fattura non trovata</p>
+          <button onClick={onClose} style={{ marginTop: 16, padding: '8px 16px' }}>Chiudi</button>
+        </div>
+      </div>
+    );
+  }
           <p>❌ {error || 'Fattura non trovata'}</p>
           <button onClick={onClose} style={{ marginTop: 16, padding: '8px 16px' }}>Chiudi</button>
         </div>
