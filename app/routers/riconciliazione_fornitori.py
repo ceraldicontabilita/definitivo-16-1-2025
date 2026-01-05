@@ -15,6 +15,17 @@ from app.database import Database
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# Dizionario alias fornitori: nome_variante -> nome_standard
+# Popolato dinamicamente + alias manuali per casi noti
+FORNITORI_ALIAS = {
+    # Aggiungi qui alias manuali per fornitori con nomi diversi
+    "dolciaria acquaviva": "dolciaria acquaviva s.p.a.",
+    "df baldassarre": "df baldassarre srl",
+    "saima": "saima s.p.a.",
+    "arval service lease italia": "arval service lease italia spa",
+    "edenred italia": "edenred italia s.r.l.",
+}
+
 
 def normalizza_nome_fornitore(nome: str) -> str:
     """Normalizza il nome fornitore per il matching."""
@@ -24,12 +35,18 @@ def normalizza_nome_fornitore(nome: str) -> str:
     # Rimuovi accenti
     nfkd = unicodedata.normalize('NFKD', nome)
     nome_norm = ''.join([c for c in nfkd if not unicodedata.combining(c)])
-    # Lowercase, rimuovi forme societarie e spazi extra
+    # Lowercase
     nome_norm = nome_norm.lower()
+    # Rimuovi NOTPROVIDE e varianti
+    nome_norm = re.sub(r'\s*notprovid\w*', '', nome_norm)
+    # Rimuovi parti legali lunghe (es. "sog. all'att. di dir. e coord. di ...")
+    nome_norm = re.sub(r'\s+sog\.?\s+all.*$', '', nome_norm)
     # Rimuovi forme societarie comuni
     for forma in ['s.r.l.', 'srl', 's.p.a.', 'spa', 's.n.c.', 'snc', 's.a.s.', 'sas', 
-                  'notprovide', 'notprovided', 'n.p.']:
+                  's.r.l', 's.p.a', 'n.p.', 'unipersonale']:
         nome_norm = nome_norm.replace(forma, '')
+    # Rimuovi punteggiatura extra
+    nome_norm = re.sub(r'[.,]+', ' ', nome_norm)
     return ' '.join(nome_norm.split())
 
 
@@ -48,16 +65,35 @@ def match_fornitori_fuzzy(nome1: str, nome2: str) -> bool:
     if n1 == n2:
         return True
     
-    # Uno contenuto nell'altro
-    if n1 in n2 or n2 in n1:
+    # Controlla alias
+    n1_canonical = FORNITORI_ALIAS.get(n1, n1)
+    n2_canonical = FORNITORI_ALIAS.get(n2, n2)
+    if n1_canonical == n2_canonical:
         return True
+    # Controlla anche alias parziali
+    for alias, canonical in FORNITORI_ALIAS.items():
+        if alias in n1 or alias in n2:
+            if normalizza_nome_fornitore(canonical) in [n1, n2]:
+                return True
+    
+    # Uno contenuto nell'altro (per nomi con suffissi legali diversi)
+    if len(n1) >= 6 and len(n2) >= 6:
+        if n1 in n2 or n2 in n1:
+            return True
     
     # Prima parola uguale (spesso è il nome distintivo)
     words1 = n1.split()
     words2 = n2.split()
     if words1 and words2:
+        # Prima parola identica e significativa
         if words1[0] == words2[0] and len(words1[0]) >= 4:
             return True
+        
+        # Prime due parole identiche
+        if len(words1) >= 2 and len(words2) >= 2:
+            if words1[0] == words2[0] and words1[1] == words2[1]:
+                return True
+        
         # Match parole significative (>= 5 caratteri)
         sig_words1 = {w for w in words1 if len(w) >= 5}
         sig_words2 = {w for w in words2 if len(w) >= 5}
