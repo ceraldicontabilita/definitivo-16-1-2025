@@ -484,6 +484,45 @@ async def list_prima_nota_banca(
     }
 
 
+@router.post("/movimento")
+async def create_movimento_generico(
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, str]:
+    """
+    Crea un movimento Prima Nota (cassa o banca).
+    Usato dalla riconciliazione per importare movimenti mancanti.
+    """
+    db = Database.get_db()
+    
+    tipo_nota = data.get("tipo", "banca")  # "cassa" o "banca"
+    tipo_movimento = data.get("tipo_movimento", "entrata")  # "entrata" o "uscita"
+    
+    required = ["data", "importo", "descrizione"]
+    for field in required:
+        if field not in data:
+            raise HTTPException(status_code=400, detail=f"Campo obbligatorio mancante: {field}")
+    
+    movimento = {
+        "id": str(uuid.uuid4()),
+        "data": data["data"],
+        "tipo": tipo_movimento,
+        "importo": float(data["importo"]),
+        "descrizione": data["descrizione"],
+        "categoria": data.get("categoria", "Altro"),
+        "riferimento": data.get("riferimento"),
+        "fornitore_piva": data.get("fornitore_piva"),
+        "fonte": data.get("fonte", "manual_entry"),
+        "riconciliato": data.get("riconciliato", False),
+        "note": data.get("note"),
+        "created_at": datetime.utcnow().isoformat()
+    }
+    
+    collection = COLLECTION_PRIMA_NOTA_BANCA if tipo_nota == "banca" else COLLECTION_PRIMA_NOTA_CASSA
+    await db[collection].insert_one(movimento)
+    
+    return {"message": f"Movimento {tipo_nota} creato", "id": movimento["id"]}
+
+
 @router.post("/banca")
 async def create_prima_nota_banca(
     data: Dict[str, Any] = Body(...)
