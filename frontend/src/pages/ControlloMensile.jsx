@@ -317,6 +317,9 @@ export default function ControlloMensile() {
       // ============ POS AUTO (da Corrispettivi XML) ============
       dayData.posAuto = dayCorrisp.reduce((sum, c) => sum + (parseFloat(c.pagato_elettronico) || 0), 0);
 
+      // ============ DOCUMENTI COMMERCIALI (da Corrispettivi XML) ============
+      dayData.documentiCommerciali = dayCorrisp.reduce((sum, c) => sum + (parseInt(c.numero_documenti) || 0), 0);
+
       // ============ POS MANUALE (da Prima Nota) ============
       dayData.posManual = dayCassa
         .filter(m => m.categoria?.toUpperCase() === 'POS' || m.source === 'excel_pos')
