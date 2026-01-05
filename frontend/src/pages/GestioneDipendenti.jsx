@@ -152,6 +152,141 @@ export default function GestioneDipendenti() {
     }
   };
 
+  // Libro Unico functions
+  const loadLibroUnico = async () => {
+    try {
+      setLoadingLibroUnico(true);
+      const monthStr = String(selectedMonth).padStart(2, '0');
+      const monthYear = `${selectedYear}-${monthStr}`;
+      const res = await api.get(`/api/dipendenti/libro-unico/salaries?month_year=${monthYear}`).catch(() => ({ data: [] }));
+      setLibroUnicoSalaries(res.data || []);
+    } catch (error) {
+      console.error('Error loading libro unico:', error);
+      setLibroUnicoSalaries([]);
+    } finally {
+      setLoadingLibroUnico(false);
+    }
+  };
+
+  const handleUploadLibroUnico = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploadingLibroUnico(true);
+      setLibroUnicoResult(null);
+      
+      const monthStr = String(selectedMonth).padStart(2, '0');
+      const monthYear = `${selectedYear}-${monthStr}`;
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await api.post(`/api/dipendenti/libro-unico/upload?month_year=${monthYear}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setLibroUnicoResult(res.data);
+      loadLibroUnico();
+      
+    } catch (error) {
+      setLibroUnicoResult({ 
+        error: true, 
+        message: error.response?.data?.detail || error.message 
+      });
+    } finally {
+      setUploadingLibroUnico(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleExportLibroUnicoExcel = async () => {
+    try {
+      const monthStr = String(selectedMonth).padStart(2, '0');
+      const monthYear = `${selectedYear}-${monthStr}`;
+      
+      const response = await api.get(`/api/dipendenti/libro-unico/export-excel?month_year=${monthYear}`, {
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `libro_unico_${monthYear}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      alert('Errore export: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleDeleteLibroUnicoSalary = async (salaryId) => {
+    if (!window.confirm('Eliminare questa busta paga?')) return;
+    try {
+      await api.delete(`/api/dipendenti/libro-unico/salaries/${salaryId}`);
+      loadLibroUnico();
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Libretti Sanitari functions
+  const loadLibretti = async () => {
+    try {
+      setLoadingLibretti(true);
+      const res = await api.get('/api/dipendenti/libretti-sanitari/all').catch(() => ({ data: [] }));
+      setLibretti(res.data || []);
+    } catch (error) {
+      console.error('Error loading libretti:', error);
+      setLibretti([]);
+    } finally {
+      setLoadingLibretti(false);
+    }
+  };
+
+  const handleSubmitLibretto = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/dipendenti/libretti-sanitari', librettoFormData);
+      setShowLibrettoForm(false);
+      setLibrettoFormData({
+        dipendente_nome: '',
+        numero_libretto: '',
+        data_rilascio: '',
+        data_scadenza: '',
+        note: ''
+      });
+      loadLibretti();
+      alert('✅ Libretto sanitario aggiunto!');
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleDeleteLibretto = async (librettoId) => {
+    if (!window.confirm('Eliminare questo libretto?')) return;
+    try {
+      await api.delete(`/api/dipendenti/libretti-sanitari/${librettoId}`);
+      loadLibretti();
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const isExpired = (dataScadenza) => {
+    if (!dataScadenza) return false;
+    return new Date(dataScadenza) < new Date();
+  };
+
+  const isExpiringSoon = (dataScadenza) => {
+    if (!dataScadenza) return false;
+    const today = new Date();
+    const scadenza = new Date(dataScadenza);
+    const diffDays = Math.ceil((scadenza - today) / (1000 * 60 * 60 * 24));
+    return diffDays <= 30 && diffDays >= 0;
+  };
+
   const handleImportSalari = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
