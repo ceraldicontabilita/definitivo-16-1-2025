@@ -79,8 +79,18 @@ async def get_financial_summary(
         corr_count = corr_result[0].get("count", 0) if corr_result else 0
         
         # ============ IVA DALLE FATTURE (CREDITO) ============
+        # Tipi documento Note Credito da SOTTRARRE
+        NOTE_CREDITO_TYPES = ["TD04", "TD08"]
+        
+        # Fatture normali (escludendo Note Credito) - usa data_ricezione con fallback
         fatt_pipeline = [
-            {"$match": {"invoice_date": date_range}},
+            {"$match": {
+                "$or": [
+                    {"data_ricezione": date_range},
+                    {"$and": [{"data_ricezione": {"$exists": False}}, {"invoice_date": date_range}]}
+                ],
+                "tipo_documento": {"$nin": NOTE_CREDITO_TYPES}
+            }},
             {"$group": {
                 "_id": None,
                 "total_iva": {"$sum": "$iva"},
@@ -94,11 +104,34 @@ async def get_financial_summary(
             iva_credito = float(fatt_result[0].get("total_iva", 0) or 0)
             tot_fatture = float(fatt_result[0].get("total_amount", 0) or 0)
             fatt_count = fatt_result[0].get("count", 0)
-            # Se IVA non presente, calcola con aliquota media 22%
-            if iva_credito == 0 and tot_fatture > 0:
-                iva_credito = tot_fatture - (tot_fatture / 1.22)
         else:
             iva_credito, tot_fatture, fatt_count = 0, 0, 0
+        
+        # Note Credito (da sottrarre dal totale IVA credito)
+        nc_pipeline = [
+            {"$match": {
+                "$or": [
+                    {"data_ricezione": date_range},
+                    {"$and": [{"data_ricezione": {"$exists": False}}, {"invoice_date": date_range}]}
+                ],
+                "tipo_documento": {"$in": NOTE_CREDITO_TYPES}
+            }},
+            {"$group": {
+                "_id": None,
+                "total_iva": {"$sum": "$iva"},
+                "total_amount": {"$sum": "$total_amount"},
+                "count": {"$sum": 1}
+            }}
+        ]
+        nc_result = await db["invoices"].aggregate(nc_pipeline).to_list(1)
+        
+        if nc_result:
+            iva_note_credito = float(nc_result[0].get("total_iva", 0) or 0)
+        else:
+            iva_note_credito = 0
+        
+        # IVA Credito Netta = Fatture - Note Credito (stessa logica di iva_calcolo.py)
+        iva_credito = iva_credito - iva_note_credito
         
         # ============ FATTURE DA PAGARE (non pagate) ============
         fatture_da_pagare = await db["invoices"].aggregate([
