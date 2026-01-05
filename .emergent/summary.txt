@@ -1,169 +1,184 @@
 <analysis>**original_problem_statement:**
-L'utente ha richiesto una serie di funzionalità e correzioni di bug per la sua applicazione gestionale ERP. Le richieste principali includono:
-1.  **Logica Contabile (Partite di Giro)**: Correggere i calcoli finanziari per rispettare i principi contabili, in particolare le partite di giro. Ad esempio, i salari pagati dalla banca non devono essere sommati due volte nelle uscite totali.
-2.  **Correzione Bug**:
-    *   : Il totale delle uscite era errato (€1.261.716,20 invece di €967.794,71) a causa di un endpoint duplicato e del doppio conteggio dei salari.
-    *   : La vista trimestrale e annuale mostravano dati identici e i dati per i mesi specifici non venivano visualizzati correttamente.
-    *   : Le funzioni di download PDF e invio email erano segnalate come non funzionanti.
-3.  **Nuove Funzionalità e UI**:
-    *   : Aggiungere card per Pagato Non Riscosso e Ammontare Annulli, estraendo i dati dai file XML.
-    *   : Sostituire il selettore di date con bottoni per i mesi e aggiungere una pagina di dettaglio per le singole transazioni.
-    *   : Aggiungere una barra di ricerca e la selezione multipla per i carnet degli assegni.
-    *   : Ristrutturare completamente la pagina per allinearla a un esempio fornito, includendo la gestione delle buste paga mensili e una Prima Nota Salari.
-4.  **Coerenza UI (Filtro Anno Globale)**: Forzare l'utilizzo di un unico selettore di anno globale per tutte le pagine, disabilitando la ricerca di dati per anni diversi da quello selezionato per prevenire errori e confusione.
-5.  **Logica di Business Specifica**:
-    *   **POS Banca**: Implementare una logica di calcolo complessa basata sul codice  e sulle regole di sfasamento temporale degli accrediti.
-    *   **Importazione XML**: Risolvere un errore che impedisce di re-importare i file XML per aggiornare i dati (es. dato già inserito).
+L'utente ha inizialmente richiesto un'applicazione ERP (Azienda Semplice) per la contabilità. Dopo l'implementazione di numerose funzionalità (dashboard, gestione scadenze, export PDF, importazione estratti conto) e un refactoring completo del codice, l'utente ha segnalato una serie di bug critici e richiesto ulteriori miglioramenti.
+
+Le richieste principali includono:
+- **Bug Critici:**
+    1.  Il filtro dell'anno globale (nella barra blu) non funziona correttamente in diverse pagine, mostrando dati di anni non selezionati.
+    2.  La pagina  mostra fatture di anni errati (es. 2025 in visualizzazione 2026).
+    3.  La pagina  mostra sempre gli stessi dati indipendentemente dal mese selezionato.
+    4.  Impossibilità di eliminare i dati di test da .
+    5.  Le fatture importate da XML non devono essere cancellabili (il cestino deve essere nascosto).
+    6.  La pagina  ha problemi con l'esportazione PDF e l'invio di email.
+    7.  La pagina  mostra dati di anni sbagliati e il link al report non funziona come previsto.
+- **Miglioramenti Funzionali:**
+    1.  Implementare la formattazione numerica italiana (separatore migliaia, virgola per decimali) su tutti gli importi dell'applicazione.
+    2.  Migliorare la logica di riconciliazione bancaria, automatizzando l'importazione di versamenti e bloccando la modifica dei movimenti riconciliati.
+    3.  Implementare un visualizzatore di fatture XML in stile AssoInvoice.
+    4.  Migliorare l'impaginazione del PDF generato dalla pagina .
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'agente ha lavorato su gran parte delle richieste.
-- **Fix **: È stato identificato e risolto un bug critico nel backend, causato da un endpoint duplicato ( in ) che non applicava il filtro per anno. La logica di calcolo è stata corretta per non contare due volte i salari (partite di giro).
-- **Fix **: Le card principali ora mostrano i totali per l'anno selezionato (invece di Oggi). È stato chiarito che la somiglianza tra vista annuale e trimestrale era dovuta alla visualizzazione dei dati del 2026 (con solo il Q1 popolato).
-- **Nuove Card **: Sono state implementate le card Pagato Non Riscosso e Ammontare Annulli. Il parser XML () è stato aggiornato e un endpoint di backfill ha aggiornato 359 record esistenti.
-- **UI  e **: La pagina  ora ha i bottoni per i mesi. La pagina  ha una nuova interfaccia per la ricerca e la selezione multipla dei carnet di assegni.
-- **Sincronizzazione Anno Globale**: L'agente ha iniziato a rimuovere i selettori di anno locali dalle pagine (, ) per forzare l'uso del context globale, ma questo ha introdotto un nuovo bug.
+L'applicazione è stata sottoposta a un importante refactoring per ridurre la complessità del codice, passando da ~90 a 71 router backend. Successivamente, sono state implementate diverse correzioni e nuove funzionalità basate sul feedback dell'utente:
+- **Filtro Anno Globale**: Tutte le pagine principali sono state modificate per utilizzare un contesto globale (), risolvendo parzialmente il bug del filtro dell'anno.
+- **Parser PDF Estratto Conto**: È stata implementata una funzionalità backend () e frontend per l'importazione e l'analisi di estratti conto bancari in formato PDF.
+- **Visualizzatore Fatture XML**: È stato creato un nuovo componente () che mostra un'anteprima dettagliata delle fatture in stile AssoInvoice.
+- **Correzioni Varie**:
+    - Risolto il bug  nella pagina .
+    - Nascosto il pulsante di eliminazione per tutte le fatture importate da XML.
+    - Ripristinata la pagina  che era stata eliminata per errore.
+    - Migliorato il layout del PDF generato per i report.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava finalizzando il fix della pagina . Dopo aver corretto la logica del backend (rimozione endpoint duplicato e gestione partite di giro), ha modificato il frontend per rimuovere il selettore di anno locale e usare il context globale. Questo ha causato la rottura della pagina.
+- **Last item agent was working**: L'agente stava implementando la richiesta dell'utente di formattare tutti i numeri con il separatore delle migliaia e la virgola per i decimali (formato italiano). Ha iniziato applicando la funzione  in diverse sezioni della pagina .
 - **Status**: IN PROGRESS
-- **Agent Testing Done**: N (Il backend è stato testato con  e funziona, ma il frontend è rotto).
-- **Which testing method agent to use?**: Frontend testing agent. Prima di tutto, l'agente deve ispezionare la console del browser e i log di Vite per capire perché la pagina  è bianca. Una volta risolto, il testing agent dovrà verificare:
-    1.  Il corretto caricamento della pagina  senza errori.
-    2.  Che le uscite totali per il 2025 corrispondano a **€967.794,71**.
-    3.  Che il dettaglio delle uscite (Cassa, Banca) sia corretto e non includa più i salari nel totale generale.
-    4.  Il corretto funzionamento del filtro anno globale sulla pagina.
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**:  per verificare la corretta formattazione degli importi su tutte le pagine dell'applicazione.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: La pagina  è bianca (P0)**
-    - **Attempted fixes**: L'agente ha rimosso il selettore di anno locale per usare il context globale. Questa modifica ha causato il problema.
+- **Issue 1: Dati Pagina IVA non si aggiornano (P0)**
+    - **Attempted fixes**: L'agente ha verificato che l'endpoint backend  viene chiamato correttamente. Tuttavia, durante i test, ha notato che il database risulta vuoto, quindi l'endpoint restituisce sempre dati nulli.
     - **Next debug checklist**:
-        1.  Controllare la console del browser per errori JavaScript (es. ).
-        2.  Verificare che il componente  riceva correttamente i dati dal .
-        3.  Assicurarsi che la rimozione del codice del vecchio dropdown non abbia lasciato tag JSX aperti o sintassi invalida.
-    - **Why fix this issue and what will be achieved with the fix?**: È un bloccante critico. Risolverlo completerà il fix della logica finanziaria e della sincronizzazione dell'anno per questa pagina.
-    - **Status**: IN PROGRESS
+        1.  Verificare perché il database è vuoto nella sessione corrente. I dati sono in cache del browser dell'utente o non vengono persistiti correttamente?
+        2.  Popolare il database con dati di test (es. importando fatture XML) per poter eseguire un debug reale.
+        3.  Testare l'endpoint  con dati reali per assicurarsi che i filtri per anno e mese funzionino.
+    - **Why fix this issue and what will be achieved with the fix?**: È un bug critico che rende inutilizzabile la funzionalità di analisi IVA.
+    - **Status**: BLOCKED
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: Mancanza di dati persistenti nel database per il debug.
+
+- **Issue 2: Impossibile eliminare movimenti di test (P2)**
+    - **Attempted fixes**: L'agente ha tentato di replicare il problema ma non ha trovato movimenti da eliminare perché il database era vuoto.
+    - **Next debug checklist**:
+        1.  Risolvere il problema della persistenza dei dati.
+        2.  Creare un movimento di test in .
+        3.  Provare a eliminarlo e analizzare i log del backend per capire perché l'operazione fallisce (potrebbe essere legato alla logica in ).
+    - **Why fix this issue and what will be achieved with the fix?**: Permetterà all'utente di pulire i dati di prova.
+    - **Status**: BLOCKED
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: backend
+    - **Blocked on other issue**: Mancanza di dati persistenti nel database.
+
+- **Issue 3: Logica di riconciliazione incompleta (P2)**
+    - **Attempted fixes**: È stato aggiunto un pulsante per importare movimenti non riconciliati in .
+    - **Next debug checklist**:
+        1.  Implementare un endpoint che, dato un movimento da VERS. CONTANTI, lo inserisca in .
+        2.  Modificare gli endpoint di riconciliazione per impostare un flag  sui documenti (fatture, movimenti, assegni).
+        3.  Modificare gli endpoint di eliminazione per impedire la cancellazione dei documenti con .
+    - **Why fix this issue and what will be achieved with this?**: Automatizzerà parte del lavoro di contabilità e garantirà l'integrità dei dati.
+    - **Status**: NOT STARTED
     - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: frontend
-    - **Blocked on other issue**: No
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: No.
 
 **In progress Task List**:
-- **Task 1: Completare il refactoring Partite di Giro e Sincronizzazione Anno (P0)**
-    - **Where to resume**: Debuggare il file  per risolvere l'errore che causa la pagina bianca.
-    - **What will be achieved with this?**: La pagina Finanziaria visualizzerà i dati contabili corretti, allineati ai principi di ragioneria e sincronizzati con il filtro anno globale, risolvendo una delle principali richieste dell'utente.
+- **Task 1: Completare la Formattazione Numerica (P0)**
+    - **Where to resume**: L'agente ha quasi completato la pagina . Ora deve estendere la formattazione a tutte le altre pagine che mostrano importi: , , , , , , , etc., sostituendo  e  con la funzione  da .
+    - **What will be achieved with this?**: L'intera applicazione userà una formattazione numerica consistente e corretta per la contabilità italiana.
     - **Status**: IN PROGRESS
-    - **Should Test frontend/backend/both after fix?**: both
-    - **Blocked on something**: La pagina bianca (Issue 1).
+    - **Should Test frontend/backend/both after fix?**: frontend
+    - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1)  - Pagina Dettaglio Transazione**: Implementare la funzionalità per cui cliccando su una riga della tabella si apre una nuova vista con i dettagli specifici di quella transazione.
-    - **(P2) Logica di Accredito POS**: Implementare la regola di sfasamento temporale per gli accrediti POS (pagamento lunedì -> accredito martedì, venerdì -> lunedì, ecc.), considerando anche i giorni festivi.
-    - **(P2) Fix Errore Re-importazione XML**: Modificare la logica di importazione dei file XML per usare un meccanismo di  (o ) invece di un semplice , per permettere l'aggiornamento dei corrispettivi esistenti quando i file vengono ricaricati.
+    - **(P1) Verifica Completa Filtro Anno**: Anche se le pagine sono state aggiornate per usare , l'utente ha segnalato che il problema persiste. È necessaria una verifica end-to-end per assicurarsi che ogni chiamata API invii l'anno corretto e che non ci siano più selettori di anno locali.
+    - **(P1) Logica Pagamento Fatture Miste**: Implementare la logica per cui, importando una fattura XML, se il fornitore ha metodo di pagamento misto, questo venga riconciliato con l'estratto conto.
 - **Future Tasks**:
-    - **(P0) Ristrutturazione **: Task di grandi dimensioni per riprogettare la pagina di gestione dei dipendenti in base all'esempio fornito, includendo schede per Paghe e Salari, visualizzazione delle buste paga mensili e una nuova pagina Prima Nota Salari.
-    - **(P2) Popolare Magazzino da Fatture XML**: Task in sospeso per estrarre i prodotti dalle fatture di acquisto XML per popolare l'inventario.
-    - **(P2) Export PDF per Riepilogo IVA**: Aggiungere una funzionalità per esportare in PDF il riepilogo trimestrale dell'IVA.
+    - **(P2) Riconciliazione Automatica Bonifici**: Implementare una logica che abbini automaticamente i bonifici in uscita dall'estratto conto con le fatture da pagare.
+    - **(P2) Grafici Interattivi Avanzati**: Aggiungere drill-down e filtri ai grafici della dashboard.
+    - **(P2) Mapping Fatture → Piano dei Conti**: Creare una logica per categorizzare automaticamente le voci delle fatture nel piano dei conti.
 
 **Completed work in this session**
-- **Fix Calcolo Spese **: Identificato e rimosso un endpoint API duplicato che causava totali errati. La logica è stata allineata ai principi contabili (partite di giro).
-- **Miglioramento UI **: Le card principali ora mostrano i totali per l'anno selezionato, rendendo la pagina più chiara. Aggiunta una vista trimestrale.
-- **Implementazione Nuove Card **: Aggiunte le card Pagato Non Riscosso e Ammontare Annulli, aggiornando il parser XML e i dati esistenti nel DB.
-- **Refactoring UI  e **: Sostituito il selettore data in  con bottoni per i mesi. Aggiunta ricerca e multiselezione per gli assegni in .
-- **Fix Calcolo POS Banca**: Implementata la nuova logica di calcolo basata sul codice .
-- **Conferma Calcolo Aliquote IVA**: Verificato che il backend calcoli correttamente l'IVA includendo tutte le aliquote (4%, 5%, 10%, 22%) presenti nei dati.
+- **Risoluzione Bug Anno Globale**: Tutte le pagine principali (, , , , etc.) sono state refattorizzate per utilizzare il contesto globale , rimuovendo gli stati locali dell'anno.
+- **Visualizzatore Fatture Stile AssoInvoice**: Creato e integrato il componente  per mostrare un'anteprima dettagliata delle fatture XML.
+- **Correzione Eliminazione Fatture**: La logica è stata perfezionata per nascondere il pulsante Elimina per tutte le fatture importate da XML, indipendentemente dal loro stato di pagamento.
+- **Correzione PDF **: Risolto il bug di  e migliorata l'intestazione e la struttura del PDF generato.
+- **Parser Estratti Conto Bancari**: Implementata con successo la funzionalità di upload e parsing di PDF di estratti conto.
+- **UI/UX **: La tabella delle fatture è stata migliorata per mostrare la data prima del numero e per includere i documenti .
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1: Logica di sfasamento accrediti POS**: Menzionata dall'utente ma non ancora implementata. Ora è un Upcoming Task.
-- **Issue 2: Errore re-importazione XML**: L'utente ha segnalato che non può aggiornare i dati reimportando i file. Questo è ora un Upcoming Task.
+Nessuno. Tutti i problemi menzionati sono stati risolti o sono presenti nella lista dei problemi pendenti.
 
 **Known issue recurrence from previous fork**
-- **Discrepanza Anno Selezionato**: Problema ricorrente in cui le pagine usano l'anno di sistema (2026) invece dell'anno selezionato dall'utente (2025). L'agente ha iniziato a risolverlo centralizzando la gestione dell'anno con , ma il lavoro è ancora in corso e ha causato il bug corrente sulla pagina Finanziaria.
-- **Recurrence count**: 2+
+- **Discrepanza Anno Selezionato**: Questo problema è stato segnalato di nuovo dall'utente. L'agente ha eseguito un refactoring massiccio per forzare l'uso di  su tutte le pagine. Sebbene tecnicamente corretto, il problema sembra persistere dal punto di vista dell'utente, probabilmente a causa della mancanza di dati persistenti che impedisce una verifica reale.
+- **Recurrence count**: 2
 - **Status**: IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Partite di Giro (Contra Entries)**: Concetto contabile fondamentale per cui i trasferimenti interni (es. stipendi pagati da banca) non devono essere conteggiati due volte nei totali. Applicato in .
-- **Debug di Endpoint Duplicati**: È stato risolto un bug critico causato da una rotta API duplicata in . Questo evidenzia la necessità di verificare la presenza di codice legacy conflittuale.
-- **Data Backfilling**: Creazione di un endpoint API () per aggiornare in massa i dati esistenti dopo una modifica al parser.
-- **Global State Management (React Context)**: Refactoring in corso per centralizzare la gestione dello stato dell'anno () e garantire la coerenza tra le pagine.
+- **Global State (React Context)**:  è fondamentale per la coerenza dello stato dell'anno selezionato.
+- **PDF Parsing (Backend)**: Utilizzo di  per l'estrazione di dati da documenti PDF.
+- **PDF Generation (Frontend)**: Utilizzo di  e  per creare report lato client.
+- **Data Persistence**: Problema critico attuale. Non è chiaro come i dati vengano salvati tra le sessioni, e il database appare vuoto.
 
 **key DB schema**
-- **corrispettivi**: Contiene i dati degli scontrini elettronici. Aggiornato con  e .
-- **estratto_conto**: Contiene i movimenti bancari, usati per il calcolo del POS Banca.
-- **prima_nota**: Contiene i movimenti di cassa.
-- **invoices**: Contiene i dati delle fatture, incluso  con il dettaglio delle aliquote.
+- Le collezioni (, , etc.) dovrebbero esistere, ma l'agente le ha trovate vuote. È necessario verificare la connessione al DB e la strategia di persistenza dei dati.
 
 **changes in tech stack**
-- Nessuna.
+- **Backend**: Aggiunta la libreria .
 
 **All files of reference**
--  (Modificato, attualmente non funzionante)
--  (Modificato per correggere calcolo e logica contabile)
--  (Modificato per rimuovere endpoint duplicato)
--  (Modificato per migliorare UX e sincronizzare l'anno)
--  (Modificato per aggiungere ricerca e multiselezione assegni)
--  (Modificato per usare bottoni per i mesi)
--  (Aggiornato per estrarre nuovi campi XML)
--  (Aggiunto endpoint per il backfill)
--  (Aggiornato)
+- **Creati**:
+  - 
+  - 
+  - 
+- **Modificati pesantemente**:
+  - , , , , , , , ,  (per usare  e ).
+  -  (refactoring router).
+  -  (correzione endpoint).
+  -  (aggiornato).
 
 **Areas that need refactoring**:
-- La sincronizzazione dell'anno tramite  deve essere completata e stabilizzata su tutte le pagine rilevanti per risolvere definitivamente il problema dell'anno non corretto.
+- È necessario un refactoring a livello di codice per garantire l'uso consistente della funzione  in tutti i componenti che visualizzano valuta.
 
 **key api endpoints**
-- : (FIXED) Restituisce il riepilogo finanziario per l'anno specificato.
-- : Restituisce il riepilogo IVA annuale.
-- : (NEW) Endpoint per il ricalcolo dei campi sui corrispettivi esistenti.
+- : (NUOVO) Esegue il parsing di un PDF di estratto conto.
+- : (DA VERIFICARE) Endpoint che al momento restituisce dati vuoti.
+- : (MODIFICATO) Recupera i dati di una singola fattura.
 
 **Critical Info for New Agent**
-- **Priorità #1: Risolvere la pagina bianca su **. Questo è un bloccante introdotto durante l'ultimo refactoring e deve essere risolto immediatamente.
-- **La logica contabile è fondamentale**: L'utente è molto attento ai dettagli contabili. Fai riferimento al concetto di partite di giro e al PDF  fornito per evitare errori di calcolo come il doppio conteggio.
-- **Completare la sincronizzazione dell'anno**: Il bug dell'anno errato è un problema ricorrente. È necessario completare il refactoring per usare  su tutte le pagine rilevanti e testare a fondo la sua funzionalità.
-- **Attenzione al codice legacy/duplicato**: Un bug critico è stato causato da un endpoint duplicato. Se un'API si comporta in modo anomalo, usa  per cercare definizioni di rotta conflittuali in tutto il progetto.
+- **Il problema più critico è la persistenza dei dati.** Il database sembra essere vuoto in ogni sessione. Non puoi debuggare la maggior parte dei bug segnalati dall'utente (filtro anno, dati IVA, eliminazione) senza dati reali. La tua prima azione deve essere capire perché il DB è vuoto e trovare un modo per popolarlo e far persistere i dati.
+- La formattazione dei numeri è una priorità alta e deve essere applicata a livello globale.
+- L'utente è molto attento ai dettagli. Assicurati di testare ogni modifica attentamente e di indirizzare ogni punto sollevato.
 
 **documents and test reports created in this job**
 - 
 - 
 - 
-- 
-- User artifact: 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **LATEST**: continua - Esortazione a procedere.
-2.  **Richiesta Logica Contabile**: Spiegazione delle partite di giro e richiesta di applicare i principi di ragioneria, sincronizzare l'anno globale e usare un libro di ragioneria fornito come riferimento.
-3.  **Dettagli Implementazione**: Chiarimenti sull'errore di re-importazione XML, conferma del valore delle uscite e conferma sulla riprogettazione della pagina dipendenti.
-4.  **Segnalazione Bug Multipla**: Bug sulla pagina IVA (dati uguali, mese non funzionante), sulla pagina Finanziaria (uscite errate) e richiesta di nuove funzionalità (dettaglio transazione in Prima Nota, riprogettazione pagina dipendenti).
-5.  **Dettagli per Nuove Card**: Specifiche tecniche per calcolare Pagato Non Riscosso e trovare Ammontare Annulli nei file XML.
-6.  **Segnalazione Bug e Feature Request**: Bug su PDF/Email nella pagina  e richiesta di ricerca/selezione assegni; richiesta di UI a bottoni in ; richiesta di nuove card in .
-7.  **Conferma Logica POS Banca**: Dettagli confermati per il fix della logica del POS Banca.
-8.  **Segnalazione Bug POS Banca**: L'utente segnala che il calcolo del POS Banca è errato e fornisce una nuova logica complessa.
-9.  **Approvazione Piano Iniziale**: L'utente approva l'esecuzione dei task P0 e P1.
-10. **Richiesta Iniziale**: Messaggio di inizio conversazione.
+1.  **LATEST**: L'utente segnala che la formattazione dei numeri è sbagliata (mancano separatore migliaia e decimali corretti), il filtro anno non funziona in , i dati  sono sempre uguali e ci sono problemi di visualizzazione nella tabella . **Stato: In corso di risoluzione.**
+2.  L'utente chiede di migliorare l'impaginazione del PDF generato e di risolvere il bug del pulsante Elimina sulle fatture importate. **Stato: Completato.**
+3.  L'utente segnala che il filtro dell'anno non funziona ancora correttamente e che la  mostra fatture di anni sbagliati. **Stato: Parzialmente risolto (refactoring ), ma da verificare.**
+4.  L'utente approva il piano di correzione precedente. **Stato: Completato.**
+5.  L'utente segnala una lunga lista di bug: problemi di riconciliazione, descrizione troncata, , e richiede un visualizzatore stile AssoInvoice. **Stato: Parzialmente risolto.**
+6.  L'utente approva il lavoro precedente (fix anno e parser PDF). **Stato: Completato.**
+7.  L'utente segnala il bug del controllo anno e richiede l'implementazione del parser per gli estratti conto PDF. **Stato: Completato.**
 
 **Project Health Check:**
-- **Broken**: La pagina  è attualmente bianca e non funzionante.
-- **Mocked**: None
+- **Broken**: Sì. Le funzionalità principali legate alla visualizzazione dei dati (IVA, filtri per anno) sono inaffidabili a causa di problemi di persistenza dei dati.
+- **Mocked**: None.
+- **Needs Cleanup**: Sì, è necessario completare il cleanup della formattazione numerica in tutto il frontend.
 
 **3rd Party Integrations**
-- Nessuna.
+- : Per i grafici.
+- : Per la generazione di PDF (backend).
+- : Per il calcolo delle festività.
+- : (Nuovo) Per il parsing di PDF.
+- , : Per la generazione di PDF (frontend).
 
 **Testing status**
-- **Testing agent used after significant changes**: YES
+- **Testing agent used after significant changes**: YES, ma i test sono passati senza dati reali nel DB, quindi non sono affidabili per i bug correnti.
 - **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**: [paths] No
-- **Known regressions**: La pagina  è diventata non funzionante (bianca) dopo l'ultimo refactoring.
+- **Test files created**: File di test sono stati generati dal testing agent ma necessitano di essere eseguiti su un database popolato.
+- **Known regressions**: Il problema del filtro dell'anno continua a essere segnalato nonostante i fix.
 
 **Credentials to test flow:**
 N/A
 
 **What agent forgot to execute**
-- Non ha ancora implementato la logica complessa di sfasamento degli accrediti POS.
-- Non ha ancora creato la pagina di dettaglio per le transazioni in .
-- Non ha ancora iniziato la ristrutturazione della pagina .
-- Non ha risolto il problema della re-importazione dei file XML.</analysis>
+- L'agente non ha risolto il problema fondamentale della persistenza dei dati. Ha continuato a lavorare sui bug come se i dati fossero presenti, basandosi su screenshot dell'utente, ma non ha potuto verificare le proprie correzioni in modo affidabile. Questo ha portato a cicli di fix non verificabili.</analysis>
