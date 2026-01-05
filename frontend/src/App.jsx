@@ -63,6 +63,25 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notificheNonLette, setNotificheNonLette] = useState(0);
   const [alertCommercialista, setAlertCommercialista] = useState(null);
+  const [openSubmenus, setOpenSubmenus] = useState({});
+  const location = useLocation();
+
+  // Toggle submenu open/close
+  const toggleSubmenu = (label) => {
+    setOpenSubmenus(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  // Auto-open submenu if current path is within it
+  useEffect(() => {
+    NAV_ITEMS.forEach(item => {
+      if (item.isSubmenu && item.children) {
+        const isChildActive = item.children.some(child => location.pathname === child.to);
+        if (isChildActive) {
+          setOpenSubmenus(prev => ({ ...prev, [item.label]: true }));
+        }
+      }
+    });
+  }, [location.pathname]);
 
   // Carica notifiche non lette all'avvio e ogni 60 secondi
   useEffect(() => {
