@@ -480,7 +480,7 @@ export default function Fornitori() {
                               {p.descrizione}
                             </td>
                             <td style={{ padding: 10, textAlign: 'right', fontWeight: 'bold' }}>
-                              € {(p.prezzo_ultimo || 0).toFixed(2)}
+                              {formatEuro(p.prezzo_ultimo)}
                             </td>
                             <td style={{ padding: 10, textAlign: 'right' }}>
                               {p.quantita_totale || '-'}
