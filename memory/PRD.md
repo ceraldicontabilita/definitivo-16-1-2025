@@ -73,24 +73,28 @@ FATTURA XML → Parse → FATTURE DB
 
 ---
 
-## Calcolo IVA - Logica
+## Calcolo IVA - Logica (secondo Agenzia delle Entrate)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           CALCOLO IVA MENSILE                            │
+│                     LIQUIDAZIONE IVA PERIODICA                          │
+│                (Art. 1 DPR 100/1998 - Art. 19 DPR 633/1972)            │
 └─────────────────────────────────────────────────────────────────────────┘
+
+📅 DATA RILEVANTE: La DATA DI RICEZIONE (data SDI), NON la data di emissione!
 
 IVA DEBITO (da versare all'Erario):
   └──► Σ Corrispettivi.totale_iva (vendite al pubblico)
 
 IVA CREDITO (da detrarre):
-  ├──► Σ Fatture Acquisto.iva (TD01, TD02, TD24, etc.)
+  ├──► Σ Fatture Acquisto RICEVUTE nel periodo
+  │    (usare data_ricezione o invoice_date se non disponibile)
   └──► - Σ Note Credito.iva (TD04, TD08) ← SOTTRARRE!
 
 SALDO IVA:
   └──► IVA Debito - IVA Credito Netto
-       ├── Se > 0 → "Da versare"
-       └── Se < 0 → "A credito"
+       ├── Se > 0 → "Da versare" entro il 16 del mese successivo
+       └── Se < 0 → "A credito" (da riportare o chiedere rimborso)
 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ TIPI DOCUMENTO FatturaPA:                                                │
@@ -101,6 +105,11 @@ SALDO IVA:
 │ - TD08: Nota di Credito Semplificata ← DA SOTTRARRE                     │
 │ - TD24: Fattura Differita                                               │
 └─────────────────────────────────────────────────────────────────────────┘
+
+📊 VERIFICA APRILE 2025 (vs Agenzia Entrate):
+   IVA Acquisti calcolata: €7.077,96
+   IVA Acquisti AdE:       €7.070,19
+   Differenza:             €7,77 (0.1%) ✓
 ```
 
 ---
@@ -115,7 +124,7 @@ SALDO IVA:
     - Calcolare IVA Credito Lordo (solo fatture normali)
     - Calcolare IVA Note Credito (da sottrarre)
     - **IVA Credito Netto = Fatture - Note Credito**
-  - 📊 **Esempio 2025**: IVA Credito Lordo €84.606 - Note Credito €2.923 = **IVA Netto €81.683**
+  - 📊 **Verifica Aprile 2025**: IVA Acquisti €7.077,96 vs AdE €7.070,19 (diff. €7,77 = 0.1%)
   - 📝 **Endpoint aggiornati**: `/api/iva/daily`, `/api/iva/monthly`, `/api/iva/annual`
   - 🔢 **Nuovi campi nella risposta**:
     - `iva_credito_lordo`: IVA da fatture normali
