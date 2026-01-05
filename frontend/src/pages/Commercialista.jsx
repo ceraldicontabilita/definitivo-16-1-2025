@@ -749,75 +749,174 @@ export default function Commercialista() {
             }}>
               <h3 style={{ margin: 0 }}>📝 Carnet Assegni</h3>
               <p style={{ margin: '5px 0 0 0', opacity: 0.9, fontSize: 14 }}>
-                Seleziona un carnet da inviare
+                Cerca e seleziona carnet da inviare
               </p>
             </div>
             <div style={{ padding: 20 }}>
+              {/* Barra di Ricerca */}
+              <input
+                type="text"
+                placeholder="🔍 Cerca carnet, beneficiario, importo..."
+                value={carnetSearch}
+                onChange={(e) => setCarnetSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: 8,
+                  border: '1px solid #ddd',
+                  marginBottom: 15,
+                  fontSize: 14
+                }}
+              />
+              
               {carnets.length === 0 ? (
                 <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>
                   Nessun carnet disponibile
                 </div>
               ) : (
                 <>
-                  <select
-                    value={selectedCarnet?.id || ''}
-                    onChange={(e) => {
-                      const carnet = carnets.find(c => c.id === e.target.value);
-                      setSelectedCarnet(carnet);
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: 8,
-                      border: '1px solid #ddd',
-                      marginBottom: 15,
-                      fontSize: 14
-                    }}
-                  >
-                    <option value="">-- Seleziona Carnet --</option>
-                    {carnets.map(c => (
-                      <option key={c.id} value={c.id}>
-                        Carnet {c.id} - {c.assegni.length} assegni - {formatCurrency(c.totale)}
-                      </option>
-                    ))}
-                  </select>
-                  
-                  {selectedCarnet && (
-                    <>
-                      <div style={{ 
-                        background: '#e8f5e9', 
-                        padding: 15, 
-                        borderRadius: 8, 
-                        marginBottom: 15 
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                          <span>Assegni:</span>
-                          <strong>{selectedCarnet.assegni.length}</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Totale:</span>
-                          <strong style={{ color: '#2e7d32' }}>{formatCurrency(selectedCarnet.totale)}</strong>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 10 }}>
-                        <button
-                          onClick={() => downloadPDF('carnet', selectedCarnet)}
-                          data-testid="download-carnet-pdf"
+                  {/* Lista Carnet con Checkbox */}
+                  <div style={{ 
+                    maxHeight: 250, 
+                    overflowY: 'auto', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: 8,
+                    marginBottom: 15
+                  }}>
+                    {carnets
+                      .filter(c => {
+                        if (!carnetSearch) return true;
+                        const search = carnetSearch.toLowerCase();
+                        // Cerca in ID carnet
+                        if (c.id.toLowerCase().includes(search)) return true;
+                        // Cerca nei beneficiari e importi degli assegni
+                        return c.assegni.some(a => 
+                          (a.beneficiario || '').toLowerCase().includes(search) ||
+                          (a.importo || '').toString().includes(search) ||
+                          (a.numero || '').toLowerCase().includes(search)
+                        );
+                      })
+                      .map(c => (
+                        <label
+                          key={c.id}
                           style={{
-                            flex: 1,
-                            padding: '12px',
-                            background: '#f5f5f5',
-                            color: '#333',
-                            border: 'none',
-                            borderRadius: 8,
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 15px',
+                            borderBottom: '1px solid #f3f4f6',
                             cursor: 'pointer',
-                            fontWeight: 'bold'
+                            background: selectedCarnets.includes(c.id) ? '#e8f5e9' : 'white',
+                            transition: 'background 0.2s'
                           }}
                         >
-                          📥 Scarica PDF
-                        </button>
-                        <button
-                          onClick={() => sendEmail('carnet', selectedCarnet)}
+                          <input
+                            type="checkbox"
+                            checked={selectedCarnets.includes(c.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCarnets([...selectedCarnets, c.id]);
+                              } else {
+                                setSelectedCarnets(selectedCarnets.filter(id => id !== c.id));
+                              }
+                            }}
+                            style={{ marginRight: 12, width: 18, height: 18 }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 'bold', color: '#1e293b' }}>
+                              Carnet {c.id}
+                            </div>
+                            <div style={{ fontSize: 12, color: '#64748b' }}>
+                              {c.assegni.length} assegni • {formatCurrency(c.totale)}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                  </div>
+                  
+                  {/* Riepilogo Selezione */}
+                  {selectedCarnets.length > 0 && (
+                    <div style={{ 
+                      background: '#e8f5e9', 
+                      padding: 15, 
+                      borderRadius: 8, 
+                      marginBottom: 15 
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <span>Carnet Selezionati:</span>
+                        <strong>{selectedCarnets.length}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <span>Totale Assegni:</span>
+                        <strong>
+                          {carnets
+                            .filter(c => selectedCarnets.includes(c.id))
+                            .reduce((sum, c) => sum + c.assegni.length, 0)}
+                        </strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Importo Totale:</span>
+                        <strong style={{ color: '#2e7d32' }}>
+                          {formatCurrency(
+                            carnets
+                              .filter(c => selectedCarnets.includes(c.id))
+                              .reduce((sum, c) => sum + c.totale, 0)
+                          )}
+                        </strong>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Pulsanti */}
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={() => {
+                        const selectedCarnetData = carnets.filter(c => selectedCarnets.includes(c.id));
+                        if (selectedCarnetData.length > 0) {
+                          downloadPDF('carnet_multi', selectedCarnetData);
+                        }
+                      }}
+                      disabled={selectedCarnets.length === 0}
+                      data-testid="download-carnet-pdf"
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        background: selectedCarnets.length === 0 ? '#e5e7eb' : '#f5f5f5',
+                        color: selectedCarnets.length === 0 ? '#9ca3af' : '#333',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: selectedCarnets.length === 0 ? 'not-allowed' : 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      📥 Scarica PDF ({selectedCarnets.length})
+                    </button>
+                    <button
+                      onClick={() => {
+                        const selectedCarnetData = carnets.filter(c => selectedCarnets.includes(c.id));
+                        if (selectedCarnetData.length > 0) {
+                          sendEmail('carnet_multi', selectedCarnetData);
+                        }
+                      }}
+                      disabled={selectedCarnets.length === 0 || sending === 'carnet' || !config.smtp_configured}
+                      data-testid="send-carnet-email"
+                      style={{
+                        flex: 1,
+                        padding: '12px',
+                        background: selectedCarnets.length === 0 || sending === 'carnet' ? '#ccc' : '#2e7d32',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: selectedCarnets.length === 0 || sending === 'carnet' ? 'not-allowed' : 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {sending === 'carnet' ? '⏳ Invio...' : `📧 Invia Email (${selectedCarnets.length})`}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
                           disabled={sending === 'carnet' || !config.smtp_configured}
                           data-testid="send-carnet-email"
                           style={{
