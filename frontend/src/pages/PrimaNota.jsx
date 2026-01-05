@@ -442,7 +442,7 @@ function PrimaNotaDesktop() {
                   <input type="number" step="0.01" placeholder="P3" value={pos.pos3} onChange={(e) => setPos({...pos, pos3: e.target.value})} style={{...inputStyleCompact, padding: 6, fontSize: 11}} />
                 </div>
                 <div style={{ fontSize: 11, textAlign: 'center', background: 'rgba(255,255,255,0.7)', padding: 4, borderRadius: 4 }}>
-                  Tot: <strong>€{posTotale.toFixed(2)}</strong>
+                  Tot: <strong>{formatEuro(posTotale)}</strong>
                 </div>
                 <button onClick={handleSavePos} disabled={savingPos} style={buttonStyleCompact('#1d4ed8', savingPos)}>
                   {savingPos ? '⏳' : '💾'}
