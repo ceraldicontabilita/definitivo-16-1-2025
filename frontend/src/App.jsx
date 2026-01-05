@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import api from "./api";
 import GlobalSearch from "./components/GlobalSearch";
 import { AnnoSelector, useAnnoGlobale } from "./contexts/AnnoContext";
@@ -18,14 +18,35 @@ const NAV_ITEMS = [
   { to: "/ordini-fornitori", label: "Ordini Fornitori", icon: "📝", short: "Ordini" },
   { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝", short: "Assegni" },
   { to: "/haccp", label: "HACCP", icon: "🍽️", short: "HACCP", hasBadge: true },
-  { to: "/dipendenti", label: "Dipendenti", icon: "👥", short: "Dipend." },
+  // Dipendenti è ora un sottomenu
+  { 
+    label: "Dipendenti", 
+    icon: "👥", 
+    short: "Dipend.",
+    isSubmenu: true,
+    children: [
+      { to: "/dipendenti", label: "Anagrafica", icon: "👤" },
+      { to: "/paghe", label: "Paghe / Salari", icon: "💰" },
+    ]
+  },
   { to: "/f24", label: "F24 / Tributi", icon: "📋", short: "F24" },
   { to: "/finanziaria", label: "Finanziaria", icon: "📈", short: "Finanz." },
   { to: "/bilancio", label: "Bilancio", icon: "📊", short: "Bilancio" },
   { to: "/piano-dei-conti", label: "Piano dei Conti", icon: "📒", short: "Conti" },
   { to: "/commercialista", label: "Commercialista", icon: "👩‍💼", short: "Comm." },
   { to: "/pianificazione", label: "Pianificazione", icon: "📅", short: "Pianif." },
-  { to: "/import-export", label: "Import/Export", icon: "📤", short: "Import" },
+  // Import/Export è ora un sottomenu
+  { 
+    label: "Import/Export", 
+    icon: "📤", 
+    short: "Import",
+    isSubmenu: true,
+    children: [
+      { to: "/import-export", label: "Import/Export Dati", icon: "📁" },
+      { to: "/estratto-conto", label: "Import Estratto Conto", icon: "📥" },
+      { to: "/estratto-conto-movimenti", label: "Movimenti Banca", icon: "🏦" },
+    ]
+  },
   { to: "/admin", label: "Admin", icon: "⚙️", short: "Admin" },
 ];
 
