@@ -468,4 +468,158 @@ async def get_portale_stats() -> Dict[str, Any]:
     }
 
 
+# ============== IMPORT SALARI DA EXCEL ==============
+
+MESI_MAP = {
+    "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4,
+    "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
+    "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12
+}
+
+@router.post("/import-salari")
+async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Importa salari da file Excel.
+    
+    Formato atteso:
+    - Colonna 1: Dipendente (nome completo)
+    - Colonna 2: Mese (italiano: Gennaio, Febbraio, etc.)
+    - Colonna 3: Anno
+    - Colonna 4: Stipendio Netto (importo busta)
+    - Colonna 5: Importo Erogato (bonifico)
+    """
+    try:
+        import openpyxl
+    except ImportError:
+        raise HTTPException(status_code=500, detail="openpyxl non installato")
+    
+    db = Database.get_db()
+    
+    # Leggi file Excel
+    contents = await file.read()
+    wb = openpyxl.load_workbook(io.BytesIO(contents))
+    sheet = wb.active
+    
+    imported = 0
+    skipped = 0
+    errors = []
+    
+    # Salta la riga di intestazione
+    for row_num in range(2, sheet.max_row + 1):
+        try:
+            dipendente_nome = sheet.cell(row=row_num, column=1).value
+            mese_str = sheet.cell(row=row_num, column=2).value
+            anno = sheet.cell(row=row_num, column=3).value
+            stipendio_netto = sheet.cell(row=row_num, column=4).value
+            importo_erogato = sheet.cell(row=row_num, column=5).value
+            
+            # Validazione
+            if not dipendente_nome or not mese_str or not anno:
+                skipped += 1
+                continue
+            
+            # Converti mese in numero
+            mese_lower = str(mese_str).lower().strip()
+            mese = MESI_MAP.get(mese_lower)
+            if not mese:
+                errors.append(f"Riga {row_num}: Mese non valido '{mese_str}'")
+                skipped += 1
+                continue
+            
+            # Converti importi
+            stipendio = float(stipendio_netto or 0)
+            erogato = float(importo_erogato or stipendio)
+            
+            # Crea data per il movimento (ultimo giorno del mese)
+            from calendar import monthrange
+            _, last_day = monthrange(int(anno), mese)
+            data_movimento = f"{anno}-{mese:02d}-{last_day:02d}"
+            
+            # Crea ID univoco per evitare duplicati
+            movimento_id = f"SAL-{anno}-{mese:02d}-{dipendente_nome.replace(' ', '-')}"
+            
+            # Controlla se già esiste
+            existing = await db["prima_nota_salari"].find_one({"id": movimento_id})
+            if existing:
+                skipped += 1
+                continue
+            
+            # Inserisci movimento salari
+            movimento = {
+                "id": movimento_id,
+                "dipendente": dipendente_nome,
+                "mese": mese,
+                "mese_nome": mese_str.capitalize(),
+                "anno": int(anno),
+                "data": data_movimento,
+                "stipendio_netto": round(stipendio, 2),
+                "importo_erogato": round(erogato, 2),
+                "importo": round(erogato, 2),  # Per compatibilità con finanziaria
+                "tipo": "uscita",
+                "categoria": "SALARIO",
+                "descrizione": f"Stipendio {mese_str} {anno} - {dipendente_nome}",
+                "created_at": datetime.utcnow().isoformat(),
+                "imported": True
+            }
+            
+            await db["prima_nota_salari"].insert_one(movimento)
+            imported += 1
+            
+        except Exception as e:
+            errors.append(f"Riga {row_num}: {str(e)}")
+            skipped += 1
+    
+    return {
+        "message": f"Importazione completata",
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors[:20] if errors else [],  # Limita errori mostrati
+        "total_rows": sheet.max_row - 1
+    }
+
+
+@router.get("/salari")
+async def get_salari(
+    anno: Optional[int] = Query(None),
+    mese: Optional[int] = Query(None),
+    dipendente: Optional[str] = Query(None)
+) -> List[Dict[str, Any]]:
+    """Lista movimenti salari con filtri."""
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["anno"] = anno
+    if mese:
+        query["mese"] = mese
+    if dipendente:
+        query["dipendente"] = {"$regex": dipendente, "$options": "i"}
+    
+    salari = await db["prima_nota_salari"].find(query, {"_id": 0}).sort([("anno", -1), ("mese", -1), ("dipendente", 1)]).to_list(5000)
+    return salari
+
+
+@router.delete("/salari/{salario_id}")
+async def delete_salario(salario_id: str) -> Dict[str, str]:
+    """Elimina un movimento salario."""
+    db = Database.get_db()
+    
+    result = await db["prima_nota_salari"].delete_one({"id": salario_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Salario non trovato")
+    
+    return {"message": "Salario eliminato"}
+
+
+@router.delete("/salari/bulk/anno/{anno}")
+async def delete_salari_anno(anno: int) -> Dict[str, Any]:
+    """Elimina tutti i salari di un anno (per reimportazione)."""
+    db = Database.get_db()
+    
+    result = await db["prima_nota_salari"].delete_many({"anno": anno})
+    
+    return {"message": f"Eliminati {result.deleted_count} salari per l'anno {anno}"}
+
+
 # Note: buste-paga routes are defined earlier in the file to avoid route conflict with /{dipendente_id}
