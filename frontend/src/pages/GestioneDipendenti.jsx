@@ -535,7 +535,7 @@ export default function GestioneDipendenti() {
       {/* TAB: Prima Nota Salari */}
       {activeTab === 'salari' && (
         <>
-          {/* Filtri periodo */}
+          {/* Filtri periodo + Importazione */}
           <div style={{ 
             display: 'flex', 
             gap: 12, 
@@ -566,21 +566,112 @@ export default function GestioneDipendenti() {
               {selectedYear}
             </span>
             
-            <button
-              onClick={loadPrimaNotaSalari}
-              style={{
-                marginLeft: 'auto',
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+              {/* Import Excel */}
+              <label style={{
                 padding: '8px 16px',
-                background: '#ff9800',
+                background: '#4caf50',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
-                cursor: 'pointer'
-              }}
-            >
-              🔄 Aggiorna
-            </button>
+                cursor: importingSalari ? 'wait' : 'pointer',
+                opacity: importingSalari ? 0.7 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                {importingSalari ? '⏳ Importando...' : '📥 Importa Excel'}
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleImportSalari}
+                  disabled={importingSalari}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              
+              {/* Elimina anno */}
+              <button
+                onClick={handleDeleteSalariAnno}
+                style={{
+                  padding: '8px 16px',
+                  background: '#ef5350',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer'
+                }}
+                title={`Elimina tutti i salari del ${selectedYear}`}
+              >
+                🗑️ Elimina Anno
+              </button>
+              
+              <button
+                onClick={loadPrimaNotaSalari}
+                style={{
+                  padding: '8px 16px',
+                  background: '#ff9800',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer'
+                }}
+              >
+                🔄 Aggiorna
+              </button>
+            </div>
           </div>
+
+          {/* Risultato importazione */}
+          {importResult && (
+            <div style={{
+              padding: 16,
+              marginBottom: 20,
+              borderRadius: 12,
+              background: importResult.error ? '#ffebee' : '#e8f5e9',
+              border: `1px solid ${importResult.error ? '#ef5350' : '#4caf50'}`
+            }}>
+              {importResult.error ? (
+                <div style={{ color: '#c62828' }}>
+                  <strong>❌ Errore:</strong> {importResult.message}
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 'bold', color: '#2e7d32', marginBottom: 8 }}>
+                    ✅ {importResult.message}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Importati</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2e7d32' }}>{importResult.imported}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Saltati (duplicati)</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f57c00' }}>{importResult.skipped}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Totale righe</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#1565c0' }}>{importResult.total_rows}</div>
+                    </div>
+                  </div>
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <div style={{ marginTop: 12, fontSize: 12, color: '#c62828' }}>
+                      <strong>Errori:</strong>
+                      <ul style={{ margin: '4px 0', paddingLeft: 20 }}>
+                        {importResult.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+              <button 
+                onClick={() => setImportResult(null)} 
+                style={{ marginTop: 8, fontSize: 12, cursor: 'pointer' }}
+              >
+                ✕ Chiudi
+              </button>
+            </div>
+          )}
 
           {/* Riepilogo Prima Nota Salari */}
           <div style={{ 
@@ -599,7 +690,7 @@ export default function GestioneDipendenti() {
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Uscite</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold' }}>
-                  {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo || 0), 0))}
+                  {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo || m.importo_erogato || 0), 0))}
                 </div>
               </div>
             </div>
