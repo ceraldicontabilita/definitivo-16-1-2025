@@ -40,10 +40,20 @@ export default function Dashboard() {
           api.get('/api/scadenze/prossime?giorni=30&limit=8').catch(() => ({ data: null }))
         ]);
         
+        // Carica dati per grafici avanzati
+        const [speseRes, confrontoRes, riconcRes] = await Promise.all([
+          api.get(`/api/dashboard/spese-per-categoria?anno=${anno}`).catch(() => ({ data: null })),
+          api.get(`/api/dashboard/confronto-annuale?anno=${anno}`).catch(() => ({ data: null })),
+          api.get(`/api/dashboard/stato-riconciliazione?anno=${anno}`).catch(() => ({ data: null }))
+        ]);
+        
         setTrendData(trendRes.data);
         setPosCalendario(posRes.data);
         setNotificheHaccp(notifRes.data.non_lette || 0);
         setScadenzeData(scadenzeRes.data);
+        setSpeseCategoria(speseRes.data);
+        setConfrontoAnnuale(confrontoRes.data);
+        setStatoRiconciliazione(riconcRes.data);
       } catch (e) {
         console.error("Dashboard error:", e);
         setErr("Backend non raggiungibile. Verifica che il server sia attivo.");
