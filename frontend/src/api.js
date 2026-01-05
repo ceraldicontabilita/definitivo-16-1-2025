@@ -10,9 +10,10 @@ export async function health() {
   return r.data;
 }
 
-export async function dashboardSummary() {
+export async function dashboardSummary(anno = null) {
   try {
-    const r = await api.get("/api/dashboard/summary");
+    const params = anno ? `?anno=${anno}` : '';
+    const r = await api.get(`/api/dashboard/summary${params}`);
     return r.data;
   } catch (e) {
     console.error("Dashboard summary error:", e);
