@@ -281,11 +281,26 @@ async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
     for row_num in range(2, sheet.max_row + 1):
         dipendente_nome = sheet.cell(row=row_num, column=1).value
         mese_str = sheet.cell(row=row_num, column=2).value
-        anno = sheet.cell(row=row_num, column=3).value
+        anno_val = sheet.cell(row=row_num, column=3).value
         stipendio_netto = sheet.cell(row=row_num, column=4).value
         importo_erogato = sheet.cell(row=row_num, column=5).value
         
-        if not dipendente_nome or not mese_str or not anno:
+        if not dipendente_nome or not mese_str or not anno_val:
+            continue
+        
+        # Gestisci anno (può essere int, float, o datetime)
+        try:
+            if isinstance(anno_val, datetime):
+                anno = anno_val.year
+            elif isinstance(anno_val, date):
+                anno = anno_val.year
+            else:
+                anno = int(float(str(anno_val)))
+            
+            # Valida anno ragionevole
+            if anno < 2000 or anno > 2100:
+                continue
+        except (ValueError, TypeError):
             continue
         
         # Converti mese
@@ -295,7 +310,7 @@ async def import_salari_excel(file: UploadFile = File(...)) -> Dict[str, Any]:
             continue
         
         # Chiave univoca
-        key = (str(dipendente_nome).strip(), mese, int(anno))
+        key = (str(dipendente_nome).strip(), mese, anno)
         
         if key not in aggregati:
             aggregati[key] = {"stipendio_netto": 0, "importo_erogato": 0}
