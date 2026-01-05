@@ -11,7 +11,7 @@ import { formatEuro } from '../lib/utils';
 
 /**
  * Pagina Gestione Dipendenti - Ristrutturata
- * Tab: Anagrafica | Paghe e Salari | Prima Nota Salari
+ * Tab: Anagrafica | Paghe e Salari | Prima Nota Salari | Libro Unico | Libretti Sanitari
  */
 export default function GestioneDipendenti() {
   const { anno: selectedYear, setAnno: setSelectedYear } = useAnnoGlobale();
@@ -50,6 +50,24 @@ export default function GestioneDipendenti() {
   const [dipendentiLista, setDipendentiLista] = useState([]);
   const [importingEstratto, setImportingEstratto] = useState(false);
   const [estrattoResult, setEstrattoResult] = useState(null);
+
+  // Libro Unico state
+  const [libroUnicoSalaries, setLibroUnicoSalaries] = useState([]);
+  const [loadingLibroUnico, setLoadingLibroUnico] = useState(false);
+  const [uploadingLibroUnico, setUploadingLibroUnico] = useState(false);
+  const [libroUnicoResult, setLibroUnicoResult] = useState(null);
+  
+  // Libretti Sanitari state
+  const [libretti, setLibretti] = useState([]);
+  const [loadingLibretti, setLoadingLibretti] = useState(false);
+  const [showLibrettoForm, setShowLibrettoForm] = useState(false);
+  const [librettoFormData, setLibrettoFormData] = useState({
+    dipendente_nome: '',
+    numero_libretto: '',
+    data_rilascio: '',
+    data_scadenza: '',
+    note: ''
+  });
 
   useEffect(() => {
     loadData();
