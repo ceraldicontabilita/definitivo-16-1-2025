@@ -1209,6 +1209,488 @@ export default function GestioneDipendenti() {
         </>
       )}
 
+      {/* TAB: Libro Unico */}
+      {activeTab === 'libro-unico' && (
+        <>
+          {/* Filtri periodo + Upload */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 12, 
+            marginBottom: 20, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            background: '#f8fafc',
+            padding: 16,
+            borderRadius: 12
+          }}>
+            <span style={{ fontWeight: 'bold', color: '#475569' }}>📅 Periodo:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}
+            >
+              {mesiNomi.map((m, i) => (
+                <option key={i} value={i + 1}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#dcfce7', fontWeight: 'bold' }}
+            >
+              {[2020, 2021, 2022, 2023, 2024, 2025, 2026].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Pulsanti Upload/Export */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+            <label style={{
+              padding: '10px 20px',
+              background: uploadingLibroUnico ? '#9ca3af' : 'linear-gradient(135deg, #10b981, #059669)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: uploadingLibroUnico ? 'wait' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 'bold'
+            }}>
+              {uploadingLibroUnico ? '⏳ Caricamento...' : '📤 Upload PDF/Excel'}
+              <input
+                type="file"
+                accept=".pdf,.xlsx,.xls"
+                onChange={handleUploadLibroUnico}
+                disabled={uploadingLibroUnico}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            <button
+              onClick={handleExportLibroUnicoExcel}
+              disabled={libroUnicoSalaries.length === 0}
+              style={{
+                padding: '10px 20px',
+                background: libroUnicoSalaries.length === 0 ? '#d1d5db' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: libroUnicoSalaries.length === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              📊 Esporta Excel
+            </button>
+            
+            <button
+              onClick={loadLibroUnico}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #6b7280, #4b5563)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🔄 Aggiorna
+            </button>
+          </div>
+
+          {/* Risultato upload */}
+          {libroUnicoResult && (
+            <div style={{
+              padding: 16,
+              marginBottom: 20,
+              borderRadius: 12,
+              background: libroUnicoResult.error ? '#ffebee' : '#dcfce7',
+              border: `1px solid ${libroUnicoResult.error ? '#ef5350' : '#10b981'}`
+            }}>
+              {libroUnicoResult.error ? (
+                <div style={{ color: '#c62828' }}>❌ {libroUnicoResult.message}</div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 'bold', color: '#166534', marginBottom: 8 }}>
+                    ✅ {libroUnicoResult.message}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Buste Paga</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#166534' }}>{libroUnicoResult.salaries_count}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#666' }}>Presenze</div>
+                      <div style={{ fontSize: 24, fontWeight: 'bold', color: '#0369a1' }}>{libroUnicoResult.presenze_count}</div>
+                    </div>
+                  </div>
+                </>
+              )}
+              <button onClick={() => setLibroUnicoResult(null)} style={{ marginTop: 8, fontSize: 12, cursor: 'pointer' }}>
+                ✕ Chiudi
+              </button>
+            </div>
+          )}
+
+          {/* Riepilogo */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            padding: 20,
+            borderRadius: 12,
+            color: 'white',
+            marginBottom: 20
+          }}>
+            <h3 style={{ margin: '0 0 12px 0' }}>📚 Libro Unico - {mesiNomi[selectedMonth - 1]} {selectedYear}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Buste Paga</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{libroUnicoSalaries.length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Netto</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>
+                  {formatEuro(libroUnicoSalaries.reduce((sum, s) => sum + (s.netto_a_pagare || 0), 0))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Acconti Pagati</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>
+                  {formatEuro(libroUnicoSalaries.reduce((sum, s) => sum + (s.acconto_pagato || 0), 0))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Da Pagare</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>
+                  {formatEuro(libroUnicoSalaries.reduce((sum, s) => sum + (s.differenza || 0), 0))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabella Libro Unico */}
+          <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+            <div style={{ 
+              padding: '16px 20px', 
+              background: '#f8fafc', 
+              borderBottom: '1px solid #e2e8f0',
+              fontWeight: 'bold'
+            }}>
+              📋 Buste Paga - {mesiNomi[selectedMonth - 1]} {selectedYear}
+            </div>
+            
+            {loadingLibroUnico ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>
+            ) : libroUnicoSalaries.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
+                Nessuna busta paga per questo periodo. Carica un file PDF o Excel.
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb' }}>
+                    <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Dipendente</th>
+                    <th style={{ padding: 12, textAlign: 'right', borderBottom: '1px solid #e2e8f0' }}>Netto</th>
+                    <th style={{ padding: 12, textAlign: 'right', borderBottom: '1px solid #e2e8f0' }}>Acconto</th>
+                    <th style={{ padding: 12, textAlign: 'right', borderBottom: '1px solid #e2e8f0' }}>Differenza</th>
+                    <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Note</th>
+                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 60 }}>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {libroUnicoSalaries.map((salary, idx) => (
+                    <tr key={salary.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: 12, fontWeight: 500 }}>{salary.dipendente_nome}</td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 'bold', color: '#10b981' }}>
+                        {formatEuro(salary.netto_a_pagare)}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', color: '#6b7280' }}>
+                        {formatEuro(salary.acconto_pagato)}
+                      </td>
+                      <td style={{ 
+                        padding: 12, 
+                        textAlign: 'right', 
+                        fontWeight: 'bold',
+                        color: salary.differenza > 0 ? '#f59e0b' : '#10b981'
+                      }}>
+                        {formatEuro(salary.differenza)}
+                      </td>
+                      <td style={{ padding: 12, fontSize: 12, color: '#6b7280' }}>{salary.note || '-'}</td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        <button
+                          onClick={() => handleDeleteLibroUnicoSalary(salary.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, opacity: 0.6 }}
+                          title="Elimina"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* TAB: Libretti Sanitari */}
+      {activeTab === 'libretti' && (
+        <>
+          {/* Header con pulsante aggiungi */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            padding: 20,
+            borderRadius: 12,
+            color: 'white',
+            marginBottom: 20,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12
+          }}>
+            <div>
+              <h3 style={{ margin: 0 }}>🏥 Gestione Libretti Sanitari</h3>
+              <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontSize: 14 }}>
+                Monitora la validità dei libretti sanitari del personale
+              </p>
+            </div>
+            <button
+              onClick={() => setShowLibrettoForm(!showLibrettoForm)}
+              style={{
+                padding: '10px 20px',
+                background: 'white',
+                color: '#dc2626',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              {showLibrettoForm ? '✕ Chiudi' : '➕ Nuovo Libretto'}
+            </button>
+          </div>
+
+          {/* Form nuovo libretto */}
+          {showLibrettoForm && (
+            <div style={{ 
+              background: 'white', 
+              borderRadius: 12, 
+              padding: 20, 
+              marginBottom: 20,
+              border: '2px solid #ef4444'
+            }}>
+              <h4 style={{ margin: '0 0 16px 0', color: '#dc2626' }}>Aggiungi Libretto Sanitario</h4>
+              <form onSubmit={handleSubmitLibretto}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: '#6b7280' }}>Nome Dipendente *</label>
+                    <input
+                      type="text"
+                      value={librettoFormData.dipendente_nome}
+                      onChange={(e) => setLibrettoFormData({...librettoFormData, dipendente_nome: e.target.value})}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 4 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: '#6b7280' }}>Numero Libretto</label>
+                    <input
+                      type="text"
+                      value={librettoFormData.numero_libretto}
+                      onChange={(e) => setLibrettoFormData({...librettoFormData, numero_libretto: e.target.value})}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 4 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: '#6b7280' }}>Data Rilascio *</label>
+                    <input
+                      type="date"
+                      value={librettoFormData.data_rilascio}
+                      onChange={(e) => setLibrettoFormData({...librettoFormData, data_rilascio: e.target.value})}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 4 }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: '#6b7280' }}>Data Scadenza *</label>
+                    <input
+                      type="date"
+                      value={librettoFormData.data_scadenza}
+                      onChange={(e) => setLibrettoFormData({...librettoFormData, data_scadenza: e.target.value})}
+                      required
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 4 }}
+                    />
+                  </div>
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ fontSize: 12, color: '#6b7280' }}>Note</label>
+                    <input
+                      type="text"
+                      value={librettoFormData.note}
+                      onChange={(e) => setLibrettoFormData({...librettoFormData, note: e.target.value})}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', marginTop: 4 }}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '10px 20px',
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    💾 Salva
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowLibrettoForm(false)}
+                    style={{
+                      padding: '10px 20px',
+                      background: '#6b7280',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Annulla
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Statistiche libretti */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+            <KPICard 
+              title="Totale Libretti" 
+              value={libretti.length} 
+              color="#6b7280" 
+              icon="📋" 
+            />
+            <KPICard 
+              title="Validi" 
+              value={libretti.filter(l => !isExpired(l.data_scadenza) && !isExpiringSoon(l.data_scadenza)).length} 
+              color="#10b981" 
+              icon="✅" 
+            />
+            <KPICard 
+              title="In Scadenza (30gg)" 
+              value={libretti.filter(l => isExpiringSoon(l.data_scadenza)).length} 
+              color="#f59e0b" 
+              icon="⚠️" 
+            />
+            <KPICard 
+              title="Scaduti" 
+              value={libretti.filter(l => isExpired(l.data_scadenza)).length} 
+              color="#ef4444" 
+              icon="❌" 
+            />
+          </div>
+
+          {/* Tabella Libretti */}
+          <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+            <div style={{ 
+              padding: '16px 20px', 
+              background: '#f8fafc', 
+              borderBottom: '1px solid #e2e8f0',
+              fontWeight: 'bold'
+            }}>
+              📋 Libretti Registrati ({libretti.length})
+            </div>
+            
+            {loadingLibretti ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>
+            ) : libretti.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
+                Nessun libretto registrato. Clicca su "Nuovo Libretto" per aggiungerne uno.
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f9fafb' }}>
+                    <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Dipendente</th>
+                    <th style={{ padding: 12, textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>N° Libretto</th>
+                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Rilascio</th>
+                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Scadenza</th>
+                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Stato</th>
+                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 60 }}>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {libretti.map((libretto, idx) => (
+                    <tr key={libretto.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      <td style={{ padding: 12, fontWeight: 500 }}>{libretto.dipendente_nome}</td>
+                      <td style={{ padding: 12, color: '#6b7280' }}>{libretto.numero_libretto || '-'}</td>
+                      <td style={{ padding: 12, textAlign: 'center', color: '#6b7280' }}>
+                        {libretto.data_rilascio ? new Date(libretto.data_rilascio).toLocaleDateString('it-IT') : '-'}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        {libretto.data_scadenza ? new Date(libretto.data_scadenza).toLocaleDateString('it-IT') : '-'}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        {isExpired(libretto.data_scadenza) ? (
+                          <span style={{ 
+                            background: '#fef2f2', 
+                            color: '#dc2626', 
+                            padding: '4px 10px', 
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                          }}>
+                            ❌ Scaduto
+                          </span>
+                        ) : isExpiringSoon(libretto.data_scadenza) ? (
+                          <span style={{ 
+                            background: '#fff7ed', 
+                            color: '#ea580c', 
+                            padding: '4px 10px', 
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                          }}>
+                            ⚠️ In scadenza
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            background: '#dcfce7', 
+                            color: '#16a34a', 
+                            padding: '4px 10px', 
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                          }}>
+                            ✅ Valido
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        <button
+                          onClick={() => handleDeleteLibretto(libretto.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, opacity: 0.6 }}
+                          title="Elimina"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
+      )}
+
       {/* Detail/Edit Modal */}
       <DipendenteDetailModal
         dipendente={selectedDipendente}
