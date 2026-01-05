@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import api from "../api";
-import { formatDateIT } from "../lib/utils";
+import { formatDateIT, formatEuro } from "../lib/utils";
 import { UploadProgressBar } from "../components/UploadProgressBar";
 import { useAnnoGlobale } from "../contexts/AnnoContext";
 import InvoiceXMLViewer from "../components/InvoiceXMLViewer";
