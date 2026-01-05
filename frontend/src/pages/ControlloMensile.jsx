@@ -643,6 +643,10 @@ export default function ControlloMensile() {
           <div style={{ fontSize: 11, opacity: 0.9 }}>Saldo Cassa</div>
           <div style={{ fontSize: 18, fontWeight: 'bold' }}>{formatCurrency(yearTotals.saldoCassa)}</div>
         </div>
+        <div style={{ background: 'linear-gradient(135deg, #64748b 0%, #475569 100%)', borderRadius: 12, padding: 14, color: 'white' }}>
+          <div style={{ fontSize: 11, opacity: 0.9 }}>📄 Doc. Commerciali</div>
+          <div style={{ fontSize: 18, fontWeight: 'bold' }}>{(yearTotals.documentiCommerciali || 0).toLocaleString('it-IT')}</div>
+        </div>
       </div>
 
       {/* Info Box */}
