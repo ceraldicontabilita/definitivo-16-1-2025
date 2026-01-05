@@ -332,13 +332,31 @@ async def get_fornitori_unici() -> List[str]:
 
 
 @router.get("/riepilogo")
-async def get_riepilogo(anno: Optional[int] = Query(None)) -> Dict[str, Any]:
-    """Riepilogo estratto conto."""
+async def get_riepilogo(
+    anno: Optional[int] = Query(None),
+    mese: Optional[int] = Query(None),
+    categoria: Optional[str] = Query(None),
+    tipo: Optional[str] = Query(None),
+    fornitore: Optional[str] = Query(None)
+) -> Dict[str, Any]:
+    """Riepilogo estratto conto con filtri."""
     db = Database.get_db()
     
     query = {}
     if anno:
-        query["data"] = {"$regex": f"^{anno}"}
+        if mese:
+            query["data"] = {"$regex": f"^{anno}-{mese:02d}"}
+        else:
+            query["data"] = {"$regex": f"^{anno}"}
+    
+    if categoria:
+        query["categoria"] = {"$regex": categoria, "$options": "i"}
+    
+    if tipo:
+        query["tipo"] = tipo
+    
+    if fornitore:
+        query["fornitore"] = {"$regex": fornitore, "$options": "i"}
     
     total = await db["estratto_conto_movimenti"].count_documents(query)
     
