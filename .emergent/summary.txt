@@ -1,158 +1,152 @@
 <analysis>**original_problem_statement:**
-L'utente ha interrotto il piano originale del fork precedente per dare priorità a una serie di nuove richieste urgenti:
-1.  **Funzionalità di Upload**: Implementare in tutte le pagine l'upload massivo tramite file ZIP, con barre di progresso e gestione atomica dei duplicati (saltare senza interrompere). Questa funzionalità è stata richiesta specificamente per la pagina .
-2.  **Pagina **:
-    *   Aggiungere dati mancanti (POS Automatico).
-    *   In caso di conflitto, i dati dei  XML devono sovrascrivere quelli inseriti da Excel.
-    *   Sostituire la colonna Stato con Saldo Cassa.
-    *   Popolare correttamente i dati di Versamenti.
-    *   Risolvere un bug critico per cui i dati di POS, Versamenti e Corrispettivi non corrispondevano a quelli presenti in  (es. per il giorno 02/01/2025).
-    *   Aggiungere una funzione di quadratura per confrontare i totali POS dalla banca, dalla cassa e dagli XML.
-    *   Aggiungere la navigazione tra mesi (precedente/successivo) nella vista di dettaglio.
-3.  **Pagina **:
-    *   Correggere un bug per cui le operazioni VOSTRA DISPOSIZIONE venivano classificate come entrate invece che uscite.
-    *   Migliorare il riconoscimento delle operazioni POS (INC.POS, INCAS. TRAMITE P.O.S).
-    *   Aumentare la lunghezza del campo descrizione per evitare di troncare informazioni importanti.
-4.  **Flusso Dati IVA**: L'importo IVA estratto dai  XML deve alimentare le pagine  e .
-5.  **Pagina **: Risolvere un errore che impediva il caricamento dei dati.
-6.  **Pagina **: Aggiungere colonne mancanti in tabella (Data Fattura, N. Fattura, Note).
-7.  **Filtro Anno**: Aggiungere un selettore di anno nelle pagine  e , e considerare un filtro globale in .
+L'utente ha richiesto una serie di funzionalità e una ristrutturazione completa del codice.
+1.  **Funzionalità Commercialista**: Creare una sezione per inviare documenti (Prima Nota Cassa, Fatture Pagate, Carnet Assegni) in formato PDF all'email del commercialista. Deve includere un alert automatico mensile.
+2.  **Stampa Carnet**: Risolvere un bug per cui la stampa di un carnet di assegni stampava tutto invece del singolo carnet selezionato.
+3.  **Standardizzazione Terminologia**: Sostituire la parola Contanti con Cassa in tutta l'applicazione.
+4.  **UI Mobile**: Creare viste semplificate e mobile-first per le pagine  e , con focus su leggibilità e inserimento rapido tramite card.
+5.  **Generazione PDF Mobile**: Sulla vista mobile delle fatture, il click su una riga deve generare e scaricare un PDF della fattura in formato standard italiano, invece di mostrare i dettagli.
+6.  **Ristrutturazione Architettura (Richiesta Principale)**: L'utente ha richiesto di ristrutturare l'intero codice per renderlo più modulare, con un'architettura chiara e relazionale. Questo include:
+    *   Spostare la logica di business dai router a un service layer.
+    *   Implementare controlli di sicurezza (es. impedire l'eliminazione di fatture pagate).
+    *   Chiarire e centralizzare i flussi di dati (es. dal caricamento XML alle sezioni interessate).
+    *   Consolidare il codice frontend usando hooks condivisi.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'agente ha implementato la maggior parte delle nuove richieste dell'utente.
+L'agente ha implementato con successo tutte le richieste di funzionalità dell'utente e ha iniziato la ristrutturazione del codice.
 - **Backend**:
-    - Creato un nuovo endpoint  per gestire l'upload di file ZIP, con estrazione degli XML e gestione dei duplicati.
-    - Risolto un conflitto di routing critico in  tra  e  che causava un errore di autenticazione sulla pagina IVA.
-    - Aumentato il limite di documenti recuperabili dall'API  per correggere il caricamento incompleto dei dati annuali in .
-    - Modificato il parser degli estratti conto () per classificare correttamente VOSTRA DISPOSIZIONE come uscita e per aumentare la lunghezza del campo descrizione.
-    - L'endpoint di  è stato aggiornato per includere i totali IVA a debito e a credito.
+    - È stato creato un nuovo router  e una pagina frontend  che permette di inviare via email (usando la configurazione SMTP esistente) i PDF di Prima Nota, Fatture e Carnet.
+    - È stato implementato un sistema di alert per l'invio dei documenti al commercialista.
+    - Il termine Contanti è stato sostituito con Cassa in vari endpoint e logiche.
+    - **È iniziata la ristrutturazione (Fase 1 completata)**: È stato creato un service layer () e un modulo per le regole di business (). La logica di sicurezza per impedire l'eliminazione di fatture già pagate è stata implementata e testata con successo, correggendo il codice in diversi router (, ) dove esistevano endpoint di eliminazione duplicati.
+    - Sono stati creati i file di base per le Fasi 2, 3 e 4 della ristrutturazione.
 - **Frontend**:
-    - **Upload**: Creato un componente riutilizzabile . Le pagine  e  sono state aggiornate con un bottone per l'upload di ZIP e una barra di progresso.
-    - **Controllo Mensile**: La pagina è stata quasi completamente riscritta. Ora aggrega e confronta dati da tre fonti diverse ( XML, , ), mostrando una quadratura tra POS Auto (XML), POS Manuale (Cassa) e POS Banca. È stata aggiunta la navigazione tra i mesi.
-    - **Pagine Varie**: Le pagine  e  ora hanno un selettore di anno. La pagina  è stata verificata e le colonne richieste erano già presenti.
+    - È stato corretto un file corrotto () e implementata la stampa PDF per singolo carnet.
+    - Sono state create viste mobile-first dedicate per  e  (, ), che vengono renderizzate condizionalmente sui dispositivi mobili.
+    - La vista  ora genera e scarica un PDF al tocco di una fattura, utilizzando .
+    - L'interfaccia mobile di  è stata ottimizzata per essere più compatta e usabile su un unico schermo.
+- **Bug Risolti**:
+    - **La regressione critica della pagina  (dati non caricati) è stata verificata e CONFERMATA RISOLTA.** La pagina ora funziona correttamente.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava lavorando su un gruppo di richieste dell'utente riguardanti la riconciliazione bancaria e la pagina .
-    1.  Migliorare la logica di parsing degli estratti conto per classificare correttamente le uscite (VOSTRA DISPOSIZIONE).
-    2.  Aumentare il numero di caratteri visualizzati nella colonna descrizione della pagina .
-    3.  Aggiungere la logica di quadratura dei POS nella pagina , confrontando i dati da XML, Prima Nota Cassa e Prima Nota Banca.
+- **Last item agent was working**: L'agente stava eseguendo un piano di ristrutturazione del codice in più fasi approvato dall'utente. Aveva appena completato la Fase 1 (creazione del service layer e implementazione delle regole di sicurezza per le fatture) e stava iniziando le fasi successive.
 - **Status**: IN PROGRESS
-- **Agent Testing Done**: Y (L'agente ha verificato tramite screenshot e  che le modifiche all'interfaccia e agli endpoint sono state applicate).
-- **Which testing method agent to use?**: frontend testing agent. Il test deve verificare:
-    1.  **Pagina **: Caricando un estratto conto, verificare che le operazioni con descrizione VOSTRA DISPOSIZIONE siano classificate come Uscita e che le operazioni INC.POS siano correttamente identificate. Verificare che la colonna Descrizione mostri il testo completo senza troncamenti.
-    2.  **Pagina **: Verificare che il nuovo KPI POS Banca e la relativa colonna in tabella vengano popolati dopo aver caricato un estratto conto contenente operazioni POS. La colonna Diff. tra POS XML e POS Banca deve calcolare correttamente la differenza.
+- **Agent Testing Done**: Y (L'agente ha testato con successo la nuova regola di sicurezza che impedisce l'eliminazione di fatture pagate tramite  e ha verificato che le fatture non pagate possono essere eliminate).
+- **Which testing method agent to use?**: backend testing agent. L'agente di test dovrebbe:
+    1. Verificare che i nuovi endpoint di eliminazione sicura per ,  e  funzionino come previsto (impedendo la cancellazione di item bloccati).
+    2. Eseguire test di regressione per assicurarsi che la creazione dei nuovi service non abbia interrotto la funzionalità esistente delle fatture.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Regressione Critica: Dati non caricati in Prima Nota (P0)**
-    - **Description**: La pagina  mostra saldi a €0,00 e non carica i movimenti. Questo era il problema principale del fork precedente ed è stato **completamente ignorato** in questa sessione.
+- **Issue 1: Discrepanza Conteggio Fatture (P2)**
+    - **Description**: Problema ereditato da un fork precedente. L'utente segnala 1326 fatture attese per il 2025, ma il database ne contiene 1328. Non è stato ancora affrontato.
     - **Status**: NOT STARTED
     - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: both
-- **Issue 2: Discrepanza Conteggio Fatture (P2)**
-    - **Description**: L'utente segnala che le fatture per il 2025 dovrebbero essere 1326, ma il database ne contiene 1328. Anche questo problema proviene dal fork precedente e non è stato affrontato.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: N
     - **Should Test frontend/backend/both after fix?**: backend
-- **Issue 3: Riconoscimento POS in Riconciliazione (P1)**
-    - **Description**: La logica per trovare e abbinare le operazioni POS (INC.POS, INCAS. TRAMITE P.O.S) dall'estratto conto bancario non è stata completamente verificata. L'agente ha aggiunto il codice per cercarle, ma manca un test end-to-end.
-    - **Status**: IN PROGRESS
+- **Issue 2: Riconoscimento POS in Riconciliazione (P2)**
+    - **Description**: Problema ereditato. La logica per abbinare le operazioni POS (INC.POS, INCAS. TRAMITE P.O.S) dall'estratto conto bancario non è stata completamente verificata.
+    - **Status**: NOT STARTED
     - **Is recurring issue?**: N
     - **Should Test frontend/backend/both after fix?**: both
 
 **In progress Task List**:
-- **Task 1: Verifica Funzionalità Riconciliazione e Controllo Mensile (P0)**
-    - **Where to resume**: L'agente ha implementato le modifiche al backend e al frontend. Il prossimo passo è eseguire un test completo, che richiede il caricamento di un estratto conto contenente le operazioni specifiche (VOSTRA DISPOSIZIONE, INC.POS) per validare la nuova logica.
-    - **What will be achieved with this?**: Correggerà la classificazione errata delle transazioni, migliorerà la precisione della riconciliazione bancaria e fornirà una visione completa dei flussi POS.
-    - **Status**: USER VERIFICATION PENDING
+- **Task 1: Completare Ristrutturazione Architettura (Fasi 2, 3, 4) (P0)**
+    - **Where to resume**: L'agente ha creato la struttura dei file per le fasi successive. Il prossimo passo è popolare questi file con la logica effettiva.
+        - **Fase 2**: Integrare le  negli endpoint di ,  e  per aggiungere i controlli di sicurezza (es. non eliminare movimenti consolidati).
+        - **Fase 3**: Implementare la logica in  per gestire flussi di dati complessi (es. Corrispettivo XML -> Calcolo IVA -> Finanziaria) e integrarla nei router pertinenti.
+        - **Fase 4**: Iniziare a migrare la logica di data-fetching dei componenti frontend (es. , ) nel nuovo hook condiviso .
+    - **What will be achieved with this?**: Un'applicazione più robusta, sicura, manutenibile e con meno codice duplicato.
+    - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: both
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P0) Filtro Anno Globale**: Implementare un selettore di anno nella  che influenzi i dati visualizzati in tutte le pagine dell'applicazione.
-    - **(P1) Implementare Modulo Bilancio**: Creare la sezione per lo Stato Patrimoniale e il Conto Economico. Il file  è ancora vuoto.
+    - **(P1) Filtro Anno Globale**: Implementare un selettore di anno nella  che influenzi i dati visualizzati in tutta l'applicazione.
+    - **(P1) Implementare Modulo Bilancio**: Creare la sezione per lo Stato Patrimoniale e il Conto Economico.
 - **Future Tasks**:
-    - **(P1) Associazione Automatica Dati Fornitore**: Progettare la logica per associare automaticamente un nuovo fornitore a fatture e movimenti esistenti.
+    - **(P2) Associazione Automatica Dati Fornitore**: Progettare la logica per associare automaticamente un nuovo fornitore a fatture e movimenti esistenti.
     - **(P2) Popolare Magazzino da Fatture XML**: Estrarre i prodotti dalle fatture d'acquisto per aggiornare l'inventario.
-    - **(P2) Mapping Prodotti Web**: Sviluppare un sistema per mappare le descrizioni dei prodotti.
 
 **Completed work in this session**
-- **Refactoring Funzionalità di Upload**: Implementato upload di file ZIP con barra di progresso e gestione dei duplicati per  e .
-- **Correzione Bug Critico Pagina **: Risolto un conflitto di routing API che impediva il caricamento dei dati.
-- **Rifacimento Pagina **: La pagina è stata trasformata in uno strumento di riconciliazione completo che aggrega dati da ,  e , risolvendo un bug di caricamento dati e aggiungendo la navigazione tra mesi.
-- **Aggiornamento Pagina **: La pagina ora integra i dati sull'IVA a debito e a credito.
-- **Fix Pagina **: Corretta la classificazione delle operazioni VOSTRA DISPOSIZIONE e aumentata la lunghezza del campo descrizione.
-- **Creazione Documentazione**: Creato il file  per documentare le logiche di business implementate.
+- **Funzionalità Commercialista**: Creata nuova sezione con invio PDF via email.
+- **Risoluzione Bug Stampa**: Corretta la stampa del singolo carnet di assegni.
+- **Risoluzione Bug Critico **: Confermato che la pagina ora carica correttamente i dati.
+- **UI Mobile per  e **: Create viste responsive e semplificate.
+- **Generazione PDF Mobile**: Implementata la creazione di PDF al tocco sulle fatture nella vista mobile.
+- **Standardizzazione Contanti -> Cassa**: Termine aggiornato in tutta l'applicazione.
+- **Inizio Ristrutturazione Backend (Fase 1)**: Creato service layer e implementato controllo di sicurezza per impedire l'eliminazione di fatture pagate.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1: Regressione Critica in **: Il problema più importante del fork precedente (pagina  non funzionante) non è stato risolto. L'agente è stato costantemente dirottato dalle nuove e urgenti richieste dell'utente.
-- **Issue 2: Discrepanza Conteggio Fatture**: Problema secondario ereditato dal fork precedente e non ancora affrontato.
+- **Issue 1: Discrepanza Conteggio Fatture**: Problema secondario ereditato e non ancora affrontato.
+- **Issue 2: Riconoscimento POS in Riconciliazione**: Problema secondario ereditato e non ancora affrontato.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork**: La pagina  non caricava i dati.
 - **Recurrence count**: 2
-- **Status**: NOT STARTED
+- **Status**: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Precedenza dei Router FastAPI**: È stato risolto un bug critico causato dall'ordine di registrazione dei router in . Un router con un percorso generico e autenticazione () veniva registrato prima di uno più specifico, intercettando la chiamata e causando un errore 401. La soluzione è stata invertire l'ordine di registrazione.
-- **Aggregazione Dati Multi-sorgente nel Frontend**: La pagina  è stata pesantemente modificata per effettuare chiamate multiple a diverse API (, , ) e aggregare i dati lato client per costruire un report complesso e una logica di quadratura.
-- **Limiti delle Query API**: È stato diagnosticato e risolto un errore  causato da una richiesta dal frontend che superava il limite massimo di documenti () definito nel modello Pydantic del backend. Il limite è stato aumentato per consentire il caricamento di un intero anno di dati.
+- **Backend Service Layer**: È in corso una ristrutturazione per spostare la logica di business dai router FastAPI a classi di servizi dedicate. Questo migliora la separazione delle responsabilità e la riusabilità del codice.
+- **Business Rule Enforcement**: Implementazione di controlli di sicurezza (es. non eliminare fatture pagate) in un modulo centralizzato () che viene invocato prima delle operazioni sul database.
+- **Conditional Rendering (Mobile vs Desktop)**: Utilizzo di un custom hook  per rilevare la larghezza dello schermo e renderizzare un componente specifico per la versione mobile () o desktop.
+- **Client-Side PDF Generation**: Utilizzo delle librerie  e  per generare dinamicamente documenti PDF direttamente nel browser dell'utente.
+- **Architectural Cleanup**: Identificazione e consolidamento di logica duplicata, in particolare più endpoint di eliminazione per la stessa risorsa sparsi in file diversi.
 
 **All files of reference**
-- 
-- 
-- 
-- 
-- 
-- 
--  (Contiene la regressione irrisolta)
--  (Nuovo documento con logiche di calcolo)
--  (Aggiornato)
+-  (Nuova logica di sicurezza)
+-  (Router principale per le fatture, modificato con i nuovi controlli)
+-  (Altro router fatture, modificato)
+-  (Logica di rendering condizionale)
+-  (Nuova UI mobile per le fatture)
+-  (Logica di rendering condizionale)
+-  (Nuova UI mobile per la prima nota)
+-  (Nuova pagina)
+-  (Nuovo router)
+-  (Nuovo documento che descrive la ristrutturazione)
+-  (Aggiornato con le nuove funzionalità)
 
 **Critical Info for New Agent**
-- **PRIORITÀ ASSOLUTA (TECNICA)**: La regressione sulla pagina  è il problema tecnico più grave e in sospeso. Sebbene l'utente non lo abbia menzionato di recente, è una funzionalità core dell'ERP che è completamente rotta. È fondamentale trovare un modo per dare priorità a questa correzione.
-- **Gestione Utente**: L'utente è molto attivo e cambia priorità frequentemente con richieste urgenti. È importante essere flessibili e affrontare le sue necessità, ma anche comunicare proattivamente lo stato dei bug critici pendenti (come quello della ) per non accumulare debito tecnico.
-- **Complessità di **: Questa pagina è diventata il componente frontend più complesso, poiché aggrega dati da più API. Qualsiasi modifica futura a questa pagina o alle API da cui dipende (, ) richiede test di regressione approfonditi.
+- **La priorità assoluta è continuare con la ristrutturazione del codice come richiesto dall'utente.** Le Fasi 2, 3 e 4 sono state approvate e sono il task principale in corso.
+- Il backend si trova in uno stato di transizione: parte della logica è nei nuovi services, ma molta è ancora nei routers. L'obiettivo è spostare tutta la logica di business nei services.
+- Il bug più critico () è stato risolto. Ora il focus è sul miglioramento strutturale e sulla sicurezza.
+- Quando si aggiungono controlli di sicurezza (es. eliminazione), bisogna fare attenzione a  per trovare tutti gli endpoint duplicati che potrebbero bypassare la nuova logica, come è successo per le fatture.
 
 **documents and test reports created in this job**
 - 
 - 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **10. (LATEST)** **Richiesta Multipla**: Aggiungere navigazione tra mesi in , correggere errore di caricamento in , e aggiungere colonne mancanti in .
-- **9. Immagine + Richiesta**: Segnalazione di bug in  (classificazione errata di VOSTRA DISPOSIZIONE, POS non trovati, descrizione troncata) e richiesta di aggiungere la quadratura dei POS in .
-- **8. Domanda**: Chiede una spiegazione dettagliata del funzionamento dei flussi  e .
-- **7. Richiesta**: Implementare il flusso dati dall'IVA dei  XML verso le pagine  e  e aggiungere un filtro per anno.
-- **6. Bug Report**: Segnalazione di un grave bug in  dove i dati giornalieri (es. 02/01/2025) non corrispondevano a quelli presenti in .
-- **5. Approvazione implicita**: L'utente approva il piano di fix per il bug di  fornendo dettagli sul problema.
-- **4. Risposta a spiegazione**: L'utente risponde alla spiegazione dei flussi, chiedendo ulteriori implementazioni.
-- **3. Risposta dell'agente**: L'agente fornisce la spiegazione dettagliata richiesta sui flussi  e .
-- **2. Risposta dell'agente**: L'agente termina un task precedente e riassume il lavoro completato.
-- **1. Richiesta iniziale del ciclo**: L'utente chiede di implementare l'upload di ZIP per i  e di sistemare la pagina .
+1.  **LATEST**: Procedi con la fase 2 poi 3 e poi 4 - Approvazione per continuare la ristrutturazione.
+2.  Si procedi fase per fase - Approvazione iniziale per il piano di ristrutturazione.
+3.  **Richiesta di Ristrutturazione**: L'utente chiede una ristrutturazione completa e metodica del codice.
+4.  **Richiesta PDF Fattura Mobile**: Sulla vista mobile, cliccare una fattura deve scaricare il PDF, non mostrare dettagli.
+5.  **Feedback UI Mobile**: Richiesta di rendere la UI mobile di Prima Nota più compatta.
+6.  **Richiesta UI Mobile Prima Nota**: Creare una vista mobile per Prima Nota con solo card di inserimento.
+7.  **Richiesta UI Mobile Fatture**: Creare una vista mobile semplificata per le Fatture.
+8.  **Richiesta Correzioni**: Sostituire Contanti con Cassa e risolvere i bug prima di procedere.
+9.  **Richiesta Funzionalità Commercialista**: Stampa carnet, PDF, sezione Commercialista, invio email e alert.
+10. **Richiesta precedente**: 
 
 **Project Health Check:**
-- **Broken**:
-    - : Pagina critica per la contabilità, non funzionante (non carica i dati). Questo è un problema grave ereditato e ignorato.
-- **Mocked**:
-    - Nessuno.
+- **Broken**: Nessuna funzionalità critica è rotta.
+- **In Refactoring**: L'architettura del backend è in fase di transizione da un modello con logica nei router a un modello con service layer. Questo significa che coesistono entrambi gli stili di codice.
 
 **3rd Party Integrations**
-- Nessuna.
+- Nessuna nuova integrazione. Il sistema di invio email utilizza la configurazione SMTP preesistente (Gmail).
 
 **Testing status**
-- **Testing agent used after significant changes**: NO
+- **Testing agent used after significant changes**: YES (utilizzato per verificare la nuova funzionalità Commercialista).
 - **Troubleshoot agent used after agent stuck in loop**: NO
 - **Test files created**: Nessuno
-- **Known regressions**: La pagina  non carica i dati, una regressione critica dal fork precedente.
+- **Known regressions**: Nessuna. La regressione precedente () è stata risolta.
 
 **Credentials to test flow:**
-- Nessuna.
+- Nessuna credenziale speciale richiesta. L'app utilizza dati di test interni.
 
 **What agent forgot to execute**
-- **Correzione della regressione **: L'incarico principale e più critico del fork precedente è stato completamente ignorato. L'agente è stato dirottato dalle nuove richieste dell'utente e non ha mai affrontato il problema originale, che rimane il bug più importante dell'intera applicazione.
-- **Discrepanza Conteggio Fatture**: Anche questo problema minore, ereditato dal fork precedente, non è stato affrontato.</analysis>
+- L'agente non ha dimenticato nulla di significativo. Ha seguito le richieste dell'utente in modo sequenziale e metodico. L'unica cosa da notare è che le Fasi 2, 3 e 4 della ristrutturazione sono state solo abbozzate con la creazione di file placeholder; la logica effettiva deve ancora essere implementata.</analysis>
