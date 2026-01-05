@@ -306,7 +306,7 @@ export default function EstrattoConto() {
           onChange={(e) => { setSelectedYear(parseInt(e.target.value)); setOffset(0); }}
           style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', minWidth: 100 }}
         >
-          {[2025, 2024, 2023, 2022, 2021, 2020].map(y => (
+          {[2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map(y => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
