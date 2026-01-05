@@ -804,6 +804,61 @@ async def get_salari(
     return salari
 
 
+@router.delete("/salari/reset-reconciliation")
+async def reset_salari_reconciliation(
+    anno: Optional[int] = Query(None),
+    dipendente: Optional[str] = Query(None)
+) -> Dict[str, Any]:
+    """
+    Reset dello stato di riconciliazione dei salari.
+    Permette di testare nuovamente la riconciliazione.
+    """
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["anno"] = anno
+    if dipendente:
+        query["dipendente"] = {"$regex": dipendente, "$options": "i"}
+    
+    # Reset solo i salari riconciliati
+    query["riconciliato"] = True
+    
+    result = await db["prima_nota_salari"].update_many(
+        query,
+        {"$unset": {
+            "riconciliato": "",
+            "data_riconciliazione": "",
+            "riferimento_banca": "",
+            "data_banca": ""
+        }}
+    )
+    
+    # Opzionalmente, pulisci anche estratto_conto_salari
+    ec_query = {}
+    if anno:
+        # Filtra per anno nella data (formato: YYYY-MM-DD)
+        ec_query["data"] = {"$regex": f"^{anno}"}
+    
+    ec_deleted = await db["estratto_conto_salari"].delete_many(ec_query) if ec_query else {"deleted_count": 0}
+    
+    return {
+        "message": "Reset riconciliazione completato",
+        "salari_resettati": result.modified_count,
+        "estratti_conto_eliminati": ec_deleted.deleted_count if hasattr(ec_deleted, 'deleted_count') else 0
+    }
+
+
+@router.delete("/salari/bulk/anno/{anno}")
+async def delete_salari_anno(anno: int) -> Dict[str, Any]:
+    """Elimina tutti i salari di un anno (per reimportazione)."""
+    db = Database.get_db()
+    
+    result = await db["prima_nota_salari"].delete_many({"anno": anno})
+    
+    return {"message": f"Eliminati {result.deleted_count} salari per l'anno {anno}"}
+
+
 @router.delete("/salari/{salario_id}")
 async def delete_salario(salario_id: str) -> Dict[str, str]:
     """Elimina un movimento salario."""
@@ -815,16 +870,6 @@ async def delete_salario(salario_id: str) -> Dict[str, str]:
         raise HTTPException(status_code=404, detail="Salario non trovato")
     
     return {"message": "Salario eliminato"}
-
-
-@router.delete("/salari/bulk/anno/{anno}")
-async def delete_salari_anno(anno: int) -> Dict[str, Any]:
-    """Elimina tutti i salari di un anno (per reimportazione)."""
-    db = Database.get_db()
-    
-    result = await db["prima_nota_salari"].delete_many({"anno": anno})
-    
-    return {"message": f"Eliminati {result.deleted_count} salari per l'anno {anno}"}
 
 
 # ============== RICONCILIAZIONE BANCARIA SALARI ==============
