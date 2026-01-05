@@ -72,10 +72,10 @@ add_exception_handlers(app)
 # Import and include routers
 from app.routers import (
     auth, invoices, suppliers, warehouse, accounting, haccp,
-    employees, cash, bank,
+    cash, bank,
     chart_of_accounts, exports,
     dashboard, notifications, cash_register, failed_invoices, staff, settings as settings_router,
-    config, search, iva, incasso_reale, lotti, assegni,
+    config, search, incasso_reale, lotti, assegni,
     tracciabilita, bank_reconciliation, payroll, products, documents,
     pianificazione, admin, analytics, shifts, ocr_assegni, magazzino, invoices_emesse,
     cart, portal, orders,
