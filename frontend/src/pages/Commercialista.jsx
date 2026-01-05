@@ -509,7 +509,7 @@ export default function Commercialista() {
           </div>
           <button
             onClick={() => {
-              setSelectedYear(alertStatus.anno_pendente);
+              setAnno(alertStatus.anno_pendente);
               setSelectedMonth(alertStatus.mese_pendente - 1);
             }}
             style={{
