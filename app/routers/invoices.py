@@ -1044,4 +1044,76 @@ async def delete_all_invoices(
         "message": f"Deleted {result.deleted_count} invoices",
         "deleted_count": result.deleted_count
     }
+
+
+@router.delete(
+    "/{invoice_id}",
+    summary="Delete single invoice with validation",
+    description="Delete a single invoice. Validates business rules before deletion."
+)
+async def delete_invoice(
+    invoice_id: str,
+    force: bool = Query(False, description="Force delete even with warnings"),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Delete a single invoice with business rule validation.
+    
+    **Rules:**
+    - Cannot delete paid invoices
+    - Cannot delete invoices registered in Prima Nota
+    - Invoices with warehouse movements require force=true
+    
+    **Parameters:**
+    - invoice_id: Invoice ID to delete
+    - force: Set to true to confirm deletion with warnings
+    """
+    from app.services.business_rules import BusinessRules, EntityStatus
+    
+    db = Database.get_db()
+    
+    # Get invoice
+    invoice = await db[Collections.INVOICES].find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fattura non trovata")
+    
+    # Validate deletion
+    validation = BusinessRules.can_delete_invoice(invoice)
+    
+    if not validation.is_valid:
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "message": "Eliminazione non consentita",
+                "errors": validation.errors
+            }
+        )
+    
+    # If warnings and not forced, return warning
+    if validation.warnings and not force:
+        return {
+            "status": "warning",
+            "message": "Eliminazione richiede conferma",
+            "warnings": validation.warnings,
+            "require_force": True
+        }
+    
+    # Soft-delete
+    from datetime import datetime, timezone
+    
+    await db[Collections.INVOICES].update_one(
+        {"id": invoice_id},
+        {"$set": {
+            "entity_status": EntityStatus.DELETED.value,
+            "status": "deleted",
+            "deleted_at": datetime.now(timezone.utc).isoformat(),
+            "deleted_by": current_user.get("user_id")
+        }}
+    )
+    
+    return {
+        "status": "success",
+        "message": "Fattura eliminata (archiviata)",
+        "invoice_id": invoice_id
+    }
 # Forced reload Sun Jan  4 18:08:32 UTC 2026
