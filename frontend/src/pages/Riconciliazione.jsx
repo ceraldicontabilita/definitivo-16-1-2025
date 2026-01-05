@@ -642,6 +642,258 @@ export default function Riconciliazione() {
         </div>
       )}
 
+      {/* Manual Reconciliation Tab */}
+      {activeTab === "manuale" && (
+        <div style={{ 
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 20,
+          marginBottom: 20
+        }}>
+          {/* Left Panel - Movimenti Estratto Conto */}
+          <div style={{ 
+            background: "white", 
+            borderRadius: 12, 
+            padding: 20,
+            border: "1px solid #e5e7eb",
+            maxHeight: "70vh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            <h3 style={{ margin: "0 0 15px 0", fontSize: 16, color: "#1e40af" }}>
+              🏦 Movimenti Banca (Uscite)
+            </h3>
+            <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 15 }}>
+              Seleziona un movimento per trovare fatture corrispondenti
+            </p>
+            
+            {/* Filtro fornitore */}
+            <input
+              type="text"
+              placeholder="🔍 Filtra per fornitore..."
+              value={searchFornitore}
+              onChange={(e) => setSearchFornitore(e.target.value)}
+              style={{
+                padding: 10,
+                border: "1px solid #e2e8f0",
+                borderRadius: 8,
+                marginBottom: 15,
+                width: "100%"
+              }}
+            />
+            
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {loadingManuale ? (
+                <div style={{ textAlign: "center", padding: 20, color: "#6b7280" }}>
+                  Caricamento...
+                </div>
+              ) : movimentiNonRiconciliati.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 20, color: "#6b7280" }}>
+                  Nessun movimento trovato. Importa un estratto conto prima.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {movimentiNonRiconciliati
+                    .filter(m => !searchFornitore || 
+                      (m.fornitore || "").toLowerCase().includes(searchFornitore.toLowerCase()) ||
+                      (m.descrizione_originale || "").toLowerCase().includes(searchFornitore.toLowerCase())
+                    )
+                    .slice(0, 100)
+                    .map((mov, idx) => (
+                      <div
+                        key={mov.id || idx}
+                        onClick={() => handleSelectMovimento(mov)}
+                        style={{
+                          padding: 12,
+                          background: selectedMovimento?.id === mov.id ? "#dbeafe" : "#f8fafc",
+                          border: selectedMovimento?.id === mov.id ? "2px solid #3b82f6" : "1px solid #e2e8f0",
+                          borderRadius: 8,
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: 600, color: "#dc2626" }}>
+                            {formatEuro(Math.abs(mov.importo))}
+                          </span>
+                          <span style={{ fontSize: 12, color: "#6b7280" }}>
+                            {mov.data ? mov.data.split("-").reverse().join("/") : ""}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 13, color: "#374151", marginTop: 4 }}>
+                          {mov.fornitore || "Fornitore non identificato"}
+                        </div>
+                        {mov.numero_fattura && (
+                          <div style={{ fontSize: 11, color: "#0369a1", marginTop: 2 }}>
+                            Rif: {mov.numero_fattura.substring(0, 40)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Panel - Fatture Suggerite */}
+          <div style={{ 
+            background: "white", 
+            borderRadius: 12, 
+            padding: 20,
+            border: "1px solid #e5e7eb",
+            maxHeight: "70vh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column"
+          }}>
+            <h3 style={{ margin: "0 0 15px 0", fontSize: 16, color: "#7c3aed" }}>
+              📄 Fatture Suggerite
+            </h3>
+            
+            {!selectedMovimento ? (
+              <div style={{ 
+                flex: 1, 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center",
+                color: "#9ca3af",
+                textAlign: "center"
+              }}>
+                <div>
+                  <div style={{ fontSize: 40, marginBottom: 10 }}>👈</div>
+                  <div>Seleziona un movimento dalla lista a sinistra</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Movimento selezionato */}
+                <div style={{ 
+                  padding: 12, 
+                  background: "#fef3c7", 
+                  borderRadius: 8, 
+                  marginBottom: 15,
+                  border: "1px solid #fde68a"
+                }}>
+                  <div style={{ fontWeight: 600, color: "#b45309" }}>Movimento selezionato:</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5 }}>
+                    <span>{selectedMovimento.fornitore || "N/D"}</span>
+                    <span style={{ fontWeight: "bold", color: "#dc2626" }}>
+                      {formatEuro(Math.abs(selectedMovimento.importo))}
+                    </span>
+                  </div>
+                </div>
+                
+                <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 10 }}>
+                  {matchingFatture.length > 0 
+                    ? `${matchingFatture.length} fatture con importo simile (±10%):`
+                    : "Nessuna fattura con importo simile trovata."
+                  }
+                </p>
+                
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                  {matchingFatture.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: 20 }}>
+                      <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 15 }}>
+                        Mostrando tutte le fatture non pagate:
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {fattureNonPagate.slice(0, 20).map((fattura, idx) => (
+                          <div
+                            key={fattura._id || fattura.id || idx}
+                            style={{
+                              padding: 12,
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: 8
+                            }}
+                          >
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                              <span style={{ fontWeight: 500 }}>
+                                {fattura.supplier_name || fattura.fornitore || "N/D"}
+                              </span>
+                              <span style={{ fontWeight: "bold", color: "#dc2626" }}>
+                                {formatEuro(parseFloat(fattura.total_amount || fattura.importo || 0))}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                              {fattura.invoice_number || fattura.numero_fattura || "N/D"} - {fattura.invoice_date || fattura.data || ""}
+                            </div>
+                            <button
+                              onClick={() => handleRiconciliaManuale(fattura)}
+                              disabled={riconciliazioneInCorso}
+                              style={{
+                                marginTop: 8,
+                                padding: "6px 12px",
+                                background: riconciliazioneInCorso ? "#9ca3af" : "#10b981",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 6,
+                                fontSize: 12,
+                                cursor: riconciliazioneInCorso ? "not-allowed" : "pointer",
+                                width: "100%"
+                              }}
+                            >
+                              {riconciliazioneInCorso ? "⏳ Elaborazione..." : "✓ Riconcilia questa fattura"}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {matchingFatture.map((fattura, idx) => (
+                        <div
+                          key={fattura._id || fattura.id || idx}
+                          style={{
+                            padding: 12,
+                            background: "#f0fdf4",
+                            border: "1px solid #bbf7d0",
+                            borderRadius: 8
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ fontWeight: 500, color: "#166534" }}>
+                              {fattura.supplier_name || fattura.fornitore || "N/D"}
+                            </span>
+                            <span style={{ fontWeight: "bold", color: "#16a34a" }}>
+                              {formatEuro(parseFloat(fattura.total_amount || fattura.importo || 0))}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "#15803d", marginTop: 4 }}>
+                            {fattura.invoice_number || fattura.numero_fattura || "N/D"} - {fattura.invoice_date || fattura.data || ""}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#059669", marginTop: 2 }}>
+                            Differenza: {formatEuro(Math.abs(parseFloat(fattura.total_amount || fattura.importo || 0) - Math.abs(selectedMovimento.importo)))}
+                          </div>
+                          <button
+                            onClick={() => handleRiconciliaManuale(fattura)}
+                            disabled={riconciliazioneInCorso}
+                            style={{
+                              marginTop: 8,
+                              padding: "6px 12px",
+                              background: riconciliazioneInCorso ? "#9ca3af" : "#10b981",
+                              color: "white",
+                              border: "none",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              cursor: riconciliazioneInCorso ? "not-allowed" : "pointer",
+                              width: "100%"
+                            }}
+                          >
+                            {riconciliazioneInCorso ? "⏳ Elaborazione..." : "✓ Riconcilia questa fattura"}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Results */}
       {results && (
         <div style={{ 
