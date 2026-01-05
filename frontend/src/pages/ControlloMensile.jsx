@@ -240,6 +240,7 @@ export default function ControlloMensile() {
         versamenti,
         saldoCassa,
         documentiCommerciali,
+        annulli,
         hasData,
         hasDiscrepancy,
         // Debug info
