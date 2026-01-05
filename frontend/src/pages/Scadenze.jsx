@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
+import { formatEuro } from '../lib/utils';
 
 export default function Scadenze() {
   const { anno } = useAnnoGlobale();

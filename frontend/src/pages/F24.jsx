@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { uploadDocument } from "../api";
 import api from "../api";
 import { ChevronDown, ChevronRight, Trash2, Edit, Upload } from "lucide-react";
+import { formatEuro } from "../lib/utils";
 
 export default function F24() {
   const [file, setFile] = useState(null);

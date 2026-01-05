@@ -7,6 +7,7 @@ import {
   DEFAULT_DIPENDENTE 
 } from '../components/dipendenti';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
+import { formatEuro } from '../lib/utils';
 
 /**
  * Pagina Gestione Dipendenti - Ristrutturata

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
+import { formatEuro } from '../lib/utils';
 
 /**
  * Prima Nota Mobile - Versione ottimizzata per smartphone e tablet
