@@ -1,33 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';
+import React from 'react';
 
 /**
  * Visualizzatore Fattura XML - Stile AssoInvoice
  * Mostra la fattura XML in formato leggibile
  */
-export default function InvoiceXMLViewer({ invoiceId, onClose }) {
-  const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (invoiceId) {
-      loadInvoice();
-    }
-  }, [invoiceId]);
-
-  const loadInvoice = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.get(`/api/invoices/${invoiceId}`);
-      setInvoice(res.data);
-    } catch (e) {
-      setError('Errore caricamento fattura');
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function InvoiceXMLViewer({ invoice, onClose }) {
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('it-IT', {
