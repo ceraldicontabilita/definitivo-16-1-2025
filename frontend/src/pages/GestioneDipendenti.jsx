@@ -1356,7 +1356,7 @@ export default function GestioneDipendenti() {
               <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>
             ) : libretti.length === 0 ? (
               <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
-                Nessun libretto registrato. Clicca su "Nuovo Libretto" per aggiungerne uno.
+                Nessun libretto registrato. Clicca su &quot;Nuovo Libretto&quot; per aggiungerne uno.
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
