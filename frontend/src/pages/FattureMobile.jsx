@@ -179,7 +179,9 @@ export default function FattureMobile() {
       }
       
       // --- RIEPILOGO IVA ---
-      const finalY = doc.lastAutoTable?.finalY || 150;
+      // Calcola posizione basata sul numero di righe
+      const lineeCount = linee.length || 0;
+      const finalY = 130 + Math.max(lineeCount * 10 + 20, 30);
       
       doc.setFillColor(248, 248, 248);
       doc.rect(pageWidth - 90, finalY + 10, 76, 50, 'F');
