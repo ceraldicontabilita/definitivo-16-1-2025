@@ -156,28 +156,24 @@ async def upload_corrispettivo_xml(file: UploadFile = File(...)) -> Dict[str, An
         await db["corrispettivi"].insert_one(corrispettivo)
         corrispettivo.pop("_id", None)
         
-        # Registra pagamento elettronico in banca
-        bank_id = None
-        pagato_el = corrispettivo["pagato_elettronico"]
-        if pagato_el > 0:
-            bank = {
-                "id": str(uuid.uuid4()),
-                "date": parsed.get("data", ""),
-                "type": "entrata",
-                "amount": pagato_el,
-                "description": f"Incasso POS RT {parsed.get('matricola_rt', '')}",
-                "category": "POS",
-                "corrispettivo_id": corrispettivo['id'],
-                "created_at": datetime.utcnow().isoformat()
-            }
-            await db["bank_statements"].insert_one(bank)
-            bank_id = bank["id"]
+        # Propaga corrispettivo a Prima Nota Cassa usando DataPropagationService
+        from app.services.data_propagation import get_propagation_service
+        
+        propagation_service = get_propagation_service()
+        propagation_result = await propagation_service.propagate_corrispettivo_to_prima_nota(corrispettivo)
+        
+        # Aggiorna corrispettivo con ID movimento Prima Nota
+        if propagation_result.get("movement_created"):
+            await db["corrispettivi"].update_one(
+                {"id": corrispettivo["id"]},
+                {"$set": {"prima_nota_id": propagation_result.get("movement_id")}}
+            )
         
         return {
             "success": True,
             "message": f"Corrispettivo del {parsed.get('data')} importato",
             "corrispettivo": corrispettivo,
-            "bank_movement_id": bank_id
+            "prima_nota_id": propagation_result.get("movement_id")
         }
         
     except HTTPException:
