@@ -89,6 +89,7 @@ const router = createBrowserRouter([
       { path: "piano-dei-conti", element: <PianoDeiConti /> },
       { path: "commercialista", element: <Commercialista /> },
       { path: "bilancio", element: <Bilancio /> },
+      { path: "scadenze", element: <Scadenze /> },
     ],
   },
 ]);
