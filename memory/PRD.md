@@ -3,13 +3,82 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 2.3.1  
+**Versione**: 2.4.0  
 **Ultimo aggiornamento**: 5 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
 ---
 
-## Correzioni Recenti (5 Gen 2026)
+## Ultime Implementazioni (5 Gen 2026)
+
+### Riconciliazione Salari Dipendenti - COMPLETATA
+Sistema di gestione e riconciliazione automatica degli stipendi con estratti conto bancari.
+
+**Funzionalità implementate:**
+1. **Import Buste Paga (Excel)**
+   - Endpoint: `POST /api/dipendenti/import-salari`
+   - Colonne: Dipendente, Mese, Anno, Stipendio Netto, Importo Erogato
+   - Gestione duplicati automatica
+   - Persistenza MongoDB: collezione `prima_nota_salari`
+
+2. **Import Estratto Conto per Riconciliazione**
+   - Endpoint: `POST /api/dipendenti/import-estratto-conto`
+   - Supporta: CSV (separatore `;`), Excel (.xlsx, .xls)
+   - Matching automatico: nome dipendente + importo
+   - Riconciliazione atomica e persistente
+   - Gestione duplicati e formati diversi
+   - Importi negativi = pagamenti (uscite)
+   - Persistenza: collezione `estratto_conto_salari`
+
+3. **UI Pagina Dipendenti (`/dipendenti`) - Tab Prima Nota Salari**
+   - Filtri: Anno, Mese, Dipendente (con dropdown)
+   - Pulsanti: "📊 Importa Buste Paga", "🏦 Importa Estratto Conto", "🗑️ Elimina Anno", "🔄 Aggiorna"
+   - Riepilogo: Movimenti, Riconciliati, Da Riconciliare, Totale Uscite
+   - Tabella colonne: Dipendente, Periodo, Importo Busta, Bonifico, Saldo, Stato, Azioni
+   - Stato: "✓ Riconciliato" (verde) o "⏳ Da verificare" (arancione)
+   - Saldo: Differenza tra Importo Busta e Bonifico
+
+**Collezioni MongoDB:**
+```javascript
+// prima_nota_salari
+{
+  "id": "SAL-2025-01-Rossi-Mario",
+  "dipendente": "Rossi Mario",
+  "mese": 1,
+  "mese_nome": "Gennaio",
+  "anno": 2025,
+  "data": "2025-01-31",
+  "stipendio_netto": 1500.00,  // Importo Busta
+  "importo_erogato": 1500.00,  // Bonifico
+  "importo": 1500.00,
+  "riconciliato": true,
+  "data_riconciliazione": "2026-01-05T19:45:00Z",
+  "riferimento_banca": "FAVORE Rossi Mario stip Gen 2025",
+  "data_banca": "2025-01-31"
+}
+
+// estratto_conto_salari
+{
+  "id": "EC-2025-01-31-1500.00",
+  "data": "2025-01-31",
+  "importo": 1500.00,
+  "descrizione": "FAVORE Rossi Mario stip Gen 2025",
+  "nome_dipendente": "Rossi Mario"
+}
+```
+
+### Bug Fix - IVA Finanziaria vs IVA
+- Allineato endpoint `/api/finanziaria/summary` con logica di `/api/iva/annual`
+- Entrambi usano `data_ricezione` con fallback a `invoice_date`
+- Sottraggono Note Credito (TD04, TD08) dal totale IVA
+
+### Bug Fix - Formattazione Numerica Italiana
+- Funzione `formatEuro` aggiornata con `useGrouping: true`
+- Separatore migliaia anche per numeri < 10.000 (es: € 5.830,62)
+
+---
+
+## Correzioni Precedenti
 
 ### Bug Fix - Formattazione Numerica Italiana COMPLETATA
 - **Formattazione Euro Consistente**: Applicata funzione `formatEuro` da `/app/frontend/src/lib/utils.js` in TUTTE le pagine
@@ -21,7 +90,6 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
   - Scadenze, GestioneDipendenti, F24, EstrattoContoImport
   - GestioneAssegni, PianoDeiConti, Commercialista
 - **Rimosse definizioni locali**: Eliminate tutte le funzioni `formatCurrency` locali ridondanti
-- **Testing**: Verificato al 100% su tutte le pagine principali
 
 ### Bug Fix Precedenti
 - **Anni dinamici**: Corretti selettori anno hardcoded in Bilancio, Commercialista, GestioneDipendenti, HACCPAnalytics
@@ -44,7 +112,7 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 │   │   ├── invoices.py       # Gestione fatture
 │   │   ├── corrispettivi_router.py  # Scontrini
 │   │   ├── prima_nota.py     # Prima nota cassa/banca
-│   │   ├── dipendenti.py     # Gestione dipendenti
+│   │   ├── dipendenti.py     # Gestione dipendenti + Riconciliazione Salari
 │   │   ├── iva_calcolo.py    # Calcolo IVA
 │   │   ├── scadenze.py       # Sistema scadenze
 │   │   ├── bilancio.py       # Bilancio e report
