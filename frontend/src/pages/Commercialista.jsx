@@ -206,7 +206,7 @@ export default function Commercialista() {
         ];
       });
       
-      doc.autoTable({
+      autoTable(doc, {
         startY: 65,
         head: [['N. Fattura', 'Data', 'Fornitore', 'Importo']],
         body: tableData,
