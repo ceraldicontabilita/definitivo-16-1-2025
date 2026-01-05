@@ -131,13 +131,12 @@ export default function ControlloMensile() {
    * Include: POS Agenzia (XML), POS Chiusura (Cassa), POS Banca (da Estratto Conto Bancario)
    */
   const processYearData = (cassa, corrispettivi, estrattoConto = []) => {
-    console.log(`[processYearData] Estratto conto ricevuti: ${estrattoConto.length} movimenti`);
-    
     const monthly = [];
     let yearPosAuto = 0, yearPosManual = 0, yearPosBanca = 0;
     let yearCorrispAuto = 0, yearCorrispManual = 0;
     let yearVersamenti = 0, yearSaldoCassa = 0;
     let yearDocumentiCommerciali = 0;
+    let yearAnnulli = 0;
 
     for (let month = 1; month <= 12; month++) {
       const monthStr = String(month).padStart(2, '0');
@@ -156,6 +155,10 @@ export default function ControlloMensile() {
       // Numero totale di scontrini/ricevute emessi nel mese
       const documentiCommerciali = monthCorrisp.reduce((sum, c) => sum + (parseInt(c.numero_documenti) || 0), 0);
 
+      // ============ ANNULLI (da Corrispettivi XML se disponibile) ============
+      // Numero di scontrini annullati nel mese - Campo non sempre presente negli XML
+      const annulli = monthCorrisp.reduce((sum, c) => sum + (parseInt(c.annulli) || 0), 0);
+
       // ============ POS MANUALE (da Prima Nota Cassa) ============
       // Il POS manuale è registrato con categoria "POS" in Prima Nota Cassa
       const posManual = monthCassa
@@ -167,7 +170,7 @@ export default function ControlloMensile() {
       // - INC.POS = Incasso POS carte credit
       // - INCAS. TRAMITE P.O.S = Incasso tramite terminale
       // - Categoria "POS" già categorizzata durante import
-      const posBancaMovimenti = monthEstratto
+      const posBanca = monthEstratto
         .filter(m => {
           const desc = (m.descrizione || '').toUpperCase();
           const cat = (m.categoria || '').toUpperCase();
@@ -180,12 +183,8 @@ export default function ControlloMensile() {
             desc.includes('P.O.S.') ||
             cat.includes('POS')
           );
-        });
-      const posBanca = posBancaMovimenti.reduce((sum, m) => sum + (parseFloat(m.importo) || 0), 0);
-      
-      if (month === 1) {
-        console.log(`[processYearData] Gennaio ${anno}: estratto=${monthEstratto.length}, POS banca movimenti=${posBancaMovimenti.length}, totale=${posBanca}`);
-      }
+        })
+        .reduce((sum, m) => sum + (parseFloat(m.importo) || 0), 0);
 
       // ============ CORRISPETTIVI AUTO (da XML) ============
       // Totale incassi giornalieri dai corrispettivi XML
