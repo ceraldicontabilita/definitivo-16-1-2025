@@ -116,6 +116,24 @@ SALDO IVA:
 
 ## Changelog
 
+### 2026-01-05 (Sessione 15 - Dashboard con Grafici Interattivi)
+- **Dashboard con Grafici Trend Mensili** ✅:
+  - Installato `recharts` per grafici React
+  - Grafico a barre Entrate vs Uscite per 12 mesi
+  - Grafico lineare Trend IVA (Debito vs Credito)
+  - Statistiche: Media mensile, Picchi entrate/uscite
+  - Totali con colori: Saldo positivo in verde, negativo in rosso
+
+- **Widget Calendario POS Sfasamento** ✅:
+  - Calendario mensile con colori sfasamento
+  - Verde: +1 giorno, Giallo: +2 giorni, Rosso: +3 giorni
+  - Festivi evidenziati in rosa
+  - Tooltip con dettagli sfasamento
+  - Link rapido a Riconciliazione
+
+- **Azioni Rapide aggiornate** ✅:
+  - Aggiunti link a Bilancio, Calcolo IVA, Commercialista
+
 ### 2026-01-05 (Sessione 14 - P3 Completi: POS, Magazzino, Bilancio, Dashboard)
 - **Logica Sfasamento Accrediti POS** ✅:
   - Nuovo utility `/app/app/utils/pos_accredito.py` con calcolo completo
