@@ -2,10 +2,14 @@
 Bilancio Router - Stato Patrimoniale e Conto Economico
 """
 from fastapi import APIRouter, Query, HTTPException
+from fastapi.responses import StreamingResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 from app.database import Database, Collections
+from io import BytesIO
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 COLLECTION_PRIMA_NOTA_CASSA = "prima_nota_cassa"
