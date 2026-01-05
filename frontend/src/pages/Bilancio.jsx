@@ -96,7 +96,7 @@ export default function Bilancio() {
                 <tr>
                   <td style={{ padding: '8px 0', color: '#374151' }}>Crediti vs Clienti</td>
                   <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 500 }}>
-                    {formatCurrency(attivo.crediti.crediti_vs_clienti)}
+                    {formatEuro(attivo.crediti.crediti_vs_clienti)}
                   </td>
                 </tr>
               </tbody>
@@ -114,7 +114,7 @@ export default function Bilancio() {
             alignItems: 'center'
           }}>
             <span style={{ fontSize: 18, fontWeight: 600 }}>TOTALE ATTIVO</span>
-            <span style={{ fontSize: 24, fontWeight: 700 }}>{formatCurrency(attivo.totale_attivo)}</span>
+            <span style={{ fontSize: 24, fontWeight: 700 }}>{formatEuro(attivo.totale_attivo)}</span>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ export default function Bilancio() {
                 <tr>
                   <td style={{ padding: '8px 0', color: '#374151' }}>Debiti vs Fornitori</td>
                   <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 500 }}>
-                    {formatCurrency(passivo.debiti.debiti_vs_fornitori)}
+                    {formatEuro(passivo.debiti.debiti_vs_fornitori)}
                   </td>
                 </tr>
               </tbody>
@@ -150,7 +150,7 @@ export default function Bilancio() {
                     fontWeight: 600,
                     color: passivo.patrimonio_netto >= 0 ? '#16a34a' : '#dc2626'
                   }}>
-                    {formatCurrency(passivo.patrimonio_netto)}
+                    {formatEuro(passivo.patrimonio_netto)}
                   </td>
                 </tr>
               </tbody>
@@ -168,7 +168,7 @@ export default function Bilancio() {
             alignItems: 'center'
           }}>
             <span style={{ fontSize: 18, fontWeight: 600 }}>TOTALE PASSIVO</span>
-            <span style={{ fontSize: 24, fontWeight: 700 }}>{formatCurrency(passivo.totale_passivo)}</span>
+            <span style={{ fontSize: 24, fontWeight: 700 }}>{formatEuro(passivo.totale_passivo)}</span>
           </div>
         </div>
       </div>
@@ -192,19 +192,19 @@ export default function Bilancio() {
               <tr>
                 <td style={{ padding: '12px 0', color: '#374151', fontSize: 15 }}>Corrispettivi (Vendite)</td>
                 <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 500, fontSize: 16 }}>
-                  {formatCurrency(ricavi.corrispettivi)}
+                  {formatEuro(ricavi.corrispettivi)}
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '12px 0', color: '#374151', fontSize: 15 }}>Altri Ricavi</td>
                 <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 500, fontSize: 16 }}>
-                  {formatCurrency(ricavi.altri_ricavi)}
+                  {formatEuro(ricavi.altri_ricavi)}
                 </td>
               </tr>
               <tr style={{ borderTop: '2px solid #22c55e', background: '#dcfce7' }}>
                 <td style={{ padding: '12px 0', fontWeight: 700, fontSize: 16 }}>TOTALE RICAVI</td>
                 <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 700, fontSize: 18, color: '#16a34a' }}>
-                  {formatCurrency(ricavi.totale_ricavi)}
+                  {formatEuro(ricavi.totale_ricavi)}
                 </td>
               </tr>
             </tbody>
@@ -221,19 +221,19 @@ export default function Bilancio() {
               <tr>
                 <td style={{ padding: '12px 0', color: '#374151', fontSize: 15 }}>Acquisti (Fatture Fornitori)</td>
                 <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 500, fontSize: 16 }}>
-                  {formatCurrency(costi.acquisti)}
+                  {formatEuro(costi.acquisti)}
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '12px 0', color: '#374151', fontSize: 15 }}>Altri Costi Operativi</td>
                 <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 500, fontSize: 16 }}>
-                  {formatCurrency(costi.altri_costi)}
+                  {formatEuro(costi.altri_costi)}
                 </td>
               </tr>
               <tr style={{ borderTop: '2px solid #ef4444', background: '#fee2e2' }}>
                 <td style={{ padding: '12px 0', fontWeight: 700, fontSize: 16 }}>TOTALE COSTI</td>
                 <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 700, fontSize: 18, color: '#dc2626' }}>
-                  {formatCurrency(costi.totale_costi)}
+                  {formatEuro(costi.totale_costi)}
                 </td>
               </tr>
             </tbody>
@@ -252,7 +252,7 @@ export default function Bilancio() {
             {isProfit ? 'UTILE DI ESERCIZIO' : 'PERDITA DI ESERCIZIO'}
           </div>
           <div style={{ fontSize: 42, fontWeight: 700 }}>
-            {formatCurrency(Math.abs(risultato.utile_perdita))}
+            {formatEuro(Math.abs(risultato.utile_perdita))}
           </div>
           <div style={{ 
             marginTop: 16, 

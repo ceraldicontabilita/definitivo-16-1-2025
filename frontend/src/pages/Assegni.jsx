@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { formatDateIT } from "../lib/utils";
+import { formatDateIT, formatEuro } from "../lib/utils";
 
 export default function Assegni() {
   const [checks, setChecks] = useState([]);
@@ -146,7 +146,7 @@ export default function Assegni() {
                     </span>
                   </td>
                   <td style={{ padding: 8 }}>{c.check_number || "-"}</td>
-                  <td style={{ padding: 8, fontWeight: "bold" }}>€ {(c.amount || 0).toFixed(2)}</td>
+                  <td style={{ padding: 8, fontWeight: "bold" }}>{formatEuro(c.amount)}</td>
                   <td style={{ padding: 8 }}>{c.beneficiary}</td>
                   <td style={{ padding: 8 }}>{c.bank || "-"}</td>
                   <td style={{ padding: 8 }}>{formatDateIT(c.due_date) || "-"}</td>

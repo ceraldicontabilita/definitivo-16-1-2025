@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
 import { useAnnoGlobale } from "../contexts/AnnoContext";
+import { formatEuro } from "../lib/utils";
 
 export default function Finanziaria() {
   const { anno: selectedYear } = useAnnoGlobale();
@@ -22,10 +23,6 @@ export default function Finanziaria() {
       setLoading(false);
     }
   }
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
-  };
 
   return (
     <>
@@ -57,26 +54,26 @@ export default function Finanziaria() {
             <div className="card" style={{ background: "#e8f5e9" }}>
               <div className="small">💰 Entrate Totali</div>
               <div className="kpi" style={{ color: "#2e7d32" }}>
-                {formatCurrency(summary?.total_income)}
+                {formatEuro(summary?.total_income)}
               </div>
               <div className="small" style={{ marginTop: 5 }}>
-                Cassa: {formatCurrency(summary?.cassa?.entrate)} | Banca: {formatCurrency(summary?.banca?.entrate)}
+                Cassa: {formatEuro(summary?.cassa?.entrate)} | Banca: {formatEuro(summary?.banca?.entrate)}
               </div>
             </div>
             <div className="card" style={{ background: "#ffebee" }}>
               <div className="small">💸 Uscite Totali (Cassa + Banca)</div>
               <div className="kpi" style={{ color: "#c62828" }}>
-                {formatCurrency(summary?.total_expenses)}
+                {formatEuro(summary?.total_expenses)}
               </div>
               <div className="small" style={{ marginTop: 5, lineHeight: 1.5 }}>
-                <div>🏪 Cassa: <strong>{formatCurrency(summary?.cassa?.uscite)}</strong></div>
-                <div>🏦 Banca: {formatCurrency(summary?.banca?.uscite)} <span style={{fontSize: 10, color: '#666'}}>(incl. salari e F24)</span></div>
+                <div>🏪 Cassa: <strong>{formatEuro(summary?.cassa?.uscite)}</strong></div>
+                <div>🏦 Banca: {formatEuro(summary?.banca?.uscite)} <span style={{fontSize: 10, color: '#666'}}>(incl. salari e F24)</span></div>
               </div>
             </div>
             <div className="card" style={{ background: summary?.balance >= 0 ? "#e3f2fd" : "#fff3e0" }}>
               <div className="small">📈 Saldo</div>
               <div className="kpi" style={{ color: summary?.balance >= 0 ? "#1565c0" : "#e65100" }}>
-                {formatCurrency(summary?.balance)}
+                {formatEuro(summary?.balance)}
               </div>
             </div>
           </div>
@@ -95,12 +92,12 @@ export default function Finanziaria() {
                   📤 IVA a DEBITO (Corrispettivi)
                 </div>
                 <div style={{ fontSize: 28, fontWeight: "bold", color: "#e65100", marginTop: 5 }}>
-                  {formatCurrency(summary?.vat_debit)}
+                  {formatEuro(summary?.vat_debit)}
                 </div>
                 <div className="small" style={{ marginTop: 8, color: "#666" }}>
                   Da {summary?.corrispettivi?.count || 0} corrispettivi
                   <br />
-                  Totale vendite: {formatCurrency(summary?.corrispettivi?.totale)}
+                  Totale vendite: {formatEuro(summary?.corrispettivi?.totale)}
                 </div>
               </div>
               
@@ -110,12 +107,12 @@ export default function Finanziaria() {
                   📥 IVA a CREDITO (Fatture)
                 </div>
                 <div style={{ fontSize: 28, fontWeight: "bold", color: "#2e7d32", marginTop: 5 }}>
-                  {formatCurrency(summary?.vat_credit)}
+                  {formatEuro(summary?.vat_credit)}
                 </div>
                 <div className="small" style={{ marginTop: 8, color: "#666" }}>
                   Da {summary?.fatture?.count || 0} fatture
                   <br />
-                  Totale acquisti: {formatCurrency(summary?.fatture?.totale)}
+                  Totale acquisti: {formatEuro(summary?.fatture?.totale)}
                 </div>
               </div>
               
@@ -134,7 +131,7 @@ export default function Finanziaria() {
                   color: summary?.vat_balance > 0 ? "#c62828" : "#2e7d32",
                   marginTop: 5 
                 }}>
-                  {formatCurrency(summary?.vat_balance)}
+                  {formatEuro(summary?.vat_balance)}
                 </div>
                 <div className="small" style={{ marginTop: 8 }}>
                   <span style={{ 
@@ -167,35 +164,35 @@ export default function Finanziaria() {
                 <tr style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 10, fontWeight: "bold" }}>💵 Cassa</td>
                   <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
-                    {formatCurrency(summary?.cassa?.entrate)}
+                    {formatEuro(summary?.cassa?.entrate)}
                   </td>
                   <td style={{ padding: 10, textAlign: "right", color: "#c62828" }}>
-                    {formatCurrency(summary?.cassa?.uscite)}
+                    {formatEuro(summary?.cassa?.uscite)}
                   </td>
                   <td style={{ padding: 10, textAlign: "right", fontWeight: "bold" }}>
-                    {formatCurrency(summary?.cassa?.saldo)}
+                    {formatEuro(summary?.cassa?.saldo)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 10, fontWeight: "bold" }}>🏦 Banca</td>
                   <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
-                    {formatCurrency(summary?.banca?.entrate)}
+                    {formatEuro(summary?.banca?.entrate)}
                   </td>
                   <td style={{ padding: 10, textAlign: "right", color: "#c62828" }}>
-                    {formatCurrency(summary?.banca?.uscite)}
+                    {formatEuro(summary?.banca?.uscite)}
                   </td>
                   <td style={{ padding: 10, textAlign: "right", fontWeight: "bold" }}>
-                    {formatCurrency(summary?.banca?.saldo)}
+                    {formatEuro(summary?.banca?.saldo)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 10, fontWeight: "bold" }}>👥 Salari</td>
                   <td style={{ padding: 10, textAlign: "right" }}>-</td>
                   <td style={{ padding: 10, textAlign: "right", color: "#c62828" }}>
-                    {formatCurrency(summary?.salari?.totale)}
+                    {formatEuro(summary?.salari?.totale)}
                   </td>
                   <td style={{ padding: 10, textAlign: "right", fontWeight: "bold", color: "#c62828" }}>
-                    -{formatCurrency(summary?.salari?.totale)}
+                    -{formatEuro(summary?.salari?.totale)}
                   </td>
                 </tr>
               </tbody>
@@ -203,17 +200,17 @@ export default function Finanziaria() {
                 <tr style={{ background: "#f5f5f5", fontWeight: "bold" }}>
                   <td style={{ padding: 10 }}>TOTALE</td>
                   <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
-                    {formatCurrency(summary?.total_income)}
+                    {formatEuro(summary?.total_income)}
                   </td>
                   <td style={{ padding: 10, textAlign: "right", color: "#c62828" }}>
-                    {formatCurrency(summary?.total_expenses)}
+                    {formatEuro(summary?.total_expenses)}
                   </td>
                   <td style={{ 
                     padding: 10, 
                     textAlign: "right",
                     color: summary?.balance >= 0 ? "#2e7d32" : "#c62828"
                   }}>
-                    {formatCurrency(summary?.balance)}
+                    {formatEuro(summary?.balance)}
                   </td>
                 </tr>
               </tfoot>
@@ -228,13 +225,13 @@ export default function Finanziaria() {
                 <tr style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 10 }}>📤 Fatture da pagare (debiti vs fornitori)</td>
                   <td style={{ padding: 10, textAlign: "right", color: "#c62828", fontWeight: "bold" }}>
-                    {formatCurrency(summary?.payables)}
+                    {formatEuro(summary?.payables)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid #eee" }}>
                   <td style={{ padding: 10 }}>📥 Fatture da incassare (crediti vs clienti)</td>
                   <td style={{ padding: 10, textAlign: "right", color: "#2e7d32", fontWeight: "bold" }}>
-                    {formatCurrency(summary?.receivables)}
+                    {formatEuro(summary?.receivables)}
                   </td>
                 </tr>
                 <tr style={{ borderBottom: "1px solid #eee", background: summary?.vat_balance > 0 ? "#ffebee" : "#e8f5e9" }}>
@@ -245,7 +242,7 @@ export default function Finanziaria() {
                     fontWeight: "bold",
                     color: summary?.vat_balance > 0 ? "#c62828" : "#2e7d32"
                   }}>
-                    {formatCurrency(Math.abs(summary?.vat_balance || 0))}
+                    {formatEuro(Math.abs(summary?.vat_balance || 0))}
                   </td>
                 </tr>
               </tbody>
