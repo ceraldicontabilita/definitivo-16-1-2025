@@ -198,6 +198,7 @@ app.include_router(haccp_report_pdf.router, prefix="/api/haccp-report", tags=["H
 app.include_router(bank_statement_import.router, prefix="/api/bank-statement", tags=["Bank Statement Import"])
 app.include_router(piano_conti.router, prefix="/api/piano-conti", tags=["Piano dei Conti"])
 app.include_router(commercialista.router, prefix="/api/commercialista", tags=["Commercialista"])
+app.include_router(bilancio.router, prefix="/api/bilancio", tags=["Bilancio"])
 
 @app.get("/")
 async def root():
