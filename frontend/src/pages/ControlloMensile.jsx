@@ -131,7 +131,7 @@ export default function ControlloMensile() {
    */
   const processYearData = (cassa, corrispettivi, estrattoConto = []) => {
     const monthly = [];
-    let yearPosAuto = 0, yearPosManual = 0, yearPosBanca = 0;
+    let yearPosAuto = 0, yearPosManual = 0, yearPosBanca = 0, yearPosBancaCommissioni = 0;
     let yearCorrispAuto = 0, yearCorrispManual = 0;
     let yearVersamenti = 0, yearSaldoCassa = 0;
     let yearDocumentiCommerciali = 0;
