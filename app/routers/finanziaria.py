@@ -27,6 +27,8 @@ async def get_financial_summary(
     end_date = f"{anno}-12-31"
     date_range = {"$gte": start_date, "$lte": end_date}
     
+    logger.info(f"[Finanziaria] Anno={anno}, date_range={date_range}")
+    
     try:
         # Get Prima Nota Cassa totals
         cassa_pipeline = [
@@ -40,6 +42,8 @@ async def get_financial_summary(
         cassa_entrate = sum(r["total"] for r in cassa_result if r["_id"] == "entrata")
         cassa_uscite = sum(r["total"] for r in cassa_result if r["_id"] == "uscita")
         
+        logger.info(f"[Finanziaria] Cassa result: {cassa_result}")
+        
         # Get Prima Nota Banca totals
         banca_pipeline = [
             {"$match": {"data": date_range}},
@@ -51,6 +55,8 @@ async def get_financial_summary(
         banca_result = await db["prima_nota_banca"].aggregate(banca_pipeline).to_list(100)
         banca_entrate = sum(r["total"] for r in banca_result if r["_id"] == "entrata")
         banca_uscite = sum(r["total"] for r in banca_result if r["_id"] == "uscita")
+        
+        logger.info(f"[Finanziaria] Banca result: {banca_result}")
         
         # Get Salari totals
         salari_pipeline = [
