@@ -116,6 +116,33 @@ SALDO IVA:
 
 ## Changelog
 
+### 2026-01-05 (Sessione 14 - P3 Completi: POS, Magazzino, Bilancio, Dashboard)
+- **Logica Sfasamento Accrediti POS** ✅:
+  - Nuovo utility `/app/app/utils/pos_accredito.py` con calcolo completo
+  - Regole: Lun-Gio +1g, Ven +3g (Lun), Sab +3g (Mar), Dom +2g (Mar)
+  - Festivi italiani 2025: 12 giorni (inclusi Pasqua e Pasquetta calcolati)
+  - API: `/api/pos-accredito/calcola-accredito`, `/festivi/{anno}`, `/calendario-mensile/{anno}/{mese}`
+
+- **Popolare Magazzino da Fatture XML** ✅:
+  - Endpoint `/api/magazzino/popola-da-fatture?dry_run=true`
+  - Estrae prodotti da line_items delle fatture
+  - Auto-genera codice prodotto e categoria
+  - Supporta dry_run per simulazione
+
+- **Confronto Anno su Anno Bilancio** ✅:
+  - Endpoint `/api/bilancio/confronto-annuale?anno_corrente=2025`
+  - Confronta Conto Economico e Stato Patrimoniale
+  - KPI: margine lordo, ROI, crescita ricavi/costi
+  - Sintesi con emoji trend (📈/📉)
+
+- **Dashboard Trend Mensili** ✅:
+  - Endpoint `/api/dashboard/trend-mensile?anno=2025`
+  - 12 mesi con entrate, uscite, saldo, IVA
+  - chart_data pronto per grafici frontend
+  - Statistiche: media, picchi, mesi con dati
+
+**Testing**: 16/16 test passati (100%)
+
 ### 2026-01-05 (Sessione 13 - Fix Pagina Finanziaria + Nuove Funzionalità P1/P2/P3)
 - **FIX CRITICO - Pagina Finanziaria bianca (P0)** ✅:
   - Causa: Errore di sintassi JSX in `IVA.jsx` (doppia `}}` alla riga 124)
