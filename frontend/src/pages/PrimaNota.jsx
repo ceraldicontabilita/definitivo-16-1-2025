@@ -570,14 +570,40 @@ function PrimaNotaDesktop() {
             </p>
           </div>
 
-          {/* Filter */}
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 14, color: '#6b7280' }}>📅 Filtra periodo:</span>
-            <input type="date" value={filterPeriodo.da} onChange={(e) => setFilterPeriodo({...filterPeriodo, da: e.target.value})} style={{...inputStyle, width: 'auto'}} />
-            <input type="date" value={filterPeriodo.a} onChange={(e) => setFilterPeriodo({...filterPeriodo, a: e.target.value})} style={{...inputStyle, width: 'auto'}} />
-            <button onClick={loadAllData} style={{ padding: '10px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
-              🔍 Filtra
+          {/* Filter - Bottoni Mesi */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14, color: '#6b7280', marginRight: 8 }}>📅 Mese:</span>
+            <button 
+              onClick={() => setSelectedMonth(null)} 
+              style={{ 
+                padding: '8px 14px', 
+                background: selectedMonth === null ? '#2563eb' : '#f3f4f6', 
+                color: selectedMonth === null ? 'white' : '#374151', 
+                border: 'none', 
+                borderRadius: 8, 
+                cursor: 'pointer', 
+                fontWeight: selectedMonth === null ? 'bold' : 'normal'
+              }}
+            >
+              Tutti
             </button>
+            {mesiNomi.map((nome, i) => (
+              <button 
+                key={i}
+                onClick={() => setSelectedMonth(i)} 
+                style={{ 
+                  padding: '8px 12px', 
+                  background: selectedMonth === i ? '#2563eb' : '#f3f4f6', 
+                  color: selectedMonth === i ? 'white' : '#374151', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  cursor: 'pointer', 
+                  fontWeight: selectedMonth === i ? 'bold' : 'normal'
+                }}
+              >
+                {nome}
+              </button>
+            ))}
           </div>
 
           {/* Movements Table Banca */}
