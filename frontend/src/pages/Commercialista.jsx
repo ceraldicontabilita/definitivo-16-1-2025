@@ -30,7 +30,8 @@ export default function Commercialista() {
   const [primaNotaData, setPrimaNotaData] = useState(null);
   const [fattureCassaData, setFattureCassaData] = useState(null);
   const [carnets, setCarnets] = useState([]);
-  const [selectedCarnet, setSelectedCarnet] = useState(null);
+  const [selectedCarnets, setSelectedCarnets] = useState([]); // Array per selezione multipla
+  const [carnetSearch, setCarnetSearch] = useState(''); // Barra di ricerca
 
   const loadConfig = useCallback(async () => {
     try {
