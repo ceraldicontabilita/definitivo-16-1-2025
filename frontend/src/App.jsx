@@ -358,6 +358,74 @@ export default function App() {
             color: white;
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
           }
+          
+          /* Submenu styles */
+          .nav-submenu {
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .nav-submenu-trigger {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            transition: all 0.2s;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+          }
+          
+          .nav-submenu-trigger:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+          }
+          
+          .nav-submenu-trigger.open {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+          }
+          
+          .submenu-arrow {
+            margin-left: auto;
+            font-size: 10px;
+            opacity: 0.6;
+          }
+          
+          .nav-submenu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding-left: 20px;
+            margin-top: 4px;
+            margin-bottom: 4px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+            margin-left: 20px;
+          }
+          
+          .nav-submenu-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            transition: all 0.2s;
+          }
+          
+          .nav-submenu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+          }
+          
+          .nav-submenu-item.active {
+            background: #2563eb;
+            color: white;
+          }
         }
         
         /* Mobile Bottom Navigation */
