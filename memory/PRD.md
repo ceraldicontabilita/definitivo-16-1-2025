@@ -75,6 +75,15 @@ FATTURA XML → Parse → FATTURE DB
 
 ## Changelog
 
+### 2026-01-05 (Sessione 9 - Bug Fix Controllo Mensile + Task P1)
+- **BUG FIX CRITICO - Controllo Mensile**:
+  - ❌ **Problema**: La colonna "Diff." POS mostrava `posBancaDiff` (POS Banca - POS Auto) invece di `posDiff` (POS Auto - POS Cassa)
+  - ❌ **Effetto**: Differenze errate di ~€30.000 invece di ~€300
+  - ✅ **Soluzione**: Corretto il riferimento alla variabile corretta `posDiff` sia nel body che nel footer della tabella
+  - ✅ **Corretto anche**: Errore di sintassi (`}}>` duplicato) nella colonna Corrispettivi
+  - 📝 **File modificato**: `/app/frontend/src/pages/ControlloMensile.jsx`
+  - 📊 **Risultato verificato**: Gennaio 2025 ora mostra +341€ (corretto) invece di -30.601€ (errato)
+
 ### 2026-01-05 (Sessione 8 - Ristrutturazione Architettura - FASI 2, 3, 4 COMPLETE)
 - **FASE 2 - Consolidamento Controlli Sicurezza**:
   - Rimossi endpoint duplicati in `prima_nota.py` che bypassavano i controlli di sicurezza
