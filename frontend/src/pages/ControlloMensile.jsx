@@ -11,12 +11,12 @@ import api from '../api';
  * FONTI DATI:
  * -----------
  * 1. CORRISPETTIVI XML (collection: corrispettivi)
- *    - pagato_elettronico = POS Auto (incassi con carta/bancomat)
+ *    - pagato_elettronico = POS Agenzia (incassi con carta/bancomat)
  *    - totale = Corrispettivi Auto (incasso totale giornaliero)
  *    - pagato_contanti = Contanti (per calcolo saldo cassa)
  * 
  * 2. PRIMA NOTA CASSA (collection: prima_nota_cassa)
- *    - categoria "POS" = POS Manuale (da Excel o inserimento manuale)
+ *    - categoria "POS" = POS Chiusura (da Excel o inserimento manuale)
  *    - categoria "Corrispettivi" = Corrispettivi Manuali
  *    - categoria "Versamento" con tipo "uscita" = Versamenti in banca
  *    - Saldo Cassa = Σ entrate - Σ uscite
@@ -26,13 +26,13 @@ import api from '../api';
  * 
  * COLONNE TABELLA:
  * ----------------
- * | Mese/Data | POS Auto | POS Manuale | Diff. POS | Corrisp. Auto | Corrisp. Man. | Diff. Corr. | Versamenti | Saldo Cassa | Dettagli |
+ * | Mese/Data | POS Agenzia | POS Chiusura | Diff. POS | Corrisp. Auto | Corrisp. Man. | Diff. Corr. | Versamenti | Saldo Cassa | Dettagli |
  * 
  * CALCOLI:
  * --------
- * - POS Auto = Σ corrispettivi.pagato_elettronico (da XML)
- * - POS Manuale = Σ prima_nota_cassa WHERE categoria = "POS" (qualsiasi tipo)
- * - Diff. POS = POS Auto - POS Manuale
+ * - POS Agenzia = Σ corrispettivi.pagato_elettronico (da XML)
+ * - POS Chiusura = Σ prima_nota_cassa WHERE categoria = "POS" (qualsiasi tipo)
+ * - Diff. POS = POS Agenzia - POS Chiusura
  * - Corrisp. Auto = Σ corrispettivi.totale (da XML)
  * - Corrisp. Man. = Σ prima_nota_cassa WHERE categoria = "Corrispettivi" AND tipo = "entrata"
  * - Diff. Corr. = Corrisp. Auto - Corrisp. Man.
