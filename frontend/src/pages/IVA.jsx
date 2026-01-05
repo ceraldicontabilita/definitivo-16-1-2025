@@ -586,10 +586,10 @@ export default function IVA() {
                       >
                         <td style={{ padding: 8 }}>{d.data}</td>
                         <td style={{ padding: 8, textAlign: "right", color: "#e65100" }}>
-                          {d.iva_debito > 0 ? `€ ${d.iva_debito.toFixed(2)}` : "-"}
+                          {d.iva_debito > 0 ? formatEuro(d.iva_debito) : "-"}
                         </td>
                         <td style={{ padding: 8, textAlign: "right", color: "#2e7d32" }}>
-                          {d.iva_credito > 0 ? `€ ${d.iva_credito.toFixed(2)}` : "-"}
+                          {d.iva_credito > 0 ? formatEuro(d.iva_credito) : "-"}
                         </td>
                         <td style={{ 
                           padding: 8, 
@@ -597,13 +597,13 @@ export default function IVA() {
                           color: getSaldoColor(d.saldo),
                           fontWeight: d.has_data ? "bold" : "normal"
                         }}>
-                          {d.has_data ? `€ ${d.saldo.toFixed(2)}` : "-"}
+                          {d.has_data ? formatEuro(d.saldo) : "-"}
                         </td>
                         <td style={{ padding: 8, textAlign: "right", background: "#fff3e0" }}>
-                          € {d.iva_debito_progressiva.toFixed(2)}
+                          {formatEuro(d.iva_debito_progressiva)}
                         </td>
                         <td style={{ padding: 8, textAlign: "right", background: "#e8f5e9" }}>
-                          € {d.iva_credito_progressiva.toFixed(2)}
+                          {formatEuro(d.iva_credito_progressiva)}
                         </td>
                         <td style={{ 
                           padding: 8, 
@@ -612,7 +612,7 @@ export default function IVA() {
                           fontWeight: "bold",
                           color: getSaldoColor(d.saldo_progressivo)
                         }}>
-                          € {d.saldo_progressivo.toFixed(2)}
+                          {formatEuro(d.saldo_progressivo)}
                         </td>
                       </tr>
                     ))}
@@ -632,11 +632,11 @@ export default function IVA() {
                   <h3 style={{ color: "#e65100" }}>Corrispettivi (IVA Debito)</h3>
                   <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8 }}>
                     <div style={{ fontSize: 24, fontWeight: "bold" }}>
-                      € {todayData.iva_debito?.toFixed(2)}
+                      {formatEuro(todayData.iva_debito || 0)}
                     </div>
                     <div className="small">
                       {todayData.corrispettivi?.count || 0} corrispettivi<br/>
-                      Totale incassato: € {todayData.corrispettivi?.totale?.toFixed(2)}
+                      Totale incassato: {formatEuro(todayData.corrispettivi?.totale || 0)}
                     </div>
                   </div>
                 </div>
@@ -644,7 +644,7 @@ export default function IVA() {
                   <h3 style={{ color: "#2e7d32" }}>Fatture Passive (IVA Credito)</h3>
                   <div style={{ background: "#e8f5e9", padding: 15, borderRadius: 8 }}>
                     <div style={{ fontSize: 24, fontWeight: "bold" }}>
-                      € {todayData.iva_credito?.toFixed(2)}
+                      {formatEuro(todayData.iva_credito || 0)}
                     </div>
                     <div className="small">{todayData.fatture?.count || 0} fatture</div>
                   </div>
