@@ -695,7 +695,7 @@ export default function GestioneDipendenti() {
               {importingEstratto ? '⏳ Riconciliando...' : '🏦 Importa Estratto Conto (PDF/CSV/Excel)'}
               <input
                 type="file"
-                accept=".xlsx,.xls,.csv,.pdf"
+                accept=".xlsx,.xls,.csv"
                 onChange={handleImportEstrattoConto}
                 disabled={importingEstratto}
                 style={{ display: 'none' }}
