@@ -273,12 +273,18 @@ FATTURA XML → Parse → FATTURE DB
 - [x] Filtro Anno Globale nella Dashboard - Context AnnoContext + selettore sidebar
 - [x] Fix pagina Magazzino - Tab Catalogo Prodotti + Inventario Manuale
 - [x] Fix Bug Controllo Mensile (Diff POS ~€30k errata → ~€300 corretta)
+- [x] Rinomina POS Auto → POS Agenzia, POS Manuale → POS Chiusura
 
-### P2 (Media)
-- [ ] Associazione automatica dati fornitore (nuovo fornitore → fatture esistenti)
-- [ ] Export PDF Bilancio
-- [ ] Discrepanza Conteggio Fatture (1326 vs 1328)
-- [ ] Riconoscimento POS in Riconciliazione ("INC.POS", "INCAS. TRAMITE P.O.S")
+### P2 (Media) - COMPLETATI
+- [x] Associazione automatica dati fornitore (nuovo fornitore → fatture esistenti)
+- [x] Export PDF Bilancio (pulsante nella pagina Bilancio)
+- [x] Riconoscimento POS in Riconciliazione ("INC.POS", "INCAS. TRAMITE P.O.S")
+- [x] Discrepanza Conteggio Fatture - Verificato: 1328 fatture uniche, nessun duplicato
+
+### P3 (Bassa) - BACKLOG
+- [ ] Confronto anno su anno nel Bilancio
+- [ ] Dashboard con grafici trend mensili
+- [ ] Notifiche in-app per scadenze
 
 ---
 
