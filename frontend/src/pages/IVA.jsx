@@ -256,10 +256,10 @@ export default function IVA() {
                       <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
                         <td style={{ padding: 10, fontWeight: "bold" }}>{m.mese_nome}</td>
                         <td style={{ padding: 10, textAlign: "right", color: "#e65100" }}>
-                          € {m.iva_debito?.toFixed(2)}
+                          {formatEuro(m.iva_debito || 0)}
                         </td>
                         <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
-                          € {m.iva_credito?.toFixed(2)}
+                          {formatEuro(m.iva_credito || 0)}
                         </td>
                         <td style={{ 
                           padding: 10, 
@@ -267,7 +267,7 @@ export default function IVA() {
                           fontWeight: "bold",
                           color: getSaldoColor(m.saldo)
                         }}>
-                          € {m.saldo?.toFixed(2)}
+                          {formatEuro(m.saldo || 0)}
                         </td>
                         <td style={{ padding: 10, textAlign: "center" }}>
                           <span style={{ 
