@@ -116,6 +116,23 @@ SALDO IVA:
 
 ## Changelog
 
+### 2026-01-05 (Sessione 11 - Miglioramenti Calcolo IVA)
+- **NUOVO CAMPO `data_ricezione`**:
+  - Aggiunto campo `data_ricezione` a tutte le fatture (1333 aggiornate)
+  - Default = `invoice_date`, può essere modificato per fatture ricevute in date diverse
+  - Il calcolo IVA ora usa `data_ricezione` invece di `invoice_date` (come da normativa AdE)
+
+- **RICALCOLO IVA/IMPONIBILE**:
+  - Nuovo endpoint `POST /api/fatture/recalculate-iva` per ricalcolare tutte le fatture
+  - IVA e imponibile estratti dal `riepilogo_iva` del XML (campi `imposta` e `imponibile`)
+  - Flag `iva_stimata: true` per fatture con IVA calcolata al 22% (quando non presente nel XML)
+
+- **QUERY IVA AGGIORNATE**:
+  - `/api/iva/daily`, `/api/iva/monthly` ora filtrano per `data_ricezione`
+  - Fallback a `invoice_date` se `data_ricezione` non presente
+
+- **VERIFICA APRILE 2025**: €7.077,96 vs AdE €7.070,19 (diff. 0.1%) ✓
+
 ### 2026-01-05 (Sessione 10 - Fix Calcolo IVA Note Credito)
 - **BUG FIX CRITICO - Registro IVA**:
   - ❌ **Problema**: Le Note Credito (TD04, TD08) venivano SOMMATE all'IVA credito invece di essere SOTTRATTE
