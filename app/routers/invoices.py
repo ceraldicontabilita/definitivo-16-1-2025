@@ -381,9 +381,14 @@ async def get_bank_pending_invoices(
         "invoices": results
     }
 
+@router.get(
+    "/{invoice_id}",
+    response_model=Dict[str, Any],
+    summary="Get invoice by ID",
+    description="Get complete invoice data"
+)
 async def get_invoice(
     invoice_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user),
     invoice_service: InvoiceService = Depends(get_invoice_service)
 ) -> Dict[str, Any]:
     """
