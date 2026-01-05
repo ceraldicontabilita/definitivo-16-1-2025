@@ -78,7 +78,7 @@ export default function IVA() {
 
       {/* Controlli */}
       <div className="card">
-        <div className="row" style={{ alignItems: "center", gap: 15 }}>
+        <div className="row" style={{ alignItems: "center", gap: 15, flexWrap: 'wrap' }}>
           <div style={{ background: '#dbeafe', padding: '8px 16px', borderRadius: 8, color: '#1e40af', fontWeight: 'bold' }}>
             📅 Anno: {selectedYear}
             <span style={{ fontSize: 11, fontWeight: 'normal', marginLeft: 8, color: '#3b82f6' }}>
@@ -97,25 +97,62 @@ export default function IVA() {
               ))}
             </select>
           </div>
-          <div style={{ marginLeft: "auto" }}>
+          
+          {/* Export PDF Buttons */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                const quarter = Math.ceil(selectedMonth / 3);
+                window.open(`${api.defaults.baseURL}/api/iva/export/pdf/trimestrale/${selectedYear}/${quarter}`, '_blank');
+              }}
+              style={{
+                padding: '6px 12px',
+                background: '#059669',
+                color: 'white',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontSize: 13
+              }}
+              data-testid="export-pdf-quarter"
+            >
+              📄 PDF Q{Math.ceil(selectedMonth / 3)}
+            </button>
+            <button
+              onClick={() => {
+                window.open(`${api.defaults.baseURL}/api/iva/export/pdf/annuale/${selectedYear}`, '_blank');
+              }}
+              style={{
+                padding: '6px 12px',
+                background: '#7c3aed',
+                color: 'white',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontSize: 13
+              }}
+              data-testid="export-pdf-annual"
+            >
+              📄 PDF Annuale
+            </button>
+          </div>
+          
+          <div style={{ marginLeft: "auto", display: 'flex', gap: 5, flexWrap: 'wrap' }}>
             <button 
               className={viewMode === "annual" ? "primary" : ""} 
               onClick={() => setViewMode("annual")}
-              style={{ marginRight: 5 }}
             >
               Annuale
             </button>
             <button 
               className={viewMode === "quarterly" ? "primary" : ""} 
               onClick={() => setViewMode("quarterly")}
-              style={{ marginRight: 5 }}
             >
               Trimestrale
             </button>
             <button 
               className={viewMode === "monthly" ? "primary" : ""} 
               onClick={() => setViewMode("monthly")}
-              style={{ marginRight: 5 }}
             >
               Mensile
             </button>
