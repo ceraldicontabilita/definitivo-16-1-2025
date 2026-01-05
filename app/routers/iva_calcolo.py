@@ -1,6 +1,34 @@
 """
 IVA Calcolo Router - Calcoli IVA giornalieri, mensili e annuali.
-Refactored from public_api.py
+
+LOGICA CALCOLO IVA (secondo Agenzia delle Entrate):
+=====================================================
+
+1. IVA a DEBITO (da versare all'Erario):
+   - Somma dell'IVA su tutti i CORRISPETTIVI del periodo
+   - I corrispettivi sono le vendite al pubblico (scontrini/ricevute)
+
+2. IVA a CREDITO (da detrarre):
+   - Somma dell'IVA su tutte le FATTURE di ACQUISTO ricevute nel periodo
+   - La data rilevante è la DATA DI RICEZIONE (data SDI), non la data di emissione
+   - Le Note Credito (TD04, TD08) devono essere SOTTRATTE dal totale
+
+3. SALDO IVA:
+   - Saldo = IVA Debito - IVA Credito
+   - Se positivo -> IVA da VERSARE
+   - Se negativo -> IVA a CREDITO (da riportare o chiedere rimborso)
+
+TIPI DOCUMENTO FatturaPA:
+- TD01: Fattura
+- TD02: Acconto/Anticipo su fattura  
+- TD04: Nota di Credito <- DA SOTTRARRE
+- TD06: Parcella
+- TD08: Nota di Credito Semplificata <- DA SOTTRARRE
+- TD24: Fattura Differita
+
+Riferimenti normativi:
+- Art. 1 DPR 100/1998
+- Art. 19 DPR 633/1972
 """
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any
@@ -12,6 +40,9 @@ from app.database import Database
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Tipi documento che sono Note Credito (da sottrarre)
+NOTE_CREDITO_TYPES = ["TD04", "TD08"]
 
 MESI_ITALIANI = ["", "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
                  "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
