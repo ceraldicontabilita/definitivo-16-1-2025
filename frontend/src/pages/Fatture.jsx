@@ -1094,10 +1094,10 @@ export default function Fatture() {
       </div>
       
       {/* Visualizzatore Fattura XML */}
-      {viewingInvoiceId && (
+      {viewingInvoice && (
         <InvoiceXMLViewer 
-          invoiceId={viewingInvoiceId} 
-          onClose={() => setViewingInvoiceId(null)} 
+          invoice={viewingInvoice} 
+          onClose={() => setViewingInvoice(null)} 
         />
       )}
     </>
