@@ -66,7 +66,11 @@ export default function ControlloMensile() {
     versamenti: 0,
     saldoCassa: 0,
     documentiCommerciali: 0,
-    annulli: 0
+    annulli: 0,
+    pagatoNonRiscosso: 0,
+    pagatoNonRiscossoCount: 0,
+    ammontareAnnulli: 0,
+    ammontareAnnulliCount: 0
   });
   
   // Daily detail data (when viewing a specific month)
