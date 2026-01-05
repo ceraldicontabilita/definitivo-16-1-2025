@@ -727,12 +727,12 @@ export default function ControlloMensile() {
                       padding: 10, 
                       borderBottom: '1px solid #e2e8f0', 
                       textAlign: 'right',
-                      fontWeight: Math.abs(row.posBancaDiff) > 1 ? 'bold' : 'normal',
-                      color: Math.abs(row.posBancaDiff) > 1 ? (row.posBancaDiff > 0 ? '#16a34a' : '#dc2626') : '#666',
+                      fontWeight: Math.abs(row.posDiff) > 1 ? 'bold' : 'normal',
+                      color: Math.abs(row.posDiff) > 1 ? (row.posDiff > 0 ? '#16a34a' : '#dc2626') : '#666',
                       fontSize: 12
                     }}>
-                      {Math.abs(row.posBancaDiff) > 0.01 ? (
-                        <span title="POS Banca - POS Auto (XML)">{row.posBancaDiff > 0 ? '+' : ''}{formatCurrency(row.posBancaDiff)}</span>
+                      {Math.abs(row.posDiff) > 0.01 ? (
+                        <span title="POS Auto (XML) - POS Cassa (Manuale)">{row.posDiff > 0 ? '+' : ''}{formatCurrency(row.posDiff)}</span>
                       ) : '-'}
                     </td>
                     <td style={{ padding: 10, borderBottom: '1px solid #e2e8f0', textAlign: 'right', background: '#fffbeb' }}>
