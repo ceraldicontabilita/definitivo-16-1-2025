@@ -778,7 +778,19 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
           </thead>
           <tbody>
             {currentWithBalance.map((mov, idx) => (
-              <tr key={mov.id || idx} style={{ borderBottom: '1px solid #e5e7eb', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
+              <tr 
+                key={mov.id || idx} 
+                onClick={() => setSelectedMovimento(mov)}
+                style={{ 
+                  borderBottom: '1px solid #e5e7eb', 
+                  background: idx % 2 === 0 ? 'white' : '#f9fafb',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#f0f9ff'}
+                onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? 'white' : '#f9fafb'}
+                data-testid={`movimento-row-${mov.id || idx}`}
+              >
                 <td style={{ padding: 10, fontFamily: 'monospace', fontSize: 12 }}>{formatDate(mov.data)}</td>
                 <td style={{ padding: 10, textAlign: 'center' }}>
                   <span style={{
@@ -811,7 +823,7 @@ function MovementsTable({ movimenti, tipo, loading, formatCurrency, formatDate, 
                 </td>
                 <td style={{ padding: 10, textAlign: 'center' }}>
                   <button 
-                    onClick={() => onDelete(mov.id)}
+                    onClick={(e) => { e.stopPropagation(); onDelete(mov.id); }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}
                     title="Elimina"
                   >
