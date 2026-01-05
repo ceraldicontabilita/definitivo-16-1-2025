@@ -304,7 +304,7 @@ export default function Bilancio() {
             }}
             data-testid="bilancio-anno-select"
           >
-            {[2023, 2024, 2025, 2026].map(y => (
+            {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>

@@ -632,7 +632,7 @@ export default function Commercialista() {
               minWidth: 100
             }}
           >
-            {[2023, 2024, 2025, 2026].map(y => (
+            {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
