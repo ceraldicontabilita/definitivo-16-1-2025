@@ -675,15 +675,33 @@ export default function GestioneDipendenti() {
               fontWeight: 'bold',
               boxShadow: '0 2px 8px rgba(33,150,243,0.3)'
             }}>
-              {importingEstratto ? '⏳ Riconciliando...' : '🏦 Importa Estratto Conto (Riconcilia)'}
+              {importingEstratto ? '⏳ Riconciliando...' : '🏦 Importa Estratto Conto (PDF/CSV/Excel)'}
               <input
                 type="file"
-                accept=".xlsx,.xls,.csv"
+                accept=".xlsx,.xls,.csv,.pdf"
                 onChange={handleImportEstrattoConto}
                 disabled={importingEstratto}
                 style={{ display: 'none' }}
               />
             </label>
+            
+            {/* Reset Riconciliazione */}
+            <button
+              onClick={handleResetRiconciliazione}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #9c27b0, #7b1fa2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 8px rgba(156,39,176,0.3)'
+              }}
+              title="Reset stato riconciliazione per ri-testare"
+            >
+              🔄 Reset Riconciliazione
+            </button>
             
             {/* Elimina anno */}
             <button
