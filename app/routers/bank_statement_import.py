@@ -518,12 +518,27 @@ def extract_row_data(row, col_mapping: Dict[str, str]) -> Optional[Dict[str, Any
                     tipo = "uscita" if parsed < 0 else "entrata"
     
     if data and importo > 0:
+        # Determina categoria automatica basata sulla descrizione
+        categoria_auto = None
+        desc_upper = descrizione.upper() if descrizione else ""
+        
+        # Riconosci movimenti POS
+        if any(k in desc_upper for k in ['INC.POS', 'INCAS.', 'INC. POS', 'INCASSO POS',
+                                          'TRAMITE P.O.S', 'P.O.S.', 'POS ', ' POS']):
+            categoria_auto = "POS"
+        # Riconosci bonifici
+        elif any(k in desc_upper for k in ['BONIFICO', 'BONIF.', 'BON.']):
+            categoria_auto = "BONIFICO"
+        # Riconosci F24
+        elif 'F24' in desc_upper:
+            categoria_auto = "F24"
+        
         return {
             "data": data,
             "descrizione": descrizione or f"Movimento del {data}",
             "importo": importo,
             "tipo": tipo,
-            "categoria": str(row.get(col_mapping.get("category", ""), "")) if col_mapping.get("category") else None
+            "categoria": categoria_auto or (str(row.get(col_mapping.get("category", ""), "")) if col_mapping.get("category") else None)
         }
     
     return None
