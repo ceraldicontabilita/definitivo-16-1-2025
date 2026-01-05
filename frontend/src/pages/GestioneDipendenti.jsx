@@ -194,7 +194,6 @@ export default function GestioneDipendenti() {
   // Helpers
   const uniqueMansioni = [...new Set(dipendenti.map(d => d.mansione).filter(Boolean))];
   const completeCount = dipendenti.filter(d => d.codice_fiscale && d.email && d.telefono).length;
-  const formatEuro = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
   const mesiNomi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
 
   return (

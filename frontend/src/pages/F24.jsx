@@ -131,10 +131,6 @@ export default function F24() {
     }
   }
 
-  const formatEuro = (value) => {
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
-  };
-
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'critical': return '#d32f2f';

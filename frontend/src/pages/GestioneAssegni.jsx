@@ -224,11 +224,6 @@ export default function GestioneAssegni() {
     }
   };
 
-  const formatEuro = (value) => {
-    if (!value) return '-';
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value);
-  };
-
   // Raggruppa assegni per carnet (primi 10 cifre del numero)
   const groupByCarnet = () => {
     const groups = {};

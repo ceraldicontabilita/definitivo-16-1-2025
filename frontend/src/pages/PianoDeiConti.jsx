@@ -87,10 +87,6 @@ export default function PianoDeiConti() {
     }
   };
 
-  const formatEuro = (value) => {
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value || 0);
-  };
-
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center' }}>Caricamento Piano dei Conti...</div>;
   }
