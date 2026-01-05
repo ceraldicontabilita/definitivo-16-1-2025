@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api';
-import PrimaNotaMobile from './PrimaNotaMobile';
-import { useIsMobile } from '../hooks/useData';
 
 /**
  * Prima Nota - Due sezioni separate: Cassa e Banca
@@ -15,19 +13,6 @@ import { useIsMobile } from '../hooks/useData';
  * - Dati da estratto conto
  */
 export default function PrimaNota() {
-  const isMobile = useIsMobile();
-  
-  // Se siamo su mobile, mostra la versione semplificata
-  if (isMobile) {
-    return <PrimaNotaMobile />;
-  }
-  
-  // Altrimenti, continua con la versione desktop completa
-  return <PrimaNotaDesktop />;
-}
-
-// Componente Desktop con tutte le funzionalità
-function PrimaNotaDesktop() {
   const today = new Date().toISOString().split('T')[0];
   const currentYear = new Date().getFullYear();
   
