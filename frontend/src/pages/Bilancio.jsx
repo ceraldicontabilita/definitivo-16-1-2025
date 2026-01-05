@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(value || 0);
-};
+import { formatEuro } from '../lib/utils';
 
 export default function Bilancio() {
   const currentYear = new Date().getFullYear();
@@ -76,19 +70,19 @@ export default function Bilancio() {
                 <tr>
                   <td style={{ padding: '8px 0', color: '#374151' }}>Cassa</td>
                   <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 500 }}>
-                    {formatCurrency(attivo.disponibilita_liquide.cassa)}
+                    {formatEuro(attivo.disponibilita_liquide.cassa)}
                   </td>
                 </tr>
                 <tr>
                   <td style={{ padding: '8px 0', color: '#374151' }}>Banca</td>
                   <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 500 }}>
-                    {formatCurrency(attivo.disponibilita_liquide.banca)}
+                    {formatEuro(attivo.disponibilita_liquide.banca)}
                   </td>
                 </tr>
                 <tr style={{ borderTop: '1px solid #86efac' }}>
                   <td style={{ padding: '8px 0', fontWeight: 600 }}>Totale</td>
                   <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 600 }}>
-                    {formatCurrency(attivo.disponibilita_liquide.totale)}
+                    {formatEuro(attivo.disponibilita_liquide.totale)}
                   </td>
                 </tr>
               </tbody>

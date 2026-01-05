@@ -3,6 +3,7 @@ import api from '../api';
 import PrimaNotaMobile from './PrimaNotaMobile';
 import { useIsMobile } from '../hooks/useData';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
+import { formatEuro } from '../lib/utils';
 
 /**
  * Prima Nota - Due sezioni separate: Cassa e Banca
@@ -161,7 +162,7 @@ function PrimaNotaDesktop() {
       });
       setPos({ data: today, pos1: '', pos2: '', pos3: '' });
       loadAllData();
-      alert(`✅ POS salvato! Totale: €${totale.toFixed(2)}`);
+      alert(`✅ POS salvato! Totale: ${formatEuro(totale)}`);
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     } finally {
@@ -226,7 +227,6 @@ function PrimaNotaDesktop() {
   };
 
   // Format helpers
-  const formatCurrency = (val) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val || 0);
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('it-IT');
   
   const posTotale = (parseFloat(pos.pos1) || 0) + (parseFloat(pos.pos2) || 0) + (parseFloat(pos.pos3) || 0);
@@ -404,17 +404,17 @@ function PrimaNotaDesktop() {
 
           {/* Summary Cards Cassa - Compatti */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 16 }}>
-            <MiniCard title="Entrate (DARE)" value={formatCurrency(cassaData.totale_entrate)} color="#10b981" />
-            <MiniCard title="Uscite (AVERE)" value={formatCurrency(cassaData.totale_uscite)} color="#ef4444" />
-            <MiniCard title="Saldo" value={formatCurrency(cassaData.saldo)} color={cassaData.saldo >= 0 ? '#10b981' : '#ef4444'} highlight />
+            <MiniCard title="Entrate (DARE)" value={formatEuro(cassaData.totale_entrate)} color="#10b981" />
+            <MiniCard title="Uscite (AVERE)" value={formatEuro(cassaData.totale_uscite)} color="#ef4444" />
+            <MiniCard title="Saldo" value={formatEuro(cassaData.saldo)} color={cassaData.saldo >= 0 ? '#10b981' : '#ef4444'} highlight />
           </div>
 
           {/* Dettaglio - Compatto */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 16 }}>
-            <TinyStatCard title="Corrispettivi" value={formatCurrency(totaleCorrispettivi)} color="#f59e0b" />
-            <TinyStatCard title="POS" value={formatCurrency(totalePOS)} color="#3b82f6" />
-            <TinyStatCard title="Versamenti" value={formatCurrency(totaleVersamenti)} color="#10b981" />
-            <TinyStatCard title="Fatture" value={formatCurrency(totaleFattureCassa)} color="#ef4444" />
+            <TinyStatCard title="Corrispettivi" value={formatEuro(totaleCorrispettivi)} color="#f59e0b" />
+            <TinyStatCard title="POS" value={formatEuro(totalePOS)} color="#3b82f6" />
+            <TinyStatCard title="Versamenti" value={formatEuro(totaleVersamenti)} color="#10b981" />
+            <TinyStatCard title="Fatture" value={formatEuro(totaleFattureCassa)} color="#ef4444" />
           </div>
 
           {/* Chiusure Giornaliere Serali - Compatte */}
