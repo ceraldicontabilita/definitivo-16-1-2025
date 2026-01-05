@@ -125,7 +125,7 @@ export default function ControlloMensile() {
   /**
    * PROCESSA DATI ANNUALI
    * Aggrega i dati per mese calcolando tutti i totali
-   * Include: POS Auto (XML), POS Manuale (Cassa), POS Banca (accrediti INC.POS)
+   * Include: POS Agenzia (XML), POS Chiusura (Cassa), POS Banca (accrediti INC.POS)
    */
   const processYearData = (cassa, banca, corrispettivi) => {
     const monthly = [];
@@ -605,7 +605,7 @@ export default function ControlloMensile() {
         marginBottom: 25 
       }}>
         <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', borderRadius: 12, padding: 14, color: 'white' }}>
-          <div style={{ fontSize: 11, opacity: 0.9 }}>POS Auto (XML)</div>
+          <div style={{ fontSize: 11, opacity: 0.9 }}>POS Agenzia (XML)</div>
           <div style={{ fontSize: 18, fontWeight: 'bold' }}>{formatCurrency(yearTotals.posAuto)}</div>
         </div>
         <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', borderRadius: 12, padding: 14, color: 'white' }}>
@@ -648,7 +648,7 @@ export default function ControlloMensile() {
         <span style={{ fontSize: 24 }}>ℹ️</span>
         <div>
           <strong>Fonti dati:</strong><br/>
-          • <strong>POS Auto</strong> = pagato_elettronico da XML corrispettivi<br/>
+          • <strong>POS Agenzia</strong> = pagato_elettronico da XML corrispettivi<br/>
           • <strong>POS Manuali</strong> = Prima Nota Cassa con categoria "POS"<br/>
           • <strong>🏦 POS Banca</strong> = Accrediti INC.POS/INCAS. TRAMITE P.O.S dalla banca
         </div>
@@ -682,7 +682,7 @@ export default function ControlloMensile() {
             <thead>
               <tr style={{ background: '#f8fafc' }}>
                 <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>Mese</th>
-                <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#dbeafe' }}>POS Auto</th>
+                <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#dbeafe' }}>POS Agenzia</th>
                 <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#ede9fe' }}>POS Cassa</th>
                 <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#fce7f3' }}>🏦 POS Banca</th>
                 <th style={{ padding: 10, textAlign: 'right', borderBottom: '2px solid #e2e8f0' }}>Diff.</th>
