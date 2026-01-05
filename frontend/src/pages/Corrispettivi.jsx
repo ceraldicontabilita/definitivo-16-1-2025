@@ -219,9 +219,9 @@ export default function Corrispettivi() {
           <div className="h1" style={{ color: "#2e7d32" }}>✓ {uploadResult.message}</div>
           <div className="grid" style={{ marginTop: 10 }}>
             <div><strong>Data:</strong> {uploadResult.corrispettivo?.data}</div>
-            <div><strong>Totale:</strong> € {uploadResult.corrispettivo?.totale?.toFixed(2)}</div>
-            <div><strong>💵 Cassa:</strong> € {uploadResult.corrispettivo?.pagato_contanti?.toFixed(2)}</div>
-            <div><strong>💳 Elettronico:</strong> € {uploadResult.corrispettivo?.pagato_elettronico?.toFixed(2)}</div>
+            <div><strong>Totale:</strong> {formatEuro(uploadResult.corrispettivo?.totale)}</div>
+            <div><strong>💵 Cassa:</strong> {formatEuro(uploadResult.corrispettivo?.pagato_contanti)}</div>
+            <div><strong>💳 Elettronico:</strong> {formatEuro(uploadResult.corrispettivo?.pagato_elettronico)}</div>
           </div>
           <button onClick={() => setUploadResult(null)} style={{ marginTop: 10 }}>Chiudi</button>
         </div>
@@ -274,9 +274,9 @@ export default function Corrispettivi() {
             <ul style={{ paddingLeft: 20, marginTop: 5, maxHeight: 200, overflowY: "auto" }}>
               {data.success.slice(0, 15).map((s, i) => (
                 <li key={i} style={{ marginBottom: 3 }}>
-                  <strong>{s.data}</strong> - € {s.totale?.toFixed(2)} 
-                  {s.contanti > 0 && <span style={{ color: "#2e7d32" }}> (💵 Cassa: {s.contanti?.toFixed(2)})</span>}
-                  {s.elettronico > 0 && <span style={{ color: "#9c27b0" }}> (💳 {s.elettronico?.toFixed(2)})</span>}
+                  <strong>{s.data}</strong> - {formatEuro(s.totale)} 
+                  {s.contanti > 0 && <span style={{ color: "#2e7d32" }}> (💵 Cassa: {formatEuro(s.contanti)})</span>}
+                  {s.elettronico > 0 && <span style={{ color: "#9c27b0" }}> (💳 {formatEuro(s.elettronico)})</span>}
                 </li>
               ))}
               {data.success.length > 15 && (
@@ -294,7 +294,7 @@ export default function Corrispettivi() {
             <ul style={{ paddingLeft: 20, marginTop: 5, maxHeight: 150, overflowY: "auto" }}>
               {data.duplicates.slice(0, 10).map((d, i) => (
                 <li key={i} style={{ color: "#e65100" }}>
-                  {d.data} - {d.matricola || d.filename} - € {(d.totale || 0).toFixed(2)}
+                  {d.data} - {d.matricola || d.filename} - {formatEuro(d.totale)}
                 </li>
               ))}
               {data.duplicates.length > 10 && (
