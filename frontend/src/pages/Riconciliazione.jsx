@@ -460,7 +460,7 @@ export default function Riconciliazione() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
         <button
           onClick={() => setActiveTab("import")}
           data-testid="tab-import"
@@ -475,6 +475,21 @@ export default function Riconciliazione() {
           }}
         >
           📥 Import Estratto Conto
+        </button>
+        <button
+          onClick={() => setActiveTab("manuale")}
+          data-testid="tab-manuale"
+          style={{
+            padding: "12px 24px",
+            background: activeTab === "manuale" ? "#f59e0b" : "#e5e7eb",
+            color: activeTab === "manuale" ? "white" : "#374151",
+            border: "none",
+            borderRadius: 8,
+            fontWeight: "bold",
+            cursor: "pointer"
+          }}
+        >
+          🔗 Riconciliazione Manuale
         </button>
         <button
           onClick={() => setActiveTab("istruzioni")}
