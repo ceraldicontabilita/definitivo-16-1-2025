@@ -811,6 +811,51 @@ def estrai_nome_da_descrizione(descrizione: str) -> Optional[str]:
 
 
 
+@router.delete("/salari/reset-reconciliation")
+async def reset_salari_reconciliation(
+    anno: Optional[int] = Query(None),
+    dipendente: Optional[str] = Query(None)
+) -> Dict[str, Any]:
+    """
+    Reset dello stato di riconciliazione dei salari.
+    Permette di testare nuovamente la riconciliazione.
+    """
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["anno"] = anno
+    if dipendente:
+        query["dipendente"] = {"$regex": dipendente, "$options": "i"}
+    
+    # Reset solo i salari riconciliati
+    query["riconciliato"] = True
+    
+    result = await db["prima_nota_salari"].update_many(
+        query,
+        {"$unset": {
+            "riconciliato": "",
+            "data_riconciliazione": "",
+            "riferimento_banca": "",
+            "data_banca": ""
+        }}
+    )
+    
+    # Opzionalmente, pulisci anche estratto_conto_salari
+    ec_query = {}
+    if anno:
+        # Filtra per anno nella data (formato: YYYY-MM-DD)
+        ec_query["data"] = {"$regex": f"^{anno}"}
+    
+    ec_deleted = await db["estratto_conto_salari"].delete_many(ec_query) if ec_query else {"deleted_count": 0}
+    
+    return {
+        "message": "Reset riconciliazione completato",
+        "salari_resettati": result.modified_count,
+        "estratti_conto_eliminati": ec_deleted.deleted_count if hasattr(ec_deleted, 'deleted_count') else 0
+    }
+
+
 @router.get("/salari/riepilogo")
 async def get_salari_riepilogo(
     anno: Optional[int] = Query(None),
