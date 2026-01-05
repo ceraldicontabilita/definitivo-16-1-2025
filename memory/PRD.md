@@ -3,7 +3,7 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 2.3.0  
+**Versione**: 2.3.1  
 **Ultimo aggiornamento**: 5 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
@@ -11,10 +11,16 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 
 ## Correzioni Recenti (5 Gen 2026)
 
-### Bug Fix - Formattazione Numerica Italiana
-- **Formattazione Euro Consistente**: Implementata funzione `formatEuro` in `/app/frontend/src/lib/utils.js`
+### Bug Fix - Formattazione Numerica Italiana COMPLETATA
+- **Formattazione Euro Consistente**: Applicata funzione `formatEuro` da `/app/frontend/src/lib/utils.js` in TUTTE le pagine
 - **Formato italiano**: Punto come separatore migliaia, virgola per decimali (es: € 10.098,90)
-- **Pagine aggiornate**: Dashboard, IVA, Corrispettivi, PrimaNota, Fatture, Fornitori, Bilancio, Finanziaria, Assegni, Riconciliazione
+- **Pagine aggiornate**: 
+  - Dashboard, IVA, Corrispettivi, PrimaNota, Fatture, Fornitori
+  - Bilancio, Finanziaria, Assegni, Riconciliazione
+  - ControlloMensile, PrimaNotaMobile, PrimaNotaCassa, PrimaNotaBanca
+  - Scadenze, GestioneDipendenti, F24, EstrattoContoImport
+  - GestioneAssegni, PianoDeiConti, Commercialista
+- **Rimosse definizioni locali**: Eliminate tutte le funzioni `formatCurrency` locali ridondanti
 - **Testing**: Verificato al 100% su tutte le pagine principali
 
 ### Bug Fix Precedenti
