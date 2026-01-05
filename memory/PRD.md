@@ -116,20 +116,36 @@ SALDO IVA:
 
 ## Changelog
 
-### 2026-01-05 (Sessione 13 - Fix Pagina Finanziaria + Piano dei Conti)
-- **FIX CRITICO - Pagina Finanziaria bianca (P0)**:
-  - ❌ **Problema**: La pagina `/finanziaria` era bianca dopo il refactoring per usare AnnoContext
-  - ✅ **Causa**: Errore di sintassi JSX in `IVA.jsx` (doppia `}}` alla riga 124) che bloccava la compilazione
-  - ✅ **Soluzione**: Corretta sintassi `onClick={() => setViewMode("today")}}`  → `onClick={() => setViewMode("today")}`
-  - 📊 **Verifica**: Uscite Totali 2025 = **€967.794,71** ✅ (valore atteso dall'utente)
-  
+### 2026-01-05 (Sessione 13 - Fix Pagina Finanziaria + Nuove Funzionalità P1/P2/P3)
+- **FIX CRITICO - Pagina Finanziaria bianca (P0)** ✅:
+  - Causa: Errore di sintassi JSX in `IVA.jsx` (doppia `}}` alla riga 124)
+  - Soluzione: Corretta sintassi `onClick={() => setViewMode("today")}}`
+  - Verifica: Uscite Totali 2025 = **€967.794,71** ✅
+
+- **P1.1 - Pagina Dettaglio Transazione Prima Nota** ✅:
+  - Nuovo componente `TransactionDetailModal` in `PrimaNota.jsx`
+  - Cliccando su una riga della tabella si apre modal con dettagli completi
+  - Mostra: importo, data, categoria, descrizione, riferimento, fonte, metadata
+
+- **P1.2 - Export PDF IVA Trimestrale/Annuale** ✅:
+  - Nuovi endpoint: `/api/iva/export/pdf/trimestrale/{year}/{quarter}`, `/api/iva/export/pdf/annuale/{year}`
+  - Pulsanti "PDF Q1" e "PDF Annuale" aggiunti nella pagina IVA
+  - PDF generato con reportlab: tabella dati mensili, riepilogo, stato IVA
+
+- **P2.1 - Fix Re-importazione XML (Upsert)** ✅:
+  - Endpoint `/api/corrispettivi/upload-xml` ora supporta `force_update=true`
+  - Permette aggiornamento corrispettivi esistenti invece di errore "già presente"
+  - Bulk upload supporta anche `force_update` per aggiornare tutti
+
+- **P3 - Ristrutturazione Gestione Dipendenti** ✅:
+  - Pagina completamente ristrutturata con 3 tab: Anagrafica, Paghe e Salari, Prima Nota Salari
+  - Tab Paghe: Riepilogo mensile con lista dipendenti e stato buste paga
+  - Tab Salari: Form inserimento pagamento + lista movimenti salari
+  - Nuovi endpoint backend: `/api/dipendenti/buste-paga`, `/api/prima-nota/salari`
+  - Bug fix: riordinato route per evitare conflitto con `/{dipendente_id}`
+
 - **NUOVO Riferimento Contabile**:
-  - Creato `/app/memory/PIANO_CONTI_REFERENCE.md` con:
-    - Piano dei Conti del Capitale (Attivo/Passivo) da ilbilancio.com
-    - Piano dei Conti del Reddito (Costi/Ricavi) da ilbilancio.com
-    - Registrazioni contabili comuni (acquisti, vendite, stipendi, POS)
-    - Spiegazione dettagliata delle PARTITE DI GIRO
-    - Mapping fatture XML → Piano dei Conti
+  - Creato `/app/memory/PIANO_CONTI_REFERENCE.md` con Piano dei Conti completo da ilbilancio.com
 
 ### 2026-01-05 (Sessione 12 - Fix Commercialista + Card Doc. Commerciali)
 - **FIX Pagina Commercialista**:
