@@ -500,17 +500,17 @@ export default function IVA() {
                         <tr style={{ background: "#f5f5f5", fontWeight: "bold" }}>
                           <td style={{ padding: 10 }}>TOTALE ANNO</td>
                           <td style={{ padding: 10, textAlign: "right", color: "#e65100" }}>
-                            € {annualData.totali?.iva_debito?.toFixed(2)}
+                            {formatEuro(annualData.totali?.iva_debito || 0)}
                           </td>
                           <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
-                            € {annualData.totali?.iva_credito?.toFixed(2)}
+                            {formatEuro(annualData.totali?.iva_credito || 0)}
                           </td>
                           <td style={{ 
                             padding: 10, 
                             textAlign: "right",
                             color: getSaldoColor(annualData.totali?.saldo)
                           }}>
-                            € {annualData.totali?.saldo?.toFixed(2)}
+                            {formatEuro(annualData.totali?.saldo || 0)}
                           </td>
                           <td colSpan={3}></td>
                         </tr>
@@ -534,13 +534,13 @@ export default function IVA() {
                 <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8, textAlign: "center" }}>
                   <div className="small">IVA Debito Mese</div>
                   <div style={{ fontSize: 24, fontWeight: "bold", color: "#e65100" }}>
-                    € {monthlyData.totale_mensile?.iva_debito?.toFixed(2)}
+                    {formatEuro(monthlyData.totale_mensile?.iva_debito || 0)}
                   </div>
                 </div>
                 <div style={{ background: "#e8f5e9", padding: 15, borderRadius: 8, textAlign: "center" }}>
                   <div className="small">IVA Credito Mese</div>
                   <div style={{ fontSize: 24, fontWeight: "bold", color: "#2e7d32" }}>
-                    € {monthlyData.totale_mensile?.iva_credito?.toFixed(2)}
+                    {formatEuro(monthlyData.totale_mensile?.iva_credito || 0)}
                   </div>
                 </div>
                 <div style={{ 
@@ -555,7 +555,7 @@ export default function IVA() {
                     fontWeight: "bold", 
                     color: getSaldoColor(monthlyData.totale_mensile?.saldo) 
                   }}>
-                    € {monthlyData.totale_mensile?.saldo?.toFixed(2)}
+                    {formatEuro(monthlyData.totale_mensile?.saldo || 0)}
                   </div>
                 </div>
               </div>
