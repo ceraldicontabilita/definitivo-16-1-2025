@@ -828,7 +828,7 @@ export default function ControlloMensile() {
             <thead>
               <tr style={{ background: '#f8fafc' }}>
                 <th style={{ padding: 12, textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>Data</th>
-                <th style={{ padding: 12, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#dbeafe' }}>POS Auto</th>
+                <th style={{ padding: 12, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#dbeafe' }}>POS Agenzia</th>
                 <th style={{ padding: 12, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#ede9fe' }}>POS Chiusura</th>
                 <th style={{ padding: 12, textAlign: 'right', borderBottom: '2px solid #e2e8f0' }}>Diff. POS</th>
                 <th style={{ padding: 12, textAlign: 'right', borderBottom: '2px solid #e2e8f0', background: '#fef3c7' }}>Corrisp. Auto</th>
@@ -953,7 +953,7 @@ export default function ControlloMensile() {
         <strong>Legenda e Logica Calcoli:</strong>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 10, marginTop: 10 }}>
           <div>
-            <strong style={{ color: '#3b82f6' }}>POS Auto</strong> = Σ corrispettivi.pagato_elettronico (da XML)
+            <strong style={{ color: '#3b82f6' }}>POS Agenzia</strong> = Σ corrispettivi.pagato_elettronico (da XML)
           </div>
           <div>
             <strong style={{ color: '#8b5cf6' }}>POS Chiusura</strong> = Σ prima_nota_cassa WHERE categoria="POS"
