@@ -84,6 +84,20 @@ FATTURA XML → Parse → FATTURE DB
   - 📝 **File modificato**: `/app/frontend/src/pages/ControlloMensile.jsx`
   - 📊 **Risultato verificato**: Gennaio 2025 ora mostra +341€ (corretto) invece di -30.601€ (errato)
 
+- **P1 COMPLETATI**:
+  - ✅ **Bilancio**: Nuova pagina `/bilancio` con Stato Patrimoniale e Conto Economico
+    - Tab "Stato Patrimoniale": Attivo (Cassa, Banca, Crediti) vs Passivo (Debiti, Patrimonio Netto)
+    - Tab "Conto Economico": Ricavi (Corrispettivi, Altri) vs Costi (Acquisti, Altri costi)
+    - Filtro per anno e mese
+    - Risultato con margine percentuale
+  - ✅ **Filtro Anno Globale**: Selettore anno nella sidebar che influenza tutti i dati
+    - Context `AnnoContext` con persistenza localStorage
+    - Integrato in Dashboard (ricarica dati al cambio anno)
+    - Componente `AnnoSelector` riutilizzabile
+  - ✅ **Fix Magazzino**: Pagina migliorata con tab "Catalogo Prodotti" e "Inventario Manuale"
+    - Catalogo mostra prodotti estratti dalle fatture XML
+    - Inventario manuale per prodotti aggiunti dall'utente
+
 ### 2026-01-05 (Sessione 8 - Ristrutturazione Architettura - FASI 2, 3, 4 COMPLETE)
 - **FASE 2 - Consolidamento Controlli Sicurezza**:
   - Rimossi endpoint duplicati in `prima_nota.py` che bypassavano i controlli di sicurezza
