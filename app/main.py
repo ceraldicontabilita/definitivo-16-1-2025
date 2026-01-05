@@ -200,6 +200,7 @@ app.include_router(bank_statement_import.router, prefix="/api/bank-statement", t
 app.include_router(piano_conti.router, prefix="/api/piano-conti", tags=["Piano dei Conti"])
 app.include_router(commercialista.router, prefix="/api/commercialista", tags=["Commercialista"])
 app.include_router(bilancio.router, prefix="/api/bilancio", tags=["Bilancio"])
+app.include_router(pos_accredito.router, prefix="/api/pos-accredito", tags=["POS Accredito"])
 
 @app.get("/")
 async def root():
