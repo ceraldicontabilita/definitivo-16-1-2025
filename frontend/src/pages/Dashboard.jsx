@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { dashboardSummary, health } from "../api";
 import api from "../api";
 import { Link } from "react-router-dom";
+import { useAnnoGlobale } from "../contexts/AnnoContext";
 
 export default function Dashboard() {
+  const { anno } = useAnnoGlobale();
   const [h, setH] = useState(null);
   const [sum, setSum] = useState(null);
   const [err, setErr] = useState("");
@@ -17,7 +19,7 @@ export default function Dashboard() {
         setLoading(true);
         const [healthData, summaryData] = await Promise.all([
           health(),
-          dashboardSummary()
+          dashboardSummary(anno)
         ]);
         setH(healthData);
         setSum(summaryData);
@@ -40,7 +42,7 @@ export default function Dashboard() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [anno]);
 
   if (loading) {
     return (
