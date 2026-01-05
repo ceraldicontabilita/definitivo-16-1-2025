@@ -3,7 +3,7 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 2.6.0  
+**Versione**: 2.7.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
@@ -43,6 +43,28 @@ Nuova interfaccia per abbinare manualmente movimenti bancari a fatture.
 - Aggiornamento automatico delle statistiche dopo riconciliazione
 
 **Endpoint:** `POST /api/riconciliazione-fornitori/riconcilia-manuale`
+
+### 4. Operazioni Atomiche Riconciliazione - COMPLETATA
+Migliorata l'integrità dei dati nelle operazioni di riconciliazione.
+
+**Implementazione:**
+- Update condizionale con double-check per evitare riconciliazioni duplicate
+- Verifica atomica che la fattura non sia già pagata prima dell'update
+- Logging degli errori senza interrompere il processo batch
+- Tracciamento dell'importo pagato per controlli successivi
+
+### 5. Grafici Interattivi Avanzati Dashboard - COMPLETATA
+Nuovi widget grafici nella dashboard per analisi finanziaria avanzata.
+
+**Nuovi grafici:**
+1. **🥧 Distribuzione Spese**: Grafico a torta con top 10 categorie di spesa
+2. **✅ Stato Riconciliazione**: Widget con barra progresso e dettaglio fatture/salari
+3. **📊 Confronto Anno Precedente**: Card con variazioni percentuali entrate/uscite/saldo
+
+**Nuovi endpoint:**
+- `GET /api/dashboard/spese-per-categoria` - Distribuzione spese per categoria
+- `GET /api/dashboard/confronto-annuale` - Confronto metriche con anno precedente
+- `GET /api/dashboard/stato-riconciliazione` - Statistiche riconciliazione dettagliate
 
 ---
 
