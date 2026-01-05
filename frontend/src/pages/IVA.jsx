@@ -290,17 +290,17 @@ export default function IVA() {
                   <tr style={{ background: "#f5f5f5", fontWeight: "bold" }}>
                     <td style={{ padding: 10 }}>TOTALE</td>
                     <td style={{ padding: 10, textAlign: "right", color: "#e65100" }}>
-                      € {annualData.totali?.iva_debito?.toFixed(2)}
+                      {formatEuro(annualData.totali?.iva_debito || 0)}
                     </td>
                     <td style={{ padding: 10, textAlign: "right", color: "#2e7d32" }}>
-                      € {annualData.totali?.iva_credito?.toFixed(2)}
+                      {formatEuro(annualData.totali?.iva_credito || 0)}
                     </td>
                     <td style={{ 
                       padding: 10, 
                       textAlign: "right",
                       color: getSaldoColor(annualData.totali?.saldo)
                     }}>
-                      € {annualData.totali?.saldo?.toFixed(2)}
+                      {formatEuro(annualData.totali?.saldo || 0)}
                     </td>
                     <td style={{ padding: 10, textAlign: "center" }}>
                       <span style={{ 
