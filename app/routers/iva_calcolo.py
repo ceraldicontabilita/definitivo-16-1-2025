@@ -283,10 +283,16 @@ async def get_iva_annual(year: int) -> Dict[str, Any]:
         for month in range(1, 13):
             month_prefix = f"{year}-{month:02d}"
             
-            # Fatture normali (credito)
+            # Fatture normali (credito) - usa data_ricezione con fallback a invoice_date
             fatt_pipe = [
                 {"$match": {
-                    "invoice_date": {"$regex": f"^{month_prefix}"},
+                    "$or": [
+                        {"data_ricezione": {"$regex": f"^{month_prefix}"}},
+                        {"$and": [
+                            {"data_ricezione": {"$exists": False}},
+                            {"invoice_date": {"$regex": f"^{month_prefix}"}}
+                        ]}
+                    ],
                     "tipo_documento": {"$nin": NOTE_CREDITO_TYPES}
                 }},
                 {"$group": {
@@ -304,17 +310,20 @@ async def get_iva_annual(year: int) -> Dict[str, Any]:
                 tot_fatt = float(fatt_res[0].get('total_amount', 0) or 0)
                 imponibile_fatt = float(fatt_res[0].get('total_imponibile', 0) or 0)
                 fatt_count = fatt_res[0].get('count', 0)
-                if iva_cred == 0 and tot_fatt > 0:
-                    iva_cred = tot_fatt - (tot_fatt / 1.22)
-                if imponibile_fatt == 0 and tot_fatt > 0:
-                    imponibile_fatt = tot_fatt / 1.22
+                # NON stimare IVA - usa solo i valori dal DB
             else:
-                iva_cred, fatt_count, imponibile_fatt = 0, 0, 0
+                iva_cred, fatt_count, imponibile_fatt, tot_fatt = 0, 0, 0, 0
             
-            # Note Credito (da sottrarre)
+            # Note Credito (da sottrarre) - usa data_ricezione con fallback
             nc_pipe = [
                 {"$match": {
-                    "invoice_date": {"$regex": f"^{month_prefix}"},
+                    "$or": [
+                        {"data_ricezione": {"$regex": f"^{month_prefix}"}},
+                        {"$and": [
+                            {"data_ricezione": {"$exists": False}},
+                            {"invoice_date": {"$regex": f"^{month_prefix}"}}
+                        ]}
+                    ],
                     "tipo_documento": {"$in": NOTE_CREDITO_TYPES}
                 }},
                 {"$group": {
@@ -332,12 +341,8 @@ async def get_iva_annual(year: int) -> Dict[str, Any]:
                 tot_nc = float(nc_res[0].get('total_amount', 0) or 0)
                 imponibile_nc = float(nc_res[0].get('total_imponibile', 0) or 0)
                 nc_count = nc_res[0].get('count', 0)
-                if iva_nc == 0 and tot_nc > 0:
-                    iva_nc = tot_nc - (tot_nc / 1.22)
-                if imponibile_nc == 0 and tot_nc > 0:
-                    imponibile_nc = tot_nc / 1.22
             else:
-                iva_nc, nc_count, imponibile_nc = 0, 0, 0
+                iva_nc, nc_count, imponibile_nc, tot_nc = 0, 0, 0, 0
             
             # Corrispettivi (debito)
             corr_pipe = [
