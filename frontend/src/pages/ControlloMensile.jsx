@@ -59,10 +59,12 @@ export default function ControlloMensile() {
   const [yearTotals, setYearTotals] = useState({
     posAuto: 0,
     posManual: 0,
+    posBanca: 0,
     corrispettiviAuto: 0,
     corrispettiviManual: 0,
     versamenti: 0,
-    saldoCassa: 0
+    saldoCassa: 0,
+    documentiCommerciali: 0
   });
   
   // Daily detail data (when viewing a specific month)
