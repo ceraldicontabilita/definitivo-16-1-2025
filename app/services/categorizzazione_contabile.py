@@ -801,11 +801,16 @@ PIANO_CONTI_ESTESO = {
     "05.02.18": {"nome": "Spese di rappresentanza", "categoria": "costi", "natura": "economico"},
     "05.02.19": {"nome": "Spese postali", "categoria": "costi", "natura": "economico"},
     "05.02.20": {"nome": "Spese condominiali", "categoria": "costi", "natura": "economico"},
+    "05.02.21": {"nome": "Diritti SIAE e licenze", "categoria": "costi", "natura": "economico"},
+    "05.02.22": {"nome": "Noleggio automezzi", "categoria": "costi", "natura": "economico"},
+    "05.02.23": {"nome": "Canoni e abbonamenti", "categoria": "costi", "natura": "economico"},
+    "05.02.24": {"nome": "Arredi e tappezzeria", "categoria": "costi", "natura": "economico"},
     
     "05.03.01": {"nome": "Salari e stipendi", "categoria": "costi", "natura": "economico"},
     "05.03.02": {"nome": "Contributi previdenziali", "categoria": "costi", "natura": "economico"},
     "05.03.03": {"nome": "Accantonamento TFR", "categoria": "costi", "natura": "economico"},
     "05.03.04": {"nome": "Altri costi del personale", "categoria": "costi", "natura": "economico"},
+    "05.03.05": {"nome": "Buoni pasto dipendenti", "categoria": "costi", "natura": "economico"},
     
     "05.04.01": {"nome": "Ammortamento immobilizzazioni materiali", "categoria": "costi", "natura": "economico"},
     "05.04.02": {"nome": "Ammortamento immobilizzazioni immateriali", "categoria": "costi", "natura": "economico"},
