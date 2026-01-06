@@ -1,9 +1,14 @@
 """F24 router - F24 tax form management with alerts and reconciliation."""
-from fastapi import APIRouter, Depends, Path, status, UploadFile, File, Body
+from fastapi import APIRouter, Depends, Path, status, UploadFile, File, Body, HTTPException
+from fastapi.responses import JSONResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from uuid import uuid4
 import logging
+import zipfile
+import io
+import hashlib
+import os
 
 from app.database import Database
 from app.utils.dependencies import get_current_user
