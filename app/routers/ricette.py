@@ -60,6 +60,15 @@ async def list_ricette(
     }
 
 
+@router.get("/categorie")
+async def get_categorie_ricette() -> List[str]:
+    """Lista categorie ricette disponibili."""
+    db = Database.get_db()
+    
+    categorie = await db["ricette"].distinct("categoria", {"attivo": True})
+    return sorted([c for c in categorie if c])
+
+
 @router.get("/{ricetta_id}")
 async def get_ricetta(ricetta_id: str) -> Dict[str, Any]:
     """Dettaglio ricetta con food cost calcolato."""
