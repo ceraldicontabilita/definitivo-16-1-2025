@@ -3,13 +3,49 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino, gestione fornitori e **contabilità analitica con centri di costo**.
 
-**Versione**: 3.6.0  
+**Versione**: 3.7.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
 ---
 
-## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente)
+## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente Parte 3)
+
+### 9. Fix Metodo Pagamento Fatture - COMPLETATA ✅
+- **Risolto errore 404** quando si aggiorna il metodo di pagamento
+- Aggiunto endpoint: `PUT /api/fatture/{id}/metodo-pagamento`
+- Ora è possibile aggiornare il metodo pagamento per fatture 2023 e 2024
+- File: `/app/app/routers/fatture_upload.py`
+
+### 10. Ricerca Prodotti Ottimizzata - COMPLETATA ✅
+- **Ricerca "amarene" ora funziona** (19 risultati)
+- Query ottimizzata: rimossa iterazione su price_history che causava timeout
+- Performance migliorata da timeout a <1 secondo
+- File: `/app/app/utils/warehouse_helpers.py`
+
+### 11. Layout Assegni Compatto - COMPLETATA ✅
+- **150 assegni su singola riga** invece di layout espanso
+- Colonne: N.Assegno, Stato, Beneficiario/Note, Importo, Fattura/Data, Azioni
+- Ridotto scroll verticale significativamente
+- File: `/app/frontend/src/pages/GestioneAssegni.jsx`
+
+### 12. Sistema Ordini Fornitori Completo - COMPLETATA ✅
+- **Stampa PDF** con intestazione Ceraldi Group S.R.L.
+- **Invio Email** con corpo formattato e totali IVA
+- Dettaglio ordine con totali (Imponibile + IVA 22% = Totale)
+- Pulsanti: 🖨️ Stampa, 📧 Email, 👁️ Dettaglio, 🗑️ Elimina
+- File: `/app/frontend/src/pages/OrdiniFornitori.jsx`
+
+### 13. Form Inserimento Ricette - COMPLETATA ✅
+- **Pulsante "+ Nuova Ricetta"** nella pagina Ricette
+- Modale con campi: Nome, Categoria, Porzioni, Prezzo Vendita
+- Gestione ingredienti dinamica (aggiungi/rimuovi)
+- Unità supportate: g, kg, ml, l, pz
+- File: `/app/frontend/src/pages/Ricette.jsx`
+
+---
+
+## Sessione Precedente (6 Gen 2026 - Parte 1-2)
 
 ### 1. Import Ricette - COMPLETATA ✅
 - **90 ricette** importate nel sistema (87 dal JSON utente + 3 pre-esistenti)
