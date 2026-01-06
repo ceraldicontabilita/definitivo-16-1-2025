@@ -256,7 +256,9 @@ PATTERNS_DESCRIZIONE = {
         "patterns": [
             r"commissione\b", r"spese?\s+(gestione|incasso|bonifico)",
             r"interessi?\s+(passiv|bancari)", r"canone\s+c/?c",
-            r"servizio\s+bancario", r"pos\s+fee", r"rid\b"
+            r"servizio\s+bancario", r"pos\s+(fee|mensile)", r"rid\b",
+            r"canone\s+mensile\s+pos", r"comm\s*%\s*tecnica",
+            r"pagobcm", r"satispay", r"sumup", r"nexi"
         ],
         "conto": ("05.05.02", "Spese e commissioni bancarie"),
         "categoria_fiscale": CategoriaFiscale.SERVIZI,
