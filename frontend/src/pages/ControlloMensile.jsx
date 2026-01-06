@@ -785,8 +785,8 @@ export default function ControlloMensile() {
         <div>
           <strong>Fonti dati:</strong><br/>
           • <strong>POS Agenzia</strong> = pagato_elettronico da XML corrispettivi<br/>
-          • <strong>POS Chiusura</strong> = Prima Nota Cassa con categoria "POS"<br/>
-          • <strong>🏦 POS Banca</strong> = Accrediti PDV 3757283 dall'estratto conto bancario<br/>
+          • <strong>POS Chiusura</strong> = Prima Nota Cassa con categoria &quot;POS&quot;<br/>
+          • <strong>🏦 POS Banca</strong> = Accrediti PDV 3757283 dall&apos;estratto conto bancario<br/>
           • <strong>💰 Pagato Non Riscosso</strong> = (Ammontare + ImportoParziale) - (Contanti + Elettronico)<br/>
           • <strong>🗑️ Ammontare Annulli</strong> = TotaleAmmontareAnnulli da XML corrispettivi
         </div>
