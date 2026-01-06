@@ -1770,7 +1770,7 @@ export default function GestioneDipendenti() {
       {/* TAB: Libretti Sanitari */}
       {activeTab === 'libretti' && (
         <>
-          {/* Header con pulsante aggiungi */}
+          {/* Header con pulsanti */}
           <div style={{ 
             background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
             padding: 20,
@@ -1789,20 +1789,79 @@ export default function GestioneDipendenti() {
                 Monitora la validità dei libretti sanitari del personale
               </p>
             </div>
-            <button
-              onClick={() => setShowLibrettoForm(!showLibrettoForm)}
-              style={{
-                padding: '10px 20px',
-                background: 'white',
-                color: '#dc2626',
-                border: 'none',
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <label style={{
+                padding: '10px 16px',
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: '1px solid rgba(255,255,255,0.3)',
                 borderRadius: 8,
                 cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              {showLibrettoForm ? '✕ Chiudi' : '➕ Nuovo Libretto'}
-            </button>
+                fontWeight: 500,
+                fontSize: 13
+              }}>
+                📥 Import Excel
+                <input 
+                  type="file" 
+                  accept=".xlsx,.xls" 
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    try {
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      const res = await api.post('/api/dipendenti/libretti-sanitari/import-excel', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                      });
+                      alert(`✅ Import completato!\nCreati: ${res.data.created}\nAggiornati: ${res.data.updated}\nErrori: ${res.data.errors?.length || 0}`);
+                      loadLibretti();
+                    } catch (error) {
+                      alert('Errore: ' + (error.response?.data?.detail || error.message));
+                    }
+                    e.target.value = '';
+                  }} 
+                  hidden 
+                />
+              </label>
+              <button
+                onClick={async () => {
+                  if (!window.confirm('Generare libretti per tutti i dipendenti che non ne hanno uno?')) return;
+                  try {
+                    const res = await api.post('/api/dipendenti/libretti-sanitari/genera-da-dipendenti');
+                    alert(`✅ Generati ${res.data.created} libretti\n${res.data.skipped} dipendenti avevano già un libretto`);
+                    loadLibretti();
+                  } catch (error) {
+                    alert('Errore: ' + (error.response?.data?.detail || error.message));
+                  }
+                }}
+                style={{
+                  padding: '10px 16px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  fontSize: 13
+                }}
+              >
+                ⚡ Genera per tutti
+              </button>
+              <button
+                onClick={() => setShowLibrettoForm(!showLibrettoForm)}
+                style={{
+                  padding: '10px 20px',
+                  background: 'white',
+                  color: '#dc2626',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                {showLibrettoForm ? '✕ Chiudi' : '➕ Nuovo Libretto'}
+              </button>
+            </div>
           </div>
 
           {/* Form nuovo libretto */}
