@@ -343,7 +343,154 @@ async def cleanup_duplicate_invoices() -> Dict[str, Any]:
     }
 
 
-@router.put("/{invoice_id}/metodo-pagamento")
+@router.post("/repopulate-warehouse")
+async def repopulate_warehouse_from_invoices() -> Dict[str, Any]:
+    """
+    Ripopola il magazzino da tutte le fatture esistenti.
+    Utile per ricostruire il catalogo prodotti dopo un reset.
+    """
+    db = Database.get_db()
+    
+    # Reset warehouse
+    await db["warehouse_inventory"].delete_many({})
+    await db["price_history"].delete_many({})
+    
+    # Ottieni tutte le fatture attive (non cancellate)
+    invoices = await db[Collections.INVOICES].find({
+        "$or": [
+            {"entity_status": {"$ne": "deleted"}},
+            {"entity_status": {"$exists": False}}
+        ]
+    }).to_list(10000)
+    
+    total_products_created = 0
+    total_products_updated = 0
+    total_price_records = 0
+    processed_invoices = 0
+    errors = []
+    
+    for invoice in invoices:
+        try:
+            # Costruisci dati nel formato atteso dal helper
+            invoice_data = {
+                "linee": invoice.get("linee", []),
+                "fornitore": {
+                    "denominazione": invoice.get("supplier_name", ""),
+                    "partita_iva": invoice.get("supplier_vat", "")
+                },
+                "numero_fattura": invoice.get("invoice_number", ""),
+                "data_fattura": invoice.get("invoice_date", "")
+            }
+            
+            result = await auto_populate_warehouse_from_invoice(
+                db, 
+                invoice_data, 
+                invoice.get("id", "")
+            )
+            
+            total_products_created += result.get("products_created", 0)
+            total_products_updated += result.get("products_updated", 0)
+            total_price_records += result.get("price_records", 0)
+            processed_invoices += 1
+            
+        except Exception as e:
+            errors.append(f"Fattura {invoice.get('invoice_number', 'N/A')}: {str(e)}")
+    
+    return {
+        "success": True,
+        "processed_invoices": processed_invoices,
+        "products_created": total_products_created,
+        "products_updated": total_products_updated,
+        "price_records": total_price_records,
+        "errors": errors[:20] if errors else []
+    }
+
+
+@router.post("/categorize-movements")
+async def categorize_all_movements() -> Dict[str, Any]:
+    """
+    Categorizza tutti i movimenti esistenti (Prima Nota Cassa e Banca)
+    basandosi sulla descrizione e sul fornitore.
+    """
+    db = Database.get_db()
+    
+    categories_map = {
+        'acquisti_merce': ['fattura', 'merce', 'prodotti', 'acquisto', 'fornitura', 'materie prime'],
+        'utenze': ['enel', 'eni', 'gas', 'luce', 'acqua', 'bolletta', 'utenz', 'telecom', 'tim', 'vodafone', 'fastweb', 'wind'],
+        'affitto': ['affitto', 'canone', 'locazione', 'pigione'],
+        'stipendi': ['stipendio', 'salario', 'busta paga', 'dipendent', 'paghe', 'f24'],
+        'tasse': ['tasse', 'tribut', 'iva', 'irpef', 'inps', 'inail', 'agenzia entrate', 'imposta'],
+        'bancari': ['commissione', 'interessi', 'bonifico', 'rid', 'addebito'],
+        'assicurazioni': ['assicuraz', 'polizza', 'premio', 'unipol', 'generali', 'allianz'],
+        'manutenzione': ['manutenz', 'riparaz', 'assist', 'intervento', 'tecnico'],
+        'consulenze': ['consulen', 'commercialista', 'avvocato', 'notaio', 'professional'],
+        'marketing': ['pubblicit', 'marketing', 'promoz', 'spot', 'social'],
+        'attrezzature': ['attrezzat', 'macchin', 'strument', 'computer', 'software'],
+        'carburante': ['benzina', 'gasolio', 'carburant', 'eni', 'q8', 'tamoil', 'ip'],
+        'vendite': ['vendita', 'incasso', 'corrispettivo', 'scontrino', 'ricavo'],
+        'altro': []
+    }
+    
+    def categorize_description(desc: str, fornitore: str = "") -> str:
+        """Determina categoria basandosi su descrizione e fornitore."""
+        text = f"{desc} {fornitore}".lower()
+        
+        for category, keywords in categories_map.items():
+            for keyword in keywords:
+                if keyword in text:
+                    return category
+        
+        return 'altro'
+    
+    # Processa Prima Nota Cassa
+    cassa_updated = 0
+    cassa_movements = await db["prima_nota_cassa"].find({}).to_list(10000)
+    for mov in cassa_movements:
+        desc = mov.get("descrizione", "") or mov.get("causale", "")
+        fornitore = mov.get("fornitore", "")
+        categoria = categorize_description(desc, fornitore)
+        
+        await db["prima_nota_cassa"].update_one(
+            {"_id": mov["_id"]},
+            {"$set": {"categoria": categoria}}
+        )
+        cassa_updated += 1
+    
+    # Processa Prima Nota Banca
+    banca_updated = 0
+    banca_movements = await db["prima_nota_banca"].find({}).to_list(10000)
+    for mov in banca_movements:
+        desc = mov.get("descrizione", "") or mov.get("causale", "")
+        fornitore = mov.get("fornitore", "")
+        categoria = categorize_description(desc, fornitore)
+        
+        await db["prima_nota_banca"].update_one(
+            {"_id": mov["_id"]},
+            {"$set": {"categoria": categoria}}
+        )
+        banca_updated += 1
+    
+    # Categorizza anche estratto conto
+    ec_updated = 0
+    ec_movements = await db["estratto_conto"].find({}).to_list(10000)
+    for mov in ec_movements:
+        desc = mov.get("descrizione", "") or mov.get("causale", "")
+        fornitore = mov.get("fornitore", "")
+        categoria = categorize_description(desc, fornitore)
+        
+        await db["estratto_conto"].update_one(
+            {"_id": mov["_id"]},
+            {"$set": {"categoria": categoria}}
+        )
+        ec_updated += 1
+    
+    return {
+        "success": True,
+        "cassa_movements_categorized": cassa_updated,
+        "banca_movements_categorized": banca_updated,
+        "estratto_conto_categorized": ec_updated,
+        "categories_available": list(categories_map.keys())
+    }
 async def update_metodo_pagamento(invoice_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """Aggiorna il metodo di pagamento di una fattura."""
     db = Database.get_db()
