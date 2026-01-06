@@ -343,7 +343,7 @@ function PrimaNotaDesktop() {
           </p>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ 
             padding: '10px 20px',
             fontSize: 16,
@@ -356,9 +356,45 @@ function PrimaNotaDesktop() {
           </span>
           
           <button
+            onClick={handleSyncCorrispettivi}
+            disabled={syncing}
+            style={{
+              padding: '8px 14px',
+              background: syncing ? '#999' : '#4caf50',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: syncing ? 'not-allowed' : 'pointer',
+              fontWeight: '600',
+              fontSize: 12
+            }}
+            title="Importa corrispettivi in Prima Nota Cassa"
+          >
+            {syncing ? '...' : '📥 Sync Corrispettivi'}
+          </button>
+          
+          <button
+            onClick={handleSyncFatture}
+            disabled={syncing}
+            style={{
+              padding: '8px 14px',
+              background: syncing ? '#999' : '#ff9800',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: syncing ? 'not-allowed' : 'pointer',
+              fontWeight: '600',
+              fontSize: 12
+            }}
+            title="Importa fatture pagate in Prima Nota"
+          >
+            {syncing ? '...' : '📤 Sync Fatture'}
+          </button>
+          
+          <button
             onClick={loadAllData}
             style={{
-              padding: '10px 16px',
+              padding: '8px 14px',
               background: 'rgba(255,255,255,0.2)',
               color: 'white',
               border: '1px solid rgba(255,255,255,0.3)',
@@ -367,7 +403,7 @@ function PrimaNotaDesktop() {
               fontWeight: '500'
             }}
           >
-            🔄 Aggiorna
+            🔄
           </button>
         </div>
       </div>
