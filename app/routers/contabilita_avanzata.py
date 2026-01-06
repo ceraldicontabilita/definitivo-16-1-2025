@@ -430,7 +430,8 @@ async def aggiorna_saldo_conto(db, codice_conto: str, importo: float, tipo: str)
 
 @router.get("/calcolo-imposte")
 async def calcola_imposte_realtime(
-    regione: str = Query("default", description="Regione per aliquota IRAP")
+    regione: str = Query("default", description="Regione per aliquota IRAP"),
+    anno: int = Query(default=None, description="Anno fiscale (default: tutti)")
 ) -> Dict[str, Any]:
     """
     Calcola IRES e IRAP in tempo reale basandosi sui dati contabili.
