@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { to: "/finanziaria", label: "Finanziaria", icon: "📈", short: "Finanz." },
   { to: "/bilancio", label: "Bilancio", icon: "📊", short: "Bilancio" },
   { to: "/contabilita", label: "Contabilità IRES/IRAP", icon: "🧮", short: "IRES" },
+  { to: "/regole-categorizzazione", label: "Regole Categorizzazione", icon: "⚙️", short: "Regole" },
   { to: "/piano-dei-conti", label: "Piano dei Conti", icon: "📒", short: "Conti" },
   { to: "/commercialista", label: "Commercialista", icon: "👩‍💼", short: "Comm." },
   { to: "/pianificazione", label: "Pianificazione", icon: "📅", short: "Pianif." },
