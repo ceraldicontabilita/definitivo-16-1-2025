@@ -239,6 +239,11 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             "success": True,
             "message": f"Fattura {parsed.get('invoice_number')} importata",
             "invoice": invoice,
+            "supplier": {
+                "id": supplier_id,
+                "nome": supplier.get("ragione_sociale") if supplier else None,
+                "created": supplier_created
+            },
             "warehouse": {
                 "products_created": warehouse_result.get("products_created", 0),
                 "products_updated": warehouse_result.get("products_updated", 0)
