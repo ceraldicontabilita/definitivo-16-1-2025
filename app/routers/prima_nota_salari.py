@@ -396,7 +396,14 @@ async def import_bonifici(file: UploadFile = File(...)) -> Dict[str, Any]:
         "message": f"Import BONIFICI completato",
         "created": created,
         "updated": updated,
-        "errors": errors[:10] if errors else []
+        "errors": errors[:10] if errors else [],
+        "colonne_trovate": list(df.columns),
+        "colonne_mappate": {
+            "dipendente": col_dipendente,
+            "mese": col_mese,
+            "anno": col_anno,
+            "importo_bonifico": col_importo
+        }
     }
 
 
