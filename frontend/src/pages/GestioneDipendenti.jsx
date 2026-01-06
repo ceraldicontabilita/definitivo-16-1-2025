@@ -618,10 +618,11 @@ export default function GestioneDipendenti() {
             </select>
             
             <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              value={selectedYear || ''}
+              onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : null)}
               style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#e3f2fd', fontWeight: 'bold' }}
             >
+              <option value="">Tutti gli anni</option>
               {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map(y => (
                 <option key={y} value={y}>{y}</option>
               ))}
