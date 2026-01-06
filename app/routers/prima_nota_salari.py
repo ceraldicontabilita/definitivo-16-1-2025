@@ -460,10 +460,10 @@ async def update_salario(
     """Aggiorna un record della prima nota salari."""
     db = Database.get_db()
     
-    # Calcola saldo
+    # Calcola saldo: Bonifico - Busta
     importo_busta = float(data.get("importo_busta", 0))
     importo_bonifico = float(data.get("importo_bonifico", 0))
-    saldo = importo_busta - importo_bonifico
+    saldo = importo_bonifico - importo_busta
     
     # Aggiorna il mese_nome se cambia il mese
     mese = int(data.get("mese", 1))
@@ -476,7 +476,7 @@ async def update_salario(
         "mese_nome": mese_nome,
         "importo_busta": importo_busta,
         "importo_bonifico": importo_bonifico,
-        "saldo": saldo,
+        "saldo": round(saldo, 2),
         "updated_at": datetime.utcnow().isoformat()
     }
     
