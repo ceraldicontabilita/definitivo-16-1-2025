@@ -66,6 +66,7 @@ export default function DizionarioArticoli() {
   // Stato operazioni
   const [generating, setGenerating] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [categorizingAI, setCategorizingAI] = useState(false);
   const [message, setMessage] = useState(null);
 
   const loadArticoli = useCallback(async () => {
