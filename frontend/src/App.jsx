@@ -44,6 +44,7 @@ const NAV_ITEMS = [
       { to: "/import-export", label: "Import/Export Dati", icon: "📁" },
       { to: "/estratto-conto", label: "Import Estratto Conto", icon: "📥" },
       { to: "/estratto-conto-movimenti", label: "Movimenti Banca", icon: "🏦" },
+      { to: "/archivio-bonifici", label: "Archivio Bonifici PDF", icon: "📂" },
     ]
   },
   { to: "/admin", label: "Admin", icon: "⚙️", short: "Admin" },
