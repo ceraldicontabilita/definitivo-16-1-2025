@@ -150,40 +150,51 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 
 **Nuovi Endpoint `/api/contabilita/`:**
 - `GET /categorizzazione-preview` - Preview categorizzazione descrizione prodotto
-- `POST /inizializza-piano-esteso` - Inizializza Piano Conti con 96 voci
+- `POST /inizializza-piano-esteso` - Inizializza Piano Conti con 106 voci
 - `POST /ricategorizza-fatture` - Ricategorizza tutte le fatture (1324 processate)
 - `GET /calcolo-imposte` - Calcolo IRES (24%) e IRAP per regione
 - `GET /bilancio-dettagliato` - Bilancio con Stato Patrimoniale e Conto Economico
 - `GET /statistiche-categorizzazione` - Distribuzione categorie fatture
 - `GET /aliquote-irap` - Aliquote IRAP per tutte le regioni italiane
 
-**Categorie Merceologiche Riconosciute (20+):**
-- bevande_alcoliche, bevande_analcoliche, alimentari
+**Categorie Merceologiche Riconosciute (30+):**
+- bevande_alcoliche, bevande_analcoliche, birra, the_infusi
+- alimentari, caffe, surgelati, pasticceria, latticini, salumi, verdure, frutta_secca
 - utenze_acqua, utenze_elettricita, utenze_gas
-- telefonia (80% deducibile), carburante (uso promiscuo 20%)
-- noleggio_attrezzature, manutenzione, ferramenta
+- telefonia (80% deducibile), carburante, noleggio_auto (20% deducibile)
+- noleggio_attrezzature, manutenzione, ferramenta, materiale_edile
 - software_cloud, consulenze, assicurazioni, pubblicita
-- trasporti, pulizia, accise, premi_omaggi
+- trasporti, pulizia, imballaggi, canoni_abbonamenti
+- spese_bancarie, diritti_autore, buoni_pasto, tappezzeria
 
-**Calcolo Imposte:**
-- IRES 24% con variazioni fiscali automatiche
-- IRAP variabile per regione (es. Calabria 3.9%, Campania 4.97%)
-- Deduzioni IRAP (€8.000 base + €7.500/dipendente)
-- Aliquota effettiva calcolata
+**Pattern Fornitori Riconosciuti (50+):**
+- KIMBO → Caffè, ARVAL → Noleggio Auto, EDENRED → Buoni Pasto
+- GB FOOD → Panetteria, LANGELLOTTI → Pulizia/DPI
+- PERFETTI VAN MELLE → Caramelle, MASTER FROST → Surgelati
+- DOLCIARIA ACQUAVIVA → Pasticceria, S.I.A.E. → Diritti autore
+- TECMARKET → Spese bancarie/POS, LEROY MERLIN → Ferramenta
+
+**Calcolo Imposte (Regione Campania):**
+- Utile Civilistico: €348.162,76
+- Variazioni IRES: +€32.659 (telefonia, carburante, noleggio auto)
+- Deduzione IRAP: -€1.852,93
+- Reddito imponibile IRES: €378.969,12
+- **IRES Dovuta: €90.952,59**
+- **IRAP Dovuta (Campania 4.97%): €18.529,26**
+- **Totale Imposte: €109.481,85**
+- **Aliquota Effettiva: 31.45%**
+
+**Statistiche Categorizzazione:**
+- 1324 fatture categorizzate (99.3% copertura)
+- Solo 141 in "merci generiche" (ridotte da 444)
+- 555 alimentari, 167 pasticceria, 79 pulizia, 73 ferramenta
 
 **Nuova Pagina Frontend `/contabilita`:**
 - Tab "Calcolo Imposte" con dettaglio IRES/IRAP
 - Tab "Statistiche" con distribuzione categorie
 - Tab "Bilancio Dettagliato" con Conto Economico e Stato Patrimoniale
-- Selettore regione per IRAP
+- Selettore regione per IRAP (21 regioni)
 - Pulsante ricategorizzazione fatture
-
-**Risultati Attuali:**
-- Utile Civilistico: €348.162,76
-- IRES Dovuta: €83.555,42
-- IRAP Dovuta (Calabria): €13.317,69
-- Totale Imposte: €96.873,11
-- Aliquota Effettiva: 27.82%
 
 ### 12. Pulizia Warning Frontend - COMPLETATA ✅ (6 Gen 2026)
 - Rimosso App.js obsoleto
