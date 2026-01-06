@@ -707,13 +707,13 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
   const start = (currentPage - 1) * itemsPerPage;
   const currentMovimenti = movimenti.slice(start, start + itemsPerPage);
 
-  // Calculate running balance
-  let runningBalance = 0;
-  const movimentiWithBalance = [...movimenti].reverse().map(m => {
-    if (m.tipo === 'entrata') runningBalance += m.importo;
-    else runningBalance -= m.importo;
-    return { ...m, saldoProgressivo: runningBalance };
-  }).reverse();
+  // Calculate running balance using reduce
+  const movimentiWithBalance = [...movimenti].reverse().reduce((acc, m) => {
+    const prevBalance = acc.length > 0 ? acc[acc.length - 1].saldoProgressivo : 0;
+    const newBalance = m.tipo === 'entrata' ? prevBalance + m.importo : prevBalance - m.importo;
+    acc.push({ ...m, saldoProgressivo: newBalance });
+    return acc;
+  }, []).reverse();
 
   const currentWithBalance = movimentiWithBalance.slice(start, start + itemsPerPage);
 
