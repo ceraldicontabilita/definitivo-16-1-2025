@@ -20,6 +20,8 @@ export default function Dashboard() {
   const [speseCategoria, setSpeseCategoria] = useState(null);
   const [confrontoAnnuale, setConfrontoAnnuale] = useState(null);
   const [statoRiconciliazione, setStatoRiconciliazione] = useState(null);
+  // Stato per widget IRES/IRAP
+  const [imposteData, setImposteData] = useState(null);
 
   useEffect(() => {
     (async () => {
