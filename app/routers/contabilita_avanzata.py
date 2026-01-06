@@ -734,18 +734,8 @@ async def export_pdf_dichiarazione(
     # Raccogli dati
     calcolatore = CalcolatoreImposte(regione=regione)
     
-    # Saldi conti
-    conti = await db["piano_conti"].find({}, {"_id": 0}).to_list(500)
-    saldi = {c["codice"]: float(c.get("saldo", 0)) for c in conti}
-    
-    # Fatture categorizzate
-    fatture = await db["invoices"].find(
-        {"categoria_contabile": {"$exists": True}},
-        {"_id": 0}
-    ).to_list(10000)
-    
-    # Calcola imposte
-    risultato = calcolatore.calcola_imposte(saldi, fatture)
+    # Calcola imposte dal database
+    risultato = await calcolatore.calcola_imposte_da_db(db)
     
     # Crea PDF
     buffer = io.BytesIO()
