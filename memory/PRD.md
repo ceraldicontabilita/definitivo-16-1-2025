@@ -284,6 +284,27 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 
 **Test:** Verificato con screenshot - Anno 2026 mostra dati corretti
 
+### 18. Auto-Creazione Fornitori da Fatture XML - COMPLETATA ✅ (6 Gen 2026)
+**Problema risolto:**
+- Quando si importa una fattura XML con un nuovo fornitore, ora viene automaticamente creato nel database
+- Questo permette di associare metodi di pagamento e usare la riconciliazione
+
+**Modifiche a `/app/app/routers/fatture_upload.py`:**
+- `ensure_supplier_exists()`: Nuova funzione che crea/aggiorna fornitore
+- `upload_fattura_xml()`: Crea fornitore se non esiste, collega `supplier_id` alla fattura
+- `upload_fatture_xml_bulk()`: Stesso comportamento per upload massivo
+
+**Nuovo Endpoint:**
+- `POST /api/fatture/sync-suppliers` - Sincronizza tutti i fornitori dalle fatture esistenti
+
+**Dati Fornitore Creati:**
+- ragione_sociale, partita_iva, codice_fiscale
+- indirizzo, cap, comune, provincia, nazione
+- metodo_pagamento (default: bonifico), giorni_pagamento (default: 30)
+- fatture_count (numero fatture)
+
+**Eseguito:** Sync di 173 fornitori con ragioni sociali aggiornate
+
 ---
 
 ## Implementazioni Precedenti (6 Gen 2026)
