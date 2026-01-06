@@ -659,23 +659,29 @@ PATTERNS_DESCRIZIONE = {
 
 # Pattern per categoria basati su fornitore
 PATTERNS_FORNITORE = {
-    # Bevande alcoliche
+    # Bevande alcoliche e vini
     "distilleria|distillerie": "bevande_alcoliche",
     "tanqueray|campari|martini.*rossi": "bevande_alcoliche",
     "drink\\s*up|coop.*eureka|asprinio": "bevande_alcoliche",
+    "enoteca|cantina|vinicol|feudi\\s+di\\s+san\\s+gregorio": "bevande_alcoliche",
+    "umani\\s+ronchi|bortolomiol|collefasani|giordano\\s+vini": "bevande_alcoliche",
+    "gasatissima|free\\s+srls": "bevande_alcoliche",
     
     # Caffe e torrefazione
     "kimbo|lavazza|illy|segafredo|costadoro|torrefazione": "caffe",
+    "foodness|domori": "caffe",  # Caffè ginseng e the
     
     # Surgelati
     "master\\s*frost|mister\\s*frost|surgela|frigori": "surgelati",
     
     # Pasticceria e dolci
     "dolciaria|acquaviva|pasticceria": "pasticceria",
-    "perfetti\\s+van\\s+melle": "pasticceria",  # Caramelle/chewing gum
+    "perfetti\\s+van\\s+melle|amarelli|venchi": "pasticceria",
+    "pastiglie\\s+leone|mondo\\s+senza\\s+glutine": "pasticceria",
+    "sweet\\s+drink": "pasticceria",  # Torroni
     
     # Panetteria
-    "gb\\s*food|panetter|panificio": "pasticceria",
+    "gb\\s*food|panetter|panificio|duegi": "pasticceria",
     
     # Alimentari generali
     "g\\.?i\\.?a\\.?l|generale\\s+ingrosso\\s+alimentar": "alimentari",
@@ -684,22 +690,36 @@ PATTERNS_FORNITORE = {
     "saima|cozzolino|nasti\\s+group|di\\s+cosmo": "alimentari",
     "cilatte|europa\\s+23|carini": "alimentari",
     "san\\s+carlo|barilla|ferrero|mulino|galbani": "alimentari",
-    "siro\\s+s\\.?r\\.?l|f\\.?lli\\s+sommella": "alimentari",
+    "siro\\s+s\\.?r\\.?l|f\\.?lli\\s+sommella|f\\.?lli\\s+fiorentino": "alimentari",
+    "granzuccheri|olive\\s+miraglia|eurouova|df\\s+baldassarre": "alimentari",
+    "carni\\s+de|lubrano|varriale": "alimentari",  # Macellerie e ortofrutta
+    "ingrosso.*bibite|cinoglosso": "bevande_analcoliche",
     
     # Materiali consumo e igiene
     "langellotti|gtm\\s+detersivi|tommasino": "pulizia",
+    "anthirat|pest": "pulizia",  # Disinfestazione
     
     # Imballaggi e carta
     "carta\\s*[&e]?\\s*party|artecarta|alfa\\s+service": "imballaggi",
+    "carpino|mautoneone|ste\\.?cla": "imballaggi",
+    "sanson\\s+cart": "imballaggi",  # Rotoli termici
     
     # Ferramenta e utensili
     "wuerth|wurth|berner": "ferramenta",
     "leroy\\s+merlin|bricofer|obi\\b|brico": "ferramenta",
-    "buonaiuto|scaramuzza": "materiale_edile",
+    "buonaiuto|scaramuzza|stabium|termoidraulica": "materiale_edile",
+    "climaria|freddo.*caldo": "manutenzione",  # Impianti clima
+    "ferlam|cmt\\s+srl|le\\.?fer": "materiale_edile",
+    "ferramenta\\s+f\\.?lli\\s+leo": "ferramenta",
+    
+    # Attrezzature bar/ristorazione
+    "fla\\s+s\\.?r\\.?l|f\\.?lli\\s+casolaro|imperatore\\s+hotellerie": "ferramenta",
+    "ve\\.?mo\\.?\\s+hotellerie|ristosubito|priolinox": "ferramenta",
+    "van\\s+berkel|spillatura|novacqua": "ferramenta",
     
     # Utenze
     "enel|edison|a2a|iren|sorgenia": "utenze_elettricita",
-    "eni\\s+gas|italgas": "utenze_gas",
+    "eni\\s+(gas|plenitude)|italgas": "utenze_gas",
     "abc.*acqua|acquedotto": "utenze_acqua",
     
     # Telefonia e internet
@@ -708,16 +728,43 @@ PATTERNS_FORNITORE = {
     # Software e cloud
     "google|microsoft|amazon\\s+aws|azure": "software_cloud",
     "hp\\s+italy|hp\\s+instant\\s+ink": "canoni_abbonamenti",
-    "amazon\\s+business": "ferramenta",  # Acquisti vari
+    "amazon\\s+business|amazon\\s+eu": "ferramenta",  # Acquisti vari
+    "fattura24|invoicex|tnx\\s+srl": "canoni_abbonamenti",
+    "cromo\\s+srl|madbit": "canoni_abbonamenti",  # Servizi cloud
+    "infocamere|today\\s+service": "consulenze",  # Servizi camerali
+    
+    # Elettronica
+    "electronics.*house|mediamarket|r-store|tufano\\s+teresa": "ferramenta",
+    "vidoelettronica|enzo\\s+led|any\\s+lamp|daedalustech": "ferramenta",
+    "gruppo\\s+adam|microtecnica": "ferramenta",
     
     # Assicurazioni
     "assicuraz|unipol|generali|allianz|axa": "assicurazioni",
     
-    # Consulenze
+    # Consulenze e legali
     "commercialista|studio\\s+(legale|notarile)": "consulenze",
+    "aniello\\s+limone|de\\s+juliis|da\\.?dif": "consulenze",  # Avvocati
     
     # Diritti d'autore
     "s\\.?i\\.?a\\.?e\\.?|siae": "diritti_autore",
+    
+    # Manutenzione
+    "timas\\s+ascensori": "manutenzione",
+    "monals|ifi\\s+sud": "manutenzione",  # Assistenza tecnica
+    "punto\\s+a\\s+srl": "manutenzione",  # Estintori
+    
+    # Pubblicità
+    "subito\\.?it|manzoni": "pubblicita",
+    "paraiso|sponsoriz": "pubblicita",
+    
+    # Ceramiche e arredamento
+    "ceramiche\\s+mara|arredotop|f\\.?covone": "materiale_edile",
+    
+    # Abbigliamento lavoro
+    "divise.*divise|skechers|lemiro": "ferramenta",  # Uniformi/scarpe lavoro
+    
+    # Trasporti e parcheggi
+    "adr\\s+mobility": "trasporti",
     
     # Noleggio auto
     "arval|leasys|ald\\s+automotive|service\\s+lease": "noleggio_auto",
