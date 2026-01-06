@@ -448,6 +448,64 @@ function PrimaNotaDesktop() {
             {syncing ? '...' : '📤 Sync Fatture'}
           </button>
           
+          {/* Import CSV Cassa */}
+          <input ref={cassaCSVRef} type="file" accept=".csv" onChange={handleImportCSVCassa} style={{ display: 'none' }} />
+          <button
+            onClick={() => cassaCSVRef.current?.click()}
+            disabled={importingCSV}
+            style={{
+              padding: '8px 14px',
+              background: '#9c27b0',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: 12
+            }}
+            title="Import CSV Cassa"
+          >
+            📊 CSV Cassa
+          </button>
+          
+          {/* Import CSV Banca */}
+          <input ref={bancaCSVRef} type="file" accept=".csv" onChange={handleImportCSVBanca} style={{ display: 'none' }} />
+          <button
+            onClick={() => bancaCSVRef.current?.click()}
+            disabled={importingCSV}
+            style={{
+              padding: '8px 14px',
+              background: '#673ab7',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: 12
+            }}
+            title="Import CSV Banca"
+          >
+            📊 CSV Banca
+          </button>
+          
+          {/* Download Templates */}
+          <button
+            onClick={() => handleDownloadTemplate('cassa')}
+            style={{
+              padding: '8px 10px',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: '500',
+              fontSize: 11
+            }}
+            title="Download Template CSV"
+          >
+            📥 Template
+          </button>
+          
           <button
             onClick={loadAllData}
             style={{
