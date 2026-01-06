@@ -651,16 +651,64 @@ PATTERNS_DESCRIZIONE = {
 
 # Pattern per categoria basati su fornitore
 PATTERNS_FORNITORE = {
+    # Bevande alcoliche
     "distilleria|distillerie": "bevande_alcoliche",
+    "tanqueray|campari|martini.*rossi": "bevande_alcoliche",
+    
+    # Caffe e torrefazione
+    "kimbo|lavazza|illy|segafredo|costadoro|torrefazione": "caffe",
+    
+    # Surgelati
+    "master\\s*frost|mister\\s*frost|surgela|frigori": "surgelati",
+    
+    # Pasticceria e dolci
+    "dolciaria|acquaviva|pasticceria": "pasticceria",
+    
+    # Alimentari generali
+    "g\\.?i\\.?a\\.?l|generale\\s+ingrosso\\s+alimentar": "alimentari",
+    "ap\\s+commerciale|ingrosso\\s+alimentar": "alimentari",
+    "big\\s+food|sud\\s+ingrosso|rondinella\\s+market": "alimentari",
+    "saima|cozzolino|nasti\\s+group|di\\s+cosmo": "alimentari",
+    "cilatte|europa\\s+23|carini": "alimentari",
+    "san\\s+carlo|barilla|ferrero|mulino|galbani": "alimentari",
+    
+    # Ferramenta e utensili
     "wuerth|wurth|berner": "ferramenta",
+    
+    # Utenze
     "enel|edison|a2a|iren|sorgenia": "utenze_elettricita",
     "eni\\s+gas|italgas": "utenze_gas",
-    "tim\\b|telecom|vodafone|wind|fastweb": "telefonia",
-    "google|microsoft|amazon\\s+aws|azure": "software_cloud",
     "abc.*acqua|acquedotto": "utenze_acqua",
-    "san\\s+carlo|barilla|ferrero|mulino|galbani": "alimentari",
+    
+    # Telefonia e internet
+    "tim\\b|telecom|vodafone|wind|fastweb": "telefonia",
+    
+    # Software e cloud
+    "google|microsoft|amazon\\s+aws|azure": "software_cloud",
+    
+    # Assicurazioni
     "assicuraz|unipol|generali|allianz|axa": "assicurazioni",
+    
+    # Consulenze
     "commercialista|studio\\s+(legale|notarile)": "consulenze",
+    
+    # Diritti d'autore
+    "s\\.?i\\.?a\\.?e\\.?|siae": "diritti_autore",
+    
+    # Noleggio auto
+    "arval|leasys|ald\\s+automotive|service\\s+lease": "noleggio_auto",
+    
+    # Buoni pasto
+    "edenred|sodexo|ticket\\s+restaurant": "buoni_pasto",
+    
+    # Servizi digitali
+    "infocert|aruba|register|legalmail": "canoni_abbonamenti",
+    
+    # Tappezzeria
+    "tappezzer|tendaggi|covino": "tappezzeria",
+    
+    # Birra
+    "peroni|heineken|carlsberg|ab\\s+inbev": "birra",
 }
 
 
