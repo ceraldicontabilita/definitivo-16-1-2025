@@ -245,6 +245,7 @@ function PrimaNotaDesktop() {
     return best;
   }, null);
 
+  // eslint-disable-next-line no-unused-vars
   const inputStyle = {
     padding: '10px 12px',
     borderRadius: 8,
@@ -263,6 +264,7 @@ function PrimaNotaDesktop() {
     boxSizing: 'border-box'
   };
 
+  // eslint-disable-next-line no-unused-vars
   const buttonStyle = (color, disabled) => ({
     padding: '12px 20px',
     background: disabled ? '#ccc' : color,
