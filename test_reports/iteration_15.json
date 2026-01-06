@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://inventory-control-75.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://inventory-control-75.preview.emergentagent.com/prima-nota",
-    "IVA": "https://inventory-control-75.preview.emergentagent.com/iva",
-    "Dipendenti": "https://inventory-control-75.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://food-tracking.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://food-tracking.preview.emergentagent.com/prima-nota",
+    "IVA": "https://food-tracking.preview.emergentagent.com/iva",
+    "Dipendenti": "https://food-tracking.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",
