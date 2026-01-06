@@ -741,7 +741,9 @@ export default function Fornitori() {
     try {
       setLoading(true);
       const params = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+      console.log('[Fornitori] Loading data with search:', searchTerm, 'URL:', `/api/suppliers${params}`);
       const res = await api.get(`/api/suppliers${params}`);
+      console.log('[Fornitori] Received', res.data.length, 'suppliers');
       setSuppliers(res.data);
     } catch (error) {
       console.error('Error:', error);
