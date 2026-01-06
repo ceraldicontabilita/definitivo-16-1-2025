@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api';
 import PrimaNotaMobile from './PrimaNotaMobile';
 import { useIsMobile } from '../hooks/useData';
@@ -34,7 +34,7 @@ function PrimaNotaDesktop() {
   const currentYear = new Date().getFullYear();
   
   // Anno selezionato viene dal context globale
-  const [availableYears, setAvailableYears] = useState([currentYear]);
+  const [_availableYears, setAvailableYears] = useState([currentYear]);
   
   // Sezione attiva
   const [activeSection, setActiveSection] = useState('cassa');
@@ -65,11 +65,13 @@ function PrimaNotaDesktop() {
   // Carica anni disponibili all'avvio
   useEffect(() => {
     loadAvailableYears();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Carica dati quando cambia l'anno o il mese selezionato
   useEffect(() => {
     loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, selectedMonth]);
 
   // Funzione per caricare gli anni disponibili
