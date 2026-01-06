@@ -901,18 +901,85 @@ export default function GestioneDipendenti() {
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
                 <thead>
                   <tr style={{ background: '#1e3a5f', color: 'white' }}>
-                    <th style={{ padding: 12, textAlign: 'left' }}>Dipendente</th>
-                    <th style={{ padding: 12, textAlign: 'center' }}>Mese</th>
-                    <th style={{ padding: 12, textAlign: 'center' }}>Anno</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Importo Busta</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Importo Bonifico</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Saldo Progressivo</th>
-                    <th style={{ padding: 12, textAlign: 'center' }}>Stato</th>
-                    <th style={{ padding: 12, textAlign: 'center', width: 80 }}>Azioni</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'left' }}>
+                      <div>Dipendente</div>
+                      <input
+                        type="text"
+                        placeholder="Filtra..."
+                        value={filtroTabDipendente}
+                        onChange={(e) => setFiltroTabDipendente(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px 8px', 
+                          borderRadius: 4, 
+                          border: 'none',
+                          fontSize: 12,
+                          marginTop: 4,
+                          color: '#1e3a5f'
+                        }}
+                      />
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <div>Mese</div>
+                      <select
+                        value={filtroTabMese}
+                        onChange={(e) => setFiltroTabMese(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: 4, 
+                          border: 'none',
+                          fontSize: 12,
+                          marginTop: 4,
+                          color: '#1e3a5f'
+                        }}
+                      >
+                        <option value="">Tutti</option>
+                        {mesiNomi.map((m, i) => (
+                          <option key={i} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <div>Anno</div>
+                      <select
+                        value={filtroTabAnno}
+                        onChange={(e) => setFiltroTabAnno(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: 4, 
+                          border: 'none',
+                          fontSize: 12,
+                          marginTop: 4,
+                          color: '#1e3a5f'
+                        }}
+                      >
+                        <option value="">Tutti</option>
+                        {[...new Set(salariMovimenti.map(m => m.anno))].sort((a,b) => b-a).map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Importo Busta</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Importo Bonifico</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Saldo Progressivo</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>Stato</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', width: 80 }}>Azioni</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {salariMovimenti.map((mov, idx) => (
+                  {salariMovimenti
+                    .filter(mov => {
+                      if (filtroTabDipendente && !mov.dipendente?.toLowerCase().includes(filtroTabDipendente.toLowerCase())) return false;
+                      if (filtroTabMese && mov.mese_nome !== filtroTabMese) return false;
+                      if (filtroTabAnno && mov.anno !== parseInt(filtroTabAnno)) return false;
+                      return true;
+                    })
+                    .map((mov, idx) => (
                     <tr 
                       key={mov.id || idx} 
                       style={{ 
