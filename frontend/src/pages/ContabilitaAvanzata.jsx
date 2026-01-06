@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatEuro } from '../lib/utils';
+import { Download, FileText, RefreshCw, Settings } from 'lucide-react';
 
 // Use empty string for relative URLs (same as api.js)
 const API = '';
