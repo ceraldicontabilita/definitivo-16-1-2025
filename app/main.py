@@ -113,7 +113,8 @@ from app.routers import (
     riconciliazione_fornitori,
     estratto_conto,
     prima_nota_salari,
-    archivio_bonifici
+    archivio_bonifici,
+    report_pdf
 )
 
 # Include public API first (no auth required)
