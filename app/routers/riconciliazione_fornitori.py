@@ -349,7 +349,7 @@ async def import_estratto_conto_fornitori(file: UploadFile = File(...)) -> Dict[
                             score = 50
                         else:
                             score = 10
-                    except:
+                    except (ValueError, TypeError):
                         score = 50
                 else:
                     score = 50
@@ -541,7 +541,7 @@ async def riconcilia_manuale(data: RiconciliazioneManuale) -> Dict[str, Any]:
         from bson import ObjectId
         try:
             fattura = await db["invoices"].find_one({"_id": ObjectId(data.fattura_id)})
-        except:
+        except Exception:
             pass
     
     if not fattura:
