@@ -1,0 +1,91 @@
+{
+  "summary": "Tested all 3 new features for iteration 32. Backend: 16/16 tests passed (100%). Frontend: All UI components verified working. Features: 1) Gestione Riservata portal with code 507488, 2) Dashboard Volume Affari Reale toggle, 3) F24 Upload Multiplo PDF section.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_iteration_32_gestione_riservata.py",
+    "/app/test_reports/pytest/pytest_iteration_32.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Gestione Riservata uses hardcoded code 507488 - consider moving to env variable for production",
+    "Volume Affari Reale calculation correctly aggregates: fatturato_ufficiale + corrispettivi + incassi_extra - spese_extra",
+    "F24 upload-multiple endpoint requires authentication (protected endpoint)",
+    "All three reserved areas now have different access codes: /cucina (141574), /gestione-riservata (507488)"
+  ],
+  "updated_files": [
+    "/app/tests/test_iteration_32_gestione_riservata.py"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "GESTIONE_RISERVATA_CODE": "507488",
+    "HACCP_CODE": "141574"
+  },
+  "seed_data_creation": "Created test movimenti during testing, cleaned up after",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 3 new features verified working: 1) Gestione Riservata portal at /gestione-riservata with login code 507488 - full CRUD for movimenti (incassi/spese non fatturati), 2) Dashboard Volume Affari Reale toggle shows real business volume including extra income/expenses, 3) F24 page has Upload Multiplo PDF section with multiple file selection",
+  "verified_features": {
+    "gestione_riservata_login": {
+      "status": "WORKING",
+      "endpoint": "POST /api/gestione-riservata/login",
+      "code": "507488",
+      "details": "Returns success with portal='gestione_riservata', invalid code returns 401"
+    },
+    "gestione_riservata_crud": {
+      "status": "WORKING",
+      "endpoints": [
+        "GET /api/gestione-riservata/movimenti",
+        "POST /api/gestione-riservata/movimenti",
+        "PUT /api/gestione-riservata/movimenti/{id}",
+        "DELETE /api/gestione-riservata/movimenti/{id}",
+        "GET /api/gestione-riservata/riepilogo"
+      ],
+      "details": "Full CRUD for incassi/spese non fatturati with soft-delete"
+    },
+    "volume_affari_reale_api": {
+      "status": "WORKING",
+      "endpoint": "GET /api/gestione-riservata/volume-affari-reale?anno=2026",
+      "details": "Returns fatturato_ufficiale, corrispettivi, incassi_non_fatturati, spese_non_fatturate, volume_affari_reale"
+    },
+    "volume_affari_reale_ui": {
+      "status": "WORKING",
+      "page": "/",
+      "details": "Dashboard has toggle button with RISERVATO label, shows/hides volume reale data cards"
+    },
+    "f24_upload_multiple_api": {
+      "status": "WORKING",
+      "endpoint": "POST /api/f24/upload-multiple",
+      "details": "Accepts multiple PDF files, requires authentication, returns import results with duplicates detection"
+    },
+    "f24_upload_multiple_ui": {
+      "status": "WORKING",
+      "page": "/f24",
+      "details": "Green section 'Upload Multiplo PDF F24' with multiple file input, progress bar, results display"
+    },
+    "gestione_riservata_ui": {
+      "status": "WORKING",
+      "page": "/gestione-riservata",
+      "details": "Login page with code input, dashboard with 3 summary cards (Incassi, Spese, Saldo), movimenti table with edit/delete actions, add movimento form"
+    }
+  },
+  "screenshots": [
+    ".screenshots/gestione_riservata_login.png",
+    ".screenshots/gestione_riservata_dashboard.png",
+    ".screenshots/gestione_riservata_form.png",
+    ".screenshots/dashboard_volume_reale_hidden.png",
+    ".screenshots/dashboard_volume_reale_visible.png",
+    ".screenshots/f24_page_full.png",
+    ".screenshots/f24_page_scrolled.png"
+  ]
+}
