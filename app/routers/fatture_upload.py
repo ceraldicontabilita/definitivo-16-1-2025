@@ -18,6 +18,70 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def ensure_supplier_exists(db, parsed_invoice: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifica se il fornitore esiste nel database, altrimenti lo crea.
+    
+    Args:
+        db: Database reference
+        parsed_invoice: Dati fattura parsati dall'XML
+        
+    Returns:
+        Dict con dati fornitore (esistente o nuovo)
+    """
+    supplier_vat = parsed_invoice.get("supplier_vat", "").strip()
+    if not supplier_vat:
+        return None
+    
+    # Cerca fornitore esistente
+    existing = await db[Collections.SUPPLIERS].find_one({"partita_iva": supplier_vat})
+    if existing:
+        # Aggiorna nome se diverso
+        supplier_name = parsed_invoice.get("supplier_name", "").strip()
+        if supplier_name and supplier_name != existing.get("ragione_sociale"):
+            await db[Collections.SUPPLIERS].update_one(
+                {"partita_iva": supplier_vat},
+                {"$set": {"ragione_sociale": supplier_name, "updated_at": datetime.utcnow().isoformat()}}
+            )
+        existing.pop("_id", None)
+        return existing
+    
+    # Crea nuovo fornitore
+    fornitore_data = parsed_invoice.get("fornitore", {})
+    
+    new_supplier = {
+        "id": str(uuid.uuid4()),
+        "ragione_sociale": parsed_invoice.get("supplier_name", "Fornitore Sconosciuto"),
+        "partita_iva": supplier_vat,
+        "codice_fiscale": fornitore_data.get("codice_fiscale", ""),
+        "indirizzo": fornitore_data.get("indirizzo", ""),
+        "cap": fornitore_data.get("cap", ""),
+        "comune": fornitore_data.get("comune", ""),
+        "provincia": fornitore_data.get("provincia", ""),
+        "nazione": fornitore_data.get("nazione", "IT"),
+        "telefono": fornitore_data.get("telefono", ""),
+        "email": fornitore_data.get("email", ""),
+        "pec": fornitore_data.get("pec", ""),
+        "regime_fiscale": fornitore_data.get("regime_fiscale", ""),
+        # Default pagamento
+        "metodo_pagamento": "bonifico",
+        "giorni_pagamento": 30,
+        "iban": "",
+        # Metadata
+        "source": "xml_auto_import",
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+        "note": "Fornitore creato automaticamente da fattura XML"
+    }
+    
+    await db[Collections.SUPPLIERS].insert_one(new_supplier)
+    new_supplier.pop("_id", None)
+    
+    logger.info(f"Nuovo fornitore creato: {new_supplier['ragione_sociale']} (P.IVA: {supplier_vat})")
+    
+    return new_supplier
+
+
 def generate_invoice_key(invoice_number: str, supplier_vat: str, invoice_date: str) -> str:
     """Genera chiave univoca per fattura: numero_piva_data"""
     key = f"{invoice_number}_{supplier_vat}_{invoice_date}"
