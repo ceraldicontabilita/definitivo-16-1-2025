@@ -38,6 +38,7 @@ export default function GestioneDipendenti() {
 
   // Periodo state
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYearPrimaNota, setSelectedYearPrimaNota] = useState(new Date().getFullYear()); // null = tutti gli anni
   
   // Prima Nota Salari state
   const [salariMovimenti, setSalariMovimenti] = useState([]);
