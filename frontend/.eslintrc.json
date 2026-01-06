@@ -25,6 +25,7 @@
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "no-unused-vars": ["warn", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "react/no-unescaped-entities": "off"
   }
 }
