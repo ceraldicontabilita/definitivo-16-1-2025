@@ -396,6 +396,79 @@ export default function GestioneDipendenti() {
     }
   };
 
+  const loadContratti = async () => {
+    try {
+      setLoadingContratti(true);
+      const [contrattiRes, scadenzeRes] = await Promise.all([
+        api.get('/api/dipendenti/contratti').catch(() => ({ data: [] })),
+        api.get('/api/dipendenti/contratti/scadenze?giorni=60').catch(() => ({ data: { scaduti: [], in_scadenza: [] } }))
+      ]);
+      setContratti(contrattiRes.data || []);
+      setContrattiScadenze(scadenzeRes.data || { scaduti: [], in_scadenza: [] });
+    } catch (error) {
+      console.error('Error loading contratti:', error);
+      setContratti([]);
+    } finally {
+      setLoadingContratti(false);
+    }
+  };
+
+  const handleSubmitContratto = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/api/dipendenti/contratti', {
+        ...contrattoFormData,
+        retribuzione_lorda: parseFloat(contrattoFormData.retribuzione_lorda) || 0
+      });
+      setShowContrattoForm(false);
+      setContrattoFormData({
+        dipendente_id: '',
+        tipo_contratto: 'tempo_determinato',
+        livello: '',
+        mansione: '',
+        retribuzione_lorda: '',
+        ore_settimanali: 40,
+        data_inizio: '',
+        data_fine: '',
+        ccnl: 'Turismo - Pubblici Esercizi'
+      });
+      loadContratti();
+      alert('✅ Contratto creato!');
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleTerminaContratto = async (contrattoId) => {
+    const dataFine = prompt('Data fine contratto (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    if (!dataFine) return;
+    const motivo = prompt('Motivo cessazione (opzionale):', '');
+    try {
+      await api.post(`/api/dipendenti/contratti/${contrattoId}/termina?data_fine=${dataFine}&motivo=${encodeURIComponent(motivo || '')}`);
+      loadContratti();
+      alert('✅ Contratto terminato');
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleImportContratti = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/api/dipendenti/contratti/import-excel', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert(`✅ Import completato!\nCreati: ${res.data.created}\nErrori: ${res.data.errors?.length || 0}`);
+      loadContratti();
+    } catch (error) {
+      alert('Errore import: ' + (error.response?.data?.detail || error.message));
+    }
+    e.target.value = '';
+  };
+
   const handleSubmitLibretto = async (e) => {
     e.preventDefault();
     try {
