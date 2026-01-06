@@ -408,7 +408,8 @@ PATTERNS_ARTICOLI = {
             r"frisk", r"vivident", r"viv\.", r"brooklyn", r"golia",
             r"morositas", r"tic\s*tac", r"big\s*babol", r"happydent",
             r"chloroph", r"spearmint", r"peppermint", r"extra\s+strong",
-            r"air\s+action", r"activ\s+plus"
+            r"air\s+action", r"activ\s+plus", r"daygum", r"protex",
+            r"alpenliebe", r"vig\.\s*aa", r"black\s+ice"
         ],
         "categoria_haccp": "dolciumi_snack",
         "conto": "05.01.05",
