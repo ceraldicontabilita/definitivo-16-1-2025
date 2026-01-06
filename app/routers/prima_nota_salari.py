@@ -377,9 +377,13 @@ async def import_bonifici(file: UploadFile = File(...)) -> Dict[str, Any]:
 
 async def ricalcola_progressivi_tutti(db):
     """
-    Ricalcola i progressivi per tutti i dipendenti.
-    Il progressivo è il saldo cumulativo dal primo mese fino al mese corrente (incluso).
-    Progressivo = Σ(importo_busta - importo_bonifico) da inizio a mese corrente
+    Ricalcola saldi e progressivi per tutti i dipendenti.
+    
+    Formula Saldo: Bonifico - Busta
+    - Saldo positivo = dipendente ha ricevuto più di quanto spettava (ci deve soldi)
+    - Saldo negativo = dipendente ha ricevuto meno di quanto spettava (gli dobbiamo soldi)
+    
+    Progressivo = Σ(saldi) da inizio a mese corrente
     """
     # Ottieni tutti i dipendenti unici
     dipendenti = await db["prima_nota_salari"].distinct("dipendente")
@@ -393,15 +397,21 @@ async def ricalcola_progressivi_tutti(db):
         progressivo = 0
         
         for record in records:
-            # Calcola saldo del mese corrente
-            saldo = record.get("saldo", 0) or 0
+            # Ricalcola saldo: Bonifico - Busta
+            importo_busta = record.get("importo_busta", 0) or 0
+            importo_bonifico = record.get("importo_bonifico", 0) or 0
+            saldo = importo_bonifico - importo_busta
+            
             # Aggiunge al progressivo
             progressivo += saldo
             
-            # Aggiorna il record con il progressivo cumulativo
+            # Aggiorna il record con saldo e progressivo
             await db["prima_nota_salari"].update_one(
                 {"_id": record["_id"]},
-                {"$set": {"progressivo": round(progressivo, 2)}}
+                {"$set": {
+                    "saldo": round(saldo, 2),
+                    "progressivo": round(progressivo, 2)
+                }}
             )
 
 
