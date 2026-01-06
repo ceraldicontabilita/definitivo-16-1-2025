@@ -65,8 +65,8 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://invoice-master-178.preview.emergentagent.com/controllo-mensile",
-    "IVA": "https://invoice-master-178.preview.emergentagent.com/iva"
+    "Controllo Mensile": "https://simplify-erp.preview.emergentagent.com/controllo-mensile",
+    "IVA": "https://simplify-erp.preview.emergentagent.com/iva"
   },
   "quarterly_iva_data_2025": {
     "Q1_Gen_Feb_Mar": {

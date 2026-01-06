@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://invoice-master-178.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://simplify-erp.preview.emergentagent.com')
 
 class TestHealthAndBasicAPIs:
     """Test health check and basic API endpoints"""
