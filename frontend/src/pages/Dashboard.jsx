@@ -27,6 +27,8 @@ export default function Dashboard() {
   const [showVolumeReale, setShowVolumeReale] = useState(false);
   const [volumeRealeData, setVolumeRealeData] = useState(null);
   const [volumeRealeLoading, setVolumeRealeLoading] = useState(false);
+  // Bilancio Istantaneo
+  const [bilancioIstantaneo, setBilancioIstantaneo] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -40,7 +42,7 @@ export default function Dashboard() {
         setSum(summaryData);
         
         // Load trend mensile, calendario POS e scadenze
-        const [trendRes, posRes, notifRes, scadenzeRes] = await Promise.all([
+        const [trendRes, posRes, notifRes, scadenzeRes, bilancioRes] = await Promise.all([
           api.get(`/api/dashboard/trend-mensile?anno=${anno}`).catch(() => ({ data: null })),
           api.get(`/api/pos-accredito/calendario-mensile/${anno}/${new Date().getMonth() + 1}`).catch(() => ({ data: null })),
           api.get('/api/haccp-completo/notifiche?solo_non_lette=true&limit=1').catch(() => ({ data: { non_lette: 0 } })),
