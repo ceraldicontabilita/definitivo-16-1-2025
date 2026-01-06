@@ -738,8 +738,8 @@ async def export_pdf_dichiarazione(
     # Raccogli dati
     calcolatore = CalcolatoreImposte(regione=regione)
     
-    # Calcola imposte dal database
-    risultato = await calcolatore.calcola_imposte_da_db(db)
+    # Calcola imposte dal database filtrate per anno
+    risultato = await calcolatore.calcola_imposte_da_db(db, anno)
     
     # Crea PDF
     buffer = io.BytesIO()
