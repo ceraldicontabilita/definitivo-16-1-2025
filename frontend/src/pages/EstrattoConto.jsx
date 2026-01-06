@@ -11,7 +11,7 @@ export default function EstrattoConto() {
   const [loading, setLoading] = useState(true);
   const [riepilogo, setRiepilogo] = useState(null);
   const [categorie, setCategorie] = useState([]);
-  const [fornitori, setFornitori] = useState([]);
+  const [_fornitori, setFornitori] = useState([]);
   
   // Filtri
   const [selectedYear, setSelectedYear] = useState(2025);
@@ -37,6 +37,7 @@ export default function EstrattoConto() {
     loadRiepilogo();
     loadCategorie();
     loadFornitori();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, selectedMonth, selectedCategoria, selectedFornitore, selectedTipo, offset]);
 
   const loadMovimenti = async () => {

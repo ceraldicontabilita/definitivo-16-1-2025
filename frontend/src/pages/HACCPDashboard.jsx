@@ -89,7 +89,7 @@ export default function HACCPDashboard() {
     scadenze_imminenti: 0,
     conformita_percentuale: 100
   });
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [meseReport, setMeseReport] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
