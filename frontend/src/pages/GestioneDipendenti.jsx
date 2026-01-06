@@ -626,8 +626,8 @@ export default function GestioneDipendenti() {
             </select>
             
             <select
-              value={selectedYear || ''}
-              onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : null)}
+              value={selectedYearPrimaNota || ''}
+              onChange={(e) => setSelectedYearPrimaNota(e.target.value ? parseInt(e.target.value) : null)}
               style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#e3f2fd', fontWeight: 'bold' }}
             >
               <option value="">Tutti gli anni</option>
