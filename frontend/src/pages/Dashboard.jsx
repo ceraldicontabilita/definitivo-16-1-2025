@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useAnnoGlobale } from "../contexts/AnnoContext";
 import { formatEuro } from "../lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
+import { Eye, EyeOff, TrendingUp, Lock } from "lucide-react";
 
 export default function Dashboard() {
   const { anno } = useAnnoGlobale();
@@ -22,6 +23,10 @@ export default function Dashboard() {
   const [statoRiconciliazione, setStatoRiconciliazione] = useState(null);
   // Stato per widget IRES/IRAP
   const [imposteData, setImposteData] = useState(null);
+  // Volume Affari Reale
+  const [showVolumeReale, setShowVolumeReale] = useState(false);
+  const [volumeRealeData, setVolumeRealeData] = useState(null);
+  const [volumeRealeLoading, setVolumeRealeLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
