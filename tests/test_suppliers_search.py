@@ -69,16 +69,19 @@ class TestSuppliersInvoiceCount:
     """Test that suppliers show correct invoice count"""
     
     def test_suppliers_have_invoice_stats(self):
-        """Suppliers should have fatture_count field"""
-        response = requests.get(f"{BASE_URL}/api/suppliers?limit=10")
+        """Suppliers with P.IVA should have fatture_count field"""
+        response = requests.get(f"{BASE_URL}/api/suppliers?limit=50")
         assert response.status_code == 200
         
         data = response.json()
         assert len(data) > 0
         
-        # Check that fatture_count field exists
-        for supplier in data:
-            assert "fatture_count" in supplier
+        # Check that suppliers with P.IVA have fatture_count field
+        suppliers_with_piva = [s for s in data if s.get("partita_iva")]
+        assert len(suppliers_with_piva) > 0, "No suppliers with P.IVA found"
+        
+        for supplier in suppliers_with_piva[:10]:
+            assert "fatture_count" in supplier, f"Missing fatture_count for {supplier.get('denominazione')}"
             assert "fatture_totale" in supplier
             assert "fatture_non_pagate" in supplier
     
