@@ -48,10 +48,10 @@ export default function UtileObiettivo() {
   async function saveTarget() {
     setSaving(true);
     try {
-      await api.post('/api/centri-costo/utile-obiettivo/imposta', {
+      await api.post('/api/centri-costo/utile-obiettivo', {
         anno,
-        target_utile: settings.target_utile,
-        margine_atteso: settings.margine_atteso
+        utile_target_annuo: settings.target_utile,
+        margine_medio_atteso: settings.margine_atteso
       });
       loadStatus();
     } catch (err) {
