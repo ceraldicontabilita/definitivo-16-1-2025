@@ -128,13 +128,91 @@ export default function Magazzino() {
   return (
     <>
       <div className="card">
-        <div className="h1">Magazzino</div>
+        <div className="h1">📦 Magazzino</div>
         <div className="row">
           <button className="primary" onClick={() => setShowForm(!showForm)}>+ Nuovo Prodotto</button>
           <button onClick={loadProducts}>🔄 Aggiorna</button>
         </div>
         {err && <div className="small" style={{ color: "#c00", marginTop: 10 }}>{err}</div>}
       </div>
+
+      {/* Statistiche */}
+      {activeTab === 'catalogo' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+          <div style={{ background: '#f0f9ff', padding: 16, borderRadius: 12, border: '1px solid #bae6fd' }}>
+            <div style={{ fontSize: 12, color: '#0369a1' }}>Prodotti Totali</div>
+            <div style={{ fontSize: 28, fontWeight: 'bold', color: '#0c4a6e' }}>{stats.total}</div>
+          </div>
+          <div style={{ background: '#f0fdf4', padding: 16, borderRadius: 12, border: '1px solid #bbf7d0' }}>
+            <div style={{ fontSize: 12, color: '#16a34a' }}>Valore Stimato</div>
+            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#166534' }}>€ {stats.totalValue.toFixed(2)}</div>
+          </div>
+          <div style={{ background: stats.lowStock > 0 ? '#fef2f2' : '#f8fafc', padding: 16, borderRadius: 12, border: `1px solid ${stats.lowStock > 0 ? '#fecaca' : '#e2e8f0'}` }}>
+            <div style={{ fontSize: 12, color: stats.lowStock > 0 ? '#dc2626' : '#64748b' }}>Scorte Basse</div>
+            <div style={{ fontSize: 28, fontWeight: 'bold', color: stats.lowStock > 0 ? '#b91c1c' : '#475569' }}>{stats.lowStock}</div>
+          </div>
+          <div style={{ background: '#fefce8', padding: 16, borderRadius: 12, border: '1px solid #fef08a' }}>
+            <div style={{ fontSize: 12, color: '#ca8a04' }}>Categorie</div>
+            <div style={{ fontSize: 28, fontWeight: 'bold', color: '#854d0e' }}>{categories.length}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Filtri */}
+      {activeTab === 'catalogo' && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+            <input
+              type="text"
+              placeholder="🔍 Cerca prodotto, fornitore..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ flex: 2, minWidth: 200, padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0' }}
+            />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              style={{ flex: 1, minWidth: 150, padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0' }}
+            >
+              <option value="">Tutte le categorie</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat} ({stats.categorieCounts[cat] || 0})</option>
+              ))}
+            </select>
+            <select
+              value={supplierFilter}
+              onChange={(e) => setSupplierFilter(e.target.value)}
+              style={{ flex: 1, minWidth: 150, padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0' }}
+            >
+              <option value="">Tutti i fornitori</option>
+              {suppliers.map(sup => (
+                <option key={sup} value={sup}>{sup}</option>
+              ))}
+            </select>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showLowStock}
+                onChange={(e) => setShowLowStock(e.target.checked)}
+              />
+              <span style={{ fontSize: 13 }}>Solo scorte basse</span>
+            </label>
+            {(searchQuery || categoryFilter || supplierFilter || showLowStock) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setCategoryFilter('');
+                  setSupplierFilter('');
+                  setShowLowStock(false);
+                }}
+                style={{ padding: '8px 16px', borderRadius: 8, background: '#f1f5f9', border: 'none', cursor: 'pointer' }}
+              >
+                ✕ Reset
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="card">
