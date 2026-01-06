@@ -510,6 +510,7 @@ async def migra_da_warehouse_inventory() -> Dict[str, Any]:
     
     migrati = 0
     errori = 0
+    aggiornati = 0
     
     for prod in prodotti_esistenti:
         try:
@@ -521,7 +522,23 @@ async def migra_da_warehouse_inventory() -> Dict[str, Any]:
                 ]
             })
             
+            giacenza = prod.get("giacenza", 0) or 0
+            costo_medio = 0
+            if prod.get("prezzi") and prod["prezzi"].get("avg"):
+                costo_medio = prod["prezzi"]["avg"]
+            
             if existing:
+                # Aggiorna giacenze se già esiste
+                await db["magazzino_doppia_verita"].update_one(
+                    {"id": existing["id"]},
+                    {"$set": {
+                        "giacenza_teorica": giacenza,
+                        "giacenza_reale": giacenza,
+                        "costo_medio": costo_medio,
+                        "updated_at": datetime.utcnow().isoformat()
+                    }}
+                )
+                aggiornati += 1
                 continue
             
             nuovo_prodotto = {
@@ -531,13 +548,13 @@ async def migra_da_warehouse_inventory() -> Dict[str, Any]:
                 "descrizione": prod.get("descrizione", ""),
                 "categoria": prod.get("categoria", "altro"),
                 "unita_misura": prod.get("unita_misura", "pz"),
-                "giacenza_teorica": prod.get("quantita", 0),
-                "giacenza_reale": prod.get("quantita", 0),  # Inizialmente uguale
-                "scorta_minima": prod.get("scorta_minima", 0),
+                "giacenza_teorica": giacenza,
+                "giacenza_reale": giacenza,  # Inizialmente uguale
+                "scorta_minima": prod.get("giacenza_minima", 0) or 0,
                 "scorta_massima": 0,
-                "costo_medio": prod.get("prezzo_unitario", 0),
-                "ultimo_costo": prod.get("prezzo_unitario", 0),
-                "fornitore_principale": prod.get("fornitore", ""),
+                "costo_medio": costo_medio,
+                "ultimo_costo": costo_medio,
+                "fornitore_principale": prod.get("ultimo_fornitore", ""),
                 "fornitore_piva": prod.get("fornitore_piva", ""),
                 "centro_costo": "CDC-03",  # Default laboratorio
                 "attivo": True,
@@ -552,7 +569,8 @@ async def migra_da_warehouse_inventory() -> Dict[str, Any]:
             errori += 1
     
     return {
-        "message": f"Migrazione completata: {migrati} prodotti migrati, {errori} errori",
+        "message": f"Migrazione completata: {migrati} nuovi, {aggiornati} aggiornati, {errori} errori",
         "migrati": migrati,
+        "aggiornati": aggiornati,
         "errori": errori
     }
