@@ -1,14 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
-import { X, Edit2, Save, Trash2, Plus, Search, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Search, Edit2, Trash2, Plus, FileText, Building2, 
+  Phone, Mail, MapPin, CreditCard, AlertCircle, Check,
+  ChevronRight, Users
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '../components/ui/dialog';
 
 const METODI_PAGAMENTO = [
-  { value: "cassa", label: "Cassa", color: "#4caf50" },
-  { value: "banca", label: "Banca/Bonifico", color: "#2196f3" },
-  { value: "assegno", label: "Assegno", color: "#ff9800" },
-  { value: "misto", label: "Misto", color: "#607d8b" },
+  { value: "cassa", label: "Contanti", color: "bg-emerald-500" },
+  { value: "banca", label: "Bonifico", color: "bg-blue-500" },
+  { value: "bonifico", label: "Bonifico", color: "bg-blue-500" },
+  { value: "assegno", label: "Assegno", color: "bg-amber-500" },
+  { value: "misto", label: "Misto", color: "bg-slate-500" },
 ];
+
+const getMetodoInfo = (metodo) => {
+  return METODI_PAGAMENTO.find(m => m.value === metodo) || { label: metodo || 'N/D', color: 'bg-slate-400' };
+};
 
 const emptySupplier = {
   ragione_sociale: '',
@@ -28,229 +47,292 @@ const emptySupplier = {
   note: ''
 };
 
-// Form component separato
-function SupplierFormModal({ supplier, onSave, onCancel, isNew, saving }) {
-  const [form, setForm] = useState(supplier || emptySupplier);
-  
-  // Aggiorna form quando cambia il supplier
-  useEffect(() => {
-    setForm(supplier || emptySupplier);
-  }, [supplier]);
-  
+// Componente per il form all'interno della Dialog
+function SupplierForm({ supplier, onChange }) {
+  const handleChange = (field, value) => {
+    onChange({ ...supplier, [field]: value });
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" data-testid="supplier-modal">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
-          <h2 className="text-xl font-bold text-slate-800">
-            {isNew ? 'Nuovo Fornitore' : 'Modifica Fornitore'}
-          </h2>
-          <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full" data-testid="close-modal">
-            <X className="w-5 h-5" />
-          </button>
+    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+      {/* Dati Principali */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
+          <Building2 className="w-4 h-4" /> Dati Azienda
+        </h4>
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              Ragione Sociale <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={supplier.ragione_sociale || ''}
+              onChange={(e) => handleChange('ragione_sociale', e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="Inserisci ragione sociale"
+              data-testid="input-ragione-sociale"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Partita IVA</label>
+              <input
+                type="text"
+                value={supplier.partita_iva || ''}
+                onChange={(e) => handleChange('partita_iva', e.target.value)}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                placeholder="01234567890"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Codice Fiscale</label>
+              <input
+                type="text"
+                value={supplier.codice_fiscale || ''}
+                onChange={(e) => handleChange('codice_fiscale', e.target.value.toUpperCase())}
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                placeholder="RSSMRA80A01H501U"
+              />
+            </div>
+          </div>
         </div>
-        
-        <div className="p-6 space-y-6">
-          {/* Dati Principali */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Dati Principali</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Ragione Sociale *</label>
-                <input
-                  type="text"
-                  value={form.ragione_sociale || ''}
-                  onChange={(e) => setForm({...form, ragione_sociale: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Nome azienda"
-                  data-testid="input-ragione-sociale"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Partita IVA</label>
-                <input
-                  type="text"
-                  value={form.partita_iva || ''}
-                  onChange={(e) => setForm({...form, partita_iva: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="01234567890"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Codice Fiscale</label>
-                <input
-                  type="text"
-                  value={form.codice_fiscale || ''}
-                  onChange={(e) => setForm({...form, codice_fiscale: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
+      </div>
 
-          {/* Indirizzo */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Indirizzo</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Via/Piazza</label>
-                <input
-                  type="text"
-                  value={form.indirizzo || ''}
-                  onChange={(e) => setForm({...form, indirizzo: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Via Roma, 123"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">CAP</label>
-                <input
-                  type="text"
-                  value={form.cap || ''}
-                  onChange={(e) => setForm({...form, cap: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="00100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Comune</label>
-                <input
-                  type="text"
-                  value={form.comune || ''}
-                  onChange={(e) => setForm({...form, comune: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Roma"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Provincia</label>
-                <input
-                  type="text"
-                  value={form.provincia || ''}
-                  onChange={(e) => setForm({...form, provincia: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="RM"
-                  maxLength={2}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nazione</label>
-                <input
-                  type="text"
-                  value={form.nazione || 'IT'}
-                  onChange={(e) => setForm({...form, nazione: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="IT"
-                  maxLength={2}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Contatti */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Contatti</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Telefono</label>
-                <input
-                  type="tel"
-                  value={form.telefono || ''}
-                  onChange={(e) => setForm({...form, telefono: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="+39 06 1234567"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={form.email || ''}
-                  onChange={(e) => setForm({...form, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="info@azienda.it"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">PEC</label>
-                <input
-                  type="email"
-                  value={form.pec || ''}
-                  onChange={(e) => setForm({...form, pec: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="azienda@pec.it"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Pagamento */}
-          <div>
-            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Pagamento</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Metodo Pagamento</label>
-                <select
-                  value={form.metodo_pagamento || 'bonifico'}
-                  onChange={(e) => setForm({...form, metodo_pagamento: e.target.value})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  {METODI_PAGAMENTO.map(m => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Giorni Pagamento</label>
-                <input
-                  type="number"
-                  value={form.giorni_pagamento || 30}
-                  onChange={(e) => setForm({...form, giorni_pagamento: parseInt(e.target.value) || 30})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  min={0}
-                  max={365}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-1">IBAN</label>
-                <input
-                  type="text"
-                  value={form.iban || ''}
-                  onChange={(e) => setForm({...form, iban: e.target.value.toUpperCase()})}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono"
-                  placeholder="IT60X0542811101000000123456"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Note */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
-            <textarea
-              value={form.note || ''}
-              onChange={(e) => setForm({...form, note: e.target.value})}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              placeholder="Note aggiuntive..."
+      {/* Indirizzo */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
+          <MapPin className="w-4 h-4" /> Indirizzo
+        </h4>
+        <div className="grid grid-cols-1 gap-4">
+          <input
+            type="text"
+            value={supplier.indirizzo || ''}
+            onChange={(e) => handleChange('indirizzo', e.target.value)}
+            className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Via/Piazza, numero civico"
+          />
+          <div className="grid grid-cols-3 gap-3">
+            <input
+              type="text"
+              value={supplier.cap || ''}
+              onChange={(e) => handleChange('cap', e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="CAP"
+              maxLength={5}
+            />
+            <input
+              type="text"
+              value={supplier.comune || ''}
+              onChange={(e) => handleChange('comune', e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="Comune"
+            />
+            <input
+              type="text"
+              value={supplier.provincia || ''}
+              onChange={(e) => handleChange('provincia', e.target.value.toUpperCase())}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="Prov"
+              maxLength={2}
             />
           </div>
         </div>
+      </div>
 
-        <div className="sticky bottom-0 bg-slate-50 border-t px-6 py-4 flex justify-end gap-3">
+      {/* Contatti */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
+          <Phone className="w-4 h-4" /> Contatti
+        </h4>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="tel"
+              value={supplier.telefono || ''}
+              onChange={(e) => handleChange('telefono', e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="Telefono"
+            />
+            <input
+              type="email"
+              value={supplier.email || ''}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="Email"
+            />
+          </div>
+          <input
+            type="email"
+            value={supplier.pec || ''}
+            onChange={(e) => handleChange('pec', e.target.value)}
+            className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="PEC (Posta Elettronica Certificata)"
+          />
+        </div>
+      </div>
+
+      {/* Pagamento */}
+      <div className="space-y-4">
+        <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
+          <CreditCard className="w-4 h-4" /> Pagamento
+        </h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Metodo</label>
+            <select
+              value={supplier.metodo_pagamento || 'bonifico'}
+              onChange={(e) => handleChange('metodo_pagamento', e.target.value)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+            >
+              <option value="bonifico">Bonifico</option>
+              <option value="cassa">Contanti</option>
+              <option value="assegno">Assegno</option>
+              <option value="misto">Misto</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Giorni Pagamento</label>
+            <input
+              type="number"
+              value={supplier.giorni_pagamento || 30}
+              onChange={(e) => handleChange('giorni_pagamento', parseInt(e.target.value) || 30)}
+              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              min={0}
+              max={365}
+            />
+          </div>
+        </div>
+        <input
+          type="text"
+          value={supplier.iban || ''}
+          onChange={(e) => handleChange('iban', e.target.value.toUpperCase().replace(/\s/g, ''))}
+          className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all font-mono text-sm"
+          placeholder="IBAN (es. IT60X0542811101000000123456)"
+        />
+      </div>
+
+      {/* Note */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1.5">Note</label>
+        <textarea
+          value={supplier.note || ''}
+          onChange={(e) => handleChange('note', e.target.value)}
+          className="w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+          rows={2}
+          placeholder="Note aggiuntive..."
+        />
+      </div>
+    </div>
+  );
+}
+
+// Card statistica
+function StatCard({ title, value, icon: Icon, color, subtext }) {
+  return (
+    <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-500">{title}</p>
+            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
+          </div>
+          <div className={`p-3 rounded-xl ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
+            <Icon className={`w-6 h-6 ${color}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Riga fornitore
+function SupplierRow({ supplier, onEdit, onDelete, onViewInvoices, selectedYear }) {
+  const metodoInfo = getMetodoInfo(supplier.metodo_pagamento);
+  const hasIncompleteData = !supplier.partita_iva || !supplier.indirizzo || !supplier.email;
+  
+  return (
+    <div 
+      className="group bg-white border border-slate-100 rounded-xl p-4 hover:shadow-md hover:border-slate-200 transition-all"
+      data-testid={`supplier-row-${supplier.id}`}
+    >
+      <div className="flex items-start gap-4">
+        {/* Avatar iniziale */}
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+          {(supplier.ragione_sociale || supplier.denominazione || '?')[0].toUpperCase()}
+        </div>
+        
+        {/* Info principale */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-slate-800 truncate">
+              {supplier.ragione_sociale || supplier.denominazione || 'Senza nome'}
+            </h3>
+            {hasIncompleteData && (
+              <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                <AlertCircle className="w-3 h-3" />
+                Dati incompleti
+              </span>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+            {supplier.partita_iva && (
+              <span className="font-mono">P.IVA: {supplier.partita_iva}</span>
+            )}
+            {supplier.comune && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {supplier.comune} {supplier.provincia && `(${supplier.provincia})`}
+              </span>
+            )}
+            {supplier.email && (
+              <span className="flex items-center gap-1">
+                <Mail className="w-3 h-3" />
+                {supplier.email}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Badge e stats */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right hidden sm:block">
+            <p className="text-xs text-slate-400">Fatture</p>
+            <p className="text-lg font-bold text-slate-700">{supplier.fatture_count || 0}</p>
+          </div>
+          
+          <Badge className={`${metodoInfo.color} text-white border-0`}>
+            {metodoInfo.label}
+          </Badge>
+        </div>
+
+        {/* Azioni */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={onCancel}
-            className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg"
+            onClick={() => onViewInvoices(supplier)}
+            className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
+            title="Vedi fatture"
+            data-testid={`view-invoices-${supplier.id}`}
           >
-            Annulla
+            <FileText className="w-4 h-4" />
           </button>
           <button
-            onClick={() => onSave(form)}
-            disabled={saving || !form.ragione_sociale}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            data-testid="save-supplier"
+            onClick={() => onEdit(supplier)}
+            className="p-2 hover:bg-blue-50 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
+            title="Modifica anagrafica"
+            data-testid={`edit-supplier-${supplier.id}`}
           >
-            <Save className="w-4 h-4" />
-            {saving ? 'Salvataggio...' : 'Salva'}
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onDelete(supplier.id)}
+            className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
+            title="Elimina"
+            data-testid={`delete-supplier-${supplier.id}`}
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -263,43 +345,67 @@ export default function Fornitori() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [expandedId, setExpandedId] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
-  const [showNewForm, setShowNewForm] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewSupplier, setIsNewSupplier] = useState(false);
+  const [formData, setFormData] = useState(emptySupplier);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const params = search ? `?search=${encodeURIComponent(search)}` : '';
       const res = await api.get(`/api/suppliers${params}`);
       setSuppliers(res.data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading suppliers:', error);
     } finally {
       setLoading(false);
     }
+  }, [search]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleOpenNew = () => {
+    setFormData(emptySupplier);
+    setIsNewSupplier(true);
+    setEditingSupplier(null);
+    setIsDialogOpen(true);
   };
 
-  const handleSave = async (supplierData) => {
+  const handleOpenEdit = (supplier) => {
+    console.log('Opening edit for supplier:', supplier);
+    setFormData({ ...emptySupplier, ...supplier });
+    setIsNewSupplier(false);
+    setEditingSupplier(supplier);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingSupplier(null);
+    setFormData(emptySupplier);
+  };
+
+  const handleSave = async () => {
+    if (!formData.ragione_sociale) {
+      alert('Inserisci la ragione sociale');
+      return;
+    }
+    
     setSaving(true);
     try {
-      if (supplierData.id) {
-        await api.put(`/api/suppliers/${supplierData.id}`, supplierData);
+      if (editingSupplier?.id) {
+        await api.put(`/api/suppliers/${editingSupplier.id}`, formData);
       } else {
         await api.post('/api/suppliers', {
-          denominazione: supplierData.ragione_sociale,
-          ragione_sociale: supplierData.ragione_sociale,
-          ...supplierData
+          denominazione: formData.ragione_sociale,
+          ...formData
         });
       }
-      setEditingSupplier(null);
-      setShowNewForm(false);
+      handleCloseDialog();
       loadData();
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
@@ -309,7 +415,7 @@ export default function Fornitori() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Eliminare questo fornitore?')) return;
+    if (!window.confirm('Sei sicuro di voler eliminare questo fornitore?')) return;
     try {
       await api.delete(`/api/suppliers/${id}`);
       loadData();
@@ -318,216 +424,181 @@ export default function Fornitori() {
     }
   };
 
-  const handleQuickMetodo = async (supplierId, metodo) => {
-    try {
-      await api.put(`/api/suppliers/${supplierId}`, { metodo_pagamento: metodo });
-      loadData();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    }
+  const handleViewInvoices = (supplier) => {
+    const searchParam = supplier.ragione_sociale || supplier.partita_iva;
+    window.location.href = `/fatture?fornitore=${encodeURIComponent(searchParam)}&anno=${selectedYear}`;
   };
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handleCloseModal = () => {
-    setEditingSupplier(null);
-    setShowNewForm(false);
+  // Stats
+  const stats = {
+    total: suppliers.length,
+    withInvoices: suppliers.filter(s => (s.fatture_count || 0) > 0).length,
+    incomplete: suppliers.filter(s => !s.partita_iva || !s.indirizzo || !s.email).length,
+    cash: suppliers.filter(s => s.metodo_pagamento === 'cassa').length,
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" data-testid="fornitori-page">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Gestione Fornitori</h1>
-          <p className="text-slate-500 mt-1">Anagrafica completa e metodi di pagamento</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Gestione Fornitori</h1>
+          <p className="text-slate-500">Anagrafica completa dei fornitori e metodi di pagamento</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Totale Fornitori</p>
-            <p className="text-2xl font-bold text-blue-600">{suppliers.length}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Con Fatture</p>
-            <p className="text-2xl font-bold text-green-600">
-              {suppliers.filter(s => (s.fatture_count || 0) > 0).length}
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Pagamento Cassa</p>
-            <p className="text-2xl font-bold text-emerald-600">
-              {suppliers.filter(s => s.metodo_pagamento === 'cassa').length}
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-slate-500">Pagamento Banca</p>
-            <p className="text-2xl font-bold text-indigo-600">
-              {suppliers.filter(s => s.metodo_pagamento === 'banca' || s.metodo_pagamento === 'bonifico').length}
-            </p>
-          </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatCard 
+            title="Totale Fornitori" 
+            value={stats.total} 
+            icon={Users} 
+            color="text-blue-600"
+          />
+          <StatCard 
+            title="Con Fatture" 
+            value={stats.withInvoices} 
+            icon={FileText} 
+            color="text-emerald-600"
+            subtext={`${stats.total > 0 ? Math.round((stats.withInvoices / stats.total) * 100) : 0}% attivi`}
+          />
+          <StatCard 
+            title="Dati Incompleti" 
+            value={stats.incomplete} 
+            icon={AlertCircle} 
+            color="text-amber-600"
+            subtext="Da completare"
+          />
+          <StatCard 
+            title="Pagamento Cash" 
+            value={stats.cash} 
+            icon={CreditCard} 
+            color="text-violet-600"
+          />
         </div>
 
-        {/* Action Bar */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center">
-          <div className="flex-1 min-w-[200px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cerca fornitore..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-            onClick={() => setShowNewForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-            data-testid="new-supplier-btn"
-          >
-            <Plus className="w-4 h-4" /> Nuovo Fornitore
-          </button>
-        </div>
+        {/* Search & Actions */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Cerca per nome, P.IVA, comune..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  data-testid="search-input"
+                />
+              </div>
+              <button
+                onClick={handleOpenNew}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                data-testid="new-supplier-btn"
+              >
+                <Plus className="w-5 h-5" />
+                Nuovo Fornitore
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Suppliers List */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-slate-500">Caricamento...</div>
-          ) : suppliers.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">Nessun fornitore trovato</div>
-          ) : (
-            <div className="divide-y divide-slate-100">
-              {suppliers.map((supplier) => (
-                <div key={supplier.id} className="hover:bg-slate-50">
-                  {/* Row principale */}
-                  <div className="p-4 flex items-center gap-4">
-                    <button
-                      onClick={() => toggleExpand(supplier.id)}
-                      className="p-1 hover:bg-slate-200 rounded"
-                    >
-                      {expandedId === supplier.id ? 
-                        <ChevronUp className="w-5 h-5 text-slate-400" /> : 
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
-                      }
-                    </button>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-slate-800 truncate">
-                        {supplier.ragione_sociale || supplier.denominazione || 'N/A'}
-                      </div>
-                      <div className="text-sm text-slate-500">
-                        P.IVA: {supplier.partita_iva || '-'} | Fatture: {supplier.fatture_count || 0}
-                      </div>
-                    </div>
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              Elenco Fornitori
+              <Badge variant="secondary" className="ml-2">{suppliers.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+              </div>
+            ) : suppliers.length === 0 ? (
+              <div className="text-center py-12">
+                <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500 mb-4">
+                  {search ? 'Nessun fornitore trovato per questa ricerca' : 'Nessun fornitore presente'}
+                </p>
+                {!search && (
+                  <button
+                    onClick={handleOpenNew}
+                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 mx-auto"
+                  >
+                    <Plus className="w-4 h-4" /> Aggiungi il primo fornitore
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {suppliers.map((supplier) => (
+                  <SupplierRow
+                    key={supplier.id}
+                    supplier={supplier}
+                    onEdit={handleOpenEdit}
+                    onDelete={handleDelete}
+                    onViewInvoices={handleViewInvoices}
+                    selectedYear={selectedYear}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-                    {/* Quick metodo buttons */}
-                    <div className="hidden md:flex gap-1">
-                      {METODI_PAGAMENTO.slice(0, 3).map(m => (
-                        <button
-                          key={m.value}
-                          onClick={() => handleQuickMetodo(supplier.id, m.value)}
-                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                            supplier.metodo_pagamento === m.value 
-                              ? 'text-white' 
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                          }`}
-                          style={supplier.metodo_pagamento === m.value ? { backgroundColor: m.color } : {}}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
-                    </div>
+        {/* Dialog per modifica/nuovo */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-2xl bg-white" data-testid="supplier-dialog">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-slate-800">
+                {isNewSupplier ? 'Nuovo Fornitore' : 'Modifica Anagrafica'}
+              </DialogTitle>
+              <DialogDescription>
+                {isNewSupplier 
+                  ? 'Inserisci i dati del nuovo fornitore' 
+                  : `Modifica i dati di ${editingSupplier?.ragione_sociale || editingSupplier?.denominazione || ''}`
+                }
+              </DialogDescription>
+            </DialogHeader>
 
-                    <div className="flex gap-1">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditingSupplier(supplier); }}
-                        className="p-2 hover:bg-blue-100 rounded text-blue-600"
-                        title="Modifica"
-                        data-testid={`edit-supplier-${supplier.id}`}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(supplier.id); }}
-                        className="p-2 hover:bg-red-100 rounded text-red-600"
-                        title="Elimina"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+            <SupplierForm 
+              supplier={formData} 
+              onChange={setFormData} 
+            />
 
-                  {/* Dettagli espansi */}
-                  {expandedId === supplier.id && (
-                    <div className="px-4 pb-4 pt-0 bg-slate-50 border-t border-slate-100">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-slate-500 mb-1">Indirizzo</p>
-                          <p className="text-slate-800">
-                            {supplier.indirizzo || '-'}<br/>
-                            {supplier.cap} {supplier.comune} {supplier.provincia && `(${supplier.provincia})`}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">Contatti</p>
-                          <p className="text-slate-800">
-                            {supplier.telefono && <span>Tel: {supplier.telefono}<br/></span>}
-                            {supplier.email && <span>Email: {supplier.email}<br/></span>}
-                            {supplier.pec && <span>PEC: {supplier.pec}</span>}
-                            {!supplier.telefono && !supplier.email && !supplier.pec && '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-slate-500 mb-1">Pagamento</p>
-                          <p className="text-slate-800">
-                            Metodo: <span className="font-medium">{supplier.metodo_pagamento || 'bonifico'}</span><br/>
-                            Giorni: {supplier.giorni_pagamento || 30}<br/>
-                            {supplier.iban && <span className="font-mono text-xs">IBAN: {supplier.iban}</span>}
-                          </p>
-                        </div>
-                      </div>
-                      {supplier.note && (
-                        <div className="mt-3 pt-3 border-t border-slate-200">
-                          <p className="text-slate-500 text-xs mb-1">Note</p>
-                          <p className="text-slate-700 text-sm">{supplier.note}</p>
-                        </div>
-                      )}
-                      <div className="mt-3 pt-3 border-t border-slate-200 flex gap-2">
-                        <a
-                          href={`/fatture?fornitore=${encodeURIComponent(supplier.ragione_sociale || supplier.partita_iva)}&anno=${selectedYear}`}
-                          className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded text-sm flex items-center gap-1 hover:bg-blue-200"
-                        >
-                          <FileText className="w-4 h-4" /> Vedi Fatture
-                        </a>
-                        <button
-                          onClick={() => setEditingSupplier(supplier)}
-                          className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded text-sm flex items-center gap-1 hover:bg-slate-200"
-                        >
-                          <Edit2 className="w-4 h-4" /> Modifica Anagrafica
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+            <DialogFooter className="gap-3 sm:gap-2">
+              <button
+                onClick={handleCloseDialog}
+                className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+                data-testid="cancel-btn"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !formData.ragione_sociale}
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+                data-testid="save-supplier-btn"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Salvataggio...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Salva
+                  </>
+                )}
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Modal Form */}
-      {(editingSupplier || showNewForm) && (
-        <SupplierFormModal
-          supplier={editingSupplier || emptySupplier}
-          onSave={handleSave}
-          onCancel={handleCloseModal}
-          isNew={showNewForm && !editingSupplier}
-          saving={saving}
-        />
-      )}
     </div>
   );
 }
