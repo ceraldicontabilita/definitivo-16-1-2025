@@ -1024,6 +1024,7 @@ export default function Fornitori() {
                 onDelete={handleDelete}
                 onViewInvoices={handleViewInvoices}
                 onChangeMetodo={handleChangeMetodo}
+                onSearchPiva={handleSearchPiva}
               />
             ))}
           </div>
