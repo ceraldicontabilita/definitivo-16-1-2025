@@ -17,6 +17,7 @@ export default function HACCPNotifiche() {
   useEffect(() => {
     loadNotifiche();
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterNonLette]);
 
   const loadNotifiche = async () => {

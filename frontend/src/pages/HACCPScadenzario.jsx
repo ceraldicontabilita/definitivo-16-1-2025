@@ -21,6 +21,7 @@ export default function HACCPScadenzario() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daysAhead, mostraScaduti]);
 
   const loadData = async () => {
