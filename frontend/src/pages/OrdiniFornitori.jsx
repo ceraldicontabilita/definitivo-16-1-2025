@@ -422,9 +422,17 @@ export default function OrdiniFornitori() {
                     <td style={{ padding: 10 }}>
                       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                         <button 
-                          onClick={() => handlePrintOrder(order)}
+                          onClick={() => handleDownloadPDF(order)}
                           style={{ background: "#e3f2fd", color: "#1976d2", padding: "5px 10px", border: "none", borderRadius: 4, cursor: "pointer" }}
-                          title="Stampa PDF"
+                          title="Scarica PDF"
+                          data-testid={`download-pdf-${order.id}`}
+                        >
+                          📄
+                        </button>
+                        <button 
+                          onClick={() => handlePrintOrder(order)}
+                          style={{ background: "#f3e8ff", color: "#7c3aed", padding: "5px 10px", border: "none", borderRadius: 4, cursor: "pointer" }}
+                          title="Stampa"
                         >
                           🖨️
                         </button>
