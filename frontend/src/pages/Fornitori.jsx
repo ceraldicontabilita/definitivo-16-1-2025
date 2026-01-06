@@ -68,13 +68,31 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
 
   const modalContent = (
     <div 
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ zIndex: 99999 }}
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        zIndex: 99999 
+      }}
       data-testid="supplier-modal-overlay"
     >
       {/* Overlay scuro */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)'
+        }}
         onClick={onClose}
       />
       
