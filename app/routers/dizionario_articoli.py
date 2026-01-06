@@ -1101,3 +1101,39 @@ async def reset_dizionario() -> Dict[str, Any]:
         "success": True,
         "deleted": result.deleted_count
     }
+
+
+
+@router.post("/categorizza-ai")
+async def categorizza_articoli_ai(
+    limite: int = Query(50, description="Numero massimo articoli da processare")
+) -> Dict[str, Any]:
+    """
+    Usa GPT-5.2 per categorizzare gli articoli con confidenza 0.
+    Aggiorna direttamente il dizionario con le categorie AI.
+    """
+    try:
+        from app.services.ai_categorizzazione import aggiorna_dizionario_con_ai
+        db = Database.get_db()
+        result = await aggiorna_dizionario_con_ai(db, limite=limite)
+        return result
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"Servizio AI non disponibile: {str(e)}")
+    except Exception as e:
+        logger.error(f"Errore categorizzazione AI: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/non-classificati")
+async def get_articoli_non_classificati(
+    limite: int = Query(100, description="Numero massimo articoli")
+) -> List[Dict[str, Any]]:
+    """
+    Ritorna gli articoli con confidenza 0, ordinati per occorrenze.
+    """
+    db = Database.get_db()
+    items = await db.dizionario_articoli.find(
+        {"confidenza": 0},
+        {"_id": 0}
+    ).sort("occorrenze", -1).limit(limite).to_list(limite)
+    return items
