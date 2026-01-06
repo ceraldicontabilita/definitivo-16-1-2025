@@ -368,7 +368,7 @@ export default function Fatture() {
     }
   }
 
-  function getMetodoPagamentoBadge(metodo) {
+  function _getMetodoPagamentoBadge(metodo) {
     const m = METODI_PAGAMENTO.find(mp => mp.value === metodo);
     if (!m) return null;
     return (

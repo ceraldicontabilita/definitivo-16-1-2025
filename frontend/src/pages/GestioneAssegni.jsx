@@ -14,10 +14,10 @@ const STATI_ASSEGNO = {
 
 export default function GestioneAssegni() {
   const [assegni, setAssegni] = useState([]);
-  const [stats, setStats] = useState({ totale: 0, per_stato: {} });
+  const [_stats, setStats] = useState({ totale: 0, per_stato: {} });
   const [loading, setLoading] = useState(true);
-  const [filterStato, setFilterStato] = useState('');
-  const [search, setSearch] = useState('');
+  const [filterStato, _setFilterStato] = useState('');
+  const [search, _setSearch] = useState('');
   
   // Generate modal
   const [showGenerate, setShowGenerate] = useState(false);
@@ -37,6 +37,7 @@ export default function GestioneAssegni() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterStato, search]);
 
   const loadData = async () => {
