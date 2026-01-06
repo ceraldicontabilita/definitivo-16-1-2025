@@ -976,6 +976,125 @@ export default function GestioneDipendenti() {
             )}
           </div>
           
+          {/* Modal Modifica Salario */}
+          {editingSalario && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: 'white',
+                borderRadius: 12,
+                padding: 24,
+                width: '90%',
+                maxWidth: 500,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+              }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1e3a5f' }}>✏️ Modifica Record</h3>
+                
+                <div style={{ display: 'grid', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Dipendente</label>
+                    <input
+                      type="text"
+                      value={editingSalario.dipendente}
+                      onChange={(e) => setEditingSalario({...editingSalario, dipendente: e.target.value})}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Anno</label>
+                      <select
+                        value={editingSalario.anno}
+                        onChange={(e) => setEditingSalario({...editingSalario, anno: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      >
+                        {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Mese</label>
+                      <select
+                        value={editingSalario.mese}
+                        onChange={(e) => setEditingSalario({...editingSalario, mese: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      >
+                        {mesiNomi.map((m, i) => (
+                          <option key={i} value={i + 1}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Importo Busta (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingSalario.importo_busta || 0}
+                        onChange={(e) => setEditingSalario({...editingSalario, importo_busta: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Importo Bonifico (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingSalario.importo_bonifico || 0}
+                        onChange={(e) => setEditingSalario({...editingSalario, importo_bonifico: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setEditingSalario(null)}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 8,
+                      border: '1px solid #e2e8f0',
+                      background: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    onClick={handleSaveSalario}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #2196f3, #1565c0)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    💾 Salva Modifiche
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Legenda */}
           <div style={{ 
             marginTop: 16, 
