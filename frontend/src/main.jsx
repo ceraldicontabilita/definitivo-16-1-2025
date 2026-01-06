@@ -103,6 +103,11 @@ const router = createBrowserRouter([
       { path: "regole-categorizzazione", element: <RegoleCategorizzazione /> },
       { path: "scadenze", element: <Scadenze /> },
       { path: "archivio-bonifici", element: <ArchivioBonifici /> },
+      // Contabilità Analitica
+      { path: "centri-costo", element: <CentriCosto /> },
+      { path: "ricette", element: <Ricette /> },
+      { path: "magazzino-dv", element: <MagazzinoDoppiaVerita /> },
+      { path: "utile-obiettivo", element: <UtileObiettivo /> },
     ],
   },
 ]);
