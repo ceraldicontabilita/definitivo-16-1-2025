@@ -115,7 +115,9 @@ export default function Ricette() {
   function generateLottoCodePreview() {
     if (!lottoModal) return '';
     const nome = lottoModal.nome?.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 8) || 'PROD';
-    const data = lottoData.data_produzione.replace(/-/g, '').substring(2); // YYMMDD
+    // Format: DDMMYYYY
+    const dateParts = lottoData.data_produzione.split('-'); // YYYY-MM-DD
+    const data = dateParts.length === 3 ? `${dateParts[2]}${dateParts[1]}${dateParts[0]}` : '';
     return `${nome}-###-${lottoData.quantita}${lottoData.unita}-${data}`;
   }
 
