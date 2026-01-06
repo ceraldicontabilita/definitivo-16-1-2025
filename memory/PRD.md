@@ -204,7 +204,7 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 - Rimosso App.js obsoleto
 - Corretti errori `process.env` → `window.location.origin`
 - Configurato ESLint con regole appropriate
-- Errori: 0, Warning: 61 (non bloccanti)
+- **Errori: 0, Warning: 0** (tutti i 62 warning risolti)
 
 ### 13. Sistema Gestione Regole Categorizzazione - COMPLETATA ✅ (6 Gen 2026)
 **Nuovi Endpoint `/api/regole/`:**
@@ -224,9 +224,10 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 
 **Frontend `/regole-categorizzazione`:**
 - Tab Fornitori/Descrizioni/Categorie con tabelle dati
+- **Editing inline** - Clicca icona matita per modificare direttamente
 - Pulsante "Scarica Excel" - Download file .xlsx
 - Pulsante "Carica Excel" - Upload file modificato
-- Pulsante "Applica e Ricategorizza" - Applica regole a tutte le fatture
+- Pulsante "Applica alle Fatture" - Ricategorizza con le nuove regole
 - Form inline per aggiunta nuova regola
 - Ricerca testuale tra le regole
 - Statistiche: 77 regole fornitori, 30 categorie
