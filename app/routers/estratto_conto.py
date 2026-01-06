@@ -103,7 +103,7 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
             importo_str = importo_str.replace('.', '').replace(',', '.')
             try:
                 importo = float(importo_str)
-            except:
+            except (ValueError, TypeError):
                 continue
             
             # Parse data contabile (DD/MM/YYYY)
@@ -113,7 +113,7 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
                     data_obj = date(int(parts[2]), int(parts[1]), int(parts[0]))
                 else:
                     continue
-            except:
+            except (ValueError, TypeError, IndexError):
                 continue
             
             # Parse data valuta
@@ -122,7 +122,7 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
                 if '/' in data_valuta:
                     parts = data_valuta.split('/')
                     data_pagamento = date(int(parts[2]), int(parts[1]), int(parts[0]))
-            except:
+            except (ValueError, TypeError, IndexError):
                 pass
             
             # Estrai fornitore/beneficiario
