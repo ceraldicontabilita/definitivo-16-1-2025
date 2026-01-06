@@ -96,11 +96,11 @@ PATTERNS_DESCRIZIONE = {
         "patterns": [
             r"pasta\b", r"riso\b", r"farina", r"pane\b", r"pizza",
             r"formaggio", r"mozzarella", r"prosciutto", r"salame",
-            r"carne\b", r"pesce\b", r"verdur", r"frutta", r"olio(?!\s*d[ie])",
+            r"carne\b", r"pesce\b", r"verdur", r"frutta",
             r"zucchero", r"sale\b", r"caff[eè]", r"latte\b", r"burro",
             r"uova?\b", r"tarall", r"biscott", r"dolc", r"gelat",
             r"alimentar", r"food", r"cibo", r"snack", r"patatine",
-            r"olio\s+(extravergine|oliva|semi)"
+            r"olio\s+(extravergine|oliva|semi|di\s+semi)"
         ],
         "conto": ("05.01.05", "Acquisto prodotti alimentari"),
         "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
