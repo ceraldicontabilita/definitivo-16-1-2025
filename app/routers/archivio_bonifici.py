@@ -230,7 +230,10 @@ async def get_job(job_id: str):
 
 @router.post("/jobs/{job_id}/upload")
 async def upload_files(job_id: str, background: BackgroundTasks, files: List[UploadFile] = File(...)):
-    """Carica file PDF o ZIP per elaborazione."""
+    """
+    Carica file PDF o ZIP per elaborazione.
+    Supporta ZIP con fino a 1500 PDF.
+    """
     db = Database.get_db()
     job = await db.bonifici_jobs.find_one({'id': job_id})
     if not job:
@@ -240,31 +243,54 @@ async def upload_files(job_id: str, background: BackgroundTasks, files: List[Upl
     job_dir.mkdir(parents=True, exist_ok=True)
     
     pdf_paths: List[Path] = []
+    zip_errors: List[str] = []
     
     for f in files:
         name = safe_filename(Path(f.filename).name)
-        raw = await f.read()
         
         if name.lower().endswith('.zip'):
-            # Estrai PDF da ZIP
+            # Salva ZIP temporaneamente su disco per gestire file grandi
+            zip_path = job_dir / f"temp_{name}"
             try:
-                with zipfile.ZipFile(io.BytesIO(raw)) as z:
+                # Leggi in chunk per file grandi
+                with open(zip_path, 'wb') as fd:
+                    while chunk := await f.read(1024 * 1024):  # 1MB chunks
+                        fd.write(chunk)
+                
+                # Estrai PDF da ZIP
+                with zipfile.ZipFile(zip_path, 'r') as z:
+                    pdf_count = 0
                     for info in z.infolist():
                         if info.is_dir():
                             continue
                         if not info.filename.lower().endswith('.pdf'):
                             continue
+                        
                         pdf_name = safe_filename(Path(info.filename).name)
-                        out_path = job_dir / pdf_name
-                        with z.open(info) as fsrc, open(out_path, 'wb') as fdst:
-                            fdst.write(fsrc.read())
-                        pdf_paths.append(out_path)
+                        # Evita collisioni di nomi
+                        out_path = job_dir / f"{pdf_count:04d}_{pdf_name}"
+                        
+                        try:
+                            with z.open(info) as fsrc, open(out_path, 'wb') as fdst:
+                                fdst.write(fsrc.read())
+                            pdf_paths.append(out_path)
+                            pdf_count += 1
+                        except Exception as e:
+                            zip_errors.append(f"{info.filename}: {str(e)}")
+                
+                # Rimuovi ZIP temporaneo
+                zip_path.unlink(missing_ok=True)
+                
+            except zipfile.BadZipFile:
+                zip_errors.append(f"{name}: File ZIP corrotto")
             except Exception as e:
-                logger.error(f"Error extracting ZIP: {e}")
+                zip_errors.append(f"{name}: {str(e)}")
+                
         elif name.lower().endswith('.pdf'):
             out = job_dir / name
             with open(out, 'wb') as fd:
-                fd.write(raw)
+                while chunk := await f.read(1024 * 1024):
+                    fd.write(chunk)
             pdf_paths.append(out)
     
     # Aggiorna job
@@ -273,6 +299,7 @@ async def upload_files(job_id: str, background: BackgroundTasks, files: List[Upl
         {'$set': {
             'status': 'queued',
             'total_files': len(pdf_paths),
+            'zip_errors': zip_errors[:50],  # Limita errori salvati
             'updated_at': datetime.now(timezone.utc).isoformat()
         }}
     )
@@ -280,7 +307,12 @@ async def upload_files(job_id: str, background: BackgroundTasks, files: List[Upl
     # Avvia elaborazione in background
     background.add_task(process_files_background, job_id, pdf_paths)
     
-    return {'job_id': job_id, 'accepted_files': len(pdf_paths)}
+    return {
+        'job_id': job_id, 
+        'accepted_files': len(pdf_paths),
+        'extraction_errors': len(zip_errors),
+        'errors_sample': zip_errors[:5] if zip_errors else []
+    }
 
 
 async def process_files_background(job_id: str, file_paths: List[Path]):
