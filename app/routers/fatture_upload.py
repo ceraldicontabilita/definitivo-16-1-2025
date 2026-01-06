@@ -217,6 +217,17 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
         
         warehouse_result = await auto_populate_warehouse_from_invoice(db, parsed, invoice["id"])
         
+        # Popolamento automatico tracciabilità HACCP
+        tracciabilita_result = {"created": 0, "skipped": 0}
+        try:
+            tracciabilita_result = await popola_tracciabilita_da_fattura(
+                fattura=invoice,
+                linee=parsed.get("linee", [])
+            )
+            logger.info(f"Tracciabilità HACCP: {tracciabilita_result.get('created', 0)} record creati")
+        except Exception as e:
+            logger.warning(f"Errore popolamento tracciabilità: {e}")
+        
         prima_nota_result = {"cassa": None, "banca": None}
         if metodo_pagamento != "misto":
             try:
@@ -249,6 +260,10 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             "warehouse": {
                 "products_created": warehouse_result.get("products_created", 0),
                 "products_updated": warehouse_result.get("products_updated", 0)
+            },
+            "tracciabilita_haccp": {
+                "created": tracciabilita_result.get("created", 0),
+                "skipped": tracciabilita_result.get("skipped", 0)
             },
             "prima_nota": prima_nota_result
         }
