@@ -344,6 +344,60 @@ METODI_PAGAMENTO = {
 
 **Test:** Verificato salvataggio database con curl - metodo_pagamento aggiornato correttamente
 
+### 21. Fix Ricerca Fornitori e Gestione Eliminazione - COMPLETATA ✅ (6 Gen 2026)
+
+**Problema Originale:**
+- La ricerca nella pagina `/fornitori` non filtrava i risultati
+- L'eliminazione fornitori con fatture collegate dava errore senza spiegazione
+
+**Bug Identificato:**
+- Esisteva un endpoint **duplicato** `GET /suppliers` in `public_api.py` senza il parametro `search`
+- Questo veniva chiamato al posto di quello corretto in `suppliers.py` perché registrato prima
+
+**Correzioni Backend (`/app/app/routers/suppliers.py`):**
+1. Rimosso endpoint duplicato da `public_api.py`
+2. Aggiornato query fatture per controllare sia `cedente_piva` che `supplier_vat`:
+   ```python
+   {"$or": [{"cedente_piva": piva}, {"supplier_vat": piva}]}
+   ```
+3. Ora 305 fornitori mostrano correttamente il conteggio fatture
+
+**Correzioni Frontend (`/app/frontend/src/pages/Fornitori.jsx`):**
+1. Implementato `useDebounce` hook con delay 500ms
+2. Aggiunto `AbortController` per evitare race conditions
+3. Gestione errore 400 per eliminazione con conferma force delete
+
+**Test Eseguiti:** 11/11 passati (100%)
+- Ricerca per nome: ACQUAVERDE → 1 risultato ✅
+- Ricerca per P.IVA: 04487630727 → 1 risultato ✅
+- Senza filtro: 310 fornitori ✅
+- Eliminazione con fatture: errore 400 + force delete ✅
+
+### 22. Aggiornamento Dati Fornitori da XLS - COMPLETATA ✅ (6 Gen 2026)
+
+**File importato:** `ReportFornitori.xls` (257 fornitori)
+
+**Dati aggiornati:**
+- Email, telefono, PEC
+- Indirizzo completo (via, CAP, comune, provincia)
+- Codice fiscale
+- 81 fornitori aggiornati con nuovi dati
+
+**Verifica Database:**
+- 310 fornitori totali nel DB
+- 1128 fatture 2024 confermate
+- Tutti i fornitori delle fatture 2024 presenti nel DB
+
+### 23. Chiarimento Pagina IVA - NOTA (6 Gen 2026)
+
+**Segnalazione utente:** "I dati sono sempre uguali per ogni mese"
+
+**Causa reale:** L'utente visualizzava l'anno 2026 (default dal sistema) che ha pochissimi dati
+- 2026: Solo 5 fatture, solo Gennaio con dati
+- 2025: 1328 fatture, dati diversi per ogni mese
+
+**Soluzione:** Selezionare l'anno 2025 dal selettore globale in sidebar. Non era un bug del codice.
+
 ### 20. Sistema Alert/Notifiche Scadenze Fiscali - COMPLETATA ✅ (6 Gen 2026)
 
 **Pagina `/scadenze` potenziata con:**
