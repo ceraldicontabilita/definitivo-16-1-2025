@@ -381,13 +381,28 @@ PATTERNS_DESCRIZIONE = {
         "patterns": [
             r"trasport", r"spedizion", r"corriere", r"dhl\b",
             r"ups\b", r"fedex", r"bartolini", r"brt\b", r"gls\b",
-            r"sda\b", r"poste\s+italian", r"consegna\b", r"delivery"
+            r"sda\b", r"poste\s+italian", r"consegna\b", r"delivery",
+            r"pedaggio", r"autostrad", r"parking", r"parcheggio"
         ],
         "conto": ("05.02.16", "Trasporti su acquisti"),
         "categoria_fiscale": CategoriaFiscale.SERVIZI,
         "deducibilita_ires": 100,
         "deducibilita_irap": 100,
         "note": "Spese di trasporto - 100% deducibile"
+    },
+    
+    # SPESE DI RAPPRESENTANZA
+    "rappresentanza": {
+        "patterns": [
+            r"pranzo\s+(aziendale|di\s+lavoro)", r"cena\s+di\s+lavoro",
+            r"pasto\s+(esterno|aziendale)", r"menu\s+fisso",
+            r"ospitalit", r"conviv"
+        ],
+        "conto": ("05.02.18", "Spese di rappresentanza"),
+        "categoria_fiscale": CategoriaFiscale.RAPPRESENTANZA,
+        "deducibilita_ires": 75,  # 75% deducibile
+        "deducibilita_irap": 100,
+        "note": "Spese rappresentanza - deducibili 75% fino ai limiti di legge (art. 108 TUIR)"
     },
     
     # PULIZIA E IGIENE
