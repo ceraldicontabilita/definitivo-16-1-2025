@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatEuro } from '../lib/utils';
 
-const API = process.env.REACT_APP_BACKEND_URL || '';
+const API = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
 
 export default function ContabilitaAvanzata() {
   const [imposte, setImposte] = useState(null);
