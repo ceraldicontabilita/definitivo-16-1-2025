@@ -627,11 +627,19 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
         </button>
       </div>
 
-      {/* Click fuori per chiudere menu */}
+      {/* Overlay per chiudere menu - deve essere FUORI dalla card */}
       {showMetodoMenu && (
         <div 
-          style={{ position: 'fixed', inset: 0, zIndex: 99 }}
-          onClick={() => setShowMetodoMenu(false)}
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            zIndex: 9998,
+            background: 'transparent'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMetodoMenu(false);
+          }}
         />
       )}
     </div>
