@@ -711,7 +711,7 @@ export default function Fatture() {
                     ))}
                   </ul>
                 </div>
-              )}}
+              )}
               
               {uploadResult.data.duplicates && uploadResult.data.duplicates.length > 0 && (
                 <div style={{ marginTop: 10 }}>
