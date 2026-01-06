@@ -458,15 +458,29 @@ async def sync_suppliers_from_invoices() -> Dict[str, Any]:
         existing = await db[Collections.SUPPLIERS].find_one({"partita_iva": supplier_vat})
         
         if existing:
-            # Aggiorna conteggio fatture se diverso
-            if existing.get("fatture_count") != group["count"]:
-                await db[Collections.SUPPLIERS].update_one(
-                    {"partita_iva": supplier_vat},
-                    {"$set": {"fatture_count": group["count"], "updated_at": datetime.utcnow().isoformat()}}
-                )
-                updated += 1
-            else:
-                skipped += 1
+            # Prepara aggiornamenti
+            updates = {"fatture_count": group["count"], "updated_at": datetime.utcnow().isoformat()}
+            
+            # Aggiorna ragione_sociale se mancante
+            if not existing.get("ragione_sociale") and group.get("supplier_name"):
+                updates["ragione_sociale"] = group["supplier_name"]
+            
+            # Aggiorna dati fornitore se mancanti
+            fornitore_data = group.get("fornitore") or {}
+            if not existing.get("indirizzo") and fornitore_data.get("indirizzo"):
+                updates["indirizzo"] = fornitore_data["indirizzo"]
+            if not existing.get("cap") and fornitore_data.get("cap"):
+                updates["cap"] = fornitore_data["cap"]
+            if not existing.get("comune") and fornitore_data.get("comune"):
+                updates["comune"] = fornitore_data["comune"]
+            if not existing.get("provincia") and fornitore_data.get("provincia"):
+                updates["provincia"] = fornitore_data["provincia"]
+            
+            await db[Collections.SUPPLIERS].update_one(
+                {"partita_iva": supplier_vat},
+                {"$set": updates}
+            )
+            updated += 1
             continue
         
         # Crea nuovo fornitore
