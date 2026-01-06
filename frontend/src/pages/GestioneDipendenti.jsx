@@ -82,7 +82,7 @@ export default function GestioneDipendenti() {
     } else if (activeTab === 'libretti') {
       loadLibretti();
     }
-  }, [activeTab, selectedYear, selectedMonth, filtroDipendente]);
+  }, [activeTab, selectedYear, selectedYearPrimaNota, selectedMonth, filtroDipendente]);
 
   const loadData = async () => {
     try {
