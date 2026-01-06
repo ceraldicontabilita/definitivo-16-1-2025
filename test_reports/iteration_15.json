@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://invoice-manager-264.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://invoice-manager-264.preview.emergentagent.com/prima-nota",
-    "IVA": "https://invoice-manager-264.preview.emergentagent.com/iva",
-    "Dipendenti": "https://invoice-manager-264.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://supplier-manager-7.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://supplier-manager-7.preview.emergentagent.com/prima-nota",
+    "IVA": "https://supplier-manager-7.preview.emergentagent.com/iva",
+    "Dipendenti": "https://supplier-manager-7.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",
