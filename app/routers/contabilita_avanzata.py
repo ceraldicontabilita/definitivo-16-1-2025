@@ -8,10 +8,12 @@ Endpoint per:
 - Bilancio dettagliato con deducibilità
 """
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import uuid
 import logging
+import io
 
 from app.database import Database
 from app.services.categorizzazione_contabile import (
@@ -21,6 +23,14 @@ from app.services.categorizzazione_contabile import (
     CategoriaFiscale
 )
 from app.services.calcolo_imposte import CalcolatoreImposte, ALIQUOTE_IRAP
+
+# PDF generation
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
