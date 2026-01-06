@@ -70,10 +70,10 @@ class TestCategorizzazionePreview:
         print(f"✓ Google Workspace correctly categorized: {data['categorizzazione']['conto_codice']} - {data['categorizzazione']['conto_nome']}")
     
     def test_categorizza_carburante(self):
-        """Test: Carburante should be categorized → conto 05.02.11"""
+        """Test: Carburante (Benzina) should be categorized → conto 05.02.11"""
         response = requests.get(
             f"{BASE_URL}/api/contabilita/categorizzazione-preview",
-            params={"descrizione": "Gasolio per autotrazione", "fornitore": "ENI Station"}
+            params={"descrizione": "Benzina super", "fornitore": "ENI Station"}
         )
         assert response.status_code == 200
         data = response.json()
