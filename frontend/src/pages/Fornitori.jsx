@@ -370,6 +370,8 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
   const metodo = getMetodo(metodoKey);
   const [showMetodoMenu, setShowMetodoMenu] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = React.useRef(null);
 
   const handleMetodoChange = async (newMetodo) => {
     if (newMetodo === metodoKey) {
@@ -380,6 +382,17 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
     setShowMetodoMenu(false);
     await onChangeMetodo(supplier.id, newMetodo);
     setUpdating(false);
+  };
+
+  const openMenu = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.right - 160
+      });
+    }
+    setShowMetodoMenu(true);
   };
 
   return (
