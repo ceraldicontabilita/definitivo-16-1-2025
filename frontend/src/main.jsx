@@ -93,6 +93,7 @@ const router = createBrowserRouter([
       { path: "commercialista", element: <Commercialista /> },
       { path: "bilancio", element: <Bilancio /> },
       { path: "scadenze", element: <Scadenze /> },
+      { path: "archivio-bonifici", element: <ArchivioBonifici /> },
     ],
   },
 ]);
