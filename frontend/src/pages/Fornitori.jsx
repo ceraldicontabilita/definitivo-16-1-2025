@@ -521,11 +521,11 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
                 marginTop: '4px',
                 backgroundColor: 'white',
                 borderRadius: '8px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
                 border: '1px solid #e5e7eb',
                 overflow: 'hidden',
-                zIndex: 100,
-                minWidth: '140px'
+                zIndex: 9999,
+                minWidth: '150px'
               }}>
                 {Object.entries(METODI_PAGAMENTO).filter(([k]) => k !== 'banca').map(([key, val]) => (
                   <button
