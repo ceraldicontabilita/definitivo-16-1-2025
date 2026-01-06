@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { 
   Search, Edit2, Trash2, Plus, FileText, Building2, 
   Phone, Mail, MapPin, CreditCard, AlertCircle, Check,
-  Users, X
+  Users, X, Filter, ChevronDown
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
 
 const METODI_PAGAMENTO = [
+  { value: "tutti", label: "Tutti", color: "bg-slate-500" },
   { value: "cassa", label: "Contanti", color: "bg-emerald-500" },
   { value: "banca", label: "Bonifico", color: "bg-blue-500" },
   { value: "bonifico", label: "Bonifico", color: "bg-blue-500" },
   { value: "assegno", label: "Assegno", color: "bg-amber-500" },
-  { value: "misto", label: "Misto", color: "bg-slate-500" },
+  { value: "misto", label: "Misto", color: "bg-slate-600" },
 ];
 
 const getMetodoInfo = (metodo) => {
@@ -39,27 +39,7 @@ const emptySupplier = {
   note: ''
 };
 
-// Card statistica
-function StatCard({ title, value, icon: Icon, color, subtext }) {
-  return (
-    <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-500">{title}</p>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
-          </div>
-          <div className={`p-3 rounded-xl ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
-            <Icon className={`w-6 h-6 ${color}`} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Modale Form Fornitore
+// Modale con Portal
 function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
   const [form, setForm] = useState(emptySupplier);
   const isNew = !supplier?.id;
@@ -71,8 +51,6 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
       setForm(emptySupplier);
     }
   }, [isOpen, supplier]);
-  
-  if (!isOpen) return null;
   
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -86,91 +64,100 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
     onSave(form);
   };
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center" data-testid="supplier-modal-overlay">
-      {/* Overlay */}
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: 99999 }}
+      data-testid="supplier-modal-overlay"
+    >
+      {/* Overlay scuro */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* Modal Content */}
+      {/* Modal */}
       <div 
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden"
+        style={{ animation: 'modalIn 0.2s ease-out' }}
         data-testid="supplier-modal"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              {isNew ? 'Nuovo Fornitore' : 'Modifica Anagrafica'}
-            </h2>
-            <p className="text-sm text-slate-500">
-              {isNew ? 'Inserisci i dati del nuovo fornitore' : `${form.ragione_sociale || form.denominazione}`}
-            </p>
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">
+                {isNew ? 'Nuovo Fornitore' : 'Modifica Anagrafica'}
+              </h2>
+              <p className="text-blue-100 text-sm mt-1">
+                {isNew ? 'Inserisci i dati del nuovo fornitore' : form.ragione_sociale || form.denominazione}
+              </p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              data-testid="close-modal-btn"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-            data-testid="close-modal-btn"
-          >
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
         </div>
 
         {/* Form Body */}
-        <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-180px)]">
           {/* Dati Azienda */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
-              <Building2 className="w-4 h-4" /> Dati Azienda
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2 border-b pb-2">
+              <Building2 className="w-4 h-4 text-blue-500" /> Dati Azienda
             </h4>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Ragione Sociale <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={form.ragione_sociale || ''}
                 onChange={(e) => handleChange('ragione_sociale', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                placeholder="Inserisci ragione sociale"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Nome azienda"
                 data-testid="input-ragione-sociale"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Partita IVA</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Partita IVA</label>
                 <input
                   type="text"
                   value={form.partita_iva || ''}
                   onChange={(e) => handleChange('partita_iva', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                   placeholder="01234567890"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Codice Fiscale</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Codice Fiscale</label>
                 <input
                   type="text"
                   value={form.codice_fiscale || ''}
                   onChange={(e) => handleChange('codice_fiscale', e.target.value.toUpperCase())}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
                 />
               </div>
             </div>
           </div>
 
           {/* Indirizzo */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Indirizzo
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2 border-b pb-2">
+              <MapPin className="w-4 h-4 text-blue-500" /> Indirizzo
             </h4>
             <input
               type="text"
               value={form.indirizzo || ''}
               onChange={(e) => handleChange('indirizzo', e.target.value)}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
               placeholder="Via/Piazza, numero civico"
             />
             <div className="grid grid-cols-3 gap-3">
@@ -178,7 +165,7 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
                 type="text"
                 value={form.cap || ''}
                 onChange={(e) => handleChange('cap', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="CAP"
                 maxLength={5}
               />
@@ -186,14 +173,14 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
                 type="text"
                 value={form.comune || ''}
                 onChange={(e) => handleChange('comune', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Comune"
               />
               <input
                 type="text"
                 value={form.provincia || ''}
                 onChange={(e) => handleChange('provincia', e.target.value.toUpperCase())}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Prov"
                 maxLength={2}
               />
@@ -201,23 +188,23 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
           </div>
 
           {/* Contatti */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
-              <Phone className="w-4 h-4" /> Contatti
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2 border-b pb-2">
+              <Phone className="w-4 h-4 text-blue-500" /> Contatti
             </h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <input
                 type="tel"
                 value={form.telefono || ''}
                 onChange={(e) => handleChange('telefono', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Telefono"
               />
               <input
                 type="email"
                 value={form.email || ''}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="Email"
               />
             </div>
@@ -225,23 +212,23 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
               type="email"
               value={form.pec || ''}
               onChange={(e) => handleChange('pec', e.target.value)}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="PEC (Posta Elettronica Certificata)"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              placeholder="PEC"
             />
           </div>
 
           {/* Pagamento */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-2">
-              <CreditCard className="w-4 h-4" /> Pagamento
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-2 border-b pb-2">
+              <CreditCard className="w-4 h-4 text-blue-500" /> Pagamento
             </h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Metodo</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Metodo</label>
                 <select
                   value={form.metodo_pagamento || 'bonifico'}
                   onChange={(e) => handleChange('metodo_pagamento', e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   <option value="bonifico">Bonifico</option>
                   <option value="cassa">Contanti</option>
@@ -250,12 +237,12 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Giorni Pagamento</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Giorni Pagamento</label>
                 <input
                   type="number"
                   value={form.giorni_pagamento || 30}
                   onChange={(e) => handleChange('giorni_pagamento', parseInt(e.target.value) || 30)}
-                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                   min={0}
                   max={365}
                 />
@@ -265,18 +252,18 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
               type="text"
               value={form.iban || ''}
               onChange={(e) => handleChange('iban', e.target.value.toUpperCase().replace(/\s/g, ''))}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all font-mono text-sm"
-              placeholder="IBAN (es. IT60X0542811101000000123456)"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              placeholder="IBAN"
             />
           </div>
 
           {/* Note */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Note</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
             <textarea
               value={form.note || ''}
               onChange={(e) => handleChange('note', e.target.value)}
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
               rows={2}
               placeholder="Note aggiuntive..."
             />
@@ -284,10 +271,10 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-100 px-6 py-4 flex justify-end gap-3">
+        <div className="bg-slate-50 border-t px-6 py-4 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors font-medium"
+            className="px-5 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg font-medium transition-colors"
             data-testid="cancel-btn"
           >
             Annulla
@@ -295,7 +282,7 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
           <button
             onClick={handleSubmit}
             disabled={saving || !form.ragione_sociale}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center gap-2 transition-colors"
             data-testid="save-supplier-btn"
           >
             {saving ? (
@@ -312,6 +299,127 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+
+  // Render con Portal nel body
+  return ReactDOM.createPortal(modalContent, document.body);
+}
+
+// Card Fornitore
+function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices }) {
+  const metodoInfo = getMetodoInfo(supplier.metodo_pagamento);
+  const hasIncompleteData = !supplier.partita_iva || !supplier.indirizzo || !supplier.email;
+  const nome = supplier.ragione_sociale || supplier.denominazione || 'Senza nome';
+  
+  return (
+    <div 
+      className="bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 overflow-hidden group"
+      data-testid={`supplier-card-${supplier.id}`}
+    >
+      {/* Header Card */}
+      <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-4 py-3 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+            {nome[0].toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-slate-800 truncate" title={nome}>
+              {nome}
+            </h3>
+            {supplier.partita_iva && (
+              <p className="text-xs text-slate-500 font-mono">P.IVA {supplier.partita_iva}</p>
+            )}
+          </div>
+          {hasIncompleteData && (
+            <div className="p-1.5 bg-amber-100 rounded-full" title="Dati incompleti">
+              <AlertCircle className="w-4 h-4 text-amber-600" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Body Card */}
+      <div className="p-4 space-y-3">
+        {/* Location */}
+        {(supplier.comune || supplier.indirizzo) && (
+          <div className="flex items-start gap-2 text-sm">
+            <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+            <span className="text-slate-600 line-clamp-2">
+              {supplier.indirizzo && `${supplier.indirizzo}, `}
+              {supplier.comune}{supplier.provincia && ` (${supplier.provincia})`}
+            </span>
+          </div>
+        )}
+
+        {/* Contact */}
+        {(supplier.email || supplier.telefono) && (
+          <div className="flex items-center gap-2 text-sm">
+            {supplier.email ? (
+              <>
+                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="text-slate-600 truncate">{supplier.email}</span>
+              </>
+            ) : (
+              <>
+                <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="text-slate-600">{supplier.telefono}</span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <p className="text-lg font-bold text-slate-800">{supplier.fatture_count || 0}</p>
+              <p className="text-xs text-slate-500">Fatture</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-slate-800">{supplier.giorni_pagamento || 30}</p>
+              <p className="text-xs text-slate-500">Giorni</p>
+            </div>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${metodoInfo.color}`}>
+            {metodoInfo.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
+        <button
+          onClick={() => onViewInvoices(supplier)}
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:bg-white hover:text-blue-600 rounded-lg transition-colors"
+          data-testid={`view-invoices-${supplier.id}`}
+        >
+          <FileText className="w-4 h-4" />
+          Fatture
+        </button>
+        <button
+          onClick={() => onEdit(supplier)}
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:bg-white hover:text-blue-600 rounded-lg transition-colors"
+          data-testid={`edit-supplier-${supplier.id}`}
+        >
+          <Edit2 className="w-4 h-4" />
+          Modifica
+        </button>
+        <button
+          onClick={() => onDelete(supplier.id)}
+          className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+          data-testid={`delete-supplier-${supplier.id}`}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -321,6 +429,9 @@ export default function Fornitori() {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterMetodo, setFilterMetodo] = useState('tutti');
+  const [filterIncomplete, setFilterIncomplete] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentSupplier, setCurrentSupplier] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -342,13 +453,25 @@ export default function Fornitori() {
     loadData();
   }, [loadData]);
 
+  // Filtra fornitori
+  const filteredSuppliers = suppliers.filter(s => {
+    if (filterMetodo !== 'tutti') {
+      const metodo = s.metodo_pagamento || 'bonifico';
+      if (filterMetodo === 'banca' && metodo !== 'banca' && metodo !== 'bonifico') return false;
+      if (filterMetodo !== 'banca' && metodo !== filterMetodo) return false;
+    }
+    if (filterIncomplete) {
+      if (s.partita_iva && s.indirizzo && s.email) return false;
+    }
+    return true;
+  });
+
   const openNewSupplier = () => {
     setCurrentSupplier(null);
     setModalOpen(true);
   };
 
   const openEditSupplier = (supplier) => {
-    console.log('Edit supplier:', supplier.ragione_sociale || supplier.denominazione);
     setCurrentSupplier(supplier);
     setModalOpen(true);
   };
@@ -402,7 +525,7 @@ export default function Fornitori() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" data-testid="fornitori-page">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50" data-testid="fornitori-page">
       <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         {/* Header */}
         <div className="mb-8">
@@ -410,188 +533,191 @@ export default function Fornitori() {
           <p className="text-slate-500">Anagrafica completa dei fornitori e metodi di pagamento</p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard 
-            title="Totale Fornitori" 
-            value={stats.total} 
-            icon={Users} 
-            color="text-blue-600"
-          />
-          <StatCard 
-            title="Con Fatture" 
-            value={stats.withInvoices} 
-            icon={FileText} 
-            color="text-emerald-600"
-            subtext={`${stats.total > 0 ? Math.round((stats.withInvoices / stats.total) * 100) : 0}% attivi`}
-          />
-          <StatCard 
-            title="Dati Incompleti" 
-            value={stats.incomplete} 
-            icon={AlertCircle} 
-            color="text-amber-600"
-            subtext="Da completare"
-          />
-          <StatCard 
-            title="Pagamento Cash" 
-            value={stats.cash} 
-            icon={CreditCard} 
-            color="text-violet-600"
-          />
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Totale</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Con Fatture</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.withInvoices}</p>
+              </div>
+              <div className="p-3 bg-emerald-100 rounded-xl">
+                <FileText className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Incompleti</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.incomplete}</p>
+              </div>
+              <div className="p-3 bg-amber-100 rounded-xl">
+                <AlertCircle className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Contanti</p>
+                <p className="text-2xl font-bold text-violet-600">{stats.cash}</p>
+              </div>
+              <div className="p-3 bg-violet-100 rounded-xl">
+                <CreditCard className="w-6 h-6 text-violet-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Search & Actions */}
-        <Card className="mb-6 border-0 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Cerca per nome, P.IVA, comune..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  data-testid="search-input"
-                />
+        {/* Search & Filters */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
+          <div className="p-4 flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cerca per nome, P.IVA, comune..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                data-testid="search-input"
+              />
+            </div>
+            
+            {/* Filter Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-3 border rounded-xl transition-colors ${
+                showFilters || filterMetodo !== 'tutti' || filterIncomplete
+                  ? 'bg-blue-50 border-blue-200 text-blue-700'
+                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+              data-testid="toggle-filters"
+            >
+              <Filter className="w-5 h-5" />
+              Filtri
+              {(filterMetodo !== 'tutti' || filterIncomplete) && (
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              )}
+              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* New Supplier */}
+            <button
+              onClick={openNewSupplier}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm"
+              data-testid="new-supplier-btn"
+            >
+              <Plus className="w-5 h-5" />
+              Nuovo Fornitore
+            </button>
+          </div>
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="px-4 pb-4 pt-2 border-t border-slate-100 flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-600">Metodo:</span>
+                <select
+                  value={filterMetodo}
+                  onChange={(e) => setFilterMetodo(e.target.value)}
+                  className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 bg-white"
+                  data-testid="filter-metodo"
+                >
+                  <option value="tutti">Tutti</option>
+                  <option value="banca">Bonifico</option>
+                  <option value="cassa">Contanti</option>
+                  <option value="assegno">Assegno</option>
+                  <option value="misto">Misto</option>
+                </select>
               </div>
+              
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filterIncomplete}
+                  onChange={(e) => setFilterIncomplete(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                  data-testid="filter-incomplete"
+                />
+                <span className="text-sm text-slate-600">Solo dati incompleti</span>
+              </label>
+
+              {(filterMetodo !== 'tutti' || filterIncomplete) && (
+                <button
+                  onClick={() => { setFilterMetodo('tutti'); setFilterIncomplete(false); }}
+                  className="text-sm text-blue-600 hover:text-blue-800 ml-auto"
+                >
+                  Resetta filtri
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Results info */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-slate-500">
+            {filteredSuppliers.length === suppliers.length 
+              ? `${suppliers.length} fornitori`
+              : `${filteredSuppliers.length} di ${suppliers.length} fornitori`
+            }
+          </p>
+        </div>
+
+        {/* Suppliers Grid */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+          </div>
+        ) : filteredSuppliers.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+            <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700 mb-2">
+              {suppliers.length === 0 ? 'Nessun fornitore' : 'Nessun risultato'}
+            </h3>
+            <p className="text-slate-500 mb-6">
+              {suppliers.length === 0 
+                ? 'Inizia aggiungendo il tuo primo fornitore'
+                : 'Prova a modificare i filtri di ricerca'
+              }
+            </p>
+            {suppliers.length === 0 && (
               <button
                 onClick={openNewSupplier}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm"
-                data-testid="new-supplier-btn"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
               >
                 <Plus className="w-5 h-5" />
-                Nuovo Fornitore
+                Aggiungi Fornitore
               </button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Suppliers List */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="border-b border-slate-100 pb-4">
-            <CardTitle className="text-lg font-semibold text-slate-700 flex items-center gap-2">
-              <Building2 className="w-5 h-5" />
-              Elenco Fornitori
-              <Badge variant="secondary" className="ml-2">{suppliers.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-              </div>
-            ) : suppliers.length === 0 ? (
-              <div className="text-center py-12 px-4">
-                <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500 mb-4">
-                  {search ? 'Nessun fornitore trovato per questa ricerca' : 'Nessun fornitore presente'}
-                </p>
-                {!search && (
-                  <button
-                    onClick={openNewSupplier}
-                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 mx-auto"
-                  >
-                    <Plus className="w-4 h-4" /> Aggiungi il primo fornitore
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {suppliers.map((supplier) => {
-                  const metodoInfo = getMetodoInfo(supplier.metodo_pagamento);
-                  const hasIncompleteData = !supplier.partita_iva || !supplier.indirizzo || !supplier.email;
-                  
-                  return (
-                    <div 
-                      key={supplier.id} 
-                      className="p-4 hover:bg-slate-50 transition-colors"
-                      data-testid={`supplier-row-${supplier.id}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        {/* Avatar */}
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-                          {(supplier.ragione_sociale || supplier.denominazione || '?')[0].toUpperCase()}
-                        </div>
-                        
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-slate-800">
-                              {supplier.ragione_sociale || supplier.denominazione || 'Senza nome'}
-                            </h3>
-                            {hasIncompleteData && (
-                              <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                                <AlertCircle className="w-3 h-3" />
-                                Incompleto
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 mt-1">
-                            {supplier.partita_iva && (
-                              <span className="font-mono text-xs">P.IVA {supplier.partita_iva}</span>
-                            )}
-                            {supplier.comune && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {supplier.comune}
-                              </span>
-                            )}
-                            {supplier.email && (
-                              <span className="flex items-center gap-1 hidden md:flex">
-                                <Mail className="w-3 h-3" />
-                                {supplier.email}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Fatture count */}
-                        <div className="text-center px-3 hidden sm:block">
-                          <p className="text-xs text-slate-400">Fatture</p>
-                          <p className="text-lg font-bold text-slate-700">{supplier.fatture_count || 0}</p>
-                        </div>
-                        
-                        {/* Badge metodo */}
-                        <Badge className={`${metodoInfo.color} text-white border-0 shrink-0`}>
-                          {metodoInfo.label}
-                        </Badge>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={() => handleViewInvoices(supplier)}
-                            className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
-                            title="Vedi fatture"
-                            data-testid={`view-invoices-${supplier.id}`}
-                          >
-                            <FileText className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => openEditSupplier(supplier)}
-                            className="p-2 hover:bg-blue-50 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
-                            title="Modifica anagrafica"
-                            data-testid={`edit-supplier-${supplier.id}`}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(supplier.id)}
-                            className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-600 transition-colors"
-                            title="Elimina"
-                            data-testid={`delete-supplier-${supplier.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredSuppliers.map((supplier) => (
+              <SupplierCard
+                key={supplier.id}
+                supplier={supplier}
+                onEdit={openEditSupplier}
+                onDelete={handleDelete}
+                onViewInvoices={handleViewInvoices}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modal */}
