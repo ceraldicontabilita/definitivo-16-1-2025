@@ -666,14 +666,30 @@ async def genera_dizionario() -> Dict[str, Any]:
     """
     db = Database.get_db()
     
-    # Estrai articoli
+    # Estrai articoli con gestione sicura dei numeri come stringhe
     pipeline = [
         {"$unwind": "$linee"},
+        {"$addFields": {
+            "prezzo_clean": {
+                "$cond": {
+                    "if": {"$eq": [{"$type": "$linee.prezzo_totale"}, "string"]},
+                    "then": {
+                        "$convert": {
+                            "input": {"$trim": {"input": {"$replaceAll": {"input": "$linee.prezzo_totale", "find": ",", "replacement": "."}}}},
+                            "to": "double",
+                            "onError": 0,
+                            "onNull": 0
+                        }
+                    },
+                    "else": {"$ifNull": [{"$toDouble": "$linee.prezzo_totale"}, 0]}
+                }
+            }
+        }},
         {"$group": {
             "_id": "$linee.descrizione",
             "count": {"$sum": 1},
             "fornitori": {"$addToSet": "$supplier_name"},
-            "totale_importo": {"$sum": {"$toDouble": {"$ifNull": ["$linee.prezzo_totale", "0"]}}}
+            "totale_importo": {"$sum": "$prezzo_clean"}
         }},
         {"$match": {"_id": {"$ne": None, "$ne": ""}}},
         {"$sort": {"count": -1}}
