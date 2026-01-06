@@ -389,7 +389,7 @@ export function useFornitori(filters = {}) {
 /**
  * Hook per gestione assegni
  */
-export function useAssegni(filters = {}) {
+export function useAssegni(_filters = {}) {
   const [assegni, setAssegni] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
