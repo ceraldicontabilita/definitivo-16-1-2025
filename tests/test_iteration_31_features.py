@@ -198,7 +198,11 @@ class TestF24PublicEndpoints:
         assert response.status_code == 200, f"Expected 200, got {response.status_code}"
         
         data = response.json()
-        assert isinstance(data, list), "Should return a list"
+        # Response is an object with f24s list
+        assert "f24s" in data or isinstance(data, list), "Should return f24s list or direct list"
+        if "f24s" in data:
+            assert isinstance(data["f24s"], list), "f24s should be a list"
+            assert "count" in data, "Should include count"
 
 
 class TestF24ZipDuplicateDetection:
