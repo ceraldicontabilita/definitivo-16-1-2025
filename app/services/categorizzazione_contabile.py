@@ -65,7 +65,7 @@ PATTERNS_DESCRIZIONE = {
     "bevande_alcoliche": {
         "patterns": [
             r"limoncello", r"amaro", r"grappa", r"vodka", r"rum", r"whisky",
-            r"gin", r"cognac", r"brandy", r"liquore", r"aperitivo",
+            r"\bgin\b", r"cognac", r"brandy", r"liquore", r"aperitivo",
             r"vermut", r"vermouth", r"sambuca", r"nocino", r"digestivo",
             r"distillat", r"spirit", r"cocktail", r"tonic", r"%\s*vol",
             r"vino\b", r"birra", r"prosecco", r"champagne", r"spumante"
