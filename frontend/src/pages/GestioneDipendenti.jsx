@@ -558,6 +558,14 @@ export default function GestioneDipendenti() {
           testId="tab-anagrafica"
         />
         <TabButton 
+          active={activeTab === 'contratti'} 
+          onClick={() => setActiveTab('contratti')}
+          icon="📄"
+          label="Contratti"
+          color="#8b5cf6"
+          testId="tab-contratti"
+        />
+        <TabButton 
           active={activeTab === 'salari'} 
           onClick={() => setActiveTab('salari')}
           icon="📒"
