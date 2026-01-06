@@ -372,6 +372,280 @@ PATTERNS_DESCRIZIONE = {
         "deducibilita_ires": 100,
         "deducibilita_irap": 100,
         "note": "Prodotti pulizia - 100% deducibile"
+    },
+    
+    # CAFFE E TORREFAZIONE
+    "caffe": {
+        "patterns": [
+            r"caff[eè]\b", r"espresso", r"cappuccino", r"moka",
+            r"miscela", r"arabica", r"robusta", r"torrefazione",
+            r"capsula", r"cialda", r"nespresso", r"dolce\s+gusto",
+            r"lavazza", r"illy\b", r"segafredo", r"costadoro"
+        ],
+        "conto": ("05.01.09", "Acquisto caffe e affini"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Caffe per rivendita - 100% deducibile"
+    },
+    
+    # SURGELATI
+    "surgelati": {
+        "patterns": [
+            r"surgelat", r"congelat", r"frozen", r"ghiaccia",
+            r"gelato\b", r"sorbetto", r"granita", r"semifreddo"
+        ],
+        "conto": ("05.01.10", "Acquisto surgelati"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Surgelati per rivendita - 100% deducibile"
+    },
+    
+    # PRODOTTI DA FORNO E PASTICCERIA
+    "pasticceria": {
+        "patterns": [
+            r"cornett", r"brioche", r"croissant", r"sfoglia",
+            r"pasticceria", r"torta", r"dolciar", r"ciambella",
+            r"plum\s*cake", r"biscott", r"pastiera", r"cannolo"
+        ],
+        "conto": ("05.01.11", "Acquisto prodotti da forno"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Prodotti da forno per rivendita - 100% deducibile"
+    },
+    
+    # DIRITTI SIAE/SCF
+    "diritti_autore": {
+        "patterns": [
+            r"siae\b", r"scf\b", r"diritti?\s+d[\'']?autore",
+            r"musica\s+d[\'']?ambiente", r"compensi?\s+siae",
+            r"licenza\s+musicale", r"repertorio"
+        ],
+        "conto": ("05.02.21", "Diritti SIAE e licenze"),
+        "categoria_fiscale": CategoriaFiscale.SERVIZI,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Diritti SIAE - 100% deducibile come costi per servizi"
+    },
+    
+    # NOLEGGIO AUTO LUNGO TERMINE
+    "noleggio_auto": {
+        "patterns": [
+            r"noleggio\s+(auto|veicol|lungo\s+termine)",
+            r"arval\b", r"leasys", r"ald\s+automotive",
+            r"canone\s+finanziario", r"nlt\b", r"lease"
+        ],
+        "conto": ("05.02.22", "Noleggio automezzi"),
+        "categoria_fiscale": CategoriaFiscale.NOLEGGIO_AUTO,
+        "deducibilita_ires": 20,  # 20% per uso promiscuo
+        "deducibilita_irap": 20,
+        "note": "Noleggio auto - deducibile 20% uso promiscuo (art. 164 TUIR), 100% se strumentale"
+    },
+    
+    # BUONI PASTO
+    "buoni_pasto": {
+        "patterns": [
+            r"buon[io]\s+pasto", r"ticket\s+restaurant", r"edenred",
+            r"sodexo\s+pass", r"day\s+tronic", r"pellegrini\s+card"
+        ],
+        "conto": ("05.03.05", "Buoni pasto dipendenti"),
+        "categoria_fiscale": CategoriaFiscale.PERSONALE,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Buoni pasto - 100% deducibile, IVA 4% detraibile"
+    },
+    
+    # CANONI E ABBONAMENTI
+    "canoni_abbonamenti": {
+        "patterns": [
+            r"canone\s+(manutenzione|assistenza|abbonamento)",
+            r"abbonamento\s+(annuale|mensile|trimestrale)",
+            r"legalmail", r"pec\b", r"firma\s+digitale"
+        ],
+        "conto": ("05.02.23", "Canoni e abbonamenti"),
+        "categoria_fiscale": CategoriaFiscale.SERVIZI,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Canoni e abbonamenti - 100% deducibile"
+    },
+    
+    # BIRRA
+    "birra": {
+        "patterns": [
+            r"birra\b", r"peroni\b", r"heineken", r"moretti",
+            r"nastro\s+azzurro", r"tourtel", r"corona\b",
+            r"budweiser", r"ceres\b", r"beck[\'']?s"
+        ],
+        "conto": ("05.01.03", "Acquisto bevande alcoliche"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Birra per rivendita - 100% deducibile"
+    },
+    
+    # MATERIALE EDILE E FERRAMENTA SPECIFICO
+    "materiale_edile": {
+        "patterns": [
+            r"profilat", r"alluminio\b", r"acquaragia",
+            r"vernice", r"stucco", r"cemento", r"malta",
+            r"piastrelle", r"legno\b", r"pannello"
+        ],
+        "conto": ("05.01.12", "Materiale edile e costruzioni"),
+        "categoria_fiscale": CategoriaFiscale.MATERIE_PRIME,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Materiale edile - 100% deducibile"
+    },
+    
+    # THE E INFUSI
+    "the_infusi": {
+        "patterns": [
+            r"\bthe\b", r"\btea\b", r"infuso", r"camomilla",
+            r"tisana", r"esta\s+the", r"ferrero.*the",
+            r"lipton", r"twinings"
+        ],
+        "conto": ("05.01.04", "Acquisto bevande analcoliche"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "The e infusi per rivendita - 100% deducibile"
+    },
+    
+    # SALUMI E INSACCATI
+    "salumi": {
+        "patterns": [
+            r"salame\b", r"prosciutt", r"pancetta", r"mortadella",
+            r"bresaola", r"speck\b", r"coppa\b", r"lardo\b",
+            r"wurstel", r"salsiccia", r"insaccat", r"affettat",
+            r"cervellatina", r"cotto\b.*suino"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Salumi per rivendita - 100% deducibile"
+    },
+    
+    # LATTICINI E FORMAGGI
+    "latticini": {
+        "patterns": [
+            r"grana\s+padano", r"parmigiano", r"pecorino",
+            r"mozzarella", r"ricotta", r"burro\b", r"panna\b",
+            r"yogurt", r"latticin", r"caseari"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Latticini per rivendita - 100% deducibile"
+    },
+    
+    # CONFETTURE E MARMELLATE  
+    "confetture": {
+        "patterns": [
+            r"confettura", r"marmellata", r"composta",
+            r"hero\b", r"zuegg", r"rigoni", r"poker\s+confet"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Confetture per rivendita - 100% deducibile"
+    },
+    
+    # PRODOTTI ORIENTALI/ETNICI
+    "prodotti_etnici": {
+        "patterns": [
+            r"wasabi", r"sushi", r"soia\b", r"tofu",
+            r"noodle", r"ramen", r"curry", r"tandoori"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Prodotti etnici per rivendita - 100% deducibile"
+    },
+    
+    # AMMONIACA E PRODOTTI CHIMICI ALIMENTARI
+    "additivi_alimentari": {
+        "patterns": [
+            r"ammoniaca.*bicarbonato", r"e503\b", r"lievito",
+            r"bicarbonato", r"additiv", r"conservant"
+        ],
+        "conto": ("05.01.13", "Additivi e ingredienti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MATERIE_PRIME,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Additivi alimentari - 100% deducibile"
+    },
+    
+    # FRUTTA SECCA E CANDITI
+    "frutta_secca": {
+        "patterns": [
+            r"scorzone", r"candito", r"frutta\s+secca",
+            r"mandorl", r"nocciola", r"pistacchio", r"noce\b",
+            r"uvetta", r"datteri", r"fichi\s+secchi"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Frutta secca per rivendita - 100% deducibile"
+    },
+    
+    # FUNGHI
+    "funghi": {
+        "patterns": [
+            r"fungh", r"champignon", r"porcin", r"ovul",
+            r"chiodini", r"pleurotus", r"tartufo"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Funghi per rivendita - 100% deducibile"
+    },
+    
+    # VERDURE E ORTAGGI
+    "verdure": {
+        "patterns": [
+            r"sedano\b", r"carota", r"cipolla", r"pomodor",
+            r"insalata", r"lattuga", r"zucchina", r"melanzana",
+            r"peperone", r"patata", r"mirtill", r"ortofrutt"
+        ],
+        "conto": ("05.01.05", "Acquisto prodotti alimentari"),
+        "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Verdure per rivendita - 100% deducibile"
+    },
+    
+    # TAPPEZZERIA E TENDAGGI
+    "tappezzeria": {
+        "patterns": [
+            r"tappezzer", r"tendaggi", r"tenda\b", r"tessut",
+            r"stoffa", r"rivestiment", r"imbottit"
+        ],
+        "conto": ("05.02.24", "Arredi e tappezzeria"),
+        "categoria_fiscale": CategoriaFiscale.SERVIZI,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Tappezzeria - 100% deducibile come servizi"
+    },
+    
+    # IMBALLAGGI SPECIFICI
+    "imballaggi": {
+        "patterns": [
+            r"borsa\s+tnt", r"shopper", r"busta\s+biodegradabile",
+            r"sacchett", r"vaschett", r"contenitor.*monouso"
+        ],
+        "conto": ("05.01.07", "Materiali di consumo e imballaggio"),
+        "categoria_fiscale": CategoriaFiscale.MATERIE_PRIME,
+        "deducibilita_ires": 100,
+        "deducibilita_irap": 100,
+        "note": "Imballaggi - 100% deducibile"
     }
 }
 
