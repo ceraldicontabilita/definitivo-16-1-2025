@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import api from "./api";
 import GlobalSearch from "./components/GlobalSearch";
-import { AnnoSelector, useAnnoGlobale } from "./contexts/AnnoContext";
+import { AnnoSelector } from "./contexts/AnnoContext";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: "📊", short: "Home" },
