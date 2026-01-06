@@ -328,9 +328,9 @@ async def list_suppliers(
     for supplier in suppliers:
         piva = supplier.get("partita_iva")
         if piva:
-            # Conta fatture e totale
+            # Conta fatture e totale (check both cedente_piva and supplier_vat fields)
             pipeline = [
-                {"$match": {"cedente_piva": piva}},
+                {"$match": {"$or": [{"cedente_piva": piva}, {"supplier_vat": piva}]}},
                 {"$group": {
                     "_id": None,
                     "count": {"$sum": 1},
