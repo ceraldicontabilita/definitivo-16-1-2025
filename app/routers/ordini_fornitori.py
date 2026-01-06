@@ -3,10 +3,25 @@ Ordini Fornitori Router - Gestione ordini ai fornitori.
 Refactored from public_api.py
 """
 from fastapi import APIRouter, HTTPException, Body
+from fastapi.responses import StreamingResponse
 from typing import Dict, Any, List
 from datetime import datetime
 import uuid
 import logging
+import smtplib
+import os
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+from io import BytesIO
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 from app.database import Database
 
