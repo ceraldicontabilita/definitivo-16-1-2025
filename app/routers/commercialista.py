@@ -711,3 +711,297 @@ Generato il {datetime.now().strftime('%d/%m/%Y %H:%M')}
         media_type='application/zip',
         headers={'Content-Disposition': f'attachment; filename=export_commercialista_{mese_str}.zip'}
     )
+
+
+@router.get("/export-excel/{anno}/{mese}")
+async def export_excel_commercialista(anno: int, mese: int):
+    """
+    Export Excel mensile per commercialista.
+    Include fogli separati per: fatture, corrispettivi, prima nota, IVA.
+    Senza dettaglio deducibilità come richiesto.
+    """
+    import io
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+    from openpyxl.utils import get_column_letter
+    from fastapi.responses import StreamingResponse
+    
+    db = Database.get_db()
+    mese_str = f"{anno}-{mese:02d}"
+    mese_nome = ["", "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+                 "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"][mese]
+    
+    # Stili
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    money_format = '#,##0.00 €'
+    
+    wb = Workbook()
+    
+    # === FOGLIO 1: FATTURE ACQUISTO ===
+    ws_fatture = wb.active
+    ws_fatture.title = "Fatture Acquisto"
+    
+    fatture = await db["invoices"].find({
+        "invoice_date": {"$regex": f"^{mese_str}"}
+    }, {"_id": 0}).sort("invoice_date", 1).to_list(10000)
+    
+    headers_fatture = ['Data', 'N. Fattura', 'Fornitore', 'P.IVA Fornitore', 'Categoria', 
+                       'Imponibile', 'IVA', 'Totale', 'Pagamento', 'Conto']
+    
+    for col, header in enumerate(headers_fatture, 1):
+        cell = ws_fatture.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = Alignment(horizontal='center')
+    
+    tot_imponibile = 0
+    tot_iva = 0
+    tot_fatture = 0
+    
+    for row, f in enumerate(fatture, 2):
+        imponibile = float(f.get('total_amount', 0) or 0) - float(f.get('total_tax', 0) or 0)
+        iva = float(f.get('total_tax', 0) or 0)
+        totale = float(f.get('total_amount', 0) or 0)
+        
+        tot_imponibile += imponibile
+        tot_iva += iva
+        tot_fatture += totale
+        
+        values = [
+            f.get('invoice_date', '')[:10],
+            f.get('invoice_number', ''),
+            f.get('supplier_name', ''),
+            f.get('supplier_vat', ''),
+            f.get('categoria_contabile', '').replace('_', ' ').title(),
+            imponibile,
+            iva,
+            totale,
+            f.get('payment_method', f.get('metodo_pagamento', '')),
+            f.get('conto_costo_codice', '')
+        ]
+        
+        for col, value in enumerate(values, 1):
+            cell = ws_fatture.cell(row=row, column=col, value=value)
+            cell.border = border
+            if col in [6, 7, 8]:
+                cell.number_format = money_format
+    
+    # Riga totali
+    row_tot = len(fatture) + 2
+    ws_fatture.cell(row=row_tot, column=5, value="TOTALI:").font = Font(bold=True)
+    ws_fatture.cell(row=row_tot, column=6, value=tot_imponibile).number_format = money_format
+    ws_fatture.cell(row=row_tot, column=7, value=tot_iva).number_format = money_format
+    ws_fatture.cell(row=row_tot, column=8, value=tot_fatture).number_format = money_format
+    for col in [6, 7, 8]:
+        ws_fatture.cell(row=row_tot, column=col).font = Font(bold=True)
+    
+    # Larghezza colonne
+    for col in range(1, 11):
+        ws_fatture.column_dimensions[get_column_letter(col)].width = 15 if col not in [3] else 30
+    
+    # === FOGLIO 2: CORRISPETTIVI ===
+    ws_corr = wb.create_sheet("Corrispettivi")
+    
+    corrispettivi = await db["corrispettivi"].find({
+        "data": {"$regex": f"^{mese_str}"}
+    }, {"_id": 0}).sort("data", 1).to_list(10000)
+    
+    headers_corr = ['Data', 'Totale', 'Contante', 'Elettronico', 'Chiusura N.', 'Note']
+    
+    for col, header in enumerate(headers_corr, 1):
+        cell = ws_corr.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    tot_corr = 0
+    tot_contante = 0
+    tot_elettr = 0
+    
+    for row, c in enumerate(corrispettivi, 2):
+        totale = float(c.get('totale', 0) or 0)
+        contante = float(c.get('pagato_contante', c.get('pagato_cassa', 0)) or 0)
+        elettr = float(c.get('pagato_elettronico', 0) or 0)
+        
+        tot_corr += totale
+        tot_contante += contante
+        tot_elettr += elettr
+        
+        values = [
+            c.get('data', '')[:10],
+            totale,
+            contante,
+            elettr,
+            c.get('numero_chiusura', ''),
+            c.get('note', '')
+        ]
+        
+        for col, value in enumerate(values, 1):
+            cell = ws_corr.cell(row=row, column=col, value=value)
+            cell.border = border
+            if col in [2, 3, 4]:
+                cell.number_format = money_format
+    
+    # Totali corrispettivi
+    row_tot = len(corrispettivi) + 2
+    ws_corr.cell(row=row_tot, column=1, value="TOTALI:").font = Font(bold=True)
+    ws_corr.cell(row=row_tot, column=2, value=tot_corr).number_format = money_format
+    ws_corr.cell(row=row_tot, column=3, value=tot_contante).number_format = money_format
+    ws_corr.cell(row=row_tot, column=4, value=tot_elettr).number_format = money_format
+    
+    for col in range(1, 7):
+        ws_corr.column_dimensions[get_column_letter(col)].width = 15
+    
+    # === FOGLIO 3: PRIMA NOTA CASSA ===
+    ws_pn = wb.create_sheet("Prima Nota Cassa")
+    
+    prima_nota = await db["prima_nota_cassa"].find({
+        "data": {"$regex": f"^{mese_str}"}
+    }, {"_id": 0}).sort("data", 1).to_list(10000)
+    
+    headers_pn = ['Data', 'Descrizione', 'Categoria', 'Tipo', 'Importo']
+    
+    for col, header in enumerate(headers_pn, 1):
+        cell = ws_pn.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    tot_entrate = 0
+    tot_uscite = 0
+    
+    for row, pn in enumerate(prima_nota, 2):
+        importo = float(pn.get('importo', 0) or 0)
+        tipo = pn.get('tipo', 'uscita')
+        
+        if tipo == 'entrata':
+            tot_entrate += importo
+        else:
+            tot_uscite += importo
+        
+        values = [
+            pn.get('data', '')[:10],
+            pn.get('descrizione', ''),
+            pn.get('categoria', '').replace('_', ' ').title(),
+            tipo.upper(),
+            importo
+        ]
+        
+        for col, value in enumerate(values, 1):
+            cell = ws_pn.cell(row=row, column=col, value=value)
+            cell.border = border
+            if col == 5:
+                cell.number_format = money_format
+    
+    # Totali prima nota
+    row_tot = len(prima_nota) + 2
+    ws_pn.cell(row=row_tot, column=3, value="TOTALE ENTRATE:").font = Font(bold=True)
+    ws_pn.cell(row=row_tot, column=5, value=tot_entrate).number_format = money_format
+    ws_pn.cell(row=row_tot + 1, column=3, value="TOTALE USCITE:").font = Font(bold=True)
+    ws_pn.cell(row=row_tot + 1, column=5, value=tot_uscite).number_format = money_format
+    ws_pn.cell(row=row_tot + 2, column=3, value="SALDO:").font = Font(bold=True, color="0000FF")
+    ws_pn.cell(row=row_tot + 2, column=5, value=tot_entrate - tot_uscite).number_format = money_format
+    
+    ws_pn.column_dimensions['B'].width = 40
+    for col in [1, 3, 4, 5]:
+        ws_pn.column_dimensions[get_column_letter(col)].width = 15
+    
+    # === FOGLIO 4: RIEPILOGO IVA ===
+    ws_iva = wb.create_sheet("Riepilogo IVA")
+    
+    headers_iva = ['Voce', 'Importo']
+    for col, header in enumerate(headers_iva, 1):
+        cell = ws_iva.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    # IVA vendite (dai corrispettivi - assumiamo 10%)
+    iva_vendite = tot_corr * 0.10 / 1.10
+    
+    iva_data = [
+        ('IVA a debito (vendite)', iva_vendite),
+        ('IVA a credito (acquisti)', tot_iva),
+        ('', ''),
+        ('SALDO IVA', iva_vendite - tot_iva)
+    ]
+    
+    for row, (voce, importo) in enumerate(iva_data, 2):
+        ws_iva.cell(row=row, column=1, value=voce).border = border
+        if importo != '':
+            cell = ws_iva.cell(row=row, column=2, value=importo)
+            cell.number_format = money_format
+            cell.border = border
+        if voce == 'SALDO IVA':
+            ws_iva.cell(row=row, column=1).font = Font(bold=True)
+            ws_iva.cell(row=row, column=2).font = Font(bold=True)
+            if importo > 0:
+                ws_iva.cell(row=row, column=2).font = Font(bold=True, color="FF0000")
+    
+    ws_iva.column_dimensions['A'].width = 30
+    ws_iva.column_dimensions['B'].width = 20
+    
+    # === FOGLIO 5: RIEPILOGO GENERALE ===
+    ws_riep = wb.create_sheet("Riepilogo")
+    
+    ws_riep.cell(row=1, column=1, value=f"RIEPILOGO {mese_nome.upper()} {anno}").font = Font(bold=True, size=14)
+    ws_riep.merge_cells('A1:B1')
+    
+    riepilogo = [
+        ('', ''),
+        ('FATTURE ACQUISTO', ''),
+        ('  Numero fatture', len(fatture)),
+        ('  Totale imponibile', tot_imponibile),
+        ('  Totale IVA', tot_iva),
+        ('  Totale fatture', tot_fatture),
+        ('', ''),
+        ('CORRISPETTIVI', ''),
+        ('  Giorni registrati', len(corrispettivi)),
+        ('  Totale incassato', tot_corr),
+        ('  di cui contante', tot_contante),
+        ('  di cui elettronico', tot_elettr),
+        ('', ''),
+        ('PRIMA NOTA CASSA', ''),
+        ('  Totale entrate', tot_entrate),
+        ('  Totale uscite', tot_uscite),
+        ('  Saldo cassa', tot_entrate - tot_uscite),
+        ('', ''),
+        ('IVA', ''),
+        ('  IVA a debito', iva_vendite),
+        ('  IVA a credito', tot_iva),
+        ('  Saldo IVA', iva_vendite - tot_iva)
+    ]
+    
+    for row, (voce, valore) in enumerate(riepilogo, 3):
+        cell_voce = ws_riep.cell(row=row, column=1, value=voce)
+        if valore != '' and not voce.startswith('  '):
+            cell_voce.font = Font(bold=True)
+        if valore != '':
+            cell_val = ws_riep.cell(row=row, column=2, value=valore)
+            if isinstance(valore, (int, float)):
+                cell_val.number_format = money_format if isinstance(valore, float) else '0'
+    
+    ws_riep.column_dimensions['A'].width = 25
+    ws_riep.column_dimensions['B'].width = 18
+    
+    # Genera file
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    filename = f"contabilita_{mese_nome.lower()}_{anno}.xlsx"
+    
+    return StreamingResponse(
+        output,
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': f'attachment; filename={filename}'}
+    )
+
