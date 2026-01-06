@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://pasticceria-fin.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://pasticceria-fin.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://pasticceria-fin.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://inventory-control-75.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://inventory-control-75.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://inventory-control-75.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {

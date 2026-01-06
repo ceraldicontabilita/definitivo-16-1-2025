@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://pasticceria-fin.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://pasticceria-fin.preview.emergentagent.com/prima-nota",
-    "IVA": "https://pasticceria-fin.preview.emergentagent.com/iva",
-    "Dipendenti": "https://pasticceria-fin.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://inventory-control-75.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://inventory-control-75.preview.emergentagent.com/prima-nota",
+    "IVA": "https://inventory-control-75.preview.emergentagent.com/iva",
+    "Dipendenti": "https://inventory-control-75.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",
