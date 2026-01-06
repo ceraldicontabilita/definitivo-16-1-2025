@@ -49,6 +49,7 @@ export default function GestioneDipendenti() {
   const [dipendentiLista, setDipendentiLista] = useState([]);
   const [importingEstratto, setImportingEstratto] = useState(false);
   const [estrattoResult, setEstrattoResult] = useState(null);
+  const [editingSalario, setEditingSalario] = useState(null); // Record in modifica
 
   // Libro Unico state
   const [libroUnicoSalaries, setLibroUnicoSalaries] = useState([]);
