@@ -156,10 +156,13 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
                 detail=f"Fattura già presente: {parsed.get('invoice_number')} del {parsed.get('invoice_date')}"
             )
         
-        supplier_vat = parsed.get("supplier_vat", "")
-        supplier = await db[Collections.SUPPLIERS].find_one({"partita_iva": supplier_vat})
+        # Assicura che il fornitore esista nel database (crea se nuovo)
+        supplier = await ensure_supplier_exists(db, parsed)
+        supplier_created = supplier.get("source") == "xml_auto_import" if supplier else False
+        
         metodo_pagamento = supplier.get("metodo_pagamento", "bonifico") if supplier else "bonifico"
         giorni_pagamento = supplier.get("giorni_pagamento", 30) if supplier else 30
+        supplier_id = supplier.get("id") if supplier else None
         
         data_fattura_str = parsed.get("invoice_date", "")
         data_scadenza = None
@@ -170,9 +173,12 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             except (ValueError, TypeError):
                 pass
         
+        supplier_vat = parsed.get("supplier_vat", "")
+        
         invoice = {
             "id": str(uuid.uuid4()),
             "invoice_key": invoice_key,
+            "supplier_id": supplier_id,  # Link al fornitore
             "invoice_number": parsed.get("invoice_number", ""),
             "invoice_date": parsed.get("invoice_date", ""),
             "data_ricezione": parsed.get("invoice_date", ""),  # Default = data fattura, può essere aggiornato
