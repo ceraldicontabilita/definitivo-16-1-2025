@@ -1095,10 +1095,9 @@ export default function GestioneDipendenti() {
             fontSize: 13,
             color: '#6b7280'
           }}>
-            <strong>Legenda:</strong> 
-            <span style={{ marginLeft: 12, color: '#ea580c' }}>● Saldo positivo = busta {">"} bonifico (da recuperare)</span>
-            <span style={{ marginLeft: 12, color: '#16a34a' }}>● Saldo negativo = bonifico {">"} busta (eccedenza)</span>
-            <span style={{ marginLeft: 12, color: '#dc2626' }}>● Progressivo = accumulo saldi precedenti</span>
+            <strong>Legenda Saldo Progressivo:</strong> 
+            <span style={{ marginLeft: 12, color: '#ea580c' }}>● Positivo = credito azienda (buste {">"} bonifici)</span>
+            <span style={{ marginLeft: 12, color: '#16a34a' }}>● Negativo = credito dipendente (bonifici {">"} buste)</span>
           </div>
         </>
       )}
