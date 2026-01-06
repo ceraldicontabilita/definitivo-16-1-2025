@@ -206,6 +206,35 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 - Configurato ESLint con regole appropriate
 - Errori: 0, Warning: 61 (non bloccanti)
 
+### 13. Sistema Gestione Regole Categorizzazione - COMPLETATA ✅ (6 Gen 2026)
+**Nuovi Endpoint `/api/regole/`:**
+- `GET /regole` - Lista tutte le regole (fornitori, descrizioni, categorie, piano_conti)
+- `GET /download-regole` - Scarica file Excel con tutte le regole
+- `POST /upload-regole` - Carica file Excel modificato con nuove regole
+- `POST /regole/fornitore` - Aggiunge/aggiorna regola fornitore
+- `POST /regole/descrizione` - Aggiunge/aggiorna regola descrizione
+- `DELETE /regole/{tipo}/{pattern}` - Elimina regola
+
+**File Excel Generato (4 fogli):**
+1. **Regole Fornitori**: Pattern, Categoria, Note (77 regole predefinite)
+2. **Regole Descrizioni**: Parola Chiave, Categoria, Note
+3. **Categorie**: Categoria, Codice Conto, Deducibilità IRES/IRAP
+4. **Piano dei Conti**: Codice, Nome, Categoria
+5. **Istruzioni**: Guida all'uso
+
+**Frontend `/regole-categorizzazione`:**
+- Tab Fornitori/Descrizioni/Categorie con tabelle dati
+- Pulsante "Scarica Excel" - Download file .xlsx
+- Pulsante "Carica Excel" - Upload file modificato
+- Pulsante "Applica e Ricategorizza" - Applica regole a tutte le fatture
+- Form inline per aggiunta nuova regola
+- Ricerca testuale tra le regole
+- Statistiche: 77 regole fornitori, 30 categorie
+
+**Test:**
+- 24/24 test backend passati (API + validazione + Excel)
+- Frontend verificato con tutti i 3 tab funzionanti
+
 ---
 
 ## Implementazioni Precedenti (6 Gen 2026)
