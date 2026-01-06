@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { formatDateIT } from "../lib/utils";
+import { formatDateIT, formatEuro } from "../lib/utils";
+
+// Dati azienda Ceraldi per intestazione email/PDF
+const AZIENDA = {
+  nome: "CERALDI GROUP S.R.L.",
+  indirizzo: "Via Example, 123",
+  cap: "00100",
+  citta: "Roma",
+  piva: "12345678901",
+  email: "ordini@ceraldi.it",
+  tel: "+39 06 12345678"
+};
 
 export default function OrdiniFornitori() {
   const [loading, setLoading] = useState(true);
@@ -9,6 +20,8 @@ export default function OrdiniFornitori() {
   const [err, setErr] = useState("");
   const [success, setSuccess] = useState("");
   const [generatingOrder, setGeneratingOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(null);
 
   useEffect(() => {
     loadData();
