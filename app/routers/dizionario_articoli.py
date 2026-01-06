@@ -362,7 +362,10 @@ PATTERNS_ARTICOLI = {
             r"aperol", r"campari", r"spritz", r"amaro", r"limoncello",
             r"grappa", r"vodka", r"rum\b", r"whisky", r"gin\b",
             r"liquore", r"digestivo", r"sambuca", r"fusti\b",
-            r"baileys", r"punt.*mes", r"irish\s+cream"
+            r"baileys", r"punt.*mes", r"irish\s+cream",
+            r"l['']?ape\b", r"bagnoli", r"aperitivo.*cl",
+            r"bianco\s+sarti", r"passoa", r"sciroppo.*cl",
+            r"kbirr", r"cuore\s+di\s+napoli", r"n['']?artigiana"
         ],
         "categoria_haccp": "bevande_alcoliche",
         "conto": "05.01.03",
