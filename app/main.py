@@ -112,7 +112,8 @@ from app.routers import (
     bank_statement_parser,
     riconciliazione_fornitori,
     estratto_conto,
-    prima_nota_salari
+    prima_nota_salari,
+    archivio_bonifici
 )
 
 # Include public API first (no auth required)
