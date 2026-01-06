@@ -114,11 +114,6 @@ async def generate_report_mensile(
         "data": {"$regex": f"^{mese_str}"}
     }, {"_id": 0}).to_list(1000)
     
-    # Scadenze del mese
-    scadenze = await db["scadenze"].find({
-        "data_scadenza": {"$regex": f"^{mese_str}"}
-    }, {"_id": 0}).to_list(100)
-    
     # Calcoli
     totale_fatture = sum(f.get("total_amount", f.get("totale_fattura", 0)) or 0 for f in fatture)
     iva_fatture = sum(f.get("total_tax", f.get("totale_iva", 0)) or 0 for f in fatture)
