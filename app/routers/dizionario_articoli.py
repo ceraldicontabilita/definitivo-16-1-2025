@@ -21,6 +21,30 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def safe_parse_float(value) -> float:
+    """Converte in modo sicuro qualsiasi valore in float."""
+    if value is None:
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            # Rimuovi spazi e converti virgola in punto
+            cleaned = value.strip().replace(',', '.')
+            return float(cleaned) if cleaned else 0.0
+        except (ValueError, TypeError):
+            return 0.0
+    return 0.0
+
+
+def sum_prices(prices: List) -> float:
+    """Somma in modo sicuro una lista di prezzi."""
+    total = 0.0
+    for p in prices:
+        total += safe_parse_float(p)
+    return total
+
+
 # ============== CATEGORIE HACCP ==============
 CATEGORIE_HACCP = {
     "carni_fresche": {
