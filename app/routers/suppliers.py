@@ -301,24 +301,26 @@ async def upload_suppliers_excel(file: UploadFile = File(...)) -> Dict[str, Any]
 async def list_suppliers(
     skip: int = Query(0, ge=0),
     limit: int = Query(1000, ge=1, le=10000),
-    search: Optional[str] = Query(None),
+    search: Optional[str] = Query(None, description="Search term for filtering suppliers"),
     metodo_pagamento: Optional[str] = Query(None),
     attivo: Optional[bool] = Query(None)
 ) -> List[Dict[str, Any]]:
     """Lista fornitori con filtri opzionali."""
     db = Database.get_db()
     
+    # Debug log
+    print(f"[SUPPLIERS] Received search param: '{search}', metodo: '{metodo_pagamento}', attivo: '{attivo}'")
+    
     query = {}
     if search and search.strip():
         search_term = search.strip()
-        logger.info(f"[SUPPLIERS] Searching for: '{search_term}'")
+        print(f"[SUPPLIERS] Applying search filter for: '{search_term}'")
         query["$or"] = [
             {"denominazione": {"$regex": search_term, "$options": "i"}},
             {"ragione_sociale": {"$regex": search_term, "$options": "i"}},
             {"partita_iva": {"$regex": search_term, "$options": "i"}},
             {"comune": {"$regex": search_term, "$options": "i"}}
         ]
-        logger.info(f"[SUPPLIERS] Query: {query}")
     if metodo_pagamento:
         query["metodo_pagamento"] = metodo_pagamento
     if attivo is not None:
