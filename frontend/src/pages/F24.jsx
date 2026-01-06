@@ -649,6 +649,104 @@ export default function F24() {
         )}
       </div>
       
+      {/* Upload Multiplo PDF F24 */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+        borderRadius: 12, 
+        padding: 24, 
+        marginBottom: 20,
+        color: 'white'
+      }}>
+        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Upload size={24} /> Upload Multiplo PDF F24
+        </h3>
+        <p style={{ opacity: 0.9, fontSize: 14, marginBottom: 20 }}>
+          Seleziona più file PDF F24 da caricare contemporaneamente. Controllo duplicati automatico.
+        </p>
+        
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input 
+            type="file" 
+            accept=".pdf"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length > 0) {
+                handleMultiplePdfUpload(files);
+              }
+            }}
+            data-testid="f24-multiple-pdf-input"
+            style={{ 
+              padding: 10, 
+              background: 'rgba(255,255,255,0.2)', 
+              borderRadius: 8,
+              border: '2px dashed rgba(255,255,255,0.5)',
+              color: 'white'
+            }}
+          />
+        </div>
+        
+        {/* Progress per upload multiplo */}
+        {multipleUploading && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              marginBottom: 8,
+              fontSize: 14
+            }}>
+              <span>Caricamento PDF in corso...</span>
+              <span>{multipleProgress}%</span>
+            </div>
+            <div style={{ 
+              background: 'rgba(255,255,255,0.2)', 
+              borderRadius: 10, 
+              height: 12,
+              overflow: 'hidden'
+            }}>
+              <div style={{ 
+                width: `${multipleProgress}%`, 
+                height: '100%', 
+                background: 'white',
+                borderRadius: 10,
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+          </div>
+        )}
+        
+        {/* Risultato Upload Multiplo */}
+        {multipleResult && (
+          <div style={{ 
+            marginTop: 20, 
+            background: 'rgba(255,255,255,0.95)', 
+            borderRadius: 8, 
+            padding: 16,
+            color: '#333'
+          }}>
+            <h4 style={{ margin: '0 0 12px 0', color: '#059669' }}>📊 Risultato Upload PDF</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 15 }}>
+              <div style={{ textAlign: 'center', padding: 10, background: '#f0f7ff', borderRadius: 6 }}>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2196f3' }}>{multipleResult.total}</div>
+                <div style={{ fontSize: 12, color: '#666' }}>Totale PDF</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 10, background: '#e8f5e9', borderRadius: 6 }}>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#4caf50' }}>{multipleResult.imported}</div>
+                <div style={{ fontSize: 12, color: '#666' }}>Importati</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 10, background: '#fff3e0', borderRadius: 6 }}>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ff9800' }}>{multipleResult.duplicates}</div>
+                <div style={{ fontSize: 12, color: '#666' }}>Duplicati</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 10, background: '#ffebee', borderRadius: 6 }}>
+                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f44336' }}>{multipleResult.errors}</div>
+                <div style={{ fontSize: 12, color: '#666' }}>Errori</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
       {/* Documenti F24 Caricati */}
       {f24Documents.length > 0 && (
         <div style={{ background: 'white', borderRadius: 8, padding: 20, marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
