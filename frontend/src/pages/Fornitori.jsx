@@ -556,10 +556,34 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
         borderTop: '1px solid #f3f4f6',
         backgroundColor: '#f9fafb'
       }}>
+        {/* Pulsante Cerca P.IVA - solo se ha P.IVA ma mancano dati */}
+        {hasPiva && hasIncomplete && (
+          <button onClick={handleSearchPiva} disabled={searching} style={{
+            flex: 1,
+            padding: '12px',
+            border: 'none',
+            backgroundColor: searching ? '#fef3c7' : 'transparent',
+            cursor: searching ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            fontSize: '13px',
+            color: '#d97706',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => { if (!searching) { e.currentTarget.style.backgroundColor = '#fef3c7'; } }}
+          onMouseLeave={(e) => { if (!searching) { e.currentTarget.style.backgroundColor = 'transparent'; } }}
+          title="Cerca dati azienda tramite Partita IVA"
+          >
+            <Search size={15} /> {searching ? 'Ricerca...' : 'Cerca P.IVA'}
+          </button>
+        )}
         <button onClick={() => onViewInvoices(supplier)} style={{
           flex: 1,
           padding: '12px',
           border: 'none',
+          borderLeft: hasPiva && hasIncomplete ? '1px solid #e5e7eb' : 'none',
           backgroundColor: 'transparent',
           cursor: 'pointer',
           display: 'flex',
