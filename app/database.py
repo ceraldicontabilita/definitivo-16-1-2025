@@ -126,7 +126,7 @@ class Collections:
     SUPPLIERS = "suppliers"
     
     # Warehouse
-    WAREHOUSE_PRODUCTS = "warehouse_products"
+    WAREHOUSE_PRODUCTS = "warehouse_inventory"
     WAREHOUSE_MOVEMENTS = "warehouse_movements"
     RIMANENZE = "rimanenze"
     
