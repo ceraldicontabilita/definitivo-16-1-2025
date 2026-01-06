@@ -424,6 +424,92 @@ async def cleanup_duplicate_invoices() -> Dict[str, Any]:
     }
 
 
+@router.post("/sync-suppliers")
+async def sync_suppliers_from_invoices() -> Dict[str, Any]:
+    """
+    Sincronizza i fornitori dalle fatture esistenti.
+    Crea nuovi fornitori per le P.IVA non presenti nel database.
+    """
+    db = Database.get_db()
+    
+    # Trova tutte le P.IVA uniche nelle fatture
+    pipeline = [
+        {"$match": {"supplier_vat": {"$exists": True, "$ne": ""}}},
+        {"$group": {
+            "_id": "$supplier_vat",
+            "supplier_name": {"$first": "$supplier_name"},
+            "fornitore": {"$first": "$fornitore"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    
+    supplier_groups = await db[Collections.INVOICES].aggregate(pipeline).to_list(5000)
+    
+    created = 0
+    updated = 0
+    skipped = 0
+    
+    for group in supplier_groups:
+        supplier_vat = group["_id"]
+        if not supplier_vat:
+            continue
+        
+        # Cerca fornitore esistente
+        existing = await db[Collections.SUPPLIERS].find_one({"partita_iva": supplier_vat})
+        
+        if existing:
+            # Aggiorna conteggio fatture se diverso
+            if existing.get("fatture_count") != group["count"]:
+                await db[Collections.SUPPLIERS].update_one(
+                    {"partita_iva": supplier_vat},
+                    {"$set": {"fatture_count": group["count"], "updated_at": datetime.utcnow().isoformat()}}
+                )
+                updated += 1
+            else:
+                skipped += 1
+            continue
+        
+        # Crea nuovo fornitore
+        fornitore_data = group.get("fornitore") or {}
+        
+        new_supplier = {
+            "id": str(uuid.uuid4()),
+            "ragione_sociale": group.get("supplier_name") or "Fornitore Sconosciuto",
+            "partita_iva": supplier_vat,
+            "codice_fiscale": fornitore_data.get("codice_fiscale", ""),
+            "indirizzo": fornitore_data.get("indirizzo", ""),
+            "cap": fornitore_data.get("cap", ""),
+            "comune": fornitore_data.get("comune", ""),
+            "provincia": fornitore_data.get("provincia", ""),
+            "nazione": fornitore_data.get("nazione", "IT"),
+            "metodo_pagamento": "bonifico",
+            "giorni_pagamento": 30,
+            "iban": "",
+            "fatture_count": group["count"],
+            "source": "sync_from_invoices",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat(),
+            "note": f"Creato automaticamente - {group['count']} fatture trovate"
+        }
+        
+        await db[Collections.SUPPLIERS].insert_one(new_supplier)
+        created += 1
+        
+        # Aggiorna le fatture con il supplier_id
+        await db[Collections.INVOICES].update_many(
+            {"supplier_vat": supplier_vat, "supplier_id": {"$exists": False}},
+            {"$set": {"supplier_id": new_supplier["id"]}}
+        )
+    
+    return {
+        "success": True,
+        "suppliers_created": created,
+        "suppliers_updated": updated,
+        "suppliers_skipped": skipped,
+        "total_unique_vat": len(supplier_groups)
+    }
+
+
 @router.post("/repopulate-warehouse")
 async def repopulate_warehouse_from_invoices() -> Dict[str, Any]:
     """
