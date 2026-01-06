@@ -100,7 +100,7 @@ export default function EstrattoContoImport() {
           🏦 Import Estratto Conto Bancario
         </h1>
         <p style={{ margin: '8px 0 0 0', opacity: 0.9 }}>
-          Carica il PDF dell'estratto conto BANCO BPM per importare automaticamente i movimenti in Prima Nota
+          Carica il PDF dell&apos;estratto conto BANCO BPM per importare automaticamente i movimenti in Prima Nota
         </p>
       </div>
 
