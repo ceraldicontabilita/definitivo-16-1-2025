@@ -879,7 +879,7 @@ export default function GestioneDipendenti() {
                 Nessun dato. Importa i file PAGHE e BONIFICI per iniziare.
               </div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
                 <thead>
                   <tr style={{ background: '#1e3a5f', color: 'white' }}>
                     <th style={{ padding: 12, textAlign: 'left' }}>Dipendente</th>
@@ -887,10 +887,9 @@ export default function GestioneDipendenti() {
                     <th style={{ padding: 12, textAlign: 'center' }}>Anno</th>
                     <th style={{ padding: 12, textAlign: 'right' }}>Importo Busta</th>
                     <th style={{ padding: 12, textAlign: 'right' }}>Importo Bonifico</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Saldo</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Progressivo</th>
+                    <th style={{ padding: 12, textAlign: 'right' }}>Saldo Progressivo</th>
                     <th style={{ padding: 12, textAlign: 'center' }}>Stato</th>
-                    <th style={{ padding: 12, textAlign: 'center', width: 60 }}>Azioni</th>
+                    <th style={{ padding: 12, textAlign: 'center', width: 80 }}>Azioni</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -899,7 +898,7 @@ export default function GestioneDipendenti() {
                       key={mov.id || idx} 
                       style={{ 
                         borderBottom: '1px solid #f1f5f9',
-                        background: mov.saldo > 0 ? '#fff7ed' : mov.saldo < 0 ? '#f0fdf4' : 'white'
+                        background: mov.progressivo > 0 ? '#fff7ed' : mov.progressivo < 0 ? '#f0fdf4' : 'white'
                       }}
                     >
                       <td style={{ padding: 12, fontWeight: 500 }}>{mov.dipendente}</td>
@@ -908,16 +907,16 @@ export default function GestioneDipendenti() {
                       <td style={{ padding: 12, textAlign: 'right', color: '#0369a1' }}>
                         {formatEuro(mov.importo_busta || 0)}
                       </td>
-                      <td style={{ padding: 12, textAlign: 'right', color: '#16a34a' }}>
+                      <td style={{ padding: 12, textAlign: 'right', color: '#dc2626' }}>
                         {formatEuro(mov.importo_bonifico || 0)}
                       </td>
                       <td style={{ 
                         padding: 12, 
                         textAlign: 'right', 
                         fontWeight: 'bold',
-                        color: mov.saldo > 0 ? '#ea580c' : mov.saldo < 0 ? '#16a34a' : '#6b7280'
+                        color: mov.progressivo > 0 ? '#ea580c' : mov.progressivo < 0 ? '#16a34a' : '#6b7280'
                       }}>
-                        {formatEuro(mov.saldo || 0)}
+                        {formatEuro(mov.progressivo || 0)}
                       </td>
                       <td style={{ 
                         padding: 12, 
