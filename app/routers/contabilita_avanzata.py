@@ -450,10 +450,13 @@ async def calcola_imposte_realtime(
     calcolatore = CalcolatoreImposte(regione)
     
     try:
-        risultato = await calcolatore.calcola_imposte_da_db(db)
+        risultato = await calcolatore.calcola_imposte_da_db(db, anno)
+        
+        anno_label = anno if anno else "tutti gli anni"
         
         # Converti in dict per JSON
         return {
+            "anno": anno,
             "utile_civilistico": risultato.utile_civilistico,
             "ires": {
                 "variazioni_aumento": [
@@ -489,7 +492,7 @@ async def calcola_imposte_realtime(
             "totale_imposte": risultato.totale_imposte,
             "aliquota_effettiva": risultato.aliquota_effettiva,
             "note": [
-                "Calcolo basato sui saldi attuali del Piano dei Conti",
+                f"Calcolo basato su fatture e corrispettivi dell'anno {anno_label}",
                 "Variazioni fiscali automatiche per telefonia (20% indeducibile) e carburante auto (80% indeducibile)",
                 f"Aliquota IRAP regione {regione}: {calcolatore.aliquota_irap}%"
             ]
