@@ -58,6 +58,82 @@ async def get_payment_methods() -> List[Dict[str, Any]]:
     ]
 
 
+@router.get("/search-piva/{partita_iva}")
+async def search_by_partita_iva(partita_iva: str) -> Dict[str, Any]:
+    """
+    Cerca dati azienda tramite Partita IVA usando VIES API (Commissione Europea).
+    Ritorna ragione sociale, indirizzo se disponibili.
+    """
+    import httpx
+    
+    # Pulisci la partita IVA
+    piva = partita_iva.strip().replace(" ", "").replace("IT", "").replace("it", "")
+    
+    if len(piva) != 11 or not piva.isdigit():
+        raise HTTPException(status_code=400, detail="Partita IVA non valida (deve essere 11 cifre)")
+    
+    try:
+        # Chiama VIES API
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                f"https://ec.europa.eu/taxation_customs/vies/rest-api/ms/IT/vat/{piva}"
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("isValid"):
+                    # Estrai indirizzo
+                    address = data.get("address", "")
+                    address_parts = address.split("\n") if address else []
+                    
+                    result = {
+                        "found": True,
+                        "partita_iva": piva,
+                        "ragione_sociale": data.get("name", "").title(),
+                        "indirizzo_completo": address,
+                        "indirizzo": address_parts[0] if len(address_parts) > 0 else "",
+                        "cap": "",
+                        "comune": "",
+                        "provincia": "",
+                        "nazione": "IT"
+                    }
+                    
+                    # Prova a parsare CAP e comune dall'indirizzo
+                    if len(address_parts) > 1:
+                        # Formato tipico: "VIA XXXX\n00123 ROMA RM"
+                        last_line = address_parts[-1].strip()
+                        import re
+                        cap_match = re.search(r'\b(\d{5})\b', last_line)
+                        if cap_match:
+                            result["cap"] = cap_match.group(1)
+                            # Rimuovi CAP dalla stringa
+                            rest = last_line.replace(cap_match.group(1), "").strip()
+                            # Cerca provincia (2 lettere maiuscole alla fine)
+                            prov_match = re.search(r'\b([A-Z]{2})\s*$', rest)
+                            if prov_match:
+                                result["provincia"] = prov_match.group(1)
+                                result["comune"] = rest.replace(prov_match.group(1), "").strip()
+                            else:
+                                result["comune"] = rest
+                    
+                    return result
+                else:
+                    return {
+                        "found": False,
+                        "partita_iva": piva,
+                        "message": "Partita IVA non trovata nel database VIES"
+                    }
+            else:
+                raise HTTPException(status_code=502, detail="Errore nella comunicazione con VIES API")
+                
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="Timeout nella ricerca - riprova più tardi")
+    except Exception as e:
+        logger.error(f"Errore ricerca PIVA: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore nella ricerca: {str(e)}")
+
+
 @router.get("/payment-terms")
 async def get_payment_terms() -> List[Dict[str, Any]]:
     """Ritorna la lista dei termini di pagamento disponibili."""
