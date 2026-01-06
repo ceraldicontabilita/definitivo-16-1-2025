@@ -51,6 +51,7 @@ import ArchivioBonifici from "./pages/ArchivioBonifici.jsx";
 // Contabilità Analitica
 import CentriCosto from "./pages/CentriCosto.jsx";
 import Ricette from "./pages/Ricette.jsx";
+import RegistroLotti from "./pages/RegistroLotti.jsx";
 import MagazzinoDoppiaVerita from "./pages/MagazzinoDoppiaVerita.jsx";
 import UtileObiettivo from "./pages/UtileObiettivo.jsx";
 // Portale HACCP separato
@@ -124,6 +125,7 @@ const router = createBrowserRouter([
       // Contabilità Analitica
       { path: "centri-costo", element: <CentriCosto /> },
       { path: "ricette", element: <Ricette /> },
+      { path: "registro-lotti", element: <RegistroLotti /> },
       { path: "magazzino-dv", element: <MagazzinoDoppiaVerita /> },
       { path: "utile-obiettivo", element: <UtileObiettivo /> },
     ],
