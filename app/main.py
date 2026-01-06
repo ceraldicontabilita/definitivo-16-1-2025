@@ -116,7 +116,9 @@ from app.routers import (
     archivio_bonifici,
     report_pdf,
     contabilita_avanzata,
-    regole_categorizzazione
+    regole_categorizzazione,
+    centri_costo,
+    magazzino_doppia_verita
 )
 
 # Include public API first (no auth required)
