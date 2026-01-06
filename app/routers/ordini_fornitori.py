@@ -30,7 +30,7 @@ async def create_ordine(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     last = await db["supplier_orders"].find_one({}, {"order_number": 1}, sort=[("order_number", -1)])
     try:
         new_num = int(last["order_number"]) + 1 if last and last.get("order_number") else 1
-    except:
+    except (ValueError, TypeError):
         new_num = 1
     
     items = data.get("items", [])

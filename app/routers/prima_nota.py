@@ -76,14 +76,14 @@ async def get_anni_disponibili() -> Dict[str, Any]:
     for doc in cassa_anni:
         try:
             anni.add(int(doc["_id"]))
-        except:
+        except (ValueError, TypeError):
             pass
     
     banca_anni = await db[COLLECTION_PRIMA_NOTA_BANCA].aggregate(pipeline).to_list(100)
     for doc in banca_anni:
         try:
             anni.add(int(doc["_id"]))
-        except:
+        except (ValueError, TypeError):
             pass
     
     return {"anni": sorted(list(anni), reverse=True)}
