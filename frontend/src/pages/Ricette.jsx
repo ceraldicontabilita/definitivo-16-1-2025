@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { formatEuro } from '../lib/utils';
-import { ChefHat, Search, Filter, TrendingUp, TrendingDown, AlertTriangle, Check, Package } from 'lucide-react';
+import { ChefHat, Search, Filter, TrendingUp, TrendingDown, AlertTriangle, Check, Package, Plus, Trash2 } from 'lucide-react';
 
 export default function Ricette() {
   const [ricette, setRicette] = useState([]);
@@ -11,6 +11,15 @@ export default function Ricette() {
   const [categorie, setCategorie] = useState([]);
   const [stats, setStats] = useState({ totale: 0, in_target: 0, fuori_target: 0 });
   const [selectedRicetta, setSelectedRicetta] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newRicetta, setNewRicetta] = useState({
+    nome: '',
+    categoria: 'pasticceria',
+    porzioni: 10,
+    prezzo_vendita: 0,
+    ingredienti: [{ nome: '', quantita: '', unita: 'g' }]
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadRicette();
