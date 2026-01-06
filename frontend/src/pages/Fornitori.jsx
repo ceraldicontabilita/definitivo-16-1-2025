@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
-import { formatEuro } from '../lib/utils';
-import { X, Edit2, Save, Trash2, Plus, Search, FileText, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Edit2, Save, Trash2, Plus, Search, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 const METODI_PAGAMENTO = [
   { value: "cassa", label: "Cassa", color: "#4caf50" },
@@ -10,6 +9,254 @@ const METODI_PAGAMENTO = [
   { value: "assegno", label: "Assegno", color: "#ff9800" },
   { value: "misto", label: "Misto", color: "#607d8b" },
 ];
+
+const emptySupplier = {
+  ragione_sociale: '',
+  partita_iva: '',
+  codice_fiscale: '',
+  indirizzo: '',
+  cap: '',
+  comune: '',
+  provincia: '',
+  nazione: 'IT',
+  telefono: '',
+  email: '',
+  pec: '',
+  iban: '',
+  metodo_pagamento: 'bonifico',
+  giorni_pagamento: 30,
+  note: ''
+};
+
+// Form component separato
+function SupplierFormModal({ supplier, onSave, onCancel, isNew, saving }) {
+  const [form, setForm] = useState(supplier || emptySupplier);
+  
+  // Aggiorna form quando cambia il supplier
+  useEffect(() => {
+    setForm(supplier || emptySupplier);
+  }, [supplier]);
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" data-testid="supplier-modal">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
+          <h2 className="text-xl font-bold text-slate-800">
+            {isNew ? 'Nuovo Fornitore' : 'Modifica Fornitore'}
+          </h2>
+          <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full" data-testid="close-modal">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="p-6 space-y-6">
+          {/* Dati Principali */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Dati Principali</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Ragione Sociale *</label>
+                <input
+                  type="text"
+                  value={form.ragione_sociale || ''}
+                  onChange={(e) => setForm({...form, ragione_sociale: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Nome azienda"
+                  data-testid="input-ragione-sociale"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Partita IVA</label>
+                <input
+                  type="text"
+                  value={form.partita_iva || ''}
+                  onChange={(e) => setForm({...form, partita_iva: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="01234567890"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Codice Fiscale</label>
+                <input
+                  type="text"
+                  value={form.codice_fiscale || ''}
+                  onChange={(e) => setForm({...form, codice_fiscale: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Indirizzo */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Indirizzo</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Via/Piazza</label>
+                <input
+                  type="text"
+                  value={form.indirizzo || ''}
+                  onChange={(e) => setForm({...form, indirizzo: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Via Roma, 123"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">CAP</label>
+                <input
+                  type="text"
+                  value={form.cap || ''}
+                  onChange={(e) => setForm({...form, cap: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="00100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Comune</label>
+                <input
+                  type="text"
+                  value={form.comune || ''}
+                  onChange={(e) => setForm({...form, comune: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Roma"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Provincia</label>
+                <input
+                  type="text"
+                  value={form.provincia || ''}
+                  onChange={(e) => setForm({...form, provincia: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="RM"
+                  maxLength={2}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nazione</label>
+                <input
+                  type="text"
+                  value={form.nazione || 'IT'}
+                  onChange={(e) => setForm({...form, nazione: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="IT"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Contatti */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Contatti</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Telefono</label>
+                <input
+                  type="tel"
+                  value={form.telefono || ''}
+                  onChange={(e) => setForm({...form, telefono: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="+39 06 1234567"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={form.email || ''}
+                  onChange={(e) => setForm({...form, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="info@azienda.it"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">PEC</label>
+                <input
+                  type="email"
+                  value={form.pec || ''}
+                  onChange={(e) => setForm({...form, pec: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="azienda@pec.it"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Pagamento */}
+          <div>
+            <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Pagamento</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Metodo Pagamento</label>
+                <select
+                  value={form.metodo_pagamento || 'bonifico'}
+                  onChange={(e) => setForm({...form, metodo_pagamento: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  {METODI_PAGAMENTO.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Giorni Pagamento</label>
+                <input
+                  type="number"
+                  value={form.giorni_pagamento || 30}
+                  onChange={(e) => setForm({...form, giorni_pagamento: parseInt(e.target.value) || 30})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  min={0}
+                  max={365}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">IBAN</label>
+                <input
+                  type="text"
+                  value={form.iban || ''}
+                  onChange={(e) => setForm({...form, iban: e.target.value.toUpperCase()})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono"
+                  placeholder="IT60X0542811101000000123456"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Note */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
+            <textarea
+              value={form.note || ''}
+              onChange={(e) => setForm({...form, note: e.target.value})}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              placeholder="Note aggiuntive..."
+            />
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-slate-50 border-t px-6 py-4 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg"
+          >
+            Annulla
+          </button>
+          <button
+            onClick={() => onSave(form)}
+            disabled={saving || !form.ragione_sociale}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            data-testid="save-supplier"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Salvataggio...' : 'Salva'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Fornitori() {
   const { anno: selectedYear } = useAnnoGlobale();
@@ -20,24 +267,6 @@ export default function Fornitori() {
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const emptySupplier = {
-    ragione_sociale: '',
-    partita_iva: '',
-    codice_fiscale: '',
-    indirizzo: '',
-    cap: '',
-    comune: '',
-    provincia: '',
-    nazione: 'IT',
-    telefono: '',
-    email: '',
-    pec: '',
-    iban: '',
-    metodo_pagamento: 'bonifico',
-    giorni_pagamento: 30,
-    note: ''
-  };
 
   useEffect(() => {
     loadData();
@@ -57,16 +286,16 @@ export default function Fornitori() {
     }
   };
 
-  const handleSave = async (supplier) => {
+  const handleSave = async (supplierData) => {
     setSaving(true);
     try {
-      if (supplier.id) {
-        await api.put(`/api/suppliers/${supplier.id}`, supplier);
+      if (supplierData.id) {
+        await api.put(`/api/suppliers/${supplierData.id}`, supplierData);
       } else {
         await api.post('/api/suppliers', {
-          denominazione: supplier.ragione_sociale,
-          ragione_sociale: supplier.ragione_sociale,
-          ...supplier
+          denominazione: supplierData.ragione_sociale,
+          ragione_sociale: supplierData.ragione_sociale,
+          ...supplierData
         });
       }
       setEditingSupplier(null);
@@ -102,226 +331,9 @@ export default function Fornitori() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const SupplierForm = ({ supplier, onSave, onCancel, isNew }) => {
-    const [form, setForm] = useState(supplier);
-    
-    return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-slate-800">
-              {isNew ? 'Nuovo Fornitore' : 'Modifica Fornitore'}
-            </h2>
-            <button onClick={onCancel} className="p-2 hover:bg-slate-100 rounded-full">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            {/* Dati Principali */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Dati Principali</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Ragione Sociale *</label>
-                  <input
-                    type="text"
-                    value={form.ragione_sociale || ''}
-                    onChange={(e) => setForm({...form, ragione_sociale: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nome azienda"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Partita IVA</label>
-                  <input
-                    type="text"
-                    value={form.partita_iva || ''}
-                    onChange={(e) => setForm({...form, partita_iva: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="01234567890"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Codice Fiscale</label>
-                  <input
-                    type="text"
-                    value={form.codice_fiscale || ''}
-                    onChange={(e) => setForm({...form, codice_fiscale: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Indirizzo */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Indirizzo</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Via/Piazza</label>
-                  <input
-                    type="text"
-                    value={form.indirizzo || ''}
-                    onChange={(e) => setForm({...form, indirizzo: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Via Roma, 123"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">CAP</label>
-                  <input
-                    type="text"
-                    value={form.cap || ''}
-                    onChange={(e) => setForm({...form, cap: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="00100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Comune</label>
-                  <input
-                    type="text"
-                    value={form.comune || ''}
-                    onChange={(e) => setForm({...form, comune: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="Roma"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Provincia</label>
-                  <input
-                    type="text"
-                    value={form.provincia || ''}
-                    onChange={(e) => setForm({...form, provincia: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="RM"
-                    maxLength={2}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Nazione</label>
-                  <input
-                    type="text"
-                    value={form.nazione || 'IT'}
-                    onChange={(e) => setForm({...form, nazione: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="IT"
-                    maxLength={2}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Contatti */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Contatti</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Telefono</label>
-                  <input
-                    type="tel"
-                    value={form.telefono || ''}
-                    onChange={(e) => setForm({...form, telefono: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="+39 06 1234567"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={form.email || ''}
-                    onChange={(e) => setForm({...form, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="info@azienda.it"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">PEC</label>
-                  <input
-                    type="email"
-                    value={form.pec || ''}
-                    onChange={(e) => setForm({...form, pec: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="azienda@pec.it"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Pagamento */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500 mb-3 uppercase">Pagamento</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Metodo Pagamento</label>
-                  <select
-                    value={form.metodo_pagamento || 'bonifico'}
-                    onChange={(e) => setForm({...form, metodo_pagamento: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    {METODI_PAGAMENTO.map(m => (
-                      <option key={m.value} value={m.value}>{m.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Giorni Pagamento</label>
-                  <input
-                    type="number"
-                    value={form.giorni_pagamento || 30}
-                    onChange={(e) => setForm({...form, giorni_pagamento: parseInt(e.target.value) || 30})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    min={0}
-                    max={365}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">IBAN</label>
-                  <input
-                    type="text"
-                    value={form.iban || ''}
-                    onChange={(e) => setForm({...form, iban: e.target.value.toUpperCase()})}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono"
-                    placeholder="IT60X0542811101000000123456"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Note */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
-              <textarea
-                value={form.note || ''}
-                onChange={(e) => setForm({...form, note: e.target.value})}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                placeholder="Note aggiuntive..."
-              />
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 bg-slate-50 border-t px-6 py-4 flex justify-end gap-3">
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg"
-            >
-              Annulla
-            </button>
-            <button
-              onClick={() => onSave(form)}
-              disabled={saving || !form.ragione_sociale}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {saving ? 'Salvataggio...' : 'Salva'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  const handleCloseModal = () => {
+    setEditingSupplier(null);
+    setShowNewForm(false);
   };
 
   return (
@@ -372,8 +384,9 @@ export default function Fornitori() {
             />
           </div>
           <button
-            onClick={() => { setEditingSupplier({...emptySupplier}); setShowNewForm(true); }}
+            onClick={() => setShowNewForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            data-testid="new-supplier-btn"
           >
             <Plus className="w-4 h-4" /> Nuovo Fornitore
           </button>
@@ -441,7 +454,6 @@ export default function Fornitori() {
                         onClick={(e) => { e.stopPropagation(); handleDelete(supplier.id); }}
                         className="p-2 hover:bg-red-100 rounded text-red-600"
                         title="Elimina"
-                        data-testid={`delete-supplier-${supplier.id}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -508,11 +520,12 @@ export default function Fornitori() {
 
       {/* Modal Form */}
       {(editingSupplier || showNewForm) && (
-        <SupplierForm
+        <SupplierFormModal
           supplier={editingSupplier || emptySupplier}
           onSave={handleSave}
-          onCancel={() => { setEditingSupplier(null); setShowNewForm(false); }}
-          isNew={showNewForm}
+          onCancel={handleCloseModal}
+          isNew={showNewForm && !editingSupplier}
+          saving={saving}
         />
       )}
     </div>
