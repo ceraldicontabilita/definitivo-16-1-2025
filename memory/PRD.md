@@ -143,6 +143,54 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 - Totale Costi: € 606.608,08
 - Utile: € 259.305,44
 
+### 11. Sistema Contabilità Avanzata con IRES/IRAP - COMPLETATA ✅ (6 Gen 2026)
+**Nuovi Servizi:**
+- `/app/app/services/categorizzazione_contabile.py` - Categorizzazione intelligente fatture
+- `/app/app/services/calcolo_imposte.py` - Calcolo IRES/IRAP in tempo reale
+
+**Nuovi Endpoint `/api/contabilita/`:**
+- `GET /categorizzazione-preview` - Preview categorizzazione descrizione prodotto
+- `POST /inizializza-piano-esteso` - Inizializza Piano Conti con 96 voci
+- `POST /ricategorizza-fatture` - Ricategorizza tutte le fatture (1324 processate)
+- `GET /calcolo-imposte` - Calcolo IRES (24%) e IRAP per regione
+- `GET /bilancio-dettagliato` - Bilancio con Stato Patrimoniale e Conto Economico
+- `GET /statistiche-categorizzazione` - Distribuzione categorie fatture
+- `GET /aliquote-irap` - Aliquote IRAP per tutte le regioni italiane
+
+**Categorie Merceologiche Riconosciute (20+):**
+- bevande_alcoliche, bevande_analcoliche, alimentari
+- utenze_acqua, utenze_elettricita, utenze_gas
+- telefonia (80% deducibile), carburante (uso promiscuo 20%)
+- noleggio_attrezzature, manutenzione, ferramenta
+- software_cloud, consulenze, assicurazioni, pubblicita
+- trasporti, pulizia, accise, premi_omaggi
+
+**Calcolo Imposte:**
+- IRES 24% con variazioni fiscali automatiche
+- IRAP variabile per regione (es. Calabria 3.9%, Campania 4.97%)
+- Deduzioni IRAP (€8.000 base + €7.500/dipendente)
+- Aliquota effettiva calcolata
+
+**Nuova Pagina Frontend `/contabilita`:**
+- Tab "Calcolo Imposte" con dettaglio IRES/IRAP
+- Tab "Statistiche" con distribuzione categorie
+- Tab "Bilancio Dettagliato" con Conto Economico e Stato Patrimoniale
+- Selettore regione per IRAP
+- Pulsante ricategorizzazione fatture
+
+**Risultati Attuali:**
+- Utile Civilistico: €348.162,76
+- IRES Dovuta: €83.555,42
+- IRAP Dovuta (Calabria): €13.317,69
+- Totale Imposte: €96.873,11
+- Aliquota Effettiva: 27.82%
+
+### 12. Pulizia Warning Frontend - COMPLETATA ✅ (6 Gen 2026)
+- Rimosso App.js obsoleto
+- Corretti errori `process.env` → `window.location.origin`
+- Configurato ESLint con regole appropriate
+- Errori: 0, Warning: 61 (non bloccanti)
+
 ---
 
 ## Implementazioni Precedenti (6 Gen 2026)
