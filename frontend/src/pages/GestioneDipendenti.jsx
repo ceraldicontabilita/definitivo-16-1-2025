@@ -74,6 +74,23 @@ export default function GestioneDipendenti() {
     note: ''
   });
 
+  // Contratti state
+  const [contratti, setContratti] = useState([]);
+  const [loadingContratti, setLoadingContratti] = useState(false);
+  const [contrattiScadenze, setContrattiScadenze] = useState({ scaduti: [], in_scadenza: [] });
+  const [showContrattoForm, setShowContrattoForm] = useState(false);
+  const [contrattoFormData, setContrattoFormData] = useState({
+    dipendente_id: '',
+    tipo_contratto: 'tempo_determinato',
+    livello: '',
+    mansione: '',
+    retribuzione_lorda: '',
+    ore_settimanali: 40,
+    data_inizio: '',
+    data_fine: '',
+    ccnl: 'Turismo - Pubblici Esercizi'
+  });
+
   useEffect(() => {
     loadData();
     loadContractTypes();
@@ -87,8 +104,11 @@ export default function GestioneDipendenti() {
       loadLibroUnico();
     } else if (activeTab === 'libretti') {
       loadLibretti();
+    } else if (activeTab === 'contratti') {
+      loadContratti();
     }
   }, [activeTab, selectedYear, selectedYearPrimaNota, selectedMonth, filtroDipendente]);
+
 
   const loadData = async () => {
     try {
