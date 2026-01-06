@@ -19,17 +19,10 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
     return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // Genera PDF della fattura
-  const handleDownloadPDF = async () => {
-    try {
-      const res = await api.get(`/api/invoices/${invoiceId}/pdf`, { responseType: 'blob' });
-      const blob = new Blob([res.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    } catch (e) {
-      // Se non esiste l'endpoint PDF, genera un PDF da HTML
-      generatePDFFromHTML();
-    }
+  // Genera PDF della fattura (funzionalità disabilitata)
+  const _handleDownloadPDF = async () => {
+    // Not implemented yet - requires api import and invoice.id
+    generatePDFFromHTML();
   };
 
   const generatePDFFromHTML = () => {
