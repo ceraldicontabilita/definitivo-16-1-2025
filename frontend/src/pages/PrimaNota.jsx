@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
 import PrimaNotaMobile from './PrimaNotaMobile';
 import { useIsMobile } from '../hooks/useData';
