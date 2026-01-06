@@ -3,38 +3,47 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 3.1.0  
+**Versione**: 3.2.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
+
+---
+
+## Backup Database (6 Gen 2026)
+**Posizione**: `/app/backups/migration_20260106/`
+- 29 collezioni esportate
+- 22.328 documenti totali
+- Script ripristino: `restore_database.py`
 
 ---
 
 ## Refactoring Completato (6 Gen 2026)
 
 ### 1. Pulizia Codice Backend - COMPLETATA ✅
-**Corretti 44 `bare except` in 19 router** - Sostituiti con eccezioni specifiche (`ValueError`, `TypeError`, `IndexError`, `UnicodeDecodeError`)
+**Corretti 44 `bare except` in 19 router** - Sostituiti con eccezioni specifiche
 
 ### 2. Fix Bug Frontend - COMPLETATA ✅
-- `Fatture.jsx` - Corretto errore JSX `)}` extra
+- `Fatture.jsx` - Corretto errore JSX
 - `Corrispettivi.jsx` - Escapato apostrofo
-- `Magazzino.jsx` - Mappatura corretta campi per catalogo prodotti
+- `Magazzino.jsx` - Mappatura corretta campi + filtri avanzati
 
 ### 3. Popolamento Magazzino da Fatture XML - COMPLETATA ✅
-**Nuovi Endpoint:**
-- `POST /api/fatture/repopulate-warehouse` - Ripopola magazzino da tutte le fatture
-- `POST /api/fatture/categorize-movements` - Categorizza tutti i movimenti
+- **2405 prodotti** creati (valore stimato € 602.140,02)
+- **7272 record storico prezzi**
+- **6040 movimenti categorizzati** (14 categorie)
 
-**Risultati:**
-- **2405 prodotti** creati nel magazzino
-- **7272 record storico prezzi** salvati
-- **6040 movimenti categorizzati** (1410 cassa, 386 banca, 4244 estratto conto)
+### 4. Upload Massivo ZIP Archivio Bonifici - COMPLETATA ✅
+- Supporta ZIP fino a 1500+ PDF
+- Upload chunked per file grandi (1MB chunks)
+- Deduplicazione avanzata con cache in memoria
+- Pulizia automatica file temporanei
+- Progress bar con duplicati/errori
 
-**Categorie Movimenti:**
-`acquisti_merce`, `utenze`, `affitto`, `stipendi`, `tasse`, `bancari`, `assicurazioni`, `manutenzione`, `consulenze`, `marketing`, `attrezzature`, `carburante`, `vendite`, `altro`
-
-### 4. Fix Collezione Database - COMPLETATA ✅
-- Aggiornato `Collections.WAREHOUSE_PRODUCTS` da `warehouse_products` a `warehouse_inventory`
-- Dashboard ora mostra correttamente 2405 prodotti
+### 5. UI Magazzino Avanzata - COMPLETATA ✅
+- Statistiche: prodotti totali, valore stimato, scorte basse, categorie
+- Filtri: ricerca testo, categoria, fornitore, scorte basse
+- Paginazione a 200 prodotti
+- Reset filtri
 
 ---
 
