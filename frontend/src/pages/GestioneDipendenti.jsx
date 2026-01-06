@@ -1472,10 +1472,11 @@ export default function GestioneDipendenti() {
 
 // Sub-components
 
-function TabButton({ active, onClick, icon, label, color }) {
+function TabButton({ active, onClick, icon, label, color, testId }) {
   return (
     <button
       onClick={onClick}
+      data-testid={testId}
       style={{
         flex: 1,
         padding: '12px 16px',
