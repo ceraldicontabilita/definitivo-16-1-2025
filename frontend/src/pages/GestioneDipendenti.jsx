@@ -886,9 +886,37 @@ export default function GestioneDipendenti() {
               padding: '16px 20px', 
               background: '#f8fafc', 
               borderBottom: '1px solid #e2e8f0',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              📋 Dettaglio - {salariMovimenti.length} record
+              <span>📋 Dettaglio - {salariMovimenti.filter(mov => {
+                if (filtroTabDipendente && !mov.dipendente?.toLowerCase().includes(filtroTabDipendente.toLowerCase())) return false;
+                if (filtroTabMese && mov.mese_nome !== filtroTabMese) return false;
+                if (filtroTabAnno && mov.anno !== parseInt(filtroTabAnno)) return false;
+                return true;
+              }).length} / {salariMovimenti.length} record</span>
+              {(filtroTabDipendente || filtroTabMese || filtroTabAnno) && (
+                <button
+                  onClick={() => {
+                    setFiltroTabDipendente('');
+                    setFiltroTabMese('');
+                    setFiltroTabAnno('');
+                  }}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: 6,
+                    border: '1px solid #e2e8f0',
+                    background: 'white',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    color: '#64748b'
+                  }}
+                >
+                  ✕ Reset filtri
+                </button>
+              )}
             </div>
             
             {loadingSalari ? (
