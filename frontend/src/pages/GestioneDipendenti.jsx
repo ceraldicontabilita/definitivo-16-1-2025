@@ -215,8 +215,11 @@ export default function GestioneDipendenti() {
   // Export Excel
   const handleExportSalariExcel = async () => {
     try {
-      let url = `/api/prima-nota-salari/export-excel?anno=${selectedYear}`;
-      if (selectedMonth) url += `&mese=${selectedMonth}`;
+      let url = `/api/prima-nota-salari/export-excel?`;
+      const params = [];
+      if (selectedYear) params.push(`anno=${selectedYear}`);
+      if (selectedMonth) params.push(`mese=${selectedMonth}`);
+      url += params.join('&');
       
       const response = await api.get(url, { responseType: 'blob' });
       
@@ -224,7 +227,8 @@ export default function GestioneDipendenti() {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.setAttribute('download', `prima_nota_salari_${selectedYear}.xlsx`);
+      const filename = selectedYear ? `prima_nota_salari_${selectedYear}.xlsx` : 'prima_nota_salari_tutti.xlsx';
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
