@@ -184,8 +184,8 @@ PATTERNS_DESCRIZIONE = {
     # NOLEGGI BENI STRUMENTALI
     "noleggio_attrezzature": {
         "patterns": [
-            r"noleggio\b", r"rental", r"leasing\b", r"locazione\s+operativa",
-            r"canone\s+(noleggio|locazione)", r"affitto\s+attrezzatur"
+            r"noleggio\s+(?!auto|veicol)", r"rental", r"locazione\s+operativa",
+            r"affitto\s+attrezzatur"
         ],
         "conto": ("05.02.09", "Noleggi e locazioni operative"),
         "categoria_fiscale": CategoriaFiscale.NOLEGGIO_BENI_STRUMENTALI,
