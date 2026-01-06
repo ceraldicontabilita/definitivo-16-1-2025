@@ -347,38 +347,83 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices }) {
   
   return (
     <div 
-      className="bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 overflow-hidden group"
+      style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        overflow: 'hidden',
+        transition: 'all 0.2s',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}
       data-testid={`supplier-card-${supplier.id}`}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = '#93c5fd';
+        e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = '#e2e8f0';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+      }}
     >
       {/* Header Card */}
-      <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-4 py-3 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+      <div style={{ 
+        background: 'linear-gradient(to right, #f8fafc, #f1f5f9)', 
+        padding: '12px 16px',
+        borderBottom: '1px solid #f1f5f9'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '8px',
+            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            boxShadow: '0 2px 4px rgba(37,99,235,0.3)'
+          }}>
             {nome[0].toUpperCase()}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-800 truncate" title={nome}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3 style={{ 
+              fontWeight: 600, 
+              color: '#1e293b', 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              fontSize: '15px',
+              margin: 0
+            }} title={nome}>
               {nome}
             </h3>
             {supplier.partita_iva && (
-              <p className="text-xs text-slate-500 font-mono">P.IVA {supplier.partita_iva}</p>
+              <p style={{ fontSize: '12px', color: '#64748b', fontFamily: 'monospace', margin: '2px 0 0' }}>
+                P.IVA {supplier.partita_iva}
+              </p>
             )}
           </div>
           {hasIncompleteData && (
-            <div className="p-1.5 bg-amber-100 rounded-full" title="Dati incompleti">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
+            <div style={{ 
+              padding: '6px', 
+              backgroundColor: '#fef3c7', 
+              borderRadius: '50%' 
+            }} title="Dati incompleti">
+              <AlertCircle style={{ width: '16px', height: '16px', color: '#d97706' }} />
             </div>
           )}
         </div>
       </div>
 
       {/* Body Card */}
-      <div className="p-4 space-y-3">
+      <div style={{ padding: '16px' }}>
         {/* Location */}
         {(supplier.comune || supplier.indirizzo) && (
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-            <span className="text-slate-600 line-clamp-2">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '14px', marginBottom: '8px' }}>
+            <MapPin style={{ width: '16px', height: '16px', color: '#94a3b8', marginTop: '2px', flexShrink: 0 }} />
+            <span style={{ color: '#475569' }}>
               {supplier.indirizzo && `${supplier.indirizzo}, `}
               {supplier.comune}{supplier.provincia && ` (${supplier.provincia})`}
             </span>
@@ -387,63 +432,127 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices }) {
 
         {/* Contact */}
         {(supplier.email || supplier.telefono) && (
-          <div className="flex items-center gap-2 text-sm">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', marginBottom: '12px' }}>
             {supplier.email ? (
               <>
-                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="text-slate-600 truncate">{supplier.email}</span>
+                <Mail style={{ width: '16px', height: '16px', color: '#94a3b8', flexShrink: 0 }} />
+                <span style={{ color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{supplier.email}</span>
               </>
             ) : (
               <>
-                <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="text-slate-600">{supplier.telefono}</span>
+                <Phone style={{ width: '16px', height: '16px', color: '#94a3b8', flexShrink: 0 }} />
+                <span style={{ color: '#475569' }}>{supplier.telefono}</span>
               </>
             )}
           </div>
         )}
 
         {/* Stats row */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <p className="text-lg font-bold text-slate-800">{supplier.fatture_count || 0}</p>
-              <p className="text-xs text-slate-500">Fatture</p>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          paddingTop: '12px', 
+          borderTop: '1px solid #f1f5f9' 
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>{supplier.fatture_count || 0}</p>
+              <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Fatture</p>
             </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-slate-800">{supplier.giorni_pagamento || 30}</p>
-              <p className="text-xs text-slate-500">Giorni</p>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>{supplier.giorni_pagamento || 30}</p>
+              <p style={{ fontSize: '11px', color: '#64748b', margin: 0 }}>Giorni</p>
             </div>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${metodoInfo.color}`}>
+          <span style={{
+            padding: '4px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 500,
+            color: 'white',
+            backgroundColor: metodoInfo.color === 'bg-emerald-500' ? '#10b981' : 
+                           metodoInfo.color === 'bg-blue-500' ? '#3b82f6' : 
+                           metodoInfo.color === 'bg-amber-500' ? '#f59e0b' : '#64748b'
+          }}>
             {metodoInfo.label}
           </span>
         </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center gap-2">
+      <div style={{ 
+        padding: '12px 16px', 
+        backgroundColor: '#f8fafc', 
+        borderTop: '1px solid #f1f5f9',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+      }}>
         <button
           onClick={() => onViewInvoices(supplier)}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:bg-white hover:text-blue-600 rounded-lg transition-colors"
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '8px 12px',
+            fontSize: '14px',
+            color: '#475569',
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#2563eb'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#475569'; }}
           data-testid={`view-invoices-${supplier.id}`}
         >
-          <FileText className="w-4 h-4" />
+          <FileText style={{ width: '16px', height: '16px' }} />
           Fatture
         </button>
         <button
           onClick={() => onEdit(supplier)}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:bg-white hover:text-blue-600 rounded-lg transition-colors"
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '8px 12px',
+            fontSize: '14px',
+            color: '#475569',
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.color = '#2563eb'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#475569'; }}
           data-testid={`edit-supplier-${supplier.id}`}
         >
-          <Edit2 className="w-4 h-4" />
+          <Edit2 style={{ width: '16px', height: '16px' }} />
           Modifica
         </button>
         <button
           onClick={() => onDelete(supplier.id)}
-          className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+          style={{
+            padding: '8px',
+            color: '#94a3b8',
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.color = '#dc2626'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#94a3b8'; }}
           data-testid={`delete-supplier-${supplier.id}`}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 style={{ width: '16px', height: '16px' }} />
         </button>
       </div>
     </div>
