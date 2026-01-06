@@ -531,27 +531,11 @@ async def estrai_articoli_fatture(
     
     pipeline = [
         {"$unwind": "$linee"},
-        {"$addFields": {
-            "prezzo_clean": {
-                "$cond": {
-                    "if": {"$eq": [{"$type": "$linee.prezzo_totale"}, "string"]},
-                    "then": {
-                        "$convert": {
-                            "input": {"$trim": {"input": {"$replaceAll": {"input": "$linee.prezzo_totale", "find": ",", "replacement": "."}}}},
-                            "to": "double",
-                            "onError": 0,
-                            "onNull": 0
-                        }
-                    },
-                    "else": {"$ifNull": [{"$toDouble": "$linee.prezzo_totale"}, 0]}
-                }
-            }
-        }},
         {"$group": {
             "_id": "$linee.descrizione",
             "count": {"$sum": 1},
             "fornitori": {"$addToSet": "$supplier_name"},
-            "totale_importo": {"$sum": "$prezzo_clean"},
+            "prezzi": {"$push": "$linee.prezzo_totale"},
             "sample_prezzo": {"$first": "$linee.prezzo_unitario"}
         }},
         {"$match": {
