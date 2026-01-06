@@ -207,6 +207,7 @@ async def create_job():
         'imported_files': 0,
     }
     await db.bonifici_jobs.insert_one(job)
+    job.pop('_id', None)
     return job
 
 
