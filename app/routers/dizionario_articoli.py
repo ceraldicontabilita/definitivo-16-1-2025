@@ -677,30 +677,14 @@ async def genera_dizionario() -> Dict[str, Any]:
     """
     db = Database.get_db()
     
-    # Estrai articoli con gestione sicura dei numeri come stringhe
+    # Estrai articoli senza calcoli numerici in MongoDB
     pipeline = [
         {"$unwind": "$linee"},
-        {"$addFields": {
-            "prezzo_clean": {
-                "$cond": {
-                    "if": {"$eq": [{"$type": "$linee.prezzo_totale"}, "string"]},
-                    "then": {
-                        "$convert": {
-                            "input": {"$trim": {"input": {"$replaceAll": {"input": "$linee.prezzo_totale", "find": ",", "replacement": "."}}}},
-                            "to": "double",
-                            "onError": 0,
-                            "onNull": 0
-                        }
-                    },
-                    "else": {"$ifNull": [{"$toDouble": "$linee.prezzo_totale"}, 0]}
-                }
-            }
-        }},
         {"$group": {
             "_id": "$linee.descrizione",
             "count": {"$sum": 1},
             "fornitori": {"$addToSet": "$supplier_name"},
-            "totale_importo": {"$sum": "$prezzo_clean"}
+            "prezzi": {"$push": "$linee.prezzo_totale"}
         }},
         {"$match": {"_id": {"$ne": None, "$ne": ""}}},
         {"$sort": {"count": -1}}
@@ -720,12 +704,15 @@ async def genera_dizionario() -> Dict[str, Any]:
         # Categorizza
         cat = categorizza_articolo(desc)
         
+        # Calcola totale importo in Python
+        totale_importo = sum_prices(art.get("prezzi", []))
+        
         doc = {
             "descrizione": desc,
             "occorrenze": art["count"],
             "n_fornitori": len(art.get("fornitori", [])),
             "fornitori": art.get("fornitori", [])[:10],
-            "totale_importo": round(art.get("totale_importo", 0), 2),
+            "totale_importo": round(totale_importo, 2),
             "categoria_haccp": cat["categoria_haccp"],
             "categoria_haccp_nome": cat["categoria_haccp_nome"],
             "conto": cat["conto"],
