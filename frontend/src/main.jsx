@@ -94,7 +94,7 @@ const router = createBrowserRouter([
       { path: "haccp/analytics", element: <HACCPAnalytics /> },
       { path: "haccp/notifiche", element: <HACCPNotifiche /> },
       { path: "haccp/disinfestazioni", element: <HACCP /> },
-      { path: "haccp/ricezione-merci", element: <HACCP /> },
+      { path: "haccp/tracciabilita", element: <HACCPTracciabilita /> },
       { path: "haccp/oli-frittura", element: <HACCP /> },
       { path: "haccp/non-conformita", element: <HACCP /> },
       { path: "dipendenti", element: <GestioneDipendenti /> },
