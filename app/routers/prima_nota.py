@@ -2,7 +2,7 @@
 Prima Nota router - Gestione Prima Nota Cassa e Banca.
 API per registrazioni contabili automatiche da fatture.
 """
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, HTTPException, Query, Body, UploadFile, File
 from typing import Dict, Any, Optional, Literal
 from datetime import datetime, timezone
 import uuid
