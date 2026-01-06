@@ -3,44 +3,56 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino, gestione fornitori e **contabilità analitica con centri di costo**.
 
-**Versione**: 3.9.0  
+**Versione**: 4.0.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
 ---
 
-## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente Parte 5)
+## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente Parte 6)
 
-### 17. Fix Bug Eliminazione Assegni - COMPLETATA ✅
-- **Problema**: API `/api/assegni` restituiva 150 elementi invece di 140 (includeva soft-deleted)
-- **Causa**: Conflitto di route tra `public_api.router` e `assegni.router`
-- **Fix**: Aggiunto filtro `{"entity_status": {"$ne": "deleted"}}` in `/app/app/routers/public_api.py`
-- Test: API ora restituisce correttamente 140 assegni
-
-### 18. Upload ZIP Massivo F24 - COMPLETATA ✅
-- **Endpoint**: `POST /api/f24/upload-zip`
+### 20. Gestione Riservata - COMPLETATA ✅
+- **URL**: `/gestione-riservata` (standalone)
+- **Codice accesso**: `507488`
 - **Funzionalità**:
-  - Accetta file ZIP contenenti multipli PDF F24
-  - Controllo duplicati tramite hash SHA256
-  - Progress bar nel frontend
-  - Lista documenti caricati con eliminazione
-- **Frontend**: Sezione viola con gradiente in `/f24`
-- File: `/app/app/routers/f24.py` (linee 45-180), `/app/frontend/src/pages/F24.jsx`
+  - Login con codice numerico
+  - CRUD movimenti non fatturati (incassi/spese extra)
+  - Riepilogo con 3 card: Incassi, Spese, Saldo Netto
+  - Filtri per anno/mese
+  - Categorie: mance, vendita_extra, catering, acquisti, altro
+- File: `/app/app/routers/gestione_riservata.py`, `/app/frontend/src/pages/GestioneRiservata.jsx`
 
-### 19. Portale HACCP Cucina Separato - COMPLETATA ✅
-- **URL**: `/cucina` (standalone, non richiede login gestionale)
-- **Codice accesso**: `141574`
+### 21. Toggle Volume Affari Reale in Dashboard - COMPLETATA ✅
+- **Endpoint**: `GET /api/gestione-riservata/volume-affari-reale?anno=2026`
+- **Widget Dashboard**: toggle nascosto di default con badge "RISERVATO"
+- **Calcolo**:
+  - Fatturato Ufficiale + Corrispettivi = Totale Ufficiale
+  - + Incassi Non Fatturati - Spese Non Fatturate = Volume Affari Reale
+- Design: background scuro con card colorate (verde incassi, rosso spese)
+- File: `/app/frontend/src/pages/Dashboard.jsx` (linee 159-260)
+
+### 22. Upload Multiplo PDF F24 - COMPLETATA ✅
+- **Endpoint**: `POST /api/f24/upload-multiple`
 - **Funzionalità**:
-  - Login con codice numerico (senza username/password)
-  - Dashboard con statistiche: Materie Prime, Lotti Attivi, Registrazioni, Anomalie
-  - Menu 8 sezioni: Dashboard, Tracciabilità, Materie Prime, Lotti, Temperature, Sanificazione, Disinfestazione, Anomalie
-  - Ricerca prodotti e lotti
-  - Registrazione temperature frigo/congelatore
-- File: `/app/app/routers/haccp_auth.py`, `/app/frontend/src/pages/HACCPPortal.jsx`
+  - Selezione multipla di file PDF
+  - Controllo duplicati SHA256
+  - Progress bar durante upload
+  - Risultati con conteggio: Totale, Importati, Duplicati, Errori
+- Design: sezione verde gradiente separata da Upload ZIP
+- File: `/app/app/routers/f24.py` (linee 160-250), `/app/frontend/src/pages/F24.jsx`
 
 ---
 
-## Implementazioni Precedenti (6 Gen 2026 - Parte 4)
+## Codici di Accesso Aree Riservate
+
+| Area | URL | Codice | Permessi |
+|------|-----|--------|----------|
+| HACCP Cucina | /cucina | 141574 | Tracciabilità, Lotti, Temperature, Sanificazione |
+| Gestione Riservata | /gestione-riservata | 507488 | Incassi/Spese extra, Volume Reale |
+
+---
+
+## Implementazioni Precedenti (6 Gen 2026 - Parte 5)
 
 ### 14. Modifica Prezzi Ricette - COMPLETATA ✅
 - **Pulsante "Modifica" (icona matita)** su ogni card ricetta
