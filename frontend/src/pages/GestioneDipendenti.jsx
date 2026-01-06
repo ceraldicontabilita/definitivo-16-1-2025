@@ -738,6 +738,230 @@ export default function GestioneDipendenti() {
         </>
       )}
 
+      {/* TAB: Contratti */}
+      {activeTab === 'contratti' && (
+        <>
+          {/* Alert Scadenze */}
+          {(contrattiScadenze.scaduti.length > 0 || contrattiScadenze.in_scadenza.length > 0) && (
+            <div style={{ 
+              background: contrattiScadenze.scaduti.length > 0 ? '#fef2f2' : '#fefce8', 
+              padding: 16, 
+              borderRadius: 12, 
+              marginBottom: 16,
+              border: `1px solid ${contrattiScadenze.scaduti.length > 0 ? '#fecaca' : '#fef08a'}`
+            }}>
+              {contrattiScadenze.scaduti.length > 0 && (
+                <div style={{ color: '#dc2626', marginBottom: 8 }}>
+                  ⚠️ <strong>{contrattiScadenze.scaduti.length} contratti scaduti</strong>
+                </div>
+              )}
+              {contrattiScadenze.in_scadenza.length > 0 && (
+                <div style={{ color: '#ca8a04' }}>
+                  ⏰ <strong>{contrattiScadenze.in_scadenza.length} contratti in scadenza</strong> nei prossimi 60 giorni
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => setShowContrattoForm(true)}
+              style={{ 
+                background: '#8b5cf6', 
+                color: 'white', 
+                padding: '10px 20px', 
+                borderRadius: 8, 
+                border: 'none', 
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              + Nuovo Contratto
+            </button>
+            <label style={{ 
+              background: '#f1f5f9', 
+              padding: '10px 20px', 
+              borderRadius: 8, 
+              cursor: 'pointer',
+              fontWeight: 500
+            }}>
+              📥 Import Excel
+              <input type="file" accept=".xlsx,.xls" onChange={handleImportContratti} hidden />
+            </label>
+          </div>
+
+          {/* Form Nuovo Contratto */}
+          {showContrattoForm && (
+            <div style={{ 
+              background: '#f8fafc', 
+              padding: 20, 
+              borderRadius: 12, 
+              marginBottom: 20,
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ marginBottom: 16 }}>Nuovo Contratto</h3>
+              <form onSubmit={handleSubmitContratto}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                  <select
+                    value={contrattoFormData.dipendente_id}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, dipendente_id: e.target.value})}
+                    required
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  >
+                    <option value="">Seleziona Dipendente *</option>
+                    {dipendenti.map(d => (
+                      <option key={d.id} value={d.id}>{d.nome_completo || `${d.nome} ${d.cognome}`}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={contrattoFormData.tipo_contratto}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, tipo_contratto: e.target.value})}
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  >
+                    <option value="tempo_determinato">Tempo Determinato</option>
+                    <option value="tempo_indeterminato">Tempo Indeterminato</option>
+                    <option value="apprendistato">Apprendistato</option>
+                    <option value="part_time">Part-Time</option>
+                    <option value="stage">Stage/Tirocinio</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Livello (es. 5°)"
+                    value={contrattoFormData.livello}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, livello: e.target.value})}
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Mansione"
+                    value={contrattoFormData.mansione}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, mansione: e.target.value})}
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="RAL Lorda Annua €"
+                    value={contrattoFormData.retribuzione_lorda}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, retribuzione_lorda: e.target.value})}
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Ore Settimanali"
+                    value={contrattoFormData.ore_settimanali}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, ore_settimanali: parseInt(e.target.value) || 40})}
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                  <input
+                    type="date"
+                    placeholder="Data Inizio"
+                    value={contrattoFormData.data_inizio}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, data_inizio: e.target.value})}
+                    required
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                  <input
+                    type="date"
+                    placeholder="Data Fine (vuoto se indeterminato)"
+                    value={contrattoFormData.data_fine}
+                    onChange={(e) => setContrattoFormData({...contrattoFormData, data_fine: e.target.value})}
+                    style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  />
+                </div>
+                <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
+                  <button type="submit" style={{ background: '#8b5cf6', color: 'white', padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+                    Salva Contratto
+                  </button>
+                  <button type="button" onClick={() => setShowContrattoForm(false)} style={{ background: '#f1f5f9', padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+                    Annulla
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Tabella Contratti */}
+          <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+            {loadingContratti ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Caricamento...</div>
+            ) : contratti.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
+                <div>Nessun contratto registrato</div>
+                <div style={{ fontSize: 13, marginTop: 8 }}>Clicca "Nuovo Contratto" o importa da Excel</div>
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                    <th style={{ padding: 12, textAlign: 'left' }}>Dipendente</th>
+                    <th style={{ padding: 12, textAlign: 'left' }}>Tipo</th>
+                    <th style={{ padding: 12, textAlign: 'left' }}>Livello</th>
+                    <th style={{ padding: 12, textAlign: 'left' }}>Mansione</th>
+                    <th style={{ padding: 12, textAlign: 'right' }}>RAL</th>
+                    <th style={{ padding: 12, textAlign: 'center' }}>Inizio</th>
+                    <th style={{ padding: 12, textAlign: 'center' }}>Fine</th>
+                    <th style={{ padding: 12, textAlign: 'center' }}>Stato</th>
+                    <th style={{ padding: 12 }}>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contratti.map((c, i) => {
+                    const isScaduto = c.data_fine && new Date(c.data_fine) < new Date();
+                    const isInScadenza = c.data_fine && !isScaduto && (new Date(c.data_fine) - new Date()) / (1000*60*60*24) <= 60;
+                    return (
+                      <tr key={c.id || i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: 12, fontWeight: 500 }}>{c.dipendente_nome}</td>
+                        <td style={{ padding: 12 }}>
+                          <span style={{ 
+                            background: c.tipo_contratto?.includes('indeterminato') ? '#dcfce7' : '#fef3c7',
+                            color: c.tipo_contratto?.includes('indeterminato') ? '#166534' : '#92400e',
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                            fontSize: 12
+                          }}>
+                            {c.tipo_contratto?.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td style={{ padding: 12 }}>{c.livello || '-'}</td>
+                        <td style={{ padding: 12 }}>{c.mansione || '-'}</td>
+                        <td style={{ padding: 12, textAlign: 'right' }}>{c.retribuzione_lorda ? formatEuro(c.retribuzione_lorda) : '-'}</td>
+                        <td style={{ padding: 12, textAlign: 'center' }}>{c.data_inizio?.split('T')[0] || '-'}</td>
+                        <td style={{ padding: 12, textAlign: 'center', color: isScaduto ? '#dc2626' : isInScadenza ? '#ca8a04' : '#64748b' }}>
+                          {c.data_fine?.split('T')[0] || 'Indeterminato'}
+                        </td>
+                        <td style={{ padding: 12, textAlign: 'center' }}>
+                          <span style={{ 
+                            background: c.stato === 'attivo' ? '#dcfce7' : '#f1f5f9',
+                            color: c.stato === 'attivo' ? '#166534' : '#64748b',
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                            fontSize: 12
+                          }}>
+                            {c.stato}
+                          </span>
+                        </td>
+                        <td style={{ padding: 12 }}>
+                          {c.stato === 'attivo' && (
+                            <button 
+                              onClick={() => handleTerminaContratto(c.id)}
+                              style={{ background: '#fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12 }}
+                            >
+                              Termina
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
+      )}
+
       {/* TAB: Prima Nota Salari */}
       {activeTab === 'salari' && (
         <>
