@@ -7,6 +7,7 @@ export default function Scadenze() {
   const { anno } = useAnnoGlobale();
   const [scadenze, setScadenze] = useState([]);
   const [scadenzeIva, setScadenzeIva] = useState(null);
+  const [alertWidget, setAlertWidget] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filtroTipo, setFiltroTipo] = useState('');
   const [includePassate, setIncludePassate] = useState(false);
