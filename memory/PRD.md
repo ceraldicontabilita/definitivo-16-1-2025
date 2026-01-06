@@ -305,6 +305,42 @@ Risolto errore JSX che causava pagina bianca su `/dipendenti`:
 
 **Eseguito:** Sync di 173 fornitori con ragioni sociali aggiornate
 
+### 19. Restyling Completo Pagina Gestione Fornitori - COMPLETATA ✅ (6 Gen 2026)
+**Nuova UI `/fornitori`:**
+
+**Layout a Card:**
+- Griglia responsiva CSS Grid con `auto-fill, minmax(320px, 1fr)`
+- 258 fornitori visualizzati come card individuali
+- Ogni card mostra: Avatar, Nome, P.IVA, Indirizzo, Email/Telefono, Fatture count, Giorni pagamento, Badge metodo pagamento
+
+**Statistiche Header:**
+- Totale Fornitori (258)
+- Con Fatture (173)
+- Dati Incompleti (148)
+- Pagamento Contanti (0)
+
+**Filtri Avanzati:**
+- Barra ricerca testuale (nome, P.IVA, comune)
+- Toggle panel filtri espandibile
+- Dropdown filtro metodo pagamento (Tutti/Bonifico/Contanti/Assegno/Misto)
+- Checkbox "Solo dati incompleti"
+- Pulsante reset filtri
+
+**Modale Nuovo/Modifica Fornitore:**
+- Usa `ReactDOM.createPortal` per rendering corretto sopra tutti gli elementi
+- Header con gradiente blu
+- Sezioni organizzate: Dati Azienda, Indirizzo, Contatti, Pagamento
+- Pre-compilazione dati esistenti in modalità modifica
+- Validazione campo obbligatorio (Ragione Sociale)
+- Pulsanti Salva/Annulla/X chiudi
+
+**Test-ID Principali:**
+- `fornitori-page`, `new-supplier-btn`, `edit-supplier-{id}`
+- `supplier-modal`, `toggle-filters`, `filter-metodo`, `filter-incomplete`
+- `save-supplier-btn`, `cancel-btn`, `close-modal-btn`
+
+**Test:** 100% frontend passed (iteration_25.json)
+
 ---
 
 ## Implementazioni Precedenti (6 Gen 2026)
