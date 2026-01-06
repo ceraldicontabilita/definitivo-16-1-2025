@@ -250,7 +250,14 @@ async def import_paghe(file: UploadFile = File(...)) -> Dict[str, Any]:
         "message": f"Import PAGHE completato",
         "created": created,
         "updated": updated,
-        "errors": errors[:10] if errors else []
+        "errors": errors[:10] if errors else [],
+        "colonne_trovate": list(df.columns),
+        "colonne_mappate": {
+            "dipendente": col_dipendente,
+            "mese": col_mese,
+            "anno": col_anno,
+            "importo_busta": col_importo
+        }
     }
 
 
