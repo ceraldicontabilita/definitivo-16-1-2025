@@ -104,7 +104,7 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             try:
                 data_fattura = datetime.strptime(data_fattura_str, "%Y-%m-%d")
                 data_scadenza = (data_fattura + timedelta(days=giorni_pagamento)).strftime("%Y-%m-%d")
-            except:
+            except (ValueError, TypeError):
                 pass
         
         invoice = {
@@ -238,7 +238,7 @@ async def upload_fatture_xml_bulk(files: List[UploadFile] = File(...)) -> Dict[s
                 try:
                     xml_content = content.decode(enc)
                     break
-                except:
+                except (UnicodeDecodeError, LookupError):
                     continue
             
             if not xml_content:
@@ -288,7 +288,7 @@ async def upload_fatture_xml_bulk(files: List[UploadFile] = File(...)) -> Dict[s
             
             try:
                 warehouse_result = await auto_populate_warehouse_from_invoice(db, parsed, invoice["id"])
-            except:
+            except Exception:
                 warehouse_result = {}
             
             results["success"].append({
