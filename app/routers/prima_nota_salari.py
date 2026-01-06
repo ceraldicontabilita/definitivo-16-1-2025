@@ -442,6 +442,45 @@ async def delete_salario(record_id: str) -> Dict[str, str]:
     return {"message": "Record eliminato"}
 
 
+@router.put("/salari/{record_id}")
+async def update_salario(
+    record_id: str,
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, str]:
+    """Aggiorna un record della prima nota salari."""
+    db = Database.get_db()
+    
+    # Calcola saldo
+    importo_busta = float(data.get("importo_busta", 0))
+    importo_bonifico = float(data.get("importo_bonifico", 0))
+    saldo = importo_busta - importo_bonifico
+    
+    # Aggiorna il mese_nome se cambia il mese
+    mese = int(data.get("mese", 1))
+    mese_nome = MESI_NOMI[mese - 1] if 1 <= mese <= 12 else ""
+    
+    update_data = {
+        "dipendente": data.get("dipendente", ""),
+        "anno": int(data.get("anno", 2025)),
+        "mese": mese,
+        "mese_nome": mese_nome,
+        "importo_busta": importo_busta,
+        "importo_bonifico": importo_bonifico,
+        "saldo": saldo,
+        "updated_at": datetime.utcnow().isoformat()
+    }
+    
+    result = await db["prima_nota_salari"].update_one(
+        {"id": record_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Record non trovato")
+    
+    return {"message": "Record aggiornato"}
+
+
 @router.put("/salari/{record_id}/riconcilia")
 async def riconcilia_salario(
     record_id: str,
