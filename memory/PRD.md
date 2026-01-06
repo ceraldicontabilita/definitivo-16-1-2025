@@ -3,7 +3,7 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino, gestione fornitori e **contabilità analitica con centri di costo**.
 
-**Versione**: 4.3.0  
+**Versione**: 4.4.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB + Claude AI
 
@@ -48,6 +48,16 @@ AI fallback per articoli non classificati.
 
 ### 3. Fattura → Fornitore → Articoli Tipici
 Link automatico fornitore-articoli basato su storico fatture.
+
+### 4. Ricetta → Produzione → Lotto → Tracciabilità Ingredienti (NUOVO ✅)
+Quando si produce una ricetta:
+1. Genera codice lotto: `NOME-PROGRESSIVO-QTÀunità-DDMMYYYY`
+2. Scarico automatico ingredienti dal magazzino
+3. Calcolo costo produzione (totale e unitario)
+4. Tracciabilità: lotto fornitore, data consegna, fornitore per ogni ingrediente
+
+**File**: `/app/app/routers/ricette.py`
+**Collezioni**: `produzioni`, `registro_lotti`
 
 ---
 
