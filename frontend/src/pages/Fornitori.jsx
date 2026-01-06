@@ -732,7 +732,13 @@ export default function Fornitori() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '16px'
+            }}
+          >
             {filteredSuppliers.map((supplier) => (
               <SupplierCard
                 key={supplier.id}
