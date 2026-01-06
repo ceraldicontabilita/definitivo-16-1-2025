@@ -3,7 +3,7 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 3.0.0  
+**Versione**: 3.1.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
@@ -12,40 +12,29 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 ## Refactoring Completato (6 Gen 2026)
 
 ### 1. Pulizia Codice Backend - COMPLETATA ✅
-**Corretti 44 `bare except` in tutti i router:**
-- `/app/app/routers/dipendenti.py` - Sostituiti con `except (ValueError, TypeError)`
-- `/app/app/routers/accounting_f24.py` - Specificate eccezioni
-- `/app/app/routers/bank_statement_import.py` - 3 fix
-- `/app/app/routers/bank_statement_parser.py` - 2 fix
-- `/app/app/routers/corrispettivi_router.py` - 3 fix (encoding)
-- `/app/app/routers/employee_contracts.py` - 1 fix
-- `/app/app/routers/employees_payroll.py` - 1 fix
-- `/app/app/routers/estratto_conto.py` - 7 fix
-- `/app/app/routers/f24_public.py` - 2 fix
-- `/app/app/routers/f24_tributi.py` - 2 fix
-- `/app/app/routers/fatture_upload.py` - 3 fix
-- `/app/app/routers/invoices.py` - 1 fix
-- `/app/app/routers/iva_calcolo.py` - 1 fix
-- `/app/app/routers/ordini_fornitori.py` - 1 fix
-- `/app/app/routers/prima_nota.py` - 2 fix
-- `/app/app/routers/prima_nota_automation.py` - 3 fix
-- `/app/app/routers/public_api.py` - 2 fix
-- `/app/app/routers/riconciliazione_fornitori.py` - 5 fix
-- `/app/app/routers/scadenze.py` - 2 fix
-- `/app/app/routers/cash.py` - Corretto undefined `corrispettivo_repo`
+**Corretti 44 `bare except` in 19 router** - Sostituiti con eccezioni specifiche (`ValueError`, `TypeError`, `IndexError`, `UnicodeDecodeError`)
 
 ### 2. Fix Bug Frontend - COMPLETATA ✅
-- `/app/frontend/src/pages/Fatture.jsx` - Corretto `)}` extra che causava errore JSX
-- `/app/frontend/src/pages/Corrispettivi.jsx` - Escapato apostrofo con `&apos;`
+- `Fatture.jsx` - Corretto errore JSX `)}` extra
+- `Corrispettivi.jsx` - Escapato apostrofo
+- `Magazzino.jsx` - Mappatura corretta campi per catalogo prodotti
 
-### 3. Verifica Collegamento Dati XML ✅
-Verificato che tutte le pagine sono correttamente collegate ai dati importati:
-- **Dashboard**: Mostra statistiche aggregate (fatture, corrispettivi, dipendenti)
-- **Fatture**: 5 fatture caricate da XML con dettagli fornitori e importi
-- **Corrispettivi**: 3 corrispettivi con totali e suddivisione cassa/POS
-- **Calcolo IVA**: IVA debito (€ 918,08) e credito (€ 19,51) calcolate correttamente
-- **Bilancio**: Stato patrimoniale e conto economico popolati
-- **Prima Nota**: Collegata ai movimenti cassa e banca
+### 3. Popolamento Magazzino da Fatture XML - COMPLETATA ✅
+**Nuovi Endpoint:**
+- `POST /api/fatture/repopulate-warehouse` - Ripopola magazzino da tutte le fatture
+- `POST /api/fatture/categorize-movements` - Categorizza tutti i movimenti
+
+**Risultati:**
+- **2405 prodotti** creati nel magazzino
+- **7272 record storico prezzi** salvati
+- **6040 movimenti categorizzati** (1410 cassa, 386 banca, 4244 estratto conto)
+
+**Categorie Movimenti:**
+`acquisti_merce`, `utenze`, `affitto`, `stipendi`, `tasse`, `bancari`, `assicurazioni`, `manutenzione`, `consulenze`, `marketing`, `attrezzature`, `carburante`, `vendite`, `altro`
+
+### 4. Fix Collezione Database - COMPLETATA ✅
+- Aggiornato `Collections.WAREHOUSE_PRODUCTS` da `warehouse_products` a `warehouse_inventory`
+- Dashboard ora mostra correttamente 2405 prodotti
 
 ---
 
