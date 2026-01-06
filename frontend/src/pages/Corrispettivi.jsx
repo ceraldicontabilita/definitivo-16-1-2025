@@ -6,7 +6,6 @@ import { useAnnoGlobale } from "../contexts/AnnoContext";
 
 export default function Corrispettivi() {
   const { anno: selectedYear } = useAnnoGlobale();
-  const currentYear = new Date().getFullYear();
   const [corrispettivi, setCorrispettivi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -20,6 +19,7 @@ export default function Corrispettivi() {
 
   useEffect(() => {
     loadCorrispettivi();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
 
   async function loadCorrispettivi() {
