@@ -468,6 +468,170 @@ export default function Ricette() {
           </div>
         </div>
       )}
+
+      {/* Modal Modifica Ricetta */}
+      {editingRicetta && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }} onClick={() => setEditingRicetta(null)}>
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '600px',
+              maxHeight: '85vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', background: 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit2 size={20} /> Modifica Ricetta
+              </h2>
+            </div>
+            
+            <div style={{ padding: '24px' }}>
+              {/* Nome e Categoria */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>Nome Ricetta *</label>
+                  <input
+                    type="text"
+                    value={editingRicetta.nome || ''}
+                    onChange={(e) => updateEditingField('nome', e.target.value)}
+                    placeholder="es. Torta Caprese"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                    data-testid="edit-nome-ricetta"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>Categoria</label>
+                  <select
+                    value={editingRicetta.categoria || 'pasticceria'}
+                    onChange={(e) => updateEditingField('categoria', e.target.value)}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                  >
+                    <option value="pasticceria">Pasticceria</option>
+                    <option value="bar">Bar</option>
+                    <option value="dolci">Dolci</option>
+                    <option value="salato">Salato</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Porzioni e Prezzo */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>Porzioni</label>
+                  <input
+                    type="number"
+                    value={editingRicetta.porzioni || 1}
+                    onChange={(e) => updateEditingField('porzioni', parseInt(e.target.value) || 1)}
+                    style={{ width: '100%', padding: '10px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>Prezzo Vendita (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingRicetta.prezzo_vendita || 0}
+                    onChange={(e) => updateEditingField('prezzo_vendita', e.target.value)}
+                    placeholder="0.00"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' }}
+                    data-testid="edit-prezzo-ricetta"
+                  />
+                </div>
+              </div>
+
+              {/* Ingredienti */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>Ingredienti</label>
+                  <button
+                    onClick={addEditingIngrediente}
+                    style={{ padding: '6px 12px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                  >
+                    + Aggiungi
+                  </button>
+                </div>
+                
+                <div style={{ maxHeight: '200px', overflow: 'auto' }}>
+                  {(editingRicetta.ingredienti || []).map((ing, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={ing.nome || ''}
+                        onChange={(e) => updateEditingIngrediente(idx, 'nome', e.target.value)}
+                        placeholder="Nome ingrediente"
+                        style={{ flex: 2, padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                      />
+                      <input
+                        type="number"
+                        value={ing.quantita || ''}
+                        onChange={(e) => updateEditingIngrediente(idx, 'quantita', e.target.value)}
+                        placeholder="Qtà"
+                        style={{ width: '70px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                      />
+                      <select
+                        value={ing.unita || 'g'}
+                        onChange={(e) => updateEditingIngrediente(idx, 'unita', e.target.value)}
+                        style={{ width: '60px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                      >
+                        <option value="g">g</option>
+                        <option value="kg">kg</option>
+                        <option value="ml">ml</option>
+                        <option value="l">l</option>
+                        <option value="pz">pz</option>
+                      </select>
+                      <button
+                        onClick={() => removeEditingIngrediente(idx)}
+                        style={{ padding: '6px', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#dc2626' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setEditingRicetta(null)}
+                style={{ padding: '10px 20px', background: '#f3f4f6', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleUpdateRicetta}
+                disabled={saving}
+                style={{
+                  padding: '10px 24px',
+                  background: saving ? '#9ca3af' : 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontSize: '14px',
+                  fontWeight: 600
+                }}
+                data-testid="update-ricetta-btn"
+              >
+                {saving ? 'Salvataggio...' : 'Aggiorna Ricetta'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
