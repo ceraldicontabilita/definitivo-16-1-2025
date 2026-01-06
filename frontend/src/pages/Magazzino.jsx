@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import api from "../api";
 import { formatDateIT } from "../lib/utils";
 
@@ -8,7 +8,14 @@ export default function Magazzino() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [err, setErr] = useState("");
-  const [activeTab, setActiveTab] = useState("catalogo"); // catalogo | manuale
+  const [activeTab, setActiveTab] = useState("catalogo");
+  
+  // Filtri
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [showLowStock, setShowLowStock] = useState(false);
+  
   const [newProduct, setNewProduct] = useState({
     name: "",
     code: "",
@@ -37,6 +44,56 @@ export default function Magazzino() {
       setLoading(false);
     }
   }
+
+  // Estrai liste uniche per filtri
+  const categories = useMemo(() => {
+    const cats = new Set(catalogProducts.map(p => p.categoria).filter(Boolean));
+    return Array.from(cats).sort();
+  }, [catalogProducts]);
+
+  const suppliers = useMemo(() => {
+    const supps = new Set(catalogProducts.map(p => p.ultimo_fornitore).filter(Boolean));
+    return Array.from(supps).sort();
+  }, [catalogProducts]);
+
+  // Prodotti filtrati
+  const filteredProducts = useMemo(() => {
+    return catalogProducts.filter(p => {
+      // Ricerca testo
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matches = (p.nome || '').toLowerCase().includes(q) ||
+                       (p.ultimo_fornitore || '').toLowerCase().includes(q) ||
+                       (p.categoria || '').toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+      // Categoria
+      if (categoryFilter && p.categoria !== categoryFilter) return false;
+      // Fornitore
+      if (supplierFilter && p.ultimo_fornitore !== supplierFilter) return false;
+      // Low stock
+      if (showLowStock && (p.giacenza || 0) > (p.giacenza_minima || 0)) return false;
+      
+      return true;
+    });
+  }, [catalogProducts, searchQuery, categoryFilter, supplierFilter, showLowStock]);
+
+  // Statistiche
+  const stats = useMemo(() => {
+    const total = filteredProducts.length;
+    const totalValue = filteredProducts.reduce((sum, p) => {
+      const price = p.prezzi?.avg || 0;
+      const qty = p.giacenza || 0;
+      return sum + (price * qty);
+    }, 0);
+    const lowStock = filteredProducts.filter(p => (p.giacenza || 0) <= (p.giacenza_minima || 0)).length;
+    const categorieCounts = {};
+    filteredProducts.forEach(p => {
+      const cat = p.categoria || 'altro';
+      categorieCounts[cat] = (categorieCounts[cat] || 0) + 1;
+    });
+    return { total, totalValue, lowStock, categorieCounts };
+  }, [filteredProducts]);
 
   async function handleCreateProduct(e) {
     e.preventDefault();
