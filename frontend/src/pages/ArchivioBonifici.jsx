@@ -171,7 +171,7 @@ export default function ArchivioBonifici() {
 
   // Export
   const handleExport = (format) => {
-    const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+    const baseUrl = window.location.origin;
     window.open(`${baseUrl}/api/archivio-bonifici/export?format=${format}`, '_blank');
   };
 
