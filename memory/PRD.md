@@ -3,13 +3,44 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino, gestione fornitori e **contabilità analitica con centri di costo**.
 
-**Versione**: 3.8.0  
+**Versione**: 3.9.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
 ---
 
-## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente Parte 4)
+## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente Parte 5)
+
+### 17. Fix Bug Eliminazione Assegni - COMPLETATA ✅
+- **Problema**: API `/api/assegni` restituiva 150 elementi invece di 140 (includeva soft-deleted)
+- **Causa**: Conflitto di route tra `public_api.router` e `assegni.router`
+- **Fix**: Aggiunto filtro `{"entity_status": {"$ne": "deleted"}}` in `/app/app/routers/public_api.py`
+- Test: API ora restituisce correttamente 140 assegni
+
+### 18. Upload ZIP Massivo F24 - COMPLETATA ✅
+- **Endpoint**: `POST /api/f24/upload-zip`
+- **Funzionalità**:
+  - Accetta file ZIP contenenti multipli PDF F24
+  - Controllo duplicati tramite hash SHA256
+  - Progress bar nel frontend
+  - Lista documenti caricati con eliminazione
+- **Frontend**: Sezione viola con gradiente in `/f24`
+- File: `/app/app/routers/f24.py` (linee 45-180), `/app/frontend/src/pages/F24.jsx`
+
+### 19. Portale HACCP Cucina Separato - COMPLETATA ✅
+- **URL**: `/cucina` (standalone, non richiede login gestionale)
+- **Codice accesso**: `141574`
+- **Funzionalità**:
+  - Login con codice numerico (senza username/password)
+  - Dashboard con statistiche: Materie Prime, Lotti Attivi, Registrazioni, Anomalie
+  - Menu 8 sezioni: Dashboard, Tracciabilità, Materie Prime, Lotti, Temperature, Sanificazione, Disinfestazione, Anomalie
+  - Ricerca prodotti e lotti
+  - Registrazione temperature frigo/congelatore
+- File: `/app/app/routers/haccp_auth.py`, `/app/frontend/src/pages/HACCPPortal.jsx`
+
+---
+
+## Implementazioni Precedenti (6 Gen 2026 - Parte 4)
 
 ### 14. Modifica Prezzi Ricette - COMPLETATA ✅
 - **Pulsante "Modifica" (icona matita)** su ogni card ricetta
