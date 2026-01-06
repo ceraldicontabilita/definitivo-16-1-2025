@@ -427,17 +427,15 @@ export default function GestioneAssegni() {
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>N. Assegno</th>
-                  <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Stato</th>
-                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Beneficiario</th>
-                  <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Importo Assegno</th>
-                  <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Data Fattura</th>
-                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>N. Fattura</th>
-                  <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Note</th>
-                  <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Azioni</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>N. Assegno</th>
+                  <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Stato</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Beneficiario / Note</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, fontSize: 12 }}>Importo</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Fattura / Data</th>
+                  <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -445,28 +443,28 @@ export default function GestioneAssegni() {
                   <React.Fragment key={carnetId}>
                     {/* Carnet Header with Print Button */}
                     <tr style={{ background: '#f0f9ff' }}>
-                      <td colSpan={6} style={{ padding: '10px 12px' }}>
+                      <td colSpan={4} style={{ padding: '8px 12px' }}>
                         <strong>Carnet {carnetIdx + 1}</strong>
-                        <span style={{ color: '#666', marginLeft: 10 }}>
+                        <span style={{ color: '#666', marginLeft: 10, fontSize: 13 }}>
                           (Assegni {carnetAssegni.length} - Totale: {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
                         </span>
                       </td>
-                      <td colSpan={2} style={{ padding: '10px 12px', textAlign: 'right' }}>
+                      <td colSpan={2} style={{ padding: '8px 12px', textAlign: 'right' }}>
                         <button
                           onClick={() => handleStampaCarnet(carnetId, carnetAssegni)}
                           data-testid={`stampa-carnet-${carnetIdx}`}
                           style={{
-                            padding: '6px 14px',
+                            padding: '5px 12px',
                             background: '#2196f3',
                             color: 'white',
                             border: 'none',
                             borderRadius: 6,
                             cursor: 'pointer',
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: 'bold'
                           }}
                         >
-                          Stampa Carnet PDF
+                          Stampa PDF
                         </button>
                       </td>
                     </tr>
