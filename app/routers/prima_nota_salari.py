@@ -163,8 +163,10 @@ async def import_paghe(file: UploadFile = File(...)) -> Dict[str, Any]:
     if not all([col_dipendente, col_mese, col_anno, col_importo]):
         raise HTTPException(
             status_code=400, 
-            detail=f"Colonne richieste non trovate. Trovate: {list(df.columns)}"
+            detail=f"Colonne richieste non trovate. Trovate: {list(df.columns)}. Mappate: dipendente={col_dipendente}, mese={col_mese}, anno={col_anno}, importo={col_importo}"
         )
+    
+    logger.info(f"IMPORT PAGHE - Colonne mappate: dipendente={col_dipendente}, mese={col_mese}, anno={col_anno}, importo={col_importo}")
     
     created = 0
     updated = 0
