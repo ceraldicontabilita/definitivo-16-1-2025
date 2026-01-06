@@ -110,6 +110,153 @@ async def get_categorie_ricette() -> List[str]:
     return sorted([c for c in categorie if c])
 
 
+# ============== REGISTRO LOTTI (PRIMA di /{ricetta_id}) ==============
+
+@router.get("/lotti")
+async def list_lotti(
+    skip: int = Query(0),
+    limit: int = Query(100),
+    data_da: Optional[str] = Query(None),
+    data_a: Optional[str] = Query(None),
+    stato: Optional[str] = Query(None),
+    search: Optional[str] = Query(None)
+) -> Dict[str, Any]:
+    """Lista lotti di produzione con tracciabilità ingredienti."""
+    db = Database.get_db()
+    
+    query = {}
+    if data_da:
+        query["data_produzione"] = {"$gte": data_da}
+    if data_a:
+        if "data_produzione" in query:
+            query["data_produzione"]["$lte"] = data_a
+        else:
+            query["data_produzione"] = {"$lte": data_a}
+    if stato:
+        query["stato"] = stato
+    if search:
+        query["$or"] = [
+            {"codice_lotto": {"$regex": search, "$options": "i"}},
+            {"prodotto_finito": {"$regex": search, "$options": "i"}}
+        ]
+    
+    lotti = await db["registro_lotti"].find(query, {"_id": 0}).sort("data_produzione", -1).skip(skip).limit(limit).to_list(limit)
+    totale = await db["registro_lotti"].count_documents(query)
+    
+    # Statistiche per stato
+    stats_pipeline = [
+        {"$group": {
+            "_id": "$stato",
+            "count": {"$sum": 1},
+            "quantita": {"$sum": "$quantita"}
+        }}
+    ]
+    stats_result = await db["registro_lotti"].aggregate(stats_pipeline).to_list(10)
+    per_stato = {s["_id"]: {"count": s["count"], "quantita": s["quantita"]} for s in stats_result if s["_id"]}
+    
+    return {
+        "lotti": lotti,
+        "totale": totale,
+        "per_stato": per_stato
+    }
+
+
+@router.get("/lotti/{codice_lotto}")
+async def get_lotto_dettaglio(codice_lotto: str) -> Dict[str, Any]:
+    """Dettaglio completo di un lotto con tracciabilità ingredienti."""
+    db = Database.get_db()
+    
+    lotto = await db["registro_lotti"].find_one({"codice_lotto": codice_lotto}, {"_id": 0})
+    if not lotto:
+        raise HTTPException(status_code=404, detail="Lotto non trovato")
+    
+    # Recupera produzione associata
+    produzione = await db["produzioni"].find_one({"id": lotto.get("produzione_id")}, {"_id": 0})
+    
+    return {
+        "lotto": lotto,
+        "produzione": produzione
+    }
+
+
+@router.put("/lotti/{codice_lotto}/stato")
+async def aggiorna_stato_lotto(
+    codice_lotto: str,
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, Any]:
+    """Aggiorna lo stato di un lotto (disponibile, venduto, scaduto, eliminato)."""
+    db = Database.get_db()
+    
+    nuovo_stato = data.get("stato")
+    if nuovo_stato not in ["disponibile", "venduto", "scaduto", "eliminato"]:
+        raise HTTPException(status_code=400, detail="Stato non valido")
+    
+    result = await db["registro_lotti"].update_one(
+        {"codice_lotto": codice_lotto},
+        {"$set": {
+            "stato": nuovo_stato,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Lotto non trovato")
+    
+    return {"success": True, "message": f"Stato lotto aggiornato a: {nuovo_stato}"}
+
+
+# ============== PRODUZIONI (PRIMA di /{ricetta_id}) ==============
+
+@router.get("/produzioni")
+async def list_produzioni(
+    skip: int = Query(0),
+    limit: int = Query(100),
+    data_da: Optional[str] = Query(None),
+    data_a: Optional[str] = Query(None),
+    ricetta_id: Optional[str] = Query(None)
+) -> Dict[str, Any]:
+    """Lista produzioni con filtri."""
+    db = Database.get_db()
+    
+    query = {}
+    if data_da:
+        query["data"] = {"$gte": data_da}
+    if data_a:
+        if "data" in query:
+            query["data"]["$lte"] = data_a
+        else:
+            query["data"] = {"$lte": data_a}
+    if ricetta_id:
+        query["ricetta_id"] = ricetta_id
+    
+    produzioni = await db["produzioni"].find(query, {"_id": 0}).sort("data", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Statistiche
+    stats_pipeline = [
+        {"$match": query},
+        {"$group": {
+            "_id": None,
+            "totale_costo": {"$sum": "$costo_produzione"},
+            "totale_quantita": {"$sum": "$quantita_prodotta"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    stats_result = await db["produzioni"].aggregate(stats_pipeline).to_list(1)
+    stats = stats_result[0] if stats_result else {}
+    
+    return {
+        "produzioni": produzioni,
+        "totale": await db["produzioni"].count_documents(query),
+        "statistiche": {
+            "produzioni_count": stats.get("count", 0),
+            "costo_totale": round(stats.get("totale_costo", 0), 2),
+            "quantita_totale": stats.get("totale_quantita", 0)
+        }
+    }
+
+
+# ============== DETTAGLIO RICETTA (DOPO le route specifiche) ==============
+
 @router.get("/{ricetta_id}")
 async def get_ricetta(ricetta_id: str) -> Dict[str, Any]:
     """Dettaglio ricetta con food cost calcolato."""
