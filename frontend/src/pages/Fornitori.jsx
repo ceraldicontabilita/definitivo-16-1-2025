@@ -668,8 +668,7 @@ export default function Fornitori() {
   const filteredSuppliers = suppliers.filter(s => {
     if (filterMetodo !== 'tutti') {
       const metodo = s.metodo_pagamento || 'bonifico';
-      if (filterMetodo === 'bonifico' && metodo !== 'banca' && metodo !== 'bonifico') return false;
-      else if (filterMetodo !== 'bonifico' && metodo !== filterMetodo) return false;
+      if (metodo !== filterMetodo) return false;
     }
     if (filterIncomplete && s.partita_iva && s.email) return false;
     return true;
