@@ -8,13 +8,14 @@ import {
   Users, X
 } from 'lucide-react';
 
-// Dizionario Metodi di Pagamento
+// Dizionario Metodi di Pagamento - allineato con il backend
 const METODI_PAGAMENTO = {
-  cassa: { label: 'Contanti', bg: '#dcfce7', color: '#16a34a' },
+  contanti: { label: 'Contanti', bg: '#dcfce7', color: '#16a34a' },
   bonifico: { label: 'Bonifico', bg: '#dbeafe', color: '#2563eb' },
-  banca: { label: 'Bonifico', bg: '#dbeafe', color: '#2563eb' },
   assegno: { label: 'Assegno', bg: '#fef3c7', color: '#d97706' },
-  misto: { label: 'Misto', bg: '#f3e8ff', color: '#9333ea' }
+  misto: { label: 'Misto', bg: '#f3e8ff', color: '#9333ea' },
+  carta: { label: 'Carta', bg: '#fce7f3', color: '#db2777' },
+  sepa: { label: 'SEPA', bg: '#e0e7ff', color: '#4f46e5' }
 };
 
 const getMetodo = (key) => METODI_PAGAMENTO[key] || METODI_PAGAMENTO.bonifico;
