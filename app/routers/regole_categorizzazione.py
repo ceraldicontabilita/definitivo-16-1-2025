@@ -532,6 +532,43 @@ async def elimina_regola(tipo: str, pattern: str) -> Dict[str, Any]:
     return {"success": True, "message": "Regola eliminata"}
 
 
+@router.post("/categorie")
+async def aggiorna_categoria(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Aggiorna o crea una categoria con deducibilità."""
+    db = Database.get_db()
+    
+    categoria = data.get("categoria", "").strip().lower().replace(" ", "_")
+    conto = data.get("conto", "").strip()
+    ded_ires = data.get("deducibilita_ires", 100)
+    ded_irap = data.get("deducibilita_irap", 100)
+    
+    if not categoria or not conto:
+        raise HTTPException(status_code=400, detail="Categoria e conto sono obbligatori")
+    
+    try:
+        ded_ires = float(ded_ires)
+        ded_irap = float(ded_irap)
+    except (ValueError, TypeError):
+        ded_ires = 100
+        ded_irap = 100
+    
+    # Upsert categoria
+    result = await db["regole_categorie"].update_one(
+        {"categoria": categoria},
+        {"$set": {
+            "categoria": categoria,
+            "conto": conto,
+            "deducibilita_ires": min(100, max(0, ded_ires)),
+            "deducibilita_irap": min(100, max(0, ded_irap)),
+            "updated_at": datetime.utcnow().isoformat()
+        }},
+        upsert=True
+    )
+    
+    action = "created" if result.upserted_id else "updated"
+    return {"success": True, "message": f"Categoria {action}", "action": action}
+
+
 # ============== FUNZIONI HELPER ==============
 
 async def _get_default_regole_fornitori() -> List[Dict]:
