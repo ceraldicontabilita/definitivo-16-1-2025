@@ -142,7 +142,7 @@ export function PrimaNotaMovementsTable({
       
       {/* Mobile Cards */}
       <div style={{ display: 'none' }} className="mobile-cards">
-        {currentMovements.map((mov, idx) => (
+        {currentMovements.map((mov) => (
           <MobileMovementCard
             key={mov.id}
             mov={mov}
