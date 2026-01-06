@@ -318,7 +318,8 @@ PATTERNS_ARTICOLI = {
         "patterns": [
             r"caff[eè]", r"kimbo", r"lavazza", r"illy", r"segafredo",
             r"borbone", r"nespresso", r"espresso", r"ginseng", r"orzo",
-            r"cappuccin", r"tazzina", r"tazza.*vetro"
+            r"cappuccin", r"tazzina", r"tazza.*vetro", r"toraldo",
+            r"cialde", r"origini\s+box"
         ],
         "categoria_haccp": "bevande_analcoliche",
         "conto": "05.01.09",
