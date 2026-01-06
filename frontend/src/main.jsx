@@ -54,12 +54,19 @@ import MagazzinoDoppiaVerita from "./pages/MagazzinoDoppiaVerita.jsx";
 import UtileObiettivo from "./pages/UtileObiettivo.jsx";
 // Portale HACCP separato
 import HACCPPortal from "./pages/HACCPPortal.jsx";
+// Gestione Riservata
+import GestioneRiservata from "./pages/GestioneRiservata.jsx";
 
 const router = createBrowserRouter([
   // Portale HACCP standalone (login con codice 141574)
   {
     path: "/cucina",
     element: <HACCPPortal />
+  },
+  // Gestione Riservata standalone (login con codice 507488)
+  {
+    path: "/gestione-riservata",
+    element: <GestioneRiservata />
   },
   {
     path: "/",
