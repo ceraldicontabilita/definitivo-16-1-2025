@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
 
+// Backend URL from window.location or empty for relative URLs
+const BACKEND_URL = window.location.origin;
+
 export default function Admin() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +64,7 @@ export default function Admin() {
       const collections = ['invoices', 'suppliers', 'employees', 'haccp_temperature_frigoriferi', 'prima_nota_cassa'];
       
       for (const col of collections) {
-        const url = `${process.env.REACT_APP_BACKEND_URL}/api/simple-exports/${col}?format=${format}`;
+        const url = `${BACKEND_URL}/api/simple-exports/${col}?format=${format}`;
         window.open(url, '_blank');
         await new Promise(r => setTimeout(r, 500)); // delay between downloads
       }
