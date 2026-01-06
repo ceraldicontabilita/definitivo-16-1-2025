@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     
     # MongoDB Atlas (REQUIRED)
     MONGODB_ATLAS_URI: Optional[str] = None
-    DB_NAME: Optional[str] = "invoice_manager_db"
+    DB_NAME: str = "azienda_erp_db"  # Database principale - NON MODIFICARE
     MONGODB_MAX_POOL_SIZE: int = 50
     MONGODB_MIN_POOL_SIZE: int = 10
     MONGODB_TIMEOUT_MS: int = 5000
