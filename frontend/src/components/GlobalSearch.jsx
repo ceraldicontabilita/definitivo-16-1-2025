@@ -183,7 +183,7 @@ export default function GlobalSearch() {
 
           {!loading && results.length === 0 && query.length >= 2 && (
             <div style={{ padding: 20, textAlign: 'center', color: '#666' }}>
-              Nessun risultato per "{query}"
+              Nessun risultato per &quot;{query}&quot;
             </div>
           )}
 
