@@ -456,11 +456,11 @@ async def get_regole() -> Dict[str, Any]:
         categorie = [{"categoria": k, **v} for k, v in DEFAULT_CATEGORIE.items()]
     
     return {
-        "regole_fornitori": regole_fornitori,
-        "regole_descrizioni": regole_descrizioni,
+        "regole_fornitori": regole_fornitori_db,
+        "regole_descrizioni": regole_descrizioni_db,
         "categorie": categorie,
         "piano_conti": DEFAULT_PIANO_CONTI,
-        "totale_regole": len(regole_fornitori) + len(regole_descrizioni)
+        "totale_regole": len(regole_fornitori_db) + len(regole_descrizioni_db)
     }
 
 
