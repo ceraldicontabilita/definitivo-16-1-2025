@@ -181,28 +181,43 @@ export default function Magazzino() {
                 <thead>
                   <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left", background: '#f8fafc' }}>
                     <th style={{ padding: 12 }}>Prodotto</th>
+                    <th style={{ padding: 12 }}>Categoria</th>
                     <th style={{ padding: 12 }}>Fornitore</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Ultimo Prezzo</th>
-                    <th style={{ padding: 12, textAlign: 'right' }}>Prezzo Medio</th>
-                    <th style={{ padding: 12 }}>Ultima Fattura</th>
+                    <th style={{ padding: 12, textAlign: 'right' }}>Giacenza</th>
+                    <th style={{ padding: 12, textAlign: 'right' }}>Prezzo Min</th>
+                    <th style={{ padding: 12, textAlign: 'right' }}>Prezzo Max</th>
+                    <th style={{ padding: 12 }}>Ultimo Acquisto</th>
                   </tr>
                 </thead>
                 <tbody>
                   {catalogProducts.slice(0, 100).map((p, i) => (
                     <tr key={p.id || p.product_id || i} style={{ borderBottom: "1px solid #eee" }}>
                       <td style={{ padding: 12 }}>
-                        <div style={{ fontWeight: 500 }}>{p.description || p.name || p.descrizione}</div>
-                        {p.code && <div className="small" style={{ color: '#64748b' }}>Cod: {p.code}</div>}
+                        <div style={{ fontWeight: 500 }}>{p.nome || p.description || p.name || '-'}</div>
+                        {p.unita_misura && <div className="small" style={{ color: '#64748b' }}>{p.unita_misura}</div>}
                       </td>
-                      <td style={{ padding: 12 }}>{p.supplier_name || p.fornitore || '-'}</td>
-                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>
-                        € {(p.last_price || p.ultimo_prezzo || p.unit_price || 0).toFixed(2)}
+                      <td style={{ padding: 12 }}>
+                        <span style={{ 
+                          background: '#f1f5f9', 
+                          padding: '2px 8px', 
+                          borderRadius: 4, 
+                          fontSize: 12 
+                        }}>
+                          {p.categoria || 'altro'}
+                        </span>
+                      </td>
+                      <td style={{ padding: 12 }}>{p.ultimo_fornitore || p.supplier_name || '-'}</td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 500 }}>
+                        {(p.giacenza || 0).toFixed(2)}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', color: '#16a34a' }}>
+                        € {(p.prezzi?.min || p.last_price || 0).toFixed(2)}
                       </td>
                       <td style={{ padding: 12, textAlign: 'right', color: '#64748b' }}>
-                        € {(p.avg_price || p.prezzo_medio || 0).toFixed(2)}
+                        € {(p.prezzi?.max || p.avg_price || 0).toFixed(2)}
                       </td>
                       <td style={{ padding: 12, color: '#64748b' }}>
-                        {p.last_invoice_date ? formatDateIT(p.last_invoice_date) : '-'}
+                        {p.ultimo_acquisto ? formatDateIT(p.ultimo_acquisto) : '-'}
                       </td>
                     </tr>
                   ))}
