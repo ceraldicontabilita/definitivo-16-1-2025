@@ -339,7 +339,7 @@ async def import_bonifici(file: UploadFile = File(...)) -> Dict[str, Any]:
                 {"_id": existing["_id"]},
                 {"$set": {
                     "importo_bonifico": round(importo_bonifico, 2),
-                    "saldo": round(importo_busta - importo_bonifico, 2),
+                    "saldo": round(importo_bonifico - importo_busta, 2),  # Bonifico - Busta
                     "updated_at": datetime.utcnow().isoformat()
                 }}
             )
@@ -354,7 +354,7 @@ async def import_bonifici(file: UploadFile = File(...)) -> Dict[str, Any]:
                 "mese_nome": MESI_NOMI[mese - 1],
                 "importo_busta": 0,
                 "importo_bonifico": round(importo_bonifico, 2),
-                "saldo": round(-importo_bonifico, 2),  # Negativo perché pagato senza busta
+                "saldo": round(importo_bonifico, 2),  # Bonifico - Busta(0) = positivo (anticipo)
                 "progressivo": 0,
                 "riconciliato": False,
                 "created_at": datetime.utcnow().isoformat(),
