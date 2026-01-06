@@ -50,6 +50,11 @@ export default function GestioneDipendenti() {
   const [importingEstratto, setImportingEstratto] = useState(false);
   const [estrattoResult, setEstrattoResult] = useState(null);
   const [editingSalario, setEditingSalario] = useState(null); // Record in modifica
+  
+  // Filtri tabella inline
+  const [filtroTabDipendente, setFiltroTabDipendente] = useState('');
+  const [filtroTabMese, setFiltroTabMese] = useState('');
+  const [filtroTabAnno, setFiltroTabAnno] = useState('');
 
   // Libro Unico state
   const [libroUnicoSalaries, setLibroUnicoSalaries] = useState([]);
