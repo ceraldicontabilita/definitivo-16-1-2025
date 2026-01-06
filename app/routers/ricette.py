@@ -9,16 +9,48 @@ from datetime import datetime, timezone
 from app.database import Database, Collections
 import uuid
 import json
+import re
 
 router = APIRouter()
 
 
-def genera_codice_lotto(ricetta_nome: str) -> str:
-    """Genera un codice lotto univoco per la produzione."""
+async def genera_codice_lotto(ricetta_nome: str, quantita: int, unita: str = "pz") -> dict:
+    """
+    Genera un codice lotto nel formato dell'app di riferimento.
+    Formato: NOME-PROGRESSIVO-QTÀunità-DDMMYYYY
+    Esempio: BABA-004-1pz-06012026
+    """
+    db = Database.get_db()
     now = datetime.now(timezone.utc)
-    # Formato: PROD-ABC-YYYYMMDD-HHMM (ABC = prime 3 lettere ricetta)
-    prefix = ''.join(c for c in ricetta_nome.upper() if c.isalpha())[:3] or "PRD"
-    return f"PROD-{prefix}-{now.strftime('%Y%m%d')}-{now.strftime('%H%M')}"
+    
+    # Estrai prefisso dal nome ricetta (max 8 caratteri, solo lettere/numeri)
+    nome_clean = re.sub(r'[^A-Z0-9]', '', ricetta_nome.upper())[:8] or "PROD"
+    
+    # Trova il prossimo progressivo per questo prodotto
+    ultimo_lotto = await db["registro_lotti"].find_one(
+        {"prodotto_finito": {"$regex": f"^{re.escape(ricetta_nome)}$", "$options": "i"}},
+        {"_id": 0, "codice_lotto": 1},
+        sort=[("created_at", -1)]
+    )
+    
+    progressivo = 1
+    if ultimo_lotto and ultimo_lotto.get("codice_lotto"):
+        # Estrai progressivo dal codice esistente
+        match = re.search(r'-(\d{3})-', ultimo_lotto["codice_lotto"])
+        if match:
+            progressivo = int(match.group(1)) + 1
+    
+    # Formatta la data come DDMMYYYY
+    data_str = now.strftime('%d%m%Y')
+    
+    # Costruisci il codice lotto
+    codice_lotto = f"{nome_clean}-{progressivo:03d}-{quantita}{unita}-{data_str}"
+    
+    return {
+        "codice_lotto": codice_lotto,
+        "progressivo": progressivo,
+        "nome_clean": nome_clean
+    }
 
 
 # ============== RICETTE ==============
