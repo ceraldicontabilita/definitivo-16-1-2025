@@ -121,7 +121,8 @@ from app.routers import (
     regole_categorizzazione,
     centri_costo,
     magazzino_doppia_verita,
-    ricette
+    ricette,
+    dizionario_articoli
 )
 
 # Include public API first (no auth required)
