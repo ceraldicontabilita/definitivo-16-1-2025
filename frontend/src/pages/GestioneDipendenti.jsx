@@ -902,7 +902,7 @@ export default function GestioneDipendenti() {
                       key={mov.id || idx} 
                       style={{ 
                         borderBottom: '1px solid #f1f5f9',
-                        background: mov.progressivo > 0 ? '#fff7ed' : mov.progressivo < 0 ? '#f0fdf4' : 'white'
+                        background: mov.progressivo > 0 ? '#f0fdf4' : mov.progressivo < 0 ? '#fef2f2' : 'white'
                       }}
                     >
                       <td style={{ padding: 12, fontWeight: 500 }}>{mov.dipendente}</td>
@@ -918,7 +918,7 @@ export default function GestioneDipendenti() {
                         padding: 12, 
                         textAlign: 'right', 
                         fontWeight: 'bold',
-                        color: mov.progressivo > 0 ? '#ea580c' : mov.progressivo < 0 ? '#16a34a' : '#6b7280'
+                        color: mov.progressivo > 0 ? '#16a34a' : mov.progressivo < 0 ? '#dc2626' : '#6b7280'
                       }}>
                         {formatEuro(mov.progressivo || 0)}
                       </td>
