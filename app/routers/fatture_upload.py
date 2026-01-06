@@ -340,9 +340,15 @@ async def upload_fatture_xml_bulk(files: List[UploadFile] = File(...)) -> Dict[s
                 results["skipped_duplicates"] += 1
                 continue
             
+            # Assicura che il fornitore esista nel database (crea se nuovo)
+            supplier = await ensure_supplier_exists(db, parsed)
+            supplier_id = supplier.get("id") if supplier else None
+            metodo_pagamento = supplier.get("metodo_pagamento", "bonifico") if supplier else "bonifico"
+            
             invoice = {
                 "id": str(uuid.uuid4()),
                 "invoice_key": invoice_key,
+                "supplier_id": supplier_id,
                 "invoice_number": parsed.get("invoice_number", ""),
                 "invoice_date": parsed.get("invoice_date", ""),
                 "supplier_name": parsed.get("supplier_name", ""),
@@ -352,6 +358,7 @@ async def upload_fatture_xml_bulk(files: List[UploadFile] = File(...)) -> Dict[s
                 "iva": float(parsed.get("iva", 0) or 0),
                 "linee": parsed.get("linee", []),
                 "riepilogo_iva": parsed.get("riepilogo_iva", []),
+                "metodo_pagamento": metodo_pagamento,
                 "status": "imported",
                 "source": "xml_bulk_upload",
                 "filename": filename,
