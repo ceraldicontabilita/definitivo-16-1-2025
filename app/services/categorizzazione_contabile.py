@@ -97,9 +97,9 @@ PATTERNS_DESCRIZIONE = {
             r"pasta\b", r"riso\b", r"farina", r"pane\b", r"pizza",
             r"formaggio", r"mozzarella", r"prosciutto", r"salame",
             r"carne\b", r"pesce\b", r"verdur", r"frutta",
-            r"zucchero", r"sale\b", r"caff[eè]", r"latte\b", r"burro",
-            r"uova?\b", r"tarall", r"biscott", r"dolc", r"gelat",
-            r"alimentar", r"food", r"cibo", r"snack", r"patatine",
+            r"zucchero", r"sale\b", r"latte\b", r"burro",
+            r"uova?\b", r"tarall", r"alimentar", r"food", r"cibo", 
+            r"snack", r"patatine", r"rosette\b", r"panin",
             r"olio\s+(extravergine|d[ie]\s*oliva|d[ie]\s*semi)"
         ],
         "conto": ("05.01.05", "Acquisto prodotti alimentari"),
