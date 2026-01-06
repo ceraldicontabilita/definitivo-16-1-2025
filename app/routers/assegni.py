@@ -144,7 +144,11 @@ async def get_assegni_stats() -> Dict[str, Any]:
     """Statistiche assegni."""
     db = Database.get_db()
     
+    # Escludi assegni eliminati (soft-delete)
+    match_filter = {"entity_status": {"$ne": "deleted"}}
+    
     pipeline = [
+        {"$match": match_filter},
         {"$group": {
             "_id": "$stato",
             "count": {"$sum": 1},
@@ -154,7 +158,7 @@ async def get_assegni_stats() -> Dict[str, Any]:
     
     by_stato = await db[COLLECTION_ASSEGNI].aggregate(pipeline).to_list(100)
     
-    totale = await db[COLLECTION_ASSEGNI].count_documents({})
+    totale = await db[COLLECTION_ASSEGNI].count_documents(match_filter)
     
     return {
         "totale": totale,
