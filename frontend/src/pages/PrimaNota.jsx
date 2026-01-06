@@ -58,6 +58,7 @@ function PrimaNotaDesktop() {
   const [savingPos, setSavingPos] = useState(false);
   const [savingVers, setSavingVers] = useState(false);
   const [savingMov, setSavingMov] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   // Nomi mesi
   const mesiNomi = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
