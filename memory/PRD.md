@@ -3,7 +3,7 @@
 ## Project Overview
 Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazione elettronica, magazzino e gestione fornitori.
 
-**Versione**: 3.2.0  
+**Versione**: 3.3.0  
 **Ultimo aggiornamento**: 6 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB
 
@@ -11,8 +11,8 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 
 ## Backup Database (6 Gen 2026)
 **Posizione**: `/app/backups/migration_20260106/`
-- 29 collezioni esportate
-- 22.328 documenti totali
+- 31 collezioni esportate
+- 22.351 documenti totali (inclusi 23 libretti sanitari)
 - Script ripristino: `restore_database.py`
 
 ---
@@ -43,7 +43,33 @@ Sistema ERP completo per gestione aziendale con focus su contabilità, fatturazi
 - Statistiche: prodotti totali, valore stimato, scorte basse, categorie
 - Filtri: ricerca testo, categoria, fornitore, scorte basse
 - Paginazione a 200 prodotti
-- Reset filtri
+
+### 6. Gestione Contratti - COMPLETATA ✅
+**Nuovi Endpoint (`/api/dipendenti/contratti/`):**
+- `GET /contratti` - Lista tutti i contratti
+- `POST /contratti` - Crea nuovo contratto
+- `PUT /contratti/{id}` - Aggiorna contratto
+- `POST /contratti/{id}/termina` - Termina contratto attivo
+- `GET /contratti/scadenze` - Contratti in scadenza (60 giorni)
+- `POST /contratti/import-excel` - Import massivo da Excel
+
+**UI Tab Contratti:**
+- Alert scadenze (contratti scaduti + in scadenza)
+- Form creazione con selezione dipendente, tipo, livello, mansione, RAL
+- Tabella con colori per tipo contratto e stato
+- Pulsante "Termina" per contratti attivi
+
+### 7. Gestione Libretti Sanitari - COMPLETATA ✅
+**Nuovi Endpoint (`/api/dipendenti/libretti-sanitari/`):**
+- `POST /import-excel` - Import massivo da Excel
+- `GET /scadenze` - Libretti in scadenza
+- `POST /genera-da-dipendenti` - Genera libretti per tutti i dipendenti
+
+**UI Tab Libretti:**
+- Import Excel per aggiornamento massivo
+- Generazione automatica per tutti i dipendenti (23 libretti creati)
+- KPI: Totale, Validi, In Scadenza, Scaduti
+- Form inserimento manuale
 
 ---
 
