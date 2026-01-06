@@ -235,7 +235,14 @@ PATTERNS_DESCRIZIONE = {
             r"lama\b", r"vite\b", r"bullone", r"dado\b", r"nastro",
             r"fascetta", r"utensil", r"attrezz", r"chiave\b",
             r"cacciavite", r"martello", r"pinza", r"trapano",
-            r"sega\b", r"wuerth", r"berner", r"wurth"
+            r"sega\b", r"wuerth", r"berner", r"wurth",
+            r"cerniere?\b", r"silicone", r"centralino",
+            r"bicchier.*rock", r"teiera", r"ramekin", r"souffle",
+            r"piatto.*pizza", r"vassoio", r"posate", r"cucchiai",
+            r"forchett", r"coltell.*tavola", r"portaposate",
+            r"pedana.*aliment", r"pile\s+(aa|aaa|stilo)",
+            r"cavo\s+(hdmi|usb|lightning)", r"mouse", r"tastiera",
+            r"led\s+faro", r"lampada\s+led", r"alimentatore"
         ],
         "conto": ("05.01.06", "Acquisto piccola utensileria"),
         "categoria_fiscale": CategoriaFiscale.ATTREZZATURE_MINORI,
@@ -249,7 +256,9 @@ PATTERNS_DESCRIZIONE = {
         "patterns": [
             r"borsa\b", r"busta\b", r"sacchetto", r"imballag",
             r"carta\b", r"cartone", r"scatol", r"confezione",
-            r"pellicola", r"vaschett", r"contenitor", r"packaging"
+            r"pellicola", r"vaschett", r"contenitor", r"packaging",
+            r"tovagliolo", r"tovagliett", r"piatti?\s+pian",
+            r"coppett", r"rotoli?\s+(termico|cassa)"
         ],
         "conto": ("05.01.07", "Materiali di consumo e imballaggio"),
         "categoria_fiscale": CategoriaFiscale.MATERIE_PRIME,
