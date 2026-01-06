@@ -282,7 +282,7 @@ export default function Magazzino() {
               cursor: 'pointer'
             }}
           >
-            📦 Catalogo Prodotti ({catalogProducts.length})
+            📦 Catalogo Prodotti ({filteredProducts.length}{filteredProducts.length !== catalogProducts.length ? ` / ${catalogProducts.length}` : ''})
           </button>
           <button
             onClick={() => setActiveTab('manuale')}
@@ -305,11 +305,11 @@ export default function Magazzino() {
             <div className="small">Caricamento...</div>
           ) : activeTab === 'catalogo' ? (
             // Catalogo Prodotti da Fatture
-            catalogProducts.length === 0 ? (
+            filteredProducts.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
-                <div>Nessun prodotto trovato nel catalogo.</div>
-                <div className="small">I prodotti verranno aggiunti automaticamente dalle fatture XML.</div>
+                <div>{catalogProducts.length > 0 ? 'Nessun prodotto corrisponde ai filtri.' : 'Nessun prodotto trovato nel catalogo.'}</div>
+                <div className="small">{catalogProducts.length === 0 ? 'I prodotti verranno aggiunti automaticamente dalle fatture XML.' : 'Prova a modificare i filtri di ricerca.'}</div>
               </div>
             ) : (
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
