@@ -280,14 +280,21 @@ async def import_bonifici(file: UploadFile = File(...)) -> Dict[str, Any]:
     col_importo = None
     
     for c in df.columns:
-        if 'dipendente' in c or 'nome' in c:
+        if 'dipendente' in c or 'nome' in c or 'cognome' in c:
             col_dipendente = c
         elif 'mese' in c:
             col_mese = c
         elif 'anno' in c:
             col_anno = c
-        elif 'erogato' in c or 'bonifico' in c or 'importo' in c:
+        elif any(x in c for x in ['erogato', 'bonifico', 'pagato', 'versato', 'accredito']):
             col_importo = c
+    
+    # Fallback: se non trova colonna specifica, cerca 'importo' (ma non 'stipendio' o 'netto')
+    if not col_importo:
+        for c in df.columns:
+            if 'importo' in c and 'stipendio' not in c and 'netto' not in c and 'busta' not in c:
+                col_importo = c
+                break
     
     if not all([col_dipendente, col_mese, col_anno, col_importo]):
         raise HTTPException(
