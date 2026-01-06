@@ -1100,8 +1100,8 @@ export default function GestioneDipendenti() {
             color: '#6b7280'
           }}>
             <strong>Legenda Saldo Progressivo:</strong> 
-            <span style={{ marginLeft: 12, color: '#ea580c' }}>● Positivo = anticipo al dipendente (bonifici {">"} buste)</span>
-            <span style={{ marginLeft: 12, color: '#16a34a' }}>● Negativo = arretrati da pagare (buste {">"} bonifici)</span>
+            <span style={{ marginLeft: 12, color: '#16a34a' }}>🟢 Positivo = anticipo al dipendente (bonifici {">"} buste)</span>
+            <span style={{ marginLeft: 12, color: '#dc2626' }}>🔴 Negativo = arretrati da pagare (buste {">"} bonifici)</span>
           </div>
         </>
       )}
