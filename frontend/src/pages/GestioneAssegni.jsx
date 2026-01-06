@@ -465,13 +465,13 @@ export default function GestioneAssegni() {
                   <React.Fragment key={carnetId}>
                     {/* Carnet Header with Print Button */}
                     <tr style={{ background: '#f0f9ff' }}>
-                      <td colSpan={4} style={{ padding: '8px 12px' }}>
+                      <td colSpan={3} style={{ padding: '8px 12px' }}>
                         <strong>Carnet {carnetIdx + 1}</strong>
                         <span style={{ color: '#666', marginLeft: 10, fontSize: 13 }}>
                           (Assegni {carnetAssegni.length} - Totale: {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
                         </span>
                       </td>
-                      <td colSpan={2} style={{ padding: '8px 12px', textAlign: 'right' }}>
+                      <td colSpan={3} style={{ padding: '8px 12px', textAlign: 'right' }}>
                         <button
                           onClick={() => handleStampaCarnet(carnetId, carnetAssegni)}
                           data-testid={`stampa-carnet-${carnetIdx}`}
@@ -483,10 +483,27 @@ export default function GestioneAssegni() {
                             borderRadius: 6,
                             cursor: 'pointer',
                             fontSize: 11,
+                            fontWeight: 'bold',
+                            marginRight: 8
+                          }}
+                        >
+                          🖨️ Stampa
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCarnet(carnetId, carnetAssegni)}
+                          data-testid={`delete-carnet-${carnetIdx}`}
+                          style={{
+                            padding: '5px 12px',
+                            background: '#dc2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: 11,
                             fontWeight: 'bold'
                           }}
                         >
-                          Stampa PDF
+                          🗑️ Elimina Carnet
                         </button>
                       </td>
                     </tr>
