@@ -159,6 +159,11 @@ export default function GestioneDipendenti() {
       loadPrimaNotaSalari();
       loadDipendentiLista();
       
+      // Mostra info colonne mappate
+      if (res.data.colonne_mappate) {
+        console.log('Import PAGHE - Colonne mappate:', res.data.colonne_mappate);
+      }
+      
     } catch (error) {
       setImportResult({ 
         error: true, 
