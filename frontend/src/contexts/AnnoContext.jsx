@@ -33,7 +33,8 @@ export function useAnnoGlobale() {
 export function AnnoSelector({ style = {} }) {
   const { anno, setAnno } = useAnnoGlobale();
   const currentYear = new Date().getFullYear();
-  const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1];
+  // Include anni dal 2023 in avanti per coprire tutti i dati storici
+  const years = [2023, 2024, 2025, currentYear, currentYear + 1].filter((v, i, a) => a.indexOf(v) === i).sort();
 
   return (
     <select

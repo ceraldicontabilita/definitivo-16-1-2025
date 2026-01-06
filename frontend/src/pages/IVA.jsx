@@ -205,38 +205,6 @@ export default function IVA() {
             <div className="card">
               <div className="h1">Riepilogo IVA Annuale {selectedYear}</div>
               
-              {/* Totali */}
-              <div className="grid" style={{ marginBottom: 20 }}>
-                <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8, textAlign: "center" }}>
-                  <div className="small">Totale IVA Debito</div>
-                  <div style={{ fontSize: 28, fontWeight: "bold", color: "#e65100" }}>
-                    {formatEuro(annualData.totali?.iva_debito)}
-                  </div>
-                </div>
-                <div style={{ background: "#e8f5e9", padding: 15, borderRadius: 8, textAlign: "center" }}>
-                  <div className="small">Totale IVA Credito</div>
-                  <div style={{ fontSize: 28, fontWeight: "bold", color: "#2e7d32" }}>
-                    {formatEuro(annualData.totali?.iva_credito)}
-                  </div>
-                </div>
-                <div style={{ 
-                  background: annualData.totali?.saldo > 0 ? "#ffcdd2" : "#c8e6c9", 
-                  padding: 15, 
-                  borderRadius: 8, 
-                  textAlign: "center" 
-                }}>
-                  <div className="small">Saldo Annuale</div>
-                  <div style={{ 
-                    fontSize: 28, 
-                    fontWeight: "bold", 
-                    color: getSaldoColor(annualData.totali?.saldo) 
-                  }}>
-                    {formatEuro(annualData.totali?.saldo)}
-                  </div>
-                  <div className="small">{annualData.totali?.stato}</div>
-                </div>
-              </div>
-
               {/* Tabella mensile */}
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
