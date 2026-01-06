@@ -114,7 +114,8 @@ from app.routers import (
     estratto_conto,
     prima_nota_salari,
     archivio_bonifici,
-    report_pdf
+    report_pdf,
+    contabilita_avanzata
 )
 
 # Include public API first (no auth required)
@@ -204,6 +205,7 @@ app.include_router(bank_statement_parser.router, prefix="/api/estratto-conto", t
 app.include_router(riconciliazione_fornitori.router, prefix="/api/riconciliazione-fornitori", tags=["Riconciliazione Fornitori"])
 app.include_router(estratto_conto.router, prefix="/api/estratto-conto-movimenti", tags=["Estratto Conto Movimenti"])
 app.include_router(report_pdf.router, prefix="/api/report-pdf", tags=["Report PDF"])
+app.include_router(contabilita_avanzata.router, prefix="/api/contabilita", tags=["Contabilita Avanzata"])
 
 @app.get("/")
 async def root():
