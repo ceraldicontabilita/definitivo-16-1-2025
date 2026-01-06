@@ -10,6 +10,7 @@ export default function Finanziaria() {
 
   useEffect(() => {
     loadSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
 
   async function loadSummary() {

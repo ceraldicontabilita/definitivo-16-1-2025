@@ -39,6 +39,7 @@ export default function Fornitori() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const loadData = async () => {

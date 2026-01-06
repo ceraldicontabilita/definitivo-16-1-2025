@@ -29,6 +29,7 @@ export default function Bilancio() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anno, mese]);
 
   const loadData = async () => {

@@ -38,6 +38,7 @@ export default function ArchivioBonifici() {
     loadTransfers();
     loadSummary();
     loadCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ricarica quando cambiano i filtri
@@ -47,6 +48,7 @@ export default function ArchivioBonifici() {
       loadTransfers();
     }, 300);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, yearFilter, ordinanteFilter, beneficiarioFilter]);
 
   const loadTransfers = async () => {
