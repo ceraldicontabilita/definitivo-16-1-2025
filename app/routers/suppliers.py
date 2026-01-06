@@ -308,13 +308,9 @@ async def list_suppliers(
     """Lista fornitori con filtri opzionali."""
     db = Database.get_db()
     
-    # Debug log
-    print(f"[SUPPLIERS] Received search param: '{search}', metodo: '{metodo_pagamento}', attivo: '{attivo}'")
-    
     query = {}
     if search and search.strip():
         search_term = search.strip()
-        print(f"[SUPPLIERS] Applying search filter for: '{search_term}'")
         query["$or"] = [
             {"denominazione": {"$regex": search_term, "$options": "i"}},
             {"ragione_sociale": {"$regex": search_term, "$options": "i"}},
