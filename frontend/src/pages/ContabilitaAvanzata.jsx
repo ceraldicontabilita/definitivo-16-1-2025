@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatEuro } from '../lib/utils';
 
-const API = import.meta.env.VITE_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL || '';
+// Use empty string for relative URLs (same as api.js)
+const API = '';
 
 export default function ContabilitaAvanzata() {
   const [imposte, setImposte] = useState(null);
