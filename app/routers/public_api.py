@@ -548,9 +548,11 @@ async def create_order(data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
 
 @router.get("/assegni")
 async def list_assegni(skip: int = 0, limit: int = 10000) -> List[Dict[str, Any]]:
-    """Lista assegni."""
+    """Lista assegni (esclusi soft-deleted)."""
     db = Database.get_db()
-    return await db["assegni"].find({}, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    # Filtra assegni eliminati (soft-delete)
+    query = {"entity_status": {"$ne": "deleted"}}
+    return await db["assegni"].find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
 
 
 @router.post("/assegni")
