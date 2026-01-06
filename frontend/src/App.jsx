@@ -22,6 +22,7 @@ const NAV_ITEMS = [
     children: [
       { to: "/centri-costo", label: "Centri di Costo", icon: "🏢" },
       { to: "/ricette", label: "Ricette & Food Cost", icon: "🍰" },
+      { to: "/registro-lotti", label: "Registro Lotti", icon: "📋" },
       { to: "/magazzino-dv", label: "Magazzino Doppia Verità", icon: "📦" },
       { to: "/utile-obiettivo", label: "Utile Obiettivo", icon: "🎯" },
     ]
