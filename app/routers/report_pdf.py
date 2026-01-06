@@ -269,7 +269,7 @@ async def generate_report_dipendenti(
     
     # Mappa per lookup veloce
     contratti_map = {c.get("dipendente_id"): c for c in contratti}
-    libretti_map = {l.get("dipendente_id"): l for l in libretti}
+    libretti_map = {lib.get("dipendente_id"): lib for lib in libretti}
     
     # Genera PDF
     buffer = BytesIO()
