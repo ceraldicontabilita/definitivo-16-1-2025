@@ -100,7 +100,7 @@ PATTERNS_DESCRIZIONE = {
             r"zucchero", r"sale\b", r"caff[eè]", r"latte\b", r"burro",
             r"uova?\b", r"tarall", r"biscott", r"dolc", r"gelat",
             r"alimentar", r"food", r"cibo", r"snack", r"patatine",
-            r"olio\s+(extravergine|oliva|semi|di\s+semi)"
+            r"olio\s+(extravergine|d[ie]\s*oliva|d[ie]\s*semi)"
         ],
         "conto": ("05.01.05", "Acquisto prodotti alimentari"),
         "categoria_fiscale": CategoriaFiscale.MERCE_RIVENDITA,
