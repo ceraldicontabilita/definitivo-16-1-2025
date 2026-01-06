@@ -121,39 +121,64 @@ class CalcolatoreImposte:
         self.regione = regione.lower().replace(" ", "_")
         self.aliquota_irap = ALIQUOTE_IRAP.get(self.regione, ALIQUOTE_IRAP["default"])
     
-    async def calcola_imposte_da_db(self, db) -> CalcoloImposte:
+    async def calcola_imposte_da_db(self, db, anno: int = None) -> CalcoloImposte:
         """
         Calcola le imposte partendo dai dati nel database.
         
         Args:
             db: Riferimento al database MongoDB
+            anno: Anno fiscale (opzionale, filtra le fatture)
             
         Returns:
             CalcoloImposte con tutti i dettagli
         """
-        # 1. Ottieni dati dal piano dei conti
-        conti = await db["piano_conti"].find({}, {"_id": 0}).to_list(1000)
-        
-        # Calcola totali per categoria
+        # 1. Calcola totali dalle fatture per l'anno specificato
         totale_ricavi = 0.0
         totale_costi = 0.0
         costi_per_tipo: Dict[str, float] = {}
         
-        for conto in conti:
-            categoria = conto.get("categoria", "")
-            codice = conto.get("codice", "")
-            saldo = float(conto.get("saldo", 0) or 0)
-            nome = conto.get("nome", "")
+        # Filtra fatture per anno se specificato
+        fatture_filter = {}
+        if anno:
+            fatture_filter["invoice_date"] = {
+                "$gte": f"{anno}-01-01",
+                "$lte": f"{anno}-12-31"
+            }
+        
+        # Calcola costi dalle fatture
+        fatture = await db["invoices"].find(fatture_filter, {"_id": 0}).to_list(10000)
+        
+        for fattura in fatture:
+            importo = float(fattura.get("total_amount", 0) or 0)
+            if importo <= 0:
+                continue
+                
+            categoria = fattura.get("categoria_contabile", "merci_generiche")
+            conto = fattura.get("conto_costo_codice", "05.01.01")
             
-            if categoria == "ricavi":
-                totale_ricavi += saldo
-            elif categoria == "costi":
-                totale_costi += saldo
-                # Traccia costi specifici per variazioni
-                costi_per_tipo[codice] = {
-                    "nome": nome,
-                    "importo": saldo
-                }
+            totale_costi += importo
+            
+            # Traccia costi per tipo di conto
+            if conto not in costi_per_tipo:
+                costi_per_tipo[conto] = {"nome": fattura.get("conto_costo_nome", ""), "importo": 0}
+            costi_per_tipo[conto]["importo"] += importo
+        
+        # Calcola ricavi dai corrispettivi per l'anno
+        corr_filter = {}
+        if anno:
+            corr_filter["data"] = {
+                "$gte": f"{anno}-01-01",
+                "$lte": f"{anno}-12-31"
+            }
+        
+        corrispettivi = await db["corrispettivi"].find(corr_filter, {"_id": 0}).to_list(5000)
+        for corr in corrispettivi:
+            totale = float(corr.get("totale", 0) or 0)
+            if totale > 0:
+                # Scorporo IVA per avere il ricavo netto
+                iva_rate = 0.10  # 10% ristorazione
+                ricavo_netto = totale / (1 + iva_rate)
+                totale_ricavi += ricavo_netto
         
         # Utile civilistico
         utile_civilistico = totale_ricavi - totale_costi
