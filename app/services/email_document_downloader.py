@@ -289,7 +289,8 @@ class EmailDocumentDownloader:
         self,
         folder: str = "INBOX",
         since_date: Optional[str] = None,
-        limit: int = 100
+        limit: int = 100,
+        search_f24_only: bool = True
     ) -> Tuple[List[Dict], Dict[str, int]]:
         """
         Scarica tutti gli allegati dalle email.
@@ -302,7 +303,12 @@ class EmailDocumentDownloader:
             "by_category": {}
         }
         
-        email_ids = self.search_emails_with_attachments(folder, since_date, limit=limit)
+        email_ids = self.search_emails_with_attachments(
+            folder, 
+            since_date, 
+            limit=limit,
+            search_f24_only=search_f24_only
+        )
         stats["emails_checked"] = len(email_ids)
         
         for email_id in email_ids:
