@@ -1,58 +1,93 @@
-<analysis>
-**original_problem_statement:**
-L'utente ha richiesto l'aggiunta di diverse funzionalità a un'applicazione ERP:
-1.  **Funzionalità di Produzione e Lotti**.
-2.  **Riconciliazione F24 a 3 Livelli** (Download email, Parsing PDF, Dashboard di riconciliazione).
-3.  **Parsing Buste Paga**.
-4.  **Calcolo Liquidazione IVA**.
-5.  **Comparatore Prezzi Fornitori**.
-
-La richiesta più recente e complessa è di implementare un sistema avanzato di gestione degli F24:
-*   Gestire F24 originali e le loro versioni corrette (ravvedimento).
-*   Se viene pagato un F24 con ravvedimento, la versione originale deve essere archiviata o annullata.
-*   Se viene pagato un F24 originale in ritardo, il sistema deve segnalare che è da ravvedere.
-*   Riconciliare automaticamente i pagamenti degli F24 con i movimenti dell'estratto conto bancario.
-*   Creare un database dei singoli codici tributo pagati, filtrabile per anno, codice e sezione (Es. Erario, INPS).
-*   Generare report mensili su F24 pagati e non pagati, con un sistema di allarmi (alert).
+<analysis>**original_problem_statement:**
+L'utente ha richiesto una serie di funzionalità per un'applicazione ERP, con le seguenti priorità e richieste emerse durante la sessione:
+1.  **Centralizzazione degli Upload (Richiesta più recente):** Unificare tutte le funzioni di upload (Fatture XML, F24, Bonifici, Estratti Conto, ecc.) in un'unica pagina Import/Export (da rinominare in Upload Generale) per semplificare l'interfaccia utente ed eliminare i pulsanti di upload sparsi nelle varie pagine.
+2.  **Correzione Bug Critici:**
+    *   Risolvere una discrepanza nel calcolo dell'IVA a credito tra la pagina  e .
+    *   Risolvere un errore  che impedisce l'upload dei file PDF F24.
+    *   Mostrare l'importo a credito sui bottoni verdi nella pagina .
+    *   Risolvere il problema dell'eliminazione di movimenti in Prima Nota (completato, ma il bug di fondo dell'architettura duplicata rimane).
+3.  **Download Automatico F24 da Email:** Creare un sistema che, all'avvio dell'applicazione, controlli automaticamente le email, scarichi solo gli allegati F24, li processi e notifichi l'utente tramite un popup.
+4.  **Sistema di Auto-Verifica:** Implementare una dashboard () che confronti automaticamente i dati tra diverse sezioni dell'app (es. IVA fatture vs Liquidazione, saldi banca, ecc.) e segnali le discrepanze.
+5.  **Riconciliazione Bonifici:** Implementare la riconciliazione automatica tra i bonifici registrati e i movimenti dell'estratto conto.
+6.  **Gestione Avanzata F24:** Implementare la logica di business per gestire F24 originali e con ravvedimento, riconciliazione con l'estratto conto e reportistica.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-*   I moduli di Produzione, Liquidazione IVA, Parser Buste Paga e Comparatore Prezzi sono stati implementati.
-*   **Parser F24**: Il parser per gli F24 del commercialista () è stato completamente riscritto. Ora è molto robusto e utilizza l'analisi basata sulle coordinate per distinguere correttamente tra colonne di debito e credito. Gestisce vari formati di F24 (standard, IVA, IMU, con ravvedimento) e diverse sezioni (Erario, INPS, INAIL, Regioni, Tributi Locali).
-*   **Parser Estratto Conto**: È stato implementato un parser () per i file CSV degli estratti conto di Banco BPM e un servizio API iniziale per la riconciliazione.
-*   **Refactoring Backend**: L'intera struttura dei router del backend è stata riorganizzata in un'architettura modulare basata sulle funzionalità (es. , ), migliorando l'organizzazione del codice.
-*   **Frontend**: Esiste una dashboard di base per la riconciliazione F24 ().
+*   **Sistema di Auto-Verifica:** È stata creata una nuova pagina  e un servizio backend () che confronta i dati IVA, i saldi di cassa/banca e i bonifici, segnalando le discrepanze. Un widget riassuntivo è presente nella Dashboard.
+*   **Download Documenti da Email:** È stato implementato un sistema per connettersi via IMAP all'account email dell'utente. Inizialmente scaricava tutti i documenti, ma è stato poi modificato per cercare e scaricare solo gli F24 all'avvio dell'app. Il parsing di questi F24 sta attualmente fallendo.
+*   **Riconciliazione Bonifici:** La funzionalità è stata completata. La pagina  ora mostra le statistiche di riconciliazione, un pulsante per avviare il processo e una spunta visiva per i bonifici abbinati.
+*   **Bug Eliminazione Prima Nota Risolto (Parzialmente):** I movimenti con  non vengono più visualizzati. La soluzione ha però rivelato un grave problema di file duplicati nell'architettura del backend, che ha richiesto un lungo debug.
+*   **Liquidazione IVA Mensile:** La pagina  è stata aggiornata con un selettore per visualizzare la liquidazione IVA sia trimestrale che mensile.
+*   **Backend Gestione Avanzata F24:** La logica di base e gli endpoint per la gestione avanzata degli F24 (ravvedimento, riconciliazione, alert) esistono, ma la riconciliazione è impostata su un match esatto e attende dati corretti dall'utente.
 
 **Last working item**:
-*   **Last item agent was working**: Avvio dell'implementazione della logica di gestione avanzata degli F24, come richiesto dall'utente. È stato creato il file di servizio  per ospitare la nuova logica complessa di gestione delle versioni originali e con ravvedimento degli F24.
-*   **Status**: IN PROGRESS
+*   **Last item agent was working**: L'agente stava per iniziare a implementare le richieste dell'utente dal messaggio 633, dopo aver ricevuto l'ok sull'idea di centralizzare gli upload. La primissima azione da intraprendere è correggere i bottoni verdi nella pagina delle scadenze IVA.
+*   **Status**: NOT STARTED
 *   **Agent Testing Done**: N
-*   **Which testing method agent to use?**: backend testing agent. Sarà necessario testare la complessa logica di business che gestisce F24 originali vs. ravveduti, la corrispondenza con l'estratto conto e gli aggiornamenti di stato. Sarà utile anche  per testare i nuovi endpoint API.
+*   **Which testing method agent to use?**: screenshot tool per la modifica visuale dei bottoni.
 *   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: Implementare la logica avanzata di gestione F24 (ravvedimento e riconciliazione) (P0)**
-*   **Issue 2: Click sui tab non funzionante nei test automatici in  (P2)**
+*   **Issue 1: Discrepanza calcolo IVA a credito (P0)**
+*   **Issue 2: Upload PDF F24 fallisce con errore 403 (P0)**
+*   **Issue 3: Parsing degli 11 F24 scaricati da email fallisce (P1)**
+*   **Issue 4: I bottoni verdi A Credito in  non mostrano l'importo (P1)**
+*   **Issue 5: Click sui tab non funzionante nei test automatici in  (P2)**
 
 **Issues Detail:**
--   **Issue 1:**
-    -   **Attempted fixes**: È stato creato il file . La logica di base deve ancora essere scritta.
+-   **Issue 1: Discrepanza calcolo IVA a credito (P0)**
+    -   **Attempted fixes**: Nessuno. L'agente ha solo visualizzato i file pertinenti.
     -   **Next debug checklist**:
-        1.  Implementare la logica in  per gestire i requisiti dell'utente:
-            *   Modificare lo schema del DB per F24 per includere campi come  ('originale', 'ravveduto', 'annullato') e .
-            *   Creare una funzione per identificare se un F24 è la versione ravveduta di un altro.
-            *   Aggiornare il servizio di riconciliazione bancaria per marcare lo stato corretto degli F24 in base ai pagamenti trovati sull'estratto conto.
-        2.  Creare nuovi endpoint API in un router dedicato (es. ).
-        3.  Creare una nuova collection nel DB () per archiviare i dati granulari dei tributi pagati.
-        4.  Implementare un'API per generare i report mensili richiesti.
-    -   **Why fix this issue and what will be achieved with this?**: È una funzionalità core richiesta dall'utente per automatizzare un processo finanziario critico, fornendo un tracciamento accurato di pagamenti e passività fiscali.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
+        1.  Verificare la fonte dati e la logica di calcolo dell'IVA a credito in  (mostra € 18.790,04).
+        2.  Verificare la fonte dati e la logica di calcolo dell'IVA a credito in  (mostra € 5.462,38).
+        3.  Analizzare gli endpoint API che forniscono questi dati e la logica di aggregazione nel backend (, ).
+        4.  Correggere la logica per allineare i calcoli.
+    -   **Why fix this issue and what will be achieved with this?**: È un bug critico che mina la fiducia nel gestionale. Risolverlo garantisce l'accuratezza dei dati fiscali.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: both
     -   **Blocked on other issue**: None
--   **Issue 2:**
-    -   **Attempted fixes**: Nessuno in questa sessione.
+
+-   **Issue 2: Upload PDF F24 fallisce con errore 403 (P0)**
+    -   **Attempted fixes**: Nessuno.
+    -   **Next debug checklist**:
+        1.  Replicare l'errore tentando di caricare un F24 dalla pagina .
+        2.  Controllare i log del backend per dettagli sull'errore .
+        3.  Ispezionare la configurazione di CORS e qualsiasi middleware di sicurezza o autenticazione che potrebbe bloccare la richiesta  all'endpoint .
+        4.  Verificare se sono richiesti header specifici (es. CSRF token) che il frontend non sta inviando.
+    -   **Why fix this issue and what will be achieved with this?**: L'upload manuale è una funzionalità fondamentale ed è attualmente bloccata.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None
+
+-   **Issue 3: Parsing degli 11 F24 scaricati da email fallisce (P1)**
+    -   **Attempted fixes**: L'agente ha corretto la chiamata al parser in  per passare il  invece del contenuto del file. Tuttavia, il re-processing di 11 documenti già scaricati è fallito di nuovo.
+    -   **Next debug checklist**:
+        1.  Utilizzare l'endpoint  per rieseguire il parsing.
+        2.  Aggiungere logging dettagliato all'interno del  nel ciclo di parsing in  per catturare l'eccezione esatta restituita da .
+        3.  Analizzare uno dei PDF falliti (salvato in ) per capire se ha un formato inatteso.
+        4.  Eseguire il parser  manualmente su un singolo file PDF fallito per un debug mirato.
+    -   **Why fix this issue and what will be achieved with this?**: Completa la funzionalità di automazione del download F24, un requisito chiave dell'utente.
+    -   **Status**: BLOCKED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: Potrebbe essere correlato a Issue 2 se c'è un problema di permessi/accesso ai file.
+
+-   **Issue 4: I bottoni verdi A Credito in  non mostrano l'importo (P1)**
+    -   **Attempted fixes**: Nessuno. L'agente ha solo visualizzato i file.
+    -   **Next debug checklist**:
+        1.  Localizzare la sezione di codice in  che renderizza i box delle scadenze IVA trimestrali e mensili.
+        2.  Modificare la condizione di rendering per mostrare l'importo (es. ) anche quando il saldo è a credito, all'interno del bottone/box verde.
+    -   **Why fix this issue and what will be achieved with this?**: Migliora l'usabilità della UI, fornendo informazioni complete a colpo d'occhio.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Blocked on other issue**: None
+
+-   **Issue 5: Click sui tab non funzionante nei test automatici in  (P2)**
+    -   **Attempted fixes**: Nessuno. Problema ereditato dal fork precedente.
     -   **Next debug checklist**: Eseguire il  specificamente sulla pagina  per replicare il problema e analizzare l'interazione con i componenti Tab di .
     -   **Why fix this issue and what will be achieved with this?**: Sbloccare test E2E affidabili per una parte critica dell'applicazione.
     -   **Status**: NOT STARTED
@@ -61,133 +96,108 @@ La richiesta più recente e complessa è di implementare un sistema avanzato di 
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1: Implementare il sistema avanzato di gestione F24 (P0)**
-    -   **Where to resume**: Dal file , che al momento è vuoto. È necessario scrivere la logica di business e creare le relative API.
-    -   **What will be achieved with this?**: Un sistema di riconciliazione F24 completamente automatizzato che gestisce le correzioni (ravvedimento) e fornisce report dettagliati.
-    -   **Status**: IN PROGRESS
+-   **Task 1: Centralizzare tutti gli upload in un'unica pagina (P0)**
+    -   **Where to resume**:
+        1.  Rinominare la pagina  in  (o simile) e il suo link nel menu.
+        2.  Creare un componente di upload generico che possa distinguere i tipi di file (XML, PDF, CSV) o avere selettori.
+        3.  Modificare il backend per avere un endpoint di upload generico o reindirizzare le chiamate agli endpoint di parsing specifici (, , etc.).
+        4.  Rimuovere i componenti di upload dalle altre pagine (, , etc.).
+    -   **What will be achieved with this?**: Un'esperienza utente più pulita e un'architettura di upload semplificata, come richiesto dall'utente.
+    -   **Status**: NOT STARTED
     -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on something**: None
-
-**Upcoming and Future Tasks**
--   **Upcoming Tasks**:
-    -   **(P0) Creare Frontend per Riconciliazione Avanzata F24**: Sviluppare una nuova pagina UI per visualizzare i risultati della riconciliazione avanzata, lo stato di ogni F24 e il report mensile dei tributi pagati.
-    -   **(P1) Testare il Parsing delle Buste Paga**: L'utente deve ancora fornire file PDF di esempio per testare il .
-    -   **(P2) UI per il Comparatore Prezzi**: Integrare la funzionalità del comparatore prezzi nella pagina frontend .
--   **Future Tasks**:
-    -   Valutare e integrare un'API bancaria (come Salt Edge, Plaid, Tink o Fabrick) per sostituire il caricamento manuale del file CSV.
-    -   Gestire l'inventario fisico e la .
-    -   Costruire una dashboard di controllo di gestione completa.
+    -   **Blocked on something**: Issue 2 (403 error) deve essere risolto per garantire che l'upload funzioni.
 
 **Completed work in this session**
--   **Correzione Bug Critico Parser F24**: Il file  è stato completamente riscritto. Il nuovo parser ora gestisce layout complessi, distingue correttamente debiti/crediti tramite coordinate e processa vari tipi di F24 (standard, IMU, ravvedimento).
--   **Refactoring del Backend**: L'intera directory dei router () è stata riorganizzata in una struttura modulare per migliorare l'organizzazione e la manutenibilità del codice.
--   **Parsing Estratto Conto Bancario**: Creato un parser per i file  di Banco BPM e un'API iniziale per la riconciliazione bancaria.
--   **Risoluzione Blocchi di Deployment**: Corretti problemi nel  e nel file  del frontend che impedivano il deployment.
+-   **Sistema di Auto-Verifica Dati**: Implementata una dashboard e un servizio backend per il controllo automatico della coerenza dei dati finanziari (IVA, saldi, etc.), con segnalazione visiva delle discrepanze.
+-   **Download Automatico F24 da Email (Scaffolding)**: Creato il sistema che si connette all'email all'avvio dell'app, cerca specificamente gli F24, li scarica e mostra un popup di notifica. Il parsing è ancora da correggere.
+-   **Riconciliazione Bonifici**: Implementata da zero la funzionalità di riconciliazione automatica dei bonifici con l'estratto conto, completa di API e aggiornamenti UI.
+-   **Bug Eliminazione Prima Nota**: Risolto il bug per cui i movimenti eliminati rimanevano visibili.
+-   **Miglioramento Liquidazione IVA**: Aggiunta la visualizzazione mensile alla pagina delle scadenze IVA.
+-   **Attivazione Backend F24 Avanzato**: Il router per la gestione avanzata degli F24, che esisteva ma non era attivo, è stato correttamente registrato in  e testato.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Click sui tab non funzionante nei test automatici in **. Problema ricorrente non ancora affrontato.
+-   **Issue 1: Click sui tab non funzionante nei test automatici in **: Problema ricorrente non ancora affrontato.
+-   **Issue 2: Parsing degli F24 da email**: Il sistema scarica 11 F24 ma fallisce nel processarli. L'agente ha provato a correggere la chiamata al parser, ma il problema persiste.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: Fallimento dei test automatici su .
--   **Recurrence count**: 3+
--   **Status**: NOT STARTED
+-   **Issue recurrence in previous fork**: L'agente ha perso molto tempo a causa di **file di routing duplicati**. Esistono copie dello stesso file router in directory diverse (es.  e ), ma solo una viene effettivamente importata in . Questo ha causato il fallimento silenzioso di diverse modifiche.
+-   **Recurrence count**: 2 volte in questa sessione (, ).
+-   **Status**: NOT STARTED (Il problema di fondo dell'architettura non è stato risolto, l'agente ha solo lavorato attorno ad esso).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Parsing PDF Avanzato con Coordinate**: L'agente è passato dall'uso di espressioni regolari a un'analisi basata su coordinate (x, y) tramite usage: pdfplumber [-h] [--structure | --structure-text]
-                  [--format {csv,json,text}] [--types TYPES [TYPES ...]]
-                  [--include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]]
-                  [--exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]]
-                  [--laparams LAPARAMS] [--precision PRECISION]
-                  [--pages PAGES [PAGES ...]] [--indent INDENT]
-                  [infile]
-
-positional arguments:
-  infile
-
-options:
-  -h, --help            show this help message and exit
-  --structure           Write the structure tree as JSON. All other arguments
-                        except --pages, --laparams, and --indent will be
-                        ignored
-  --structure-text      Write the structure tree as JSON including text
-                        contents. All other arguments except --pages,
-                        --laparams, and --indent will be ignored
-  --format {csv,json,text}
-  --types TYPES [TYPES ...]
-  --include-attrs INCLUDE_ATTRS [INCLUDE_ATTRS ...]
-                        Include *only* these object attributes in output.
-  --exclude-attrs EXCLUDE_ATTRS [EXCLUDE_ATTRS ...]
-                        Exclude these object attributes from output.
-  --laparams LAPARAMS
-  --precision PRECISION
-  --pages PAGES [PAGES ...]
-  --indent INDENT       Indent level for JSON pretty-printing. per interpretare correttamente la struttura a colonne dei PDF F24.
--   **Refactoring Modulare del Backend**: Il backend FastAPI è stato ristrutturato da una lista piatta di router a un'architettura modulare basata su domini di business, migliorando scalabilità e manutenibilità.
--   **Logica Finanziaria Complessa**: La nuova richiesta di gestione degli F24 introduce una logica stateful che richiede di tracciare le relazioni tra documenti (originale vs. corretto) e il loro stato di pagamento.
+-   **Data Consistency Verification**: Implementazione di un servizio di backend per eseguire controlli incrociati tra diverse collection del database (es. fatture, corrispettivi, prima nota) per garantire l'integrità dei dati.
+-   **Email Document Processing (IMAP)**: Utilizzo della libreria  per connettersi a un account Gmail, cercare email secondo criteri specifici (es. oggetto F24), scaricare gli allegati PDF e salvarli localmente per il processing.
+-   **Debugging di Architetture Complesse**: L'agente ha dovuto affrontare e diagnosticare un problema ricorrente di file duplicati, utilizzando , l'analisi delle route OpenAPI () e l'ispezione degli  per determinare quale file venisse effettivamente caricato dal server.
 
 **key DB schema**
--   **f24_commercialista**: . Dovrebbe essere esteso con campi come  ('originale', 'ravveduto', 'annullato') e .
--   **estratto_conto_movimenti**: .
--   **(DA CREARE) codici_tributo_pagati**: .
+-   **documents_inbox** (CREATED): 
+
+**changes in tech stack**
+- Nessuna
 
 **All files of reference**
--   : File chiave per la prossima task.
--   : Il parser F24, ora robusto e completo.
--   : Il parser per gli estratti conto.
--   : Entry point dell'applicazione, ora refattorizzato.
--   : Documentazione della nuova architettura backend.
+-   : File corretto per la logica della prima nota.
+-   : File corretto per la logica dei bonifici.
+-   : Logica per scaricare F24 da email.
+-   : API per la gestione dei documenti scaricati.
+-   : Logica per il controllo di coerenza dei dati.
+-   : Pagina con uno dei valori IVA da correggere.
+-   : Pagina con l'altro valore IVA da correggere.
+-   : Pagina con i bottoni verdi da modificare.
 
-**Areas that need refactoring**:
--   La cartella  potrebbe essere a sua volta modularizzata per rispecchiare la nuova struttura dei router (es. , ).
+**Areas that need refactoring**
+-   **CRITICO:** La struttura della directory  deve essere urgentemente bonificata. Ci sono file duplicati che causano enormi perdite di tempo in fase di debug (es. , ). È necessario stabilire una singola fonte di verità per ogni router e rimuovere tutti i file obsoleti o duplicati. La centralizzazione degli upload richiesta dall'utente è un'ottima occasione per eseguire questa pulizia.
 
 **key api endpoints**
--   : Carica e analizza un PDF F24.
--   : Carica e analizza un estratto conto in formato CSV.
--   : Esegue una riconciliazione di base tra F24 e movimenti bancari.
+-   : Avvia il download e il processing automatico degli F24 dalle email.
+-   : Riesegue il parsing degli F24 già scaricati ma falliti.
+-   : Restituisce un report completo delle discrepanze dei dati.
+-   : Avvia la riconciliazione dei bonifici.
+-   : Restituisce le statistiche sulla riconciliazione dei bonifici.
 
 **Critical Info for New Agent**
--   La priorità assoluta (P0) è implementare la logica avanzata di gestione degli F24 come richiesto dall'utente. Questo include la gestione del ravvedimento, l'archiviazione delle versioni obsolete e la segnalazione di quelle da correggere.
--   Il backend è stato appena refattorizzato. Qualsiasi nuovo codice deve seguire la struttura modulare esistente.
--   Il parser F24 in  è ora molto stabile e non dovrebbe essere modificato a meno di nuovi formati PDF.
--   L'integrazione con Fabrick è un'attività futura. La logica attuale deve basarsi sul file CSV dell'estratto conto caricato manualmente.
+-   **Priorità Utente:** L'utente ora guida attivamente le priorità. Segui l'ultimo piano concordato: 1) Correggi i bug visibili (bottoni verdi, 403 upload, discrepanza IVA), 2) Centralizza tutti gli upload nella pagina .
+-   **ARCHITETTURA DUPLICATA:** Presta massima attenzione alla struttura dei file in . Ci sono file duplicati. Prima di modificare un file di routing, assicurati che sia quello corretto importato da  (controlla ). Questo è il rischio maggiore di perdita di tempo.
+-   **F24 Email Parsing Bloccato:** Il parsing degli F24 scaricati da email fallisce. L'utente si è spostato su altri task. Affronta questo problema solo dopo aver risolto i bug a più alta priorità (P0).
+-   **Sistema di Verifica Esistente:** Usa la pagina  per testare l'impatto delle tue correzioni sulla coerenza generale dei dati, specialmente quando risolvi la discrepanza IVA.
 
 **documents and test reports created in this job**
--   
--   
+-    (aggiornato)
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **Richiesta utente (PENDING):** Implementare una logica avanzata per F24 con ravvedimento, riconciliazione bancaria e reportistica dettagliata dei tributi pagati.
-9.  **Utente (Completato):** Conferma che la logica per F24 a saldo zero è corretta e chiede di procedere.
-8.  **Agente (Completato):** Chiede chiarimenti sul motivo per cui un F24 ha saldo zero.
-7.  **Utente (Completato):** Segnala errori nel parsing del totale di un F24 e la mancanza di alcuni tributi. Questo ha portato alla riscrittura del parser.
-6.  **Agente (Completato):** Comunica la risoluzione (errata) del bug del parser.
-5.  **Utente (Completato):** Chiede di refattorizzare il backend in moduli.
-4.  **Utente (Completato):** Conferma che il nuovo parser funziona e chiede di caricare gli F24 nel DB.
-3.  **Utente (Completato):** Chiede di procedere con il piano.
-2.  **Utente (Completato):** Fornisce 3 nuovi PDF F24 complessi per il testing.
-1.  **Utente (Completato):** Chiarisce la logica di un F24 multi-pagina, confermando che sono documenti separati.
+10. **Utente (PENDING):** Richiesta di correggere i bottoni verdi in , una discrepanza IVA, un errore 403 sull'upload F24, e l'idea di centralizzare tutti gli upload.
+9.  **Agente (Completato):** Riconosce che l'idea di centralizzare gli upload è ottima e propone un piano d'azione.
+8.  **Utente (PENDING):** Chiarisce che il download automatico da email deve essere SOLO per gli F24, deve avvenire all'avvio dell'app e caricare i file direttamente con un popup di notifica.
+7.  **Agente (Completato):** Conferma che la prima versione del download documenti funziona e ha scaricato 83 documenti di vario tipo.
+6.  **Utente (PENDING):** Richiede di implementare una sezione Documenti che scarichi automaticamente gli allegati dalle email.
+5.  **Agente (Completato):** Riassume il lavoro completato sul sistema di auto-verifica coerenza.
+4.  **Utente (Completato):** Chiede all'agente di procedere con il test del sistema di download F24 con email reali.
+3.  **Agente (Completato):** Riassume il lavoro fatto sulla funzionalità di sync email per F24, indicando che sembra funzionare ma attende un test con dati reali.
+2.  **Utente (PENDING):** Chiede di creare un sistema di auto-verifica per trovare discrepanze di dati (es. IVA, saldi) tra le varie sezioni dell'app.
+1.  **Agente (Completato):** Dichiara di aver implementato la riconciliazione dei bonifici e risolto i problemi di eliminazione in Prima Nota e l'aggiunta della vista mensile per l'IVA.
 
 **Project Health Check:**
--   **Broken**: Nessuno. Il bug critico del parser F24 è stato risolto.
+-   **Broken**:
+    -   Upload di file F24 (restituisce errore 403).
+    -   Processing automatico degli F24 scaricati da email (il parsing fallisce).
 -   **Mocked**: Nessuno.
 
 **3rd Party Integrations**
--   **Google/Gmail (IMAP)**: Per scaricare allegati F24.
+-   **Google/Gmail (IMAP)**: In uso per scaricare allegati.
 -   **pdfplumber**: Per il parsing dei PDF.
--   **Fabrick (Futuro)**: L'utente ha espresso interesse, ma l'implementazione non è una priorità attuale.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES
--   **Test files created**: 
--   **Known regressions**: Una regressione importante nel parser F24 è stata identificata e risolta durante questa sessione.
+-   **Testing agent used after significant changes**: NO (non in questa sessione).
+-   **Troubleshoot agent used after agent stuck in loop**: NO.
+-   **Test files created**: Nessuno.
+-   **Known regressions**: L'upload F24 sembra essersi rotto (errore 403).
 
 **Credentials to test flow:**
 -   **Email User**: 
--   **Email App Password**:  (disponibile in )
+-   **Email App Password**:  (disponibile in  sotto ).
 
 **What agent forgot to execute**
-Nessuna dimenticanza critica. L'agente ha affrontato con successo la complessità del parsing degli F24, ha eseguito il refactoring richiesto e ha preparato il terreno per la prossima importante funzionalità richiesta dall'utente.
-</analysis>
+L'agente non ha dimenticato nulla, ma si è trovato impantanato nel debug causato dalla struttura di file duplicati. Il task del parsing degli F24 da email è rimasto incompleto e bloccato, e l'agente è stato reindirizzato dall'utente su problemi a priorità più alta prima di poterlo risolvere.</analysis>
