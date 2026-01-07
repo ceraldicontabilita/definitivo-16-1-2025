@@ -62,6 +62,8 @@ import GestioneRiservata from "./pages/GestioneRiservata.jsx";
 import DizionarioArticoli from "./pages/DizionarioArticoli.jsx";
 // Liquidazione IVA
 import LiquidazioneIVA from "./pages/LiquidazioneIVA.jsx";
+// Riconciliazione F24
+import RiconciliazioneF24 from "./pages/RiconciliazioneF24.jsx";
 
 const router = createBrowserRouter([
   // Portale HACCP standalone (login con codice 141574)
