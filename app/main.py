@@ -130,7 +130,7 @@ from app.routers import (
     portal_extended, cash_register_extended, finanziaria, public_api,
     comparatore, gestione_riservata, commercialista, scadenze,
     riconciliazione_fornitori, ordini_fornitori, payroll, documents,
-    pianificazione, admin
+    pianificazione, admin, verifica_coerenza
 )
 
 
