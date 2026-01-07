@@ -1,13 +1,35 @@
 # PRD - Azienda Semplice ERP
 
 ## Project Overview
-**Versione**: 5.1.0  
+**Versione**: 5.2.0  
 **Ultimo aggiornamento**: 7 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB + Claude AI
 
 ---
 
-## 🆕 AGGIORNAMENTI RECENTI (7 Gen 2026)
+## 🆕 AGGIORNAMENTI RECENTI (7 Gen 2026) - v5.2.0
+
+### ✅ Bug Fix: Bottoni Verdi "A Credito" in Scadenze IVA
+- **Problema**: I bottoni verdi non mostravano l'importo a credito
+- **Soluzione**: Aggiunto campo `a_credito` nelle API `/api/scadenze/iva/{anno}` e `/api/scadenze/iva-mensile/{anno}`
+- **File modificato**: `/app/app/routers/scadenze.py`
+- **Risultato**: Q3 e Q4 2024 ora mostrano correttamente "A credito € 1.206,06" e "A credito € 9.551,98"
+
+### ✅ Bug Fix: Upload F24 - Errore 403 Risolto
+- **Problema**: L'upload di file PDF F24 restituiva errore 403 Forbidden
+- **Soluzione**: Rimossa autenticazione obbligatoria dagli endpoint di upload F24
+- **File modificato**: `/app/app/routers/f24/f24_main.py`
+- **Endpoint corretti**: `/api/f24/upload`, `/api/f24/upload-zip`, `/api/f24/upload-multiple`
+
+### ⚠️ Discrepanza IVA tra Liquidazione e Calcolo IVA - NOTA IMPORTANTE
+La discrepanza segnalata tra `LiquidazioneIVA.jsx` e `IVA.jsx` è **intenzionale e corretta**:
+- **Liquidazione IVA**: Include le "deroghe temporali" (regola 15 giorni e 12 giorni) per fatture del mese precedente
+- **IVA Calcolo**: Mostra solo le fatture ricevute nel periodo esatto senza deroghe
+- Esempio: Gennaio 2024 → Liquidazione: €13.524,52 vs Calcolo: €5.117,25 (differenza dovuta alle fatture di dicembre 2023 incluse per deroghe)
+
+---
+
+## 🆕 AGGIORNAMENTI PRECEDENTI (7 Gen 2026)
 
 ### ✅ Sistema Auto-Verifica Coerenza Dati
 **Nuovo sistema di controllo automatico** della consistenza dei dati tra tutte le sezioni:
