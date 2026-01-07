@@ -90,6 +90,30 @@ export default function ArchivioBonifici() {
     }
   };
 
+  const loadRiconciliazioneStats = async () => {
+    try {
+      const res = await api.get('/api/archivio-bonifici/stato-riconciliazione');
+      setRiconciliazioneStats(res.data);
+    } catch (error) {
+      console.error('Error loading riconciliazione stats:', error);
+    }
+  };
+
+  const handleRiconcilia = async () => {
+    if (!window.confirm('Vuoi avviare la riconciliazione dei bonifici con l\'estratto conto?')) return;
+    
+    setRiconciliando(true);
+    try {
+      const res = await api.post('/api/archivio-bonifici/riconcilia');
+      alert(`✅ ${res.data.message}\n\nRiconciliati: ${res.data.riconciliati}\nNon trovati: ${res.data.non_riconciliati}`);
+      await Promise.all([loadTransfers(), loadRiconciliazioneStats()]);
+    } catch (error) {
+      alert(`❌ Errore: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setRiconciliando(false);
+    }
+  };
+
   // Upload files
   const handleUpload = async () => {
     if (files.length === 0) {
