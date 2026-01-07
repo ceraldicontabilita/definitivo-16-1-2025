@@ -1118,11 +1118,31 @@ export default function GestioneDipendenti() {
             {[2018, 2019, 2020, 2021, 2022].map(anno => (
               <button
                 key={anno}
-                onClick={() => {
+                onClick={async () => {
+                  let nuoviAnniEsclusi;
                   if (anniEsclusi.includes(anno)) {
-                    setAnniEsclusi(anniEsclusi.filter(a => a !== anno));
+                    nuoviAnniEsclusi = anniEsclusi.filter(a => a !== anno);
                   } else {
-                    setAnniEsclusi([...anniEsclusi, anno]);
+                    nuoviAnniEsclusi = [...anniEsclusi, anno];
+                  }
+                  setAnniEsclusi(nuoviAnniEsclusi);
+                  
+                  // Ricalcola automaticamente i progressivi
+                  try {
+                    const params = new URLSearchParams();
+                    params.append('force_reset', 'true');
+                    if (nuoviAnniEsclusi.length > 0) {
+                      params.append('anni_esclusi', nuoviAnniEsclusi.join(','));
+                    }
+                    if (filtroDipendente) {
+                      params.append('dipendente', filtroDipendente);
+                    }
+                    await fetch(`${API_BASE_URL}/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`, {
+                      method: 'POST'
+                    });
+                    loadPrimaNotaSalari();
+                  } catch (err) {
+                    console.error('Errore ricalcolo:', err);
                   }
                 }}
                 style={{
@@ -1141,7 +1161,23 @@ export default function GestioneDipendenti() {
             ))}
             {anniEsclusi.length > 0 && (
               <button
-                onClick={() => setAnniEsclusi([])}
+                onClick={async () => {
+                  setAnniEsclusi([]);
+                  // Ricalcola senza esclusioni
+                  try {
+                    const params = new URLSearchParams();
+                    params.append('force_reset', 'true');
+                    if (filtroDipendente) {
+                      params.append('dipendente', filtroDipendente);
+                    }
+                    await fetch(`${API_BASE_URL}/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`, {
+                      method: 'POST'
+                    });
+                    loadPrimaNotaSalari();
+                  } catch (err) {
+                    console.error('Errore ricalcolo:', err);
+                  }
+                }}
                 style={{
                   padding: '6px 12px',
                   borderRadius: 6,
