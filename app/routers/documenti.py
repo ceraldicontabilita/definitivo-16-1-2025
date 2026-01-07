@@ -81,8 +81,8 @@ async def scarica_documenti_email(
     db = Database.get_db()
     
     # Recupera credenziali email
-    email_user = os.environ.get("EMAIL_USER")
-    email_password = os.environ.get("EMAIL_APP_PASSWORD")
+    email_user = os.environ.get("EMAIL_USER") or os.environ.get("EMAIL_ADDRESS")
+    email_password = os.environ.get("EMAIL_APP_PASSWORD") or os.environ.get("EMAIL_PASSWORD")
     
     if not email_user or not email_password:
         raise HTTPException(
