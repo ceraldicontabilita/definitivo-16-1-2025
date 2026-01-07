@@ -138,6 +138,58 @@ class Database:
 
 ---
 
+## Ultime Implementazioni (7 Gen 2026 - Sessione Corrente Parte 10)
+
+### 26. Liquidazione IVA Mensile ✅ COMPLETATA
+Sistema completo per calcolo preciso della liquidazione IVA mensile, con confronto con i dati del commercialista.
+
+**Logica di Calcolo** (regime IVA ordinaria per competenza):
+- **IVA a Debito**: Somma IVA da corrispettivi del periodo
+- **IVA a Credito**: Somma IVA da fatture acquisto ricevute nel periodo
+- **Deroghe temporali**:
+  - Regola 15 giorni: fattura mese precedente registrata entro il 15
+  - Regola 12 giorni: fattura mese precedente registrata entro il 12 del mese corrente
+- **Note Credito** (TD04, TD08): Sottratte dal totale IVA credito
+- **Saldo**: IVA da versare o credito da riportare
+
+**Backend** (`/app/app/services/liquidazione_iva.py`, `/app/app/routers/liquidazione_iva.py`):
+- `GET /api/liquidazione-iva/calcola/{anno}/{mese}` - Calcolo liquidazione con credito precedente opzionale
+- `GET /api/liquidazione-iva/confronto/{anno}/{mese}` - Confronto con valori commercialista (tolleranza 1€)
+- `GET /api/liquidazione-iva/riepilogo-annuale/{anno}` - Riepilogo 12 mesi con progressivo credito
+- `GET /api/liquidazione-iva/export/pdf/{anno}/{mese}` - Export PDF con dettaglio per aliquota
+- `GET /api/liquidazione-iva/dettaglio-fatture/{anno}/{mese}` - Lista fatture incluse/escluse con motivo
+
+**Frontend** (`/app/frontend/src/pages/LiquidazioneIVA.jsx`):
+- Selettori anno/mese + input credito precedente
+- Cards riepilogo: IVA Debito (rosso), IVA Credito (verde), Saldo (arancione/blu)
+- Dettaglio per aliquota IVA (espandibile)
+- Sezione "Confronto con Commercialista" con input e risultato differenze
+- Tabella riepilogo annuale con tutti i mesi
+- Download PDF
+
+**Output Esempio** (Gennaio 2026):
+- IVA Debito: €918.08 (3 corrispettivi)
+- IVA Credito: €16,724.70 (140 fatture, 3 NC)
+- Credito da Riportare: €15,806.62
+- Stato: A credito
+
+**Test**: 18/18 passati (iteration_34)
+
+---
+
+## Valutazione Salt Edge - Integrazione Bancaria (Solo Analisi)
+
+**Salt Edge Account Information API** valutato per futura integrazione bancaria:
+- ✅ 66 banche italiane supportate (incluso Banco BPM)
+- ✅ API RESTful moderna con webhook
+- ✅ Conforme PSD2 Open Banking
+- ❌ Pricing non trasparente (richiede demo commerciale)
+- ❌ Complessità onboarding certificazione AISP
+
+**Alternative suggerite**: Plaid, Tink (Visa), Fabrick (italiano)
+
+---
+
 ## Ultime Implementazioni (6 Gen 2026 - Sessione Corrente Parte 9)
 
 ### 25. Produzione con Creazione Lotto - HACCP Compliant ✅ COMPLETATA
