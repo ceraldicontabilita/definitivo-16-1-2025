@@ -166,8 +166,7 @@ async def upload_f24_zip(
     summary="Upload multiplo PDF F24"
 )
 async def upload_f24_multiple(
-    files: List[UploadFile] = File(...),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    files: List[UploadFile] = File(...)
 ) -> Dict[str, Any]:
     """
     Upload massivo di multipli PDF F24.
