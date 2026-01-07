@@ -222,8 +222,8 @@ def compute_vat_liquidation_from_db(
                 purchase_detail[aliquota]["iva"] += imposta
         else:
             # Fallback: usa campi fattura
-            f_iva = Decimal(str(inv.get("iva", 0) or 0)) * perc * sign
-            f_imponibile = Decimal(str(inv.get("imponibile", 0) or 0)) * perc * sign
+            f_iva = safe_decimal(inv.get("iva", 0) or 0) * perc * sign
+            f_imponibile = safe_decimal(inv.get("imponibile", 0) or 0) * perc * sign
             
             # Stima aliquota
             if f_imponibile > 0:
