@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://taxform-autosync.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-f24-dashboard.preview.emergentagent.com')
 
 class TestHealthAndBasicAPIs:
     """Test health check and basic API endpoints"""

@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://taxform-autosync.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://taxform-autosync.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://taxform-autosync.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://erp-f24-dashboard.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://erp-f24-dashboard.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://erp-f24-dashboard.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {

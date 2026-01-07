@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://taxform-autosync.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://taxform-autosync.preview.emergentagent.com/prima-nota",
-    "IVA": "https://taxform-autosync.preview.emergentagent.com/iva",
-    "Dipendenti": "https://taxform-autosync.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://erp-f24-dashboard.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://erp-f24-dashboard.preview.emergentagent.com/prima-nota",
+    "IVA": "https://erp-f24-dashboard.preview.emergentagent.com/iva",
+    "Dipendenti": "https://erp-f24-dashboard.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",

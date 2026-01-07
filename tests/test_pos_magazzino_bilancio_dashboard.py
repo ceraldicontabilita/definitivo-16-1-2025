@@ -11,7 +11,7 @@ import os
 from datetime import date, datetime
 
 # Use the public URL from frontend/.env
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://taxform-autosync.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-f24-dashboard.preview.emergentagent.com').rstrip('/')
 
 
 class TestPOSAccredito:

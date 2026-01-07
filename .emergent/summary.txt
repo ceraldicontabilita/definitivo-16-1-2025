@@ -1,37 +1,52 @@
 <analysis>**original_problem_statement:**
-L'utente ha richiesto una serie di funzionalità per un'applicazione ERP:
-1.  **Funzionalità di Produzione e Lotti**: Implementare un sistema che permetta di produrre una ricetta (es. 300 babà), generando un codice di lotto univoco (es. ), registrando la produzione in un Registro Lotti e tracciando gli ingredienti utilizzati. L'utente ha fornito una URL di riferimento per la UI e il flusso desiderati.
-2.  **Parsing Quietanza F24**: Implementare un sistema per parsificare i file PDF delle quietanze di pagamento F24 caricate dall'utente.
-3.  **Riconciliazione F24 a 3 Livelli**: Creare un flusso di lavoro completo per la riconciliazione degli F24:
-    *   **Livello 1 (Input Commercialista)**: Gli F24 arrivano via email da commercialisti e consulenti del lavoro. Il sistema deve scaricare automaticamente gli allegati PDF da queste email.
-    *   **Livello 2 (Quietanza di Pagamento)**: Le quietanze F24 (già parsificate) confermano il pagamento effettivo.
-    *   **Livello 3 (Banca)**: La riconciliazione con l'estratto conto bancario chiude il ciclo.
-    *   **Logica di Riconciliazione**: Il sistema deve confrontare i codici tributo e i periodi tra l'F24 del commercialista e la quietanza. Se un F24 viene sostituito da una versione successiva con ravvedimento, il sistema deve segnalare il primo come obsoleto e permettere all'utente di eliminarlo. L'obiettivo è creare una dashboard per interrogare lo stato di pagamento di ogni codice tributo.
+L'utente ha richiesto l'aggiunta di diverse funzionalità a un'applicazione ERP:
+1.  **Funzionalità di Produzione e Lotti**: Implementare un sistema per la produzione basata su ricette, con generazione di codici di lotto e tracciabilità degli ingredienti.
+2.  **Riconciliazione F24 a 3 Livelli**:
+    *   Download automatico di F24 via email da commercialisti/consulenti.
+    *   Parsing dei PDF F24 (sia quietanze di pagamento che modelli F24 del commercialista).
+    *   Creazione di una dashboard per riconciliare i pagamenti, confrontando i modelli F24 con le quietanze, e segnalando lo stato di ogni tributo (Pagato, Da Pagare, In Scadenza).
+3.  **Parsing Buste Paga**: Estrarre dati dai PDF delle buste paga.
+4.  **Calcolo Liquidazione IVA**: Integrare un modulo fornito dall'utente per il calcolo dell'IVA mensile e la generazione di un report PDF.
+5.  **Comparatore Prezzi Fornitori**: Integrare la logica fornita per confrontare i prezzi dei prodotti tra diversi fornitori, includendo una normalizzazione basata su AI.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione è stata estesa con due importanti moduli:
-1.  **Gestione Produzione e Lotti**: Una funzionalità completa (backend e frontend) che consente di generare lotti di produzione partendo dalle ricette. La UI è stata modellata su un'applicazione di riferimento fornita dall'utente. Include una pagina Ricette con un modale per la produzione e una pagina Registro Lotti con visualizzazione tabellare, filtri, statistiche e dettagli sulla tracciabilità degli ingredienti per ogni lotto.
-2.  **Sistema di Riconciliazione F24 (parzialmente implementato)**:
-    *   **Parsing Quietanza**: Un parser basato su  che estrae dati dettagliati (dati anagrafici, protocollo, data, importi, sezioni tributo) dai PDF delle quietanze di pagamento F24. I dati vengono salvati nel database.
-    *   **Logica di Riconciliazione**: È stato creato il backend () che permette di verificare se un dato codice tributo per un certo periodo risulta pagato, confrontandolo con le quietanze presenti nel database.
-    *   **Download Automatico Email**: È stato implementato un servizio () che si connette a un account Gmail (le cui credenziali sono salvate in ), cerca email da mittenti specifici (commercialista, consulenti del lavoro), scarica gli allegati PDF (F24 e altri documenti) e li salva registrandone i metadati.
-    *   **Database Codici Tributo**: È stato creato un servizio () che funge da database per i codici tributo, le loro descrizioni, scadenze e la fonte (fiscale o contributiva).
+-   **Modulo Produzione e Lotti**: Completamente implementato (backend e frontend).
+-   **Modulo Liquidazione IVA**: Completamente implementato (backend e frontend), basato sul codice fornito dall'utente.
+-   **Modulo Buste Paga**: Il parser per i PDF Zucchetti () e il relativo router API () sono stati integrati. L'endpoint per l'upload è funzionante.
+-   **Modulo Comparatore Prezzi**: La logica del comparatore è stata integrata nel router esistente ().
+-   **Modulo Riconciliazione F24**:
+    *   **Download Email**: Servizio per scaricare allegati PDF da Gmail funzionante.
+    *   **Parser Quietanze F24**: Funzionante ().
+    *   **Parser F24 Commercialista/Consulente**: Funzionante per vari formati, ma con un bug di aggregazione in fase di correzione.
+    *   **Backend Riconciliazione**: Le API per la dashboard e la verifica dello stato dei pagamenti sono implementate.
+    *   **Frontend Dashboard**: La pagina  è stata creata e visualizza correttamente i dati forniti dal backend.
 
 **Last working item**:
--   **Last item agent was working**: Implementazione del sistema di download automatico delle email per recuperare gli F24 inviati da commercialista e consulenti del lavoro.
--   **Status**: USER VERIFICATION PENDING
--   **Agent Testing Done**: Y
--   **Which testing method agent to use?**: manual testing by curl. L'agente ha testato con successo la connessione all'account Gmail e il download di 53 allegati PDF da email reali, verificando che il sistema è in grado di connettersi, cercare e scaricare i file.
+-   **Last item agent was working**: Correzione di un bug critico nel parser F24 del consulente del lavoro (). L'utente ha segnalato che il parser accorpava erroneamente righe di tributo con lo stesso codice ma anni o periodi diversi (es. due righe per il codice 3802 venivano sommate), impedendo una corretta riconciliazione per singolo tributo/periodo.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: N (Il test stava per essere eseguito dopo la modifica del codice)
+-   **Which testing method agent to use?**: manual testing by curl. L'agente deve eseguire un test mirato sul parser aggiornato usando il file  per verificare che ogni riga di tributo venga estratta come un elemento separato.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Click sui tab non funzionante nei test automatici in  (P2)**
--   **Issue 2: Parsificare la busta paga (P0)**
+-   **Issue 1: Il parser F24 aggrega le righe di tributo invece di leggerle singolarmente (P0)**
+-   **Issue 2: Click sui tab non funzionante nei test automatici in  (P2)**
 
 **Issues Detail:**
--   **Issue 1**:
+-   **Issue 1:**
+    -   **Attempted fixes**: L'agente ha identificato che il problema era l'approccio di cercare pattern in modo sequenziale. Ha refattorizzato il codice in  per usare un singolo pattern  con , con l'obiettivo di iterare su tutte le righe di tributo presenti nel testo del PDF e creare un record per ciascuna.
+    -   **Next debug checklist**:
+        1.  Eseguire uno script di test per invocare la funzione  con il file  (proveniente da ).
+        2.  Verificare che l'output (il dizionario ) contenga una lista separata di tributi per ogni riga, specialmente per i codici 3802 (che appare due volte) e per tutti i codici segnalati dall'utente (1631, 1704, 3797, 3847, 3848).
+        3.  Se il test locale passa, ricaricare il PDF tramite l'API  e verificare che la dashboard  mostri correttamente tutti i tributi non accorpati.
+    -   **Why fix this issue and what will be achieved with this?**: Per garantire l'accuratezza della riconciliazione F24, che è una funzionalità core richiesta. L'utente deve poter tracciare lo stato di ogni singolo versamento per codice tributo e periodo.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None
+-   **Issue 2:**
     -   **Attempted fixes**: Nessuno in questa sessione.
     -   **Next debug checklist**: Eseguire il  specificamente sulla pagina  per replicare il problema e analizzare l'interazione con i componenti Tab di .
     -   **Why fix this issue and what will be achieved with this?**: Sbloccare test E2E affidabili per una parte critica dell'applicazione.
@@ -39,40 +54,32 @@ L'applicazione è stata estesa con due importanti moduli:
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: frontend
     -   **Blocked on other issue**: None
--   **Issue 2**:
-    -   **Attempted fixes**: L'agente non ha potuto lavorare su questo a causa della mancanza dei file.
-    -   **Next debug checklist**: Richiedere all'utente di caricare i file PDF delle buste paga.
-    -   **Why fix this issue and what will be achieved with this?**: Automatizzare l'inserimento dei dati dei dipendenti.
-    -   **Status**: BLOCKED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: backend
-    -   **Blocked on other issue**: None
 
 **In progress Task List**:
 Nessuno.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks**:
-    -   **(P0) Completare il flusso di Riconciliazione F24**:
-        1.  Implementare il parsing degli F24 del commercialista scaricati via email (utilizzando ). Attualmente i file vengono solo scaricati.
-        2.  Integrare i dati parsati nel sistema di riconciliazione in .
-        3.  Implementare la logica di gestione degli F24 sostitutivi (con ravvedimento) e l'alert per l'eliminazione di quelli obsoleti.
-        4.  Creare una pagina frontend per la dashboard di riconciliazione F24, dove l'utente possa vedere lo stato (Da Pagare, Pagato, Sostituito, In Scadenza) e interagire con gli alert.
--   **Future Tasks**:
-    -   Gestire l'inventario fisico e la .
-    -   Costruire una dashboard di controllo di gestione completa e avanzata.
-    -   Aggiungere gestione delle non conformità ai record di tracciabilità.
+-   **(P0) Testare il parsing delle buste paga**: L'utente deve fornire file PDF di buste paga per testare il parser  appena integrato.
+-   **(P1) Valutare integrazione bancaria**: Completare l'analisi di Salt Edge o alternative (Plaid, Tink, Fabrick) per la riconciliazione con l'estratto conto bancario (Livello 3 del flusso F24).
+-   **(P2) Implementare la logica F24 Sostitutivi**: Aggiungere la gestione degli F24 con ravvedimento, segnalando le versioni precedenti come obsolete.
+-   **(P3) UI per il Comparatore Prezzi**: Integrare la funzionalità del comparatore prezzi nella pagina frontend .
+
+**Future Tasks**:
+-   Gestire l'inventario fisico e la .
+-   Costruire una dashboard di controllo di gestione completa e avanzata.
+-   Aggiungere gestione delle non conformità ai record di tracciabilità.
 
 **Completed work in this session**
--   **Funzionalità Produzione con creazione Lotto**: Implementata e testata completamente (backend + frontend).
--   **Parsing Quietanza F24**: Creato e testato con successo un parser per i PDF delle quietanze di pagamento.
--   **Download Automatico F24 da Email**: Creato e testato un sistema che si connette a Gmail, cerca email da mittenti specifici e scarica gli allegati PDF.
--   **Backend per Riconciliazione F24**: Creata l'API per verificare lo stato di pagamento di un codice tributo confrontandolo con le quietanze.
--   **Database Codici Tributo**: Creata una base di conoscenza interna dei codici tributo F24.
--   **Fix Bug di Routing FastAPI**: Risolti due gravi problemi di routing in  e  causati da un ordine errato delle route. La soluzione ha previsto la riorganizzazione delle funzioni e la creazione di router dedicati () per evitare conflitti.
+-   **Modulo Liquidazione IVA Mensile**: Integrato codice fornito dall'utente, creato API backend e pagina frontend dedicata. Funzionalità testata con successo.
+-   **Integrazione di 3 moduli forniti dall'utente**:
+    1.  **Parser Buste Paga Zucchetti**: Integrato il servizio  e l'API .
+    2.  **Database Codici Tributo**: Integrato il servizio .
+    3.  **Comparatore Prezzi**: Integrata la logica nel router esistente .
+-   **Frontend per Dashboard Riconciliazione F24**: Creata la pagina  che mostra lo stato degli F24 caricati.
+-   **Miglioramento Parser F24**: Migliorata significativamente la robustezza del parser  per gestire diversi formati di PDF, inclusi quelli basati su form, passando a metodi di estrazione testo più avanzati ().
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Click sui tab non funzionante nei test automatici in **. Problema ricorrente non ancora affrontato in questa sessione.
+-   **Issue 1: Click sui tab non funzionante nei test automatici in **. Problema ricorrente non ancora affrontato.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork**: Il fallimento dei test automatici su .
@@ -83,70 +90,63 @@ Nessuno.
 
 
 **Key Technical Concepts**
--   **Risoluzione Conflitti di Routing (FastAPI)**: L'agente ha diagnosticato e risolto per due volte un problema comune in FastAPI dove le route dinamiche (es. ) intercettano le chiamate a route statiche (es. ) se dichiarate prima. La soluzione è stata riordinare le definizioni delle route e, in un caso, estrarre la logica in un router separato con un prefisso univoco per garantire l'isolamento.
--   **Flusso di Lavoro Asincrono e Automatizzato**: Implementazione di un processo end-to-end che parte dalla connessione a un servizio esterno (Gmail via IMAP), esegue ricerche, scarica file e li prepara per il processing successivo.
--   **Parsing di PDF con Regex**: Utilizzo combinato di  per l'estrazione del testo grezzo dai PDF e di espressioni regolari (regex) complesse per identificare ed estrarre dati strutturati da un layout non standard come quello delle quietanze F24.
--   **Gestione delle Credenziali**: Le credenziali per l'accesso a Gmail sono state correttamente gestite tramite variabili d'ambiente nel file , evitando di hardcodarle nel codice.
+-   **Debugging Frontend (Vite)**: L'agente ha affrontato un complesso problema di debug sul frontend. Inizialmente ha sospettato un errore di alias (), poi un errore , ma la causa principale si è rivelata essere uno stato instabile del server di sviluppo Vite, risolto solo dopo aver riavviato e testato incrementalmente i componenti.
+-   **Refactoring del Parser PDF**: Di fronte a un bug segnalato dall'utente, l'agente è passato da un approccio di parsing basato su  (che trova solo la prima corrispondenza) a uno basato su  per iterare su *tutte* le corrispondenze di un pattern, risolvendo così un problema di aggregazione dati.
+-   **Estrazione Testo da PDF Complessi**: L'agente ha imparato che  può fallire con PDF basati su form. Ha quindi adottato metodi più robusti come  e  per estrarre dati da layout non testuali.
+-   **Gestione dei Conflitti di Routing**: L'agente ha identificato e risolto un conflitto di routing in FastAPI causato dalla creazione di un nuovo router () con un prefisso già in uso da un router esistente ().
 
 **key DB schema**
--   **lotti_produzione**: 
--   **quietanze_f24**: 
--   **f24_commercialista**:  (Schema per i metadati dei file scaricati)
+-   **f24_commercialista**: 
+-   **buste_paga**: 
 
 **All files of reference**
--    (Da implementare, per ora vuoto)
--    (Contiene la logica di base da espandere)
--    (Logica di download email)
--    (Contiene le nuove credenziali email  e )
+-   : File chiave per la risoluzione del bug corrente.
+-   : Router che utilizza i dati del parser.
+-   : Pagina frontend che visualizzerà i dati corretti.
+-   : Parser per le buste paga, in attesa di file di test.
 
 **Critical Info for New Agent**
--   La priorità assoluta è completare la **task di riconciliazione F24**. Il download automatico degli allegati email è funzionante, ma il passo successivo è cruciale: devi implementare la logica in  per leggere i file PDF scaricati, estrarne i dati e salvarli in un'apposita collezione MongoDB.
--   Una volta parsati i dati, dovrai estendere  per implementare il confronto a tre vie (commercialista -> quietanza -> banca) e la logica per la gestione degli F24 sostitutivi.
--   Le credenziali per l'accesso a Gmail ( e ) sono già state salvate nel file . Puoi usarle direttamente nei tuoi script.
--   La funzionalità Produzione con Lotti è completa e testata. Non dovrebbe richiedere ulteriori interventi a meno di bug segnalati.
+-   La priorità assoluta (P0) è risolvere il bug di aggregazione nel parser . La soluzione proposta (usare ) è corretta concettualmente, ma deve essere testata a fondo per assicurarsi che ogni riga di tributo dal PDF venga salvata come un oggetto separato nell'array  del documento MongoDB.
+-   L'utente è molto attento e tecnico. Si aspetta che i dati siano accurati al 100%. Non accorpare o sommare nulla che non sia esplicitamente richiesto. Ogni riga sull'F24 è un'entità a sé.
+-   L'intero ecosistema frontend (Vite, React) si è dimostrato sensibile a problemi di cache. In caso di errori inspiegabili sulla UI, una pulizia della cache () e un riavvio completo del servizio  è un buon primo passo.
+-   Per testare il parser buste paga (), dovrai chiedere all'utente di fornire uno o più file PDF di esempio.
 
 **documents and test reports created in this job**
--    (aggiornato)
--    (report di test per la feature Produzione Lotti)
--   
--   
--   
--   
--   
--   
--   
+-    (Test Liquidazione IVA)
+-    (Test integrazione 3 moduli)
+-    (Test Dashboard Riconciliazione F24)
+-   File PDF caricati dall'utente in  per il testing dei parser F24.
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. L'utente fornisce l'indirizzo email personale e quelli dei consulenti/commercialista da cui scaricare gli F24, specificando che tipo di F24 arriva da chi (fiscali vs contributivi) e suggerisce di fare una ricerca web sui codici tributo.
-9.  L'utente fornisce la password per le app di Google per l'accesso a Gmail ().
-8.  L'utente conferma che la logica di riconciliazione F24 proposta è corretta. (COMPLETED)
-7.  L'utente spiega in dettaglio il flusso di riconciliazione a 3 livelli desiderato (F24 commercialista -> Quietanza -> Banca), inclusa la gestione dei ravvedimenti.
-6.  L'utente carica due file PDF di quietanze F24 da parsificare. (COMPLETED)
-5.  L'utente conferma che il flusso per la creazione dei lotti di produzione deve essere identico a quello dell'applicazione di riferimento. (COMPLETED)
-4.  (PENDING) L'agente chiede l'indirizzo email per configurare il downloader. (Risposto nel messaggio 10)
-3.  (PENDING) L'agente chiede conferma sulla logica di riconciliazione a 3 livelli. (Risposto nel messaggio 7 e 8)
-2.  (PENDING) L'agente chiede conferma del piano per implementare la riconciliazione.
-1.  (PENDING) L'agente riassume la sua comprensione del flusso di riconciliazione F24 e chiede conferma. (Risposto nel messaggio 8)
+10. L'utente ha segnalato che il parser F24 sta erroneamente accorpando più righe di tributo in una sola e che mancano diversi codici. Ha chiesto di leggere ogni riga separatamente. (PENDING FIX)
+9.  L'utente ha chiesto di spiegare e parsare un F24 del consulente del lavoro. (COMPLETED, but buggy)
+8.  L'utente ha fornito un PDF di un F24 per l'IVA di Novembre e ha chiesto di caricarlo. (COMPLETED)
+7.  L'utente ha chiesto di continuare a lavorare sulla Riconciliazione F24. (IN PROGRESS)
+6.  L'utente ha chiesto di integrare 3 file Python che ha caricato: un parser buste paga, un database di codici tributo e un comparatore prezzi. (COMPLETED)
+5.  L'utente ha caricato i 3 file Python. (COMPLETED)
+4.  L'utente ha chiesto di integrare il modulo , usare la collezione  esistente e di valutare Salt Edge. (COMPLETED)
+3.  L'utente ha fornito il file . (COMPLETED)
+2.  In attesa della risposta dell'utente al piano proposto dall'agente.
+1.  L'agente ha chiesto conferma del suo piano all'utente.
 
 **Project Health Check:**
--   **Broken**: Nessuna funzionalità critica è interrotta.
+-   **Broken**: La funzionalità di parsing degli F24 del consulente è parzialmente rotta a causa del bug di aggregazione.
 -   **Mocked**: Nessuna.
--   **Needs Cleanup**: Nessuno.
 
 **3rd Party Integrations**
--   **Claude Sonnet 4.5 (via Emergent LLM Key)**: Per la categorizzazione degli articoli (implementato in una sessione precedente).
--   **Google/Gmail (IMAP)**: Integrato per il download automatico degli allegati F24. Le credenziali sono in .
+-   **Google/Gmail (IMAP)**: Per il download degli allegati F24.
+-   **pdfplumber**: Nuova dipendenza aggiunta per il parsing dei PDF delle buste paga.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (per la feature Produzione con Lotti)
+-   **Testing agent used after significant changes**: YES (usato più volte per Liquidazione IVA, integrazione moduli, e Riconciliazione F24).
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: 
--   **Known regressions**: Nessuna
+-   **Test files created**: , , .
+-   **Known regressions**: Il parser  ha avuto una regressione funzionale (parsing errato) dopo l'introduzione di un PDF con un nuovo formato, che ha poi rivelato un bug logico più profondo (aggregazione).
 
 **Credentials to test flow:**
 -   **Email User**: 
 -   **Email App Password**: 
--   (Queste credenziali sono già nel file )
+-   (Queste credenziali sono nel file )
 
 **What agent forgot to execute**
-L'agente non ha dimenticato nulla, ma ha lasciato il flusso di riconciliazione F24 intenzionalmente a metà. Ha implementato il download dei file ma non il loro parsing e l'integrazione nella logica di riconciliazione, che rappresenta il prossimo passo naturale. Le attività a bassa priorità (parsing buste paga, fix test UI) sono state correttamente posticipate per dare priorità alle richieste esplicite e complesse dell'utente.</analysis>
+L'agente non ha dimenticato nulla, ma ha introdotto un bug logico nel parser F24 nel tentativo di gestire un nuovo formato di file. L'errore è stato correttamente identificato dall'utente e l'agente ha iniziato il processo di refactoring per correggerlo.</analysis>
