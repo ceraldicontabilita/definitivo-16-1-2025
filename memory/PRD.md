@@ -138,6 +138,31 @@ class Database:
 
 ---
 
+## Ultime Implementazioni (7 Gen 2026 - Sessione Corrente Parte 11)
+
+### 27. Integrazione 3 Moduli Forniti dall'Utente ✅ COMPLETATA
+
+**a) Database Codici Tributo F24** (`/app/app/services/codici_tributo_f24.py`)
+- 44 codici tributo completi con descrizione, tipo (debito/credito/misto), sezione (ERARIO/INPS/REGIONI/IMU/INAIL)
+- Funzioni: `get_codice_info()`, `get_descrizione_tributo()`, `get_tipo_tributo()`, `get_sezione_tributo()`, `cerca_codice_tributo()`, `get_all_codici()`, `get_codici_by_sezione()`
+- Sostituisce il precedente `codici_tributo_db.py`
+
+**b) Parser Buste Paga Zucchetti** (`/app/app/services/libro_unico_parser.py`)
+- Parsing PDF Libro Unico del Lavoro formato Zucchetti
+- Estrae: nome, netto, acconto, differenza, ore ordinarie, mansione, scadenza contratto
+- Auto-detect mese competenza con confidenza alta/bassa
+- Supporta dipendenti normali e amministratori/tirocinanti
+- API Router: `/api/buste-paga/upload`, `/api/buste-paga/salva`, `/api/buste-paga/lista`, `/api/buste-paga/riepilogo-mensile/{competenza}`, `/api/buste-paga/competenze`
+
+**c) Comparatore Prezzi** (già esistente in `/app/app/routers/comparatore.py`)
+- Funzionalità già presente nell'app
+- API: `/api/comparatore/products`, `/api/comparatore/suppliers`, `/api/comparatore/cart`, `/api/comparatore/exclude-supplier`
+- Frontend: `/ricerca-prodotti`
+
+**Test**: 34/34 passati (`/app/test_reports/iteration_35.json`)
+
+---
+
 ## Ultime Implementazioni (7 Gen 2026 - Sessione Corrente Parte 10)
 
 ### 26. Liquidazione IVA Mensile ✅ COMPLETATA
