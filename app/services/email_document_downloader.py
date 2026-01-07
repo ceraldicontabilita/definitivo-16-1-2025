@@ -125,13 +125,13 @@ class EmailDocumentDownloader:
         folder: str = "INBOX",
         since_date: Optional[str] = None,
         search_criteria: Optional[str] = None,
-        search_f24_only: bool = True,
-        limit: int = 50
+        search_keywords: Optional[List[str]] = None,
+        limit: int = 200
     ) -> List[bytes]:
         """
         Cerca email con allegati.
         since_date: formato "01-Jan-2025"
-        search_f24_only: se True, cerca solo email con F24 nell'oggetto
+        search_keywords: lista di parole chiave da cercare nell'oggetto
         """
         if not self.connection:
             return []
@@ -146,11 +146,24 @@ class EmailDocumentDownloader:
             if search_criteria:
                 criteria.append(search_criteria)
             
-            # Se cerchiamo solo F24, aggiungi filtro oggetto
-            if search_f24_only:
-                criteria.append('(OR (SUBJECT "F24") (SUBJECT "f24"))')
+            # Se ci sono parole chiave, costruisci il filtro OR
+            if search_keywords and len(search_keywords) > 0:
+                # Costruisci OR per ogni parola chiave
+                keyword_criteria = []
+                for kw in search_keywords:
+                    keyword_criteria.append(f'(SUBJECT "{kw}")')
+                
+                if len(keyword_criteria) == 1:
+                    criteria.append(keyword_criteria[0])
+                else:
+                    # Costruisci OR ricorsivo: (OR (a) (OR (b) (c)))
+                    or_expr = keyword_criteria[-1]
+                    for i in range(len(keyword_criteria) - 2, -1, -1):
+                        or_expr = f'(OR {keyword_criteria[i]} {or_expr})'
+                    criteria.append(or_expr)
             
             search_string = ' '.join(criteria) if criteria else 'ALL'
+            logger.info(f"Ricerca email con criteri: {search_string}")
             
             status, messages = self.connection.search(None, search_string)
             
@@ -163,6 +176,7 @@ class EmailDocumentDownloader:
             if len(email_ids) > limit:
                 email_ids = email_ids[-limit:]
             
+            logger.info(f"Trovate {len(email_ids)} email")
             return email_ids
             
         except Exception as e:
