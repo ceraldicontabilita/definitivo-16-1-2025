@@ -84,39 +84,59 @@ def decode_mime_header(header_value: str) -> str:
     return ''.join(result)
 
 
-def categorize_document(filename: str, subject: str = "", sender: str = "") -> str:
+def categorize_document(filename: str, subject: str = "", sender: str = "", search_keywords: List[str] = None) -> str:
     """
-    Categorizza un documento in base al nome file, oggetto e mittente.
-    FILTRIAMO SOLO F24 - altri documenti vengono ignorati.
-    
-    NOTA: Questa funzione viene chiamata solo per allegati da email con "F24" nell'oggetto,
-    quindi siamo già abbastanza sicuri che siano F24.
+    Categorizza un documento in base al nome file, oggetto, mittente e parole chiave di ricerca.
+    Ora supporta tutte le categorie, non solo F24.
     """
     filename_lower = filename.lower()
     subject_lower = subject.lower()
     sender_lower = sender.lower()
     
-    # Se l'email ha F24 nell'oggetto e l'allegato è un PDF, consideralo F24
-    if 'f24' in subject_lower and filename_lower.endswith('.pdf'):
-        return "f24"
+    # Se ci sono parole chiave specifiche dalla ricerca, usa quelle per determinare la categoria
+    if search_keywords:
+        for kw in search_keywords:
+            kw_lower = kw.lower()
+            if kw_lower in subject_lower or kw_lower in filename_lower:
+                return get_category_from_keyword(kw)
     
-    # F24 - Pattern nel nome file
-    f24_patterns_filename = ['f24', 'f-24', 'f_24', 'mod.f24', 'modello f24', 'tribut']
-    if any(x in filename_lower for x in f24_patterns_filename):
+    # Cartelle Esattoriali
+    cartella_patterns = ['cartella esattoriale', 'cartella esattoria', 'agenzia entrate riscossione', 
+                         'equitalia', 'ader', 'intimazione', 'ingiunzione']
+    if any(x in subject_lower or x in filename_lower for x in cartella_patterns):
+        return "cartella_esattoriale"
+    
+    # F24 - Pattern nell'oggetto o nel nome file
+    f24_patterns = ['f24', 'f-24', 'f_24', 'mod.f24', 'modello f24', 'tribut']
+    if any(x in subject_lower or x in filename_lower for x in f24_patterns):
         return "f24"
     
     # Quietanze F24
-    if any(x in filename_lower for x in ['quietanza', 'ricevuta f24', 'pagamento f24']):
-        return "quietanza"
-    if any(x in subject_lower for x in ['quietanza', 'ricevuta pagamento f24']):
+    if any(x in filename_lower or x in subject_lower for x in ['quietanza', 'ricevuta f24', 'pagamento f24']):
         return "quietanza"
     
-    # Se è un PDF da email F24, consideralo F24
-    if filename_lower.endswith('.pdf'):
-        return "f24"
+    # Fatture
+    fattura_patterns = ['fattura', 'invoice', 'fatt.', 'ft.']
+    if any(x in subject_lower or x in filename_lower for x in fattura_patterns):
+        return "fattura"
     
-    # Non è riconosciuto
-    return None
+    # Buste paga
+    busta_patterns = ['busta paga', 'cedolino', 'lul', 'libro unico']
+    if any(x in subject_lower or x in filename_lower for x in busta_patterns):
+        return "busta_paga"
+    
+    # Estratti conto
+    estratto_patterns = ['estratto conto', 'movimenti', 'saldo']
+    if any(x in subject_lower or x in filename_lower for x in estratto_patterns):
+        return "estratto_conto"
+    
+    # Bonifici
+    bonifico_patterns = ['bonifico', 'sepa', 'disposizione']
+    if any(x in subject_lower or x in filename_lower for x in bonifico_patterns):
+        return "bonifico"
+    
+    # Default: altro (accetta comunque il documento)
+    return "altro"
 
 
 def calculate_file_hash(content: bytes) -> str:
