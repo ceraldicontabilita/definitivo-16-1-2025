@@ -383,7 +383,7 @@ async def import_bonifici(file: UploadFile = File(...)) -> Dict[str, Any]:
     }
 
 
-async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_filtro: str = None):
+async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_filtro: str = None, anni_esclusi: List[int] = None):
     """
     Ricalcola saldi e progressivi per tutti i dipendenti o uno specifico.
     
@@ -392,7 +392,12 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
     - Progressivo = Somma cumulativa di tutti i saldi precedenti + saldo corrente
     
     I record sono ordinati per anno, mese e data di creazione.
+    Gli anni in anni_esclusi vengono saltati nel calcolo del progressivo.
+    I record con vincolo=True non vengono modificati.
     """
+    if anni_esclusi is None:
+        anni_esclusi = []
+    
     # Ottieni dipendenti da processare
     if dipendente_filtro:
         dipendenti = [dipendente_filtro]
@@ -409,18 +414,25 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
         progressivo = 0
         
         for record in records:
+            # Skip record con vincolo
+            if record.get("vincolo"):
+                continue
+            
             # Saldo della singola riga: Bonifico - Busta
             importo_busta = record.get("importo_busta", 0) or 0
             importo_bonifico = record.get("importo_bonifico", 0) or 0
             saldo = importo_bonifico - importo_busta
             
-            # Il progressivo si calcola solo dall'anno_inizio in poi (se specificato)
             anno_record = record.get("anno", 0)
-            if anno_inizio is None or anno_record >= anno_inizio:
+            
+            # Se l'anno è escluso, non aggiorna il progressivo
+            if anno_record in anni_esclusi:
+                prog_value = 0
+            elif anno_inizio is None or anno_record >= anno_inizio:
                 progressivo += saldo
                 prog_value = round(progressivo, 2)
             else:
-                prog_value = 0  # Record prima dell'anno_inizio hanno progressivo 0
+                prog_value = 0
             
             # Aggiorna il record con saldo e progressivo
             await db["prima_nota_salari"].update_one(
