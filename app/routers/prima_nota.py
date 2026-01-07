@@ -439,7 +439,7 @@ async def list_prima_nota_banca(
     """Lista movimenti prima nota banca."""
     db = Database.get_db()
     
-    query = {}
+    query = {"status": {"$ne": "deleted"}}  # Escludi movimenti eliminati
     
     # Filtro per anno
     if anno:
