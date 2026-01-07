@@ -222,7 +222,7 @@ async def import_paghe(file: UploadFile = File(...)) -> Dict[str, Any]:
                 "dipendente": dipendente,
                 "anno": anno,
                 "mese": mese,
-                "mese_nome": MESI_NOMI[mese - 1] if 1 <= mese <= 12 else "",
+                "mese_nome": MESI_NOMI[mese - 1] if 1 <= mese <= len(MESI_NOMI) else f"Mese {mese}",
                 "importo_busta": round(importo, 2),
                 "importo_bonifico": 0,
                 "saldo": round(-importo, 2),
