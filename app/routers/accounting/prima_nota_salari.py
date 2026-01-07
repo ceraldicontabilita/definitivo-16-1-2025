@@ -23,11 +23,17 @@ from app.database import Database
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Mapping mesi italiano -> numero
+# Mapping mesi italiano -> numero (include anche numeri come stringhe)
 MESI_MAP = {
     "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4,
     "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
-    "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12
+    "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12,
+    "gen": 1, "feb": 2, "mar": 3, "apr": 4, "mag": 5, "giu": 6,
+    "lug": 7, "ago": 8, "set": 9, "ott": 10, "nov": 11, "dic": 12,
+    "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6,
+    "7": 7, "8": 8, "9": 9, "10": 10, "11": 11, "12": 12,
+    "01": 1, "02": 2, "03": 3, "04": 4, "05": 5, "06": 6,
+    "07": 7, "08": 8, "09": 9
 }
 
 MESI_NOMI = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
