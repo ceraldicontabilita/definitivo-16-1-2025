@@ -184,6 +184,7 @@ app.include_router(estratto_conto.router, prefix="/api/estratto-conto-movimenti"
 app.include_router(archivio_bonifici.router, prefix="/api", tags=["Archivio Bonifici"])
 app.include_router(assegni.router, prefix="/api/assegni", tags=["Assegni"])
 app.include_router(pos_accredito.router, prefix="/api/pos-accredito", tags=["POS Accredito"])
+app.include_router(riconciliazione_f24_banca.router, prefix="/api/f24-riconciliazione", tags=["Riconciliazione F24 Banca"])
 
 # --- Warehouse Module ---
 app.include_router(warehouse_main.router, prefix="/api/warehouse", tags=["Warehouse"])
