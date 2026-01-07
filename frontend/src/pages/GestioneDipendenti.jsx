@@ -299,7 +299,7 @@ export default function GestioneDipendenti() {
         importo_bonifico: parseFloat(editingSalario.importo_bonifico) || 0
       });
       setEditingSalario(null);
-      loadPrimaNotaSalari();
+      await loadPrimaNotaSalari();
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     }
