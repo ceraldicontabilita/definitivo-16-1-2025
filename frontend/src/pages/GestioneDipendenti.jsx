@@ -1659,6 +1659,8 @@ export default function GestioneDipendenti() {
                 <tbody>
                   {salariMovimenti
                     .filter(mov => {
+                      // Filtro dal 2023 (quando attivo)
+                      if (filtroAnnoDal2023 && mov.anno < 2023) return false;
                       if (filtroTabDipendente && !mov.dipendente?.toLowerCase().includes(filtroTabDipendente.toLowerCase())) return false;
                       if (filtroTabMese && mov.mese_nome !== filtroTabMese) return false;
                       if (filtroTabAnno && mov.anno !== parseInt(filtroTabAnno)) return false;
