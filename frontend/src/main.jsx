@@ -64,6 +64,8 @@ import DizionarioArticoli from "./pages/DizionarioArticoli.jsx";
 import LiquidazioneIVA from "./pages/LiquidazioneIVA.jsx";
 // Riconciliazione F24
 import RiconciliazioneF24 from "./pages/RiconciliazioneF24.jsx";
+// Verifica Coerenza Dati
+import VerificaCoerenza from "./pages/VerificaCoerenza.jsx";
 
 const router = createBrowserRouter([
   // Portale HACCP standalone (login con codice 141574)
