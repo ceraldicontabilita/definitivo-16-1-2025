@@ -123,10 +123,12 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     # ============================================
     # ESTRAZIONE BASATA SU COORDINATE
     # ============================================
-    # Soglie X per distinguere debiti da crediti
-    # Debito: X ~350-410, Credito: X ~430-490
-    DEBITO_X_MAX = 420
-    CREDITO_X_MIN = 430
+    # Layout F24 standard:
+    # - Colonna DEBITO (euro): X ~357-379, (centesimi): X ~388-389
+    # - Colonna CREDITO (euro): X ~443-460, (centesimi): X ~474-475
+    # Soglia: se X < 420 è debito, se X >= 430 è credito
+    DEBITO_X_MAX = 410  # Numeri con X <= 410 sono debiti
+    CREDITO_X_MIN = 440  # Numeri con X >= 440 sono crediti
     
     # Tracks tributi già estratti per evitare duplicati
     tributi_visti = set()
