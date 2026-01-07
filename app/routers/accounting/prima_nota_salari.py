@@ -455,17 +455,70 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None):
 
 @router.post("/ricalcola-progressivi")
 async def ricalcola_progressivi(
-    anno_inizio: Optional[int] = Query(None, description="Anno da cui iniziare il calcolo del progressivo (es. 2023)")
+    anno_inizio: Optional[int] = Query(None, description="Anno da cui iniziare il calcolo del progressivo (es. 2023)"),
+    dipendente: Optional[str] = Query(None, description="Nome dipendente specifico (opzionale)")
 ) -> Dict[str, Any]:
     """
-    Ricalcola tutti i progressivi dipendenti.
+    Ricalcola i progressivi per uno o tutti i dipendenti.
     Se anno_inizio è specificato, il progressivo parte da 0 a gennaio di quell'anno.
+    Se dipendente è specificato, ricalcola solo per quel dipendente.
     """
     db = Database.get_db()
-    await ricalcola_progressivi_tutti(db, anno_inizio)
+    await ricalcola_progressivi_tutti(db, anno_inizio, dipendente)
     return {
-        "message": f"Progressivi ricalcolati{f' dal {anno_inizio}' if anno_inizio else ''}",
-        "anno_inizio": anno_inizio
+        "message": f"Progressivi ricalcolati{f' dal {anno_inizio}' if anno_inizio else ''}{f' per {dipendente}' if dipendente else ''}",
+        "anno_inizio": anno_inizio,
+        "dipendente": dipendente
+    }
+
+
+@router.post("/salari/aggiustamento")
+async def aggiungi_aggiustamento(
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, Any]:
+    """
+    Aggiunge una riga di aggiustamento per allineare il saldo con il commercialista.
+    L'importo positivo aumenta il saldo (va nel bonifico), negativo lo diminuisce (va nella busta).
+    """
+    db = Database.get_db()
+    
+    dipendente = data.get("dipendente", "").strip().upper()
+    anno = int(data.get("anno", datetime.utcnow().year))
+    mese = int(data.get("mese", datetime.utcnow().month))
+    importo_busta = float(data.get("importo_busta", 0))
+    importo_bonifico = float(data.get("importo_bonifico", 0))
+    descrizione = data.get("descrizione", "Aggiustamento saldo")
+    
+    if not dipendente:
+        raise HTTPException(status_code=400, detail="Dipendente obbligatorio")
+    
+    # Crea il record di aggiustamento
+    new_record = {
+        "id": str(uuid.uuid4()),
+        "dipendente": dipendente,
+        "anno": anno,
+        "mese": mese,
+        "mese_nome": MESI_NOMI[mese - 1] if 1 <= mese <= 12 else "",
+        "importo_busta": round(importo_busta, 2),
+        "importo_bonifico": round(importo_bonifico, 2),
+        "saldo": round(importo_bonifico - importo_busta, 2),
+        "progressivo": 0,  # Verrà ricalcolato
+        "riconciliato": False,
+        "tipo": "aggiustamento",
+        "descrizione": descrizione,
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat()
+    }
+    
+    await db["prima_nota_salari"].insert_one(new_record)
+    
+    # Ricalcola i progressivi per questo dipendente
+    await ricalcola_progressivi_tutti(db, None, dipendente)
+    
+    return {
+        "success": True,
+        "message": f"Aggiustamento inserito per {dipendente}",
+        "record_id": new_record["id"]
     }
 
 
