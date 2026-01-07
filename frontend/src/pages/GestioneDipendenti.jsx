@@ -321,29 +321,31 @@ export default function GestioneDipendenti() {
     }
   };
 
-  // Ricalcola progressivi dal 2023 per un dipendente specifico
+  // Ricalcola progressivi dal 2023 per il dipendente selezionato nel filtro
   const handleRicalcolaProgressiviDal2023 = async () => {
-    if (!ricalcoloDipendente) {
-      alert('Seleziona un dipendente');
+    // Usa il dipendente dal filtro in alto
+    const dipendenteDaUsare = filtroDipendente;
+    
+    if (!dipendenteDaUsare) {
+      alert('⚠️ Seleziona prima un dipendente dal filtro in alto');
       return;
     }
+    
+    if (!window.confirm(`Ricalcolare i progressivi dal 01/01/2023 per ${dipendenteDaUsare}?`)) {
+      return;
+    }
+    
     try {
       setRicalcolandoProgressivi(true);
       // Chiama l'endpoint di ricalcolo con reset forzato
-      await api.post(`/api/prima-nota-salari/ricalcola-progressivi?anno_inizio=2023&dipendente=${encodeURIComponent(ricalcoloDipendente)}&force_reset=true`);
-      // Imposta i filtri per mostrare solo dal 2023 per il dipendente selezionato
-      setSelectedMonthPrimaNota(''); // Tutti i mesi
-      setSelectedYearPrimaNota(null); // Tutti gli anni
-      setFiltroDipendente(ricalcoloDipendente);
-      setFiltroAnnoDal2023(true); // Attiva filtro dal 2023
-      // Reset filtri tabella
+      await api.post(`/api/prima-nota-salari/ricalcola-progressivi?anno_inizio=2023&dipendente=${encodeURIComponent(dipendenteDaUsare)}&force_reset=true`);
+      // Attiva filtro dal 2023
+      setFiltroAnnoDal2023(true);
+      // Reset filtri tabella per mostrare tutti i mesi/anni
       setFiltroTabMese('');
       setFiltroTabAnno('');
-      setFiltroTabDipendente(ricalcoloDipendente);
       await loadPrimaNotaSalari();
-      setShowRicalcoloModal(false);
-      alert(`✅ Progressivi ricalcolati dal 01/01/2023 per ${ricalcoloDipendente}\n\nLa lista ora mostra solo le paghe dal 2023 in poi.`);
-      setRicalcoloDipendente('');
+      alert(`✅ Progressivi ricalcolati dal 01/01/2023 per ${dipendenteDaUsare}`);
     } catch (error) {
       alert('Errore: ' + (error.response?.data?.detail || error.message));
     } finally {
@@ -354,7 +356,6 @@ export default function GestioneDipendenti() {
   // Reset filtro dal 2023
   const handleResetFiltroDal2023 = () => {
     setFiltroAnnoDal2023(false);
-    setFiltroDipendente('');
   };
 
   // Aggiungi riga di aggiustamento saldo
