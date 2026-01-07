@@ -125,7 +125,8 @@ from app.routers import (
     centri_costo,
     magazzino_doppia_verita,
     ricette,
-    dizionario_articoli
+    dizionario_articoli,
+    liquidazione_iva
 )
 
 # Include public API first (no auth required)
@@ -228,6 +229,7 @@ app.include_router(dizionario_articoli.router, prefix="/api/dizionario-articoli"
 app.include_router(centri_costo.router, prefix="/api/centri-costo", tags=["Centri di Costo"])
 app.include_router(magazzino_doppia_verita.router, prefix="/api/magazzino-dv", tags=["Magazzino Doppia Verità"])
 app.include_router(ricette.router, prefix="/api/ricette", tags=["Ricette e Produzione"])
+app.include_router(liquidazione_iva.router, prefix="/api", tags=["Liquidazione IVA"])
 
 @app.get("/")
 async def root():
