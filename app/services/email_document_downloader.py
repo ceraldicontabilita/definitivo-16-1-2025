@@ -55,30 +55,22 @@ def categorize_document(filename: str, subject: str = "", sender: str = "") -> s
     """
     Categorizza un documento in base al nome file, oggetto e mittente.
     FILTRIAMO SOLO F24 - altri documenti vengono ignorati.
+    
+    NOTA: Questa funzione viene chiamata solo per allegati da email con "F24" nell'oggetto,
+    quindi siamo già abbastanza sicuri che siano F24.
     """
     filename_lower = filename.lower()
     subject_lower = subject.lower()
     sender_lower = sender.lower()
     
-    # F24 - Pattern molto specifici
-    f24_patterns_filename = ['f24', 'f-24', 'f_24', 'mod.f24', 'modello f24']
-    f24_patterns_subject = ['f24', 'f-24', 'tribut', 'scadenza fiscal', 'versamento', 'erario', 'inps']
-    f24_patterns_sender = ['commercialista', 'studio', 'consulente', 'agenzia entrate']
-    
-    # Check filename
-    if any(x in filename_lower for x in f24_patterns_filename):
+    # Se l'email ha F24 nell'oggetto e l'allegato è un PDF, consideralo F24
+    if 'f24' in subject_lower and filename_lower.endswith('.pdf'):
         return "f24"
     
-    # Check subject
-    if any(x in subject_lower for x in f24_patterns_subject):
-        # Verifica che sia PDF
-        if filename_lower.endswith('.pdf'):
-            return "f24"
-    
-    # Check sender (commercialista)
-    if any(x in sender_lower for x in f24_patterns_sender):
-        if filename_lower.endswith('.pdf'):
-            return "f24"
+    # F24 - Pattern nel nome file
+    f24_patterns_filename = ['f24', 'f-24', 'f_24', 'mod.f24', 'modello f24', 'tribut']
+    if any(x in filename_lower for x in f24_patterns_filename):
+        return "f24"
     
     # Quietanze F24
     if any(x in filename_lower for x in ['quietanza', 'ricevuta f24', 'pagamento f24']):
@@ -86,7 +78,11 @@ def categorize_document(filename: str, subject: str = "", sender: str = "") -> s
     if any(x in subject_lower for x in ['quietanza', 'ricevuta pagamento f24']):
         return "quietanza"
     
-    # NON è un F24 - ritorna None per ignorarlo
+    # Se è un PDF da email F24, consideralo F24
+    if filename_lower.endswith('.pdf'):
+        return "f24"
+    
+    # Non è riconosciuto
     return None
 
 
