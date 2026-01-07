@@ -302,6 +302,74 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                         break
             
             # ============================================
+            # SEZIONE INAIL - Pattern: cod_sede cod_ditta cc num_rif causale importo
+            # Es: "33400 13882560 91 902025 P 365 11"
+            # ============================================
+            # Riconosce righe INAIL: iniziano con codice sede 5 cifre seguito da codice ditta
+            is_inail_row = False
+            cod_sede_inail = ""
+            cod_ditta = ""
+            
+            if len(row) >= 5:
+                first_words = [r['word'] for r in row[:6]]
+                # Pattern: codice sede (5 cifre), codice ditta (8 cifre)
+                if (len(first_words) >= 2 and 
+                    re.match(r'^\d{5}$', first_words[0]) and
+                    re.match(r'^\d{7,10}$', first_words[1])):
+                    cod_sede_inail = first_words[0]
+                    cod_ditta = first_words[1]
+                    is_inail_row = True
+            
+            if is_inail_row:
+                cc = ""
+                num_riferimento = ""
+                causale_inail = ""
+                
+                # Cerca cc, numero riferimento, causale
+                for i, item in enumerate(row):
+                    word = item['word']
+                    if word in [',', '+/–']:
+                        continue
+                    
+                    if re.match(r'^\d{2}$', word) and not cc and i > 1:
+                        cc = word
+                    elif re.match(r'^\d{6}$', word) and not num_riferimento:
+                        num_riferimento = word
+                    elif re.match(r'^[A-Z]$', word) and not causale_inail:
+                        causale_inail = word
+                
+                # Estrai importo (debito, X > 340)
+                importo_inail = 0.0
+                numero_parts = []
+                for r in row:
+                    if r['x'] > 340 and re.match(r'^[\d.]+$', r['word']):
+                        numero_parts.append((r['x'], r['word']))
+                
+                if len(numero_parts) >= 2:
+                    numero_parts.sort()
+                    euro = numero_parts[0][1].replace('.', '')
+                    cent = numero_parts[1][1]
+                    try:
+                        importo_inail = float(euro) + float(cent) / 100
+                    except:
+                        pass
+                
+                if cod_sede_inail and cod_ditta and importo_inail > 0:
+                    key = f"INAIL_{cod_sede_inail}_{cod_ditta}_{num_riferimento}"
+                    if key not in tributi_visti:
+                        tributi_visti.add(key)
+                        result["sezione_inail"].append({
+                            "codice_sede": cod_sede_inail,
+                            "codice_ditta": cod_ditta,
+                            "cc": cc,
+                            "numero_riferimento": num_riferimento,
+                            "causale": causale_inail,
+                            "importo_debito": round(importo_inail, 2),
+                            "importo_credito": 0.0,
+                            "descrizione": f"Premio INAIL - Causale {causale_inail}"
+                        })
+            
+            # ============================================
             # SEZIONE REGIONI - Pattern: cod_regione 3802 rateazione anno debito/credito
             # Riconosce righe con "0 5" prima del codice 38xx
             # ============================================
