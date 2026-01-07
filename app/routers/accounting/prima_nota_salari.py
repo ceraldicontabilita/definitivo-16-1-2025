@@ -459,24 +459,42 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
                     "progressivo": prog_value
                 }}
             )
+    
+    return True  # Conferma che il ricalcolo è avvenuto
 
 
 @router.post("/ricalcola-progressivi")
 async def ricalcola_progressivi(
     anno_inizio: Optional[int] = Query(None, description="Anno da cui iniziare il calcolo del progressivo (es. 2023)"),
-    dipendente: Optional[str] = Query(None, description="Nome dipendente specifico (opzionale)")
+    dipendente: Optional[str] = Query(None, description="Nome dipendente specifico (opzionale)"),
+    force_reset: bool = Query(False, description="Forza il reset dei progressivi prima del ricalcolo")
 ) -> Dict[str, Any]:
     """
     Ricalcola i progressivi per uno o tutti i dipendenti.
     Se anno_inizio è specificato, il progressivo parte da 0 a gennaio di quell'anno.
     Se dipendente è specificato, ricalcola solo per quel dipendente.
+    Se force_reset è True, prima azzera tutti i progressivi e poi li ricalcola.
     """
     db = Database.get_db()
+    
+    # Se force_reset, prima azzera i progressivi
+    if force_reset:
+        reset_query = {}
+        if dipendente:
+            reset_query["dipendente"] = dipendente
+        await db["prima_nota_salari"].update_many(
+            reset_query,
+            {"$set": {"progressivo": 0, "saldo": 0}}
+        )
+    
+    # Ricalcola
     await ricalcola_progressivi_tutti(db, anno_inizio, dipendente)
+    
     return {
         "message": f"Progressivi ricalcolati{f' dal {anno_inizio}' if anno_inizio else ''}{f' per {dipendente}' if dipendente else ''}",
         "anno_inizio": anno_inizio,
-        "dipendente": dipendente
+        "dipendente": dipendente,
+        "force_reset": force_reset
     }
 
 
