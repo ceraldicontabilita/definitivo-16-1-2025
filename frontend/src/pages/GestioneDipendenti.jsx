@@ -1664,6 +1664,7 @@ export default function GestioneDipendenti() {
                     </th>
                     <th style={{ padding: '8px 12px', textAlign: 'right' }}>Importo Busta</th>
                     <th style={{ padding: '8px 12px', textAlign: 'right' }}>Importo Bonifico</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', width: 100 }}>Vincolo</th>
                     <th style={{ padding: '8px 12px', textAlign: 'right' }}>Saldo Progressivo</th>
                     <th style={{ padding: '8px 12px', textAlign: 'center' }}>Stato</th>
                     <th style={{ padding: '8px 12px', textAlign: 'center', width: 80 }}>Azioni</th>
