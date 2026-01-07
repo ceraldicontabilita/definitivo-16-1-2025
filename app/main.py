@@ -206,6 +206,7 @@ app.include_router(employees_payroll.router, prefix="/api/employees", tags=["Emp
 app.include_router(f24_tributi.router, prefix="/api/f24", tags=["F24 Tributi"])
 app.include_router(accounting_f24.router, prefix="/api/f24", tags=["F24 Accounting"])
 app.include_router(f24_public.router, prefix="/api/f24-public", tags=["F24 Public"])
+app.include_router(f24_riconciliazione.router, prefix="/api/f24-riconciliazione", tags=["F24 Riconciliazione"])
 app.include_router(haccp_report_pdf.router, prefix="/api/haccp-report", tags=["HACCP Report PDF"])
 app.include_router(bank_statement_import.router, prefix="/api/bank-statement", tags=["Bank Statement Import"])
 app.include_router(piano_conti.router, prefix="/api/piano-conti", tags=["Piano dei Conti"])
