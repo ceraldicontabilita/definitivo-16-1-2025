@@ -549,3 +549,154 @@ async def export_transfers(
         out.seek(0)
         headers = {'Content-Disposition': 'attachment; filename="bonifici_export.xlsx"'}
         return StreamingResponse(out, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers=headers)
+
+
+# =============================================================================
+# RICONCILIAZIONE BONIFICI CON ESTRATTO CONTO
+# =============================================================================
+
+@router.post("/riconcilia")
+async def riconcilia_bonifici_con_estratto():
+    """
+    Riconcilia i bonifici con i movimenti dell'estratto conto.
+    Match basato su: importo esatto e data (±1 giorno).
+    """
+    db = Database.get_db()
+    
+    # Recupera tutti i bonifici non ancora riconciliati
+    bonifici = await db.bonifici_transfers.find(
+        {"riconciliato": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    # Recupera movimenti estratto conto
+    movimenti = await db.estratto_conto_movimenti.find(
+        {},
+        {"_id": 0}
+    ).to_list(50000)
+    
+    if not bonifici:
+        return {"success": True, "message": "Nessun bonifico da riconciliare", "riconciliati": 0}
+    
+    if not movimenti:
+        return {"success": False, "message": "Nessun movimento estratto conto caricato", "riconciliati": 0}
+    
+    riconciliati = 0
+    movimenti_usati = set()
+    
+    for bonifico in bonifici:
+        bonifico_importo = abs(bonifico.get("importo", 0))
+        bonifico_data_str = bonifico.get("data", "")
+        bonifico_cro = bonifico.get("cro_trn", "")
+        
+        # Parse data bonifico
+        try:
+            if "T" in bonifico_data_str:
+                bonifico_data = datetime.fromisoformat(bonifico_data_str.replace("+00:00", "").replace("Z", ""))
+            else:
+                bonifico_data = datetime.strptime(bonifico_data_str[:10], "%Y-%m-%d")
+        except:
+            continue
+        
+        # Cerca match nei movimenti
+        match_found = None
+        
+        for idx, mov in enumerate(movimenti):
+            if idx in movimenti_usati:
+                continue
+            
+            mov_importo = abs(mov.get("importo", 0))
+            mov_data_str = mov.get("data", "")
+            mov_descrizione = mov.get("descrizione_originale", "")
+            
+            # Parse data movimento
+            try:
+                mov_data = datetime.strptime(mov_data_str[:10], "%Y-%m-%d")
+            except:
+                continue
+            
+            # Match per importo ESATTO (tolleranza 0.01€)
+            if abs(bonifico_importo - mov_importo) > 0.01:
+                continue
+            
+            # Match per data (±1 giorno)
+            diff_giorni = abs((bonifico_data - mov_data).days)
+            if diff_giorni > 1:
+                continue
+            
+            # Match trovato!
+            match_found = mov
+            movimenti_usati.add(idx)
+            break
+        
+        if match_found:
+            # Aggiorna bonifico come riconciliato
+            await db.bonifici_transfers.update_one(
+                {"id": bonifico.get("id")},
+                {"$set": {
+                    "riconciliato": True,
+                    "data_riconciliazione": datetime.now(timezone.utc),
+                    "movimento_estratto_conto_id": match_found.get("id"),
+                    "movimento_data": match_found.get("data"),
+                    "movimento_descrizione": match_found.get("descrizione_originale", "")[:100]
+                }}
+            )
+            riconciliati += 1
+    
+    return {
+        "success": True,
+        "message": f"Riconciliazione completata: {riconciliati} bonifici riconciliati",
+        "riconciliati": riconciliati,
+        "totale_bonifici": len(bonifici),
+        "non_riconciliati": len(bonifici) - riconciliati
+    }
+
+
+@router.get("/stato-riconciliazione")
+async def stato_riconciliazione_bonifici():
+    """Stato della riconciliazione bonifici."""
+    db = Database.get_db()
+    
+    totale = await db.bonifici_transfers.count_documents({})
+    riconciliati = await db.bonifici_transfers.count_documents({"riconciliato": True})
+    non_riconciliati = totale - riconciliati
+    
+    # Totale importi
+    pipeline = [
+        {"$group": {
+            "_id": "$riconciliato",
+            "totale": {"$sum": "$importo"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    stats = {doc["_id"]: {"totale": doc["totale"], "count": doc["count"]} 
+             async for doc in db.bonifici_transfers.aggregate(pipeline)}
+    
+    return {
+        "totale": totale,
+        "riconciliati": riconciliati,
+        "non_riconciliati": non_riconciliati,
+        "percentuale": round(riconciliati / max(totale, 1) * 100, 1),
+        "importo_riconciliato": round(stats.get(True, {}).get("totale", 0), 2),
+        "importo_non_riconciliato": round(stats.get(False, {}).get("totale", 0) + stats.get(None, {}).get("totale", 0), 2)
+    }
+
+
+@router.post("/reset-riconciliazione")
+async def reset_riconciliazione():
+    """Reset dello stato di riconciliazione di tutti i bonifici."""
+    db = Database.get_db()
+    
+    result = await db.bonifici_transfers.update_many(
+        {},
+        {"$unset": {
+            "riconciliato": "",
+            "data_riconciliazione": "",
+            "movimento_estratto_conto_id": "",
+            "movimento_data": "",
+            "movimento_descrizione": ""
+        }}
+    )
+    
+    return {"success": True, "reset": result.modified_count}
+
