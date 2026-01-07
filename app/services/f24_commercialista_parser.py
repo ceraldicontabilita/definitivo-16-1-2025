@@ -220,8 +220,6 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                     codice = word
                     rateazione = ""
                     anno = ""
-                    importo_debito = 0.0
-                    importo_credito = 0.0
                     
                     # Cerca rateazione (00MM) e anno (20XX) nelle parole successive
                     for j in range(i+1, min(i+5, len(row))):
@@ -234,47 +232,8 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                         elif re.match(r'^20\d{2}$', next_word) and not anno:
                             anno = next_word
                     
-                    # Cerca importi - raggruppa numeri adiacenti come "1.288 72" o "64 46"
-                    importo_parts_debito = []
-                    importo_parts_credito = []
-                    
-                    for j in range(i+1, len(row)):
-                        next_item = row[j]
-                        next_word = next_item['word']
-                        next_x = next_item['x']
-                        
-                        if next_word in [',', '+/–', '+/-']:
-                            continue
-                        
-                        # Verifica se è un numero (euro o centesimi)
-                        if re.match(r'^[\d.]+$', next_word):
-                            if next_x < DEBITO_X_MAX:
-                                importo_parts_debito.append((next_x, next_word))
-                            elif next_x >= CREDITO_X_MIN:
-                                importo_parts_credito.append((next_x, next_word))
-                    
-                    # Costruisci importi
-                    if importo_parts_debito:
-                        importo_parts_debito.sort(key=lambda x: x[0])
-                        parts = [p[1] for p in importo_parts_debito]
-                        if len(parts) >= 2:
-                            euro = parts[0].replace('.', '').replace(',', '')
-                            cent = parts[1]
-                            try:
-                                importo_debito = float(euro) + float(cent) / 100
-                            except:
-                                pass
-                    
-                    if importo_parts_credito:
-                        importo_parts_credito.sort(key=lambda x: x[0])
-                        parts = [p[1] for p in importo_parts_credito]
-                        if len(parts) >= 2:
-                            euro = parts[0].replace('.', '').replace(',', '')
-                            cent = parts[1]
-                            try:
-                                importo_credito = float(euro) + float(cent) / 100
-                            except:
-                                pass
+                    # Estrai importi usando la funzione helper
+                    importo_debito, importo_credito = extract_importo_from_row(row)
                     
                     if anno and (importo_debito > 0 or importo_credito > 0):
                         mese = rateazione[2:4] if len(rateazione) == 4 else "00"
