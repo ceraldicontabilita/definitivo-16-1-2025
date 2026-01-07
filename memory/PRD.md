@@ -1529,3 +1529,27 @@ Sistema di riconciliazione automatica tra estratti conto bancari e fatture forni
 2. **MongoDB**: Escludere sempre `_id` dalle risposte API
 3. **Routing**: Tutti gli endpoint backend devono avere prefisso `/api`
 4. **Testing**: Usare `testing_agent_v3_fork` per test di regressione
+
+---
+
+## ⚠️ REGOLE IMPORTANTI - MAI AGGREGARE DATI
+
+### 🚫 REGOLA: MAI AGGREGARE IMPORT PAGHE E BONIFICI
+
+**Data**: 7 Gennaio 2026
+
+**Regola assoluta**: Quando si importano file Excel di paghe o bonifici, il sistema deve **SEMPRE creare un record separato per ogni riga del file**. 
+
+**NON aggregare MAI** le righe per dipendente/mese/anno. Se un dipendente ha 3 bonifici diversi nello stesso mese, devono essere creati 3 record separati nel database.
+
+**Motivo**: I dati di paghe e bonifici sono già corretti nel file Excel dell'utente. L'aggregazione causa perdita di informazioni e conteggi errati.
+
+**File coinvolti**:
+- `/app/app/routers/accounting/prima_nota_salari.py`
+- Endpoint: `POST /api/prima-nota-salari/import-paghe`
+- Endpoint: `POST /api/prima-nota-salari/import-bonifici`
+
+**Comportamento corretto**:
+- File con 1024 righe → 1024 record nel database
+- File con 729 combinazioni uniche ma 1024 righe → 1024 record (NON 729)
+
