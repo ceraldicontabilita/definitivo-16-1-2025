@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://erp-document-hub-1.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://erp-document-hub-1.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://erp-document-hub-1.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://doc-manager-29.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://doc-manager-29.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://doc-manager-29.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {
