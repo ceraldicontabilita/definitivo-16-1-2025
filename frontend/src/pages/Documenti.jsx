@@ -274,39 +274,29 @@ export default function Documenti() {
       {/* Azione Download Email */}
       <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #1e40af, #7c3aed)' }}>
         <CardContent className="pt-6">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Mail size={24} />
                 Scarica Documenti da Email
               </div>
               <div style={{ fontSize: 14, opacity: 0.9, marginTop: 4 }}>
-                Controlla la casella email e scarica automaticamente F24, Fatture, Buste Paga, Estratti Conto
+                Controlla la casella email e scarica automaticamente i documenti
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ textAlign: 'right' }}>
-                <label style={{ fontSize: 12, opacity: 0.8 }}>Ultimi giorni:</label>
-                <select 
-                  value={giorniDownload}
-                  onChange={(e) => setGiorniDownload(Number(e.target.value))}
-                  style={{
-                    marginLeft: 8,
-                    padding: '6px 12px',
-                    borderRadius: 6,
-                    border: 'none',
-                    background: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  <option value={7} style={{ color: '#000' }}>7 giorni</option>
-                  <option value={15} style={{ color: '#000' }}>15 giorni</option>
-                  <option value={30} style={{ color: '#000' }}>30 giorni</option>
-                  <option value={60} style={{ color: '#000' }}>60 giorni</option>
-                  <option value={90} style={{ color: '#000' }}>90 giorni</option>
-                </select>
-              </div>
+              <Button
+                onClick={() => setShowImportSettings(!showImportSettings)}
+                variant="outline"
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  borderColor: 'rgba(255,255,255,0.3)'
+                }}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Impostazioni
+              </Button>
               <Button
                 onClick={handleDownloadFromEmail}
                 disabled={downloading}
@@ -332,6 +322,144 @@ export default function Documenti() {
               </Button>
             </div>
           </div>
+          
+          {/* Pannello Impostazioni Import */}
+          {showImportSettings && (
+            <div style={{ 
+              marginTop: 20, 
+              padding: 20, 
+              background: 'rgba(255,255,255,0.95)', 
+              borderRadius: 12,
+              color: '#1e293b'
+            }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 'bold' }}>
+                ⚙️ Impostazioni Importazione
+              </h3>
+              
+              {/* Periodo */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold', fontSize: 13 }}>
+                  📅 Periodo di ricerca
+                </label>
+                <select 
+                  value={giorniDownload}
+                  onChange={(e) => setGiorniDownload(Number(e.target.value))}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: '1px solid #e2e8f0',
+                    width: '100%',
+                    maxWidth: 300
+                  }}
+                >
+                  <option value={30}>Ultimi 30 giorni</option>
+                  <option value={60}>Ultimi 60 giorni</option>
+                  <option value={90}>Ultimi 90 giorni</option>
+                  <option value={180}>Ultimi 6 mesi</option>
+                  <option value={365}>Ultimo anno</option>
+                  <option value={730}>Ultimi 2 anni</option>
+                  <option value={1460}>Dal 2021 (~4 anni)</option>
+                </select>
+              </div>
+              
+              {/* Parole Chiave */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold', fontSize: 13 }}>
+                  🔍 Parole chiave da cercare nelle email
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                  {DEFAULT_KEYWORDS.map(kw => (
+                    <button
+                      key={kw.id}
+                      onClick={() => toggleKeyword(kw.id)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: 20,
+                        border: paroleChiaveSelezionate.includes(kw.id) ? '2px solid #3b82f6' : '1px solid #e2e8f0',
+                        background: paroleChiaveSelezionate.includes(kw.id) ? '#dbeafe' : 'white',
+                        color: paroleChiaveSelezionate.includes(kw.id) ? '#1e40af' : '#64748b',
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: paroleChiaveSelezionate.includes(kw.id) ? 'bold' : 'normal'
+                      }}
+                    >
+                      {paroleChiaveSelezionate.includes(kw.id) ? '✓ ' : ''}{kw.label}
+                    </button>
+                  ))}
+                  {customKeywords.map(kw => (
+                    <div key={kw.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button
+                        onClick={() => toggleKeyword(kw.id)}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: 20,
+                          border: paroleChiaveSelezionate.includes(kw.id) ? '2px solid #10b981' : '1px solid #e2e8f0',
+                          background: paroleChiaveSelezionate.includes(kw.id) ? '#dcfce7' : '#f0fdf4',
+                          color: paroleChiaveSelezionate.includes(kw.id) ? '#166534' : '#64748b',
+                          cursor: 'pointer',
+                          fontSize: 13,
+                          fontWeight: paroleChiaveSelezionate.includes(kw.id) ? 'bold' : 'normal'
+                        }}
+                      >
+                        {paroleChiaveSelezionate.includes(kw.id) ? '✓ ' : ''}{kw.label}
+                      </button>
+                      <button
+                        onClick={() => removeCustomKeyword(kw.id)}
+                        style={{
+                          padding: '2px 6px',
+                          borderRadius: 4,
+                          border: 'none',
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          cursor: 'pointer',
+                          fontSize: 12
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Aggiungi nuova parola chiave */}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    value={nuovaParolaChiave}
+                    onChange={(e) => setNuovaParolaChiave(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addCustomKeyword()}
+                    placeholder="Aggiungi parola chiave (es: cartella esattoriale)"
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #e2e8f0',
+                      fontSize: 13
+                    }}
+                  />
+                  <Button onClick={addCustomKeyword} variant="outline" size="sm">
+                    <Plus className="h-4 w-4 mr-1" /> Aggiungi
+                  </Button>
+                </div>
+                <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
+                  💡 Crea parole chiave personalizzate per categorizzare automaticamente i documenti.
+                  Es: "cartella esattoriale" creerà una cartella "Cartelle Esattoriali".
+                </p>
+              </div>
+              
+              {paroleChiaveSelezionate.length === 0 && (
+                <div style={{ 
+                  padding: 12, 
+                  background: '#fef3c7', 
+                  borderRadius: 8, 
+                  fontSize: 13,
+                  color: '#92400e'
+                }}>
+                  ⚠️ Nessuna parola chiave selezionata. Verranno scaricati TUTTI gli allegati dalle email.
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
