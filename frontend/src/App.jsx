@@ -139,6 +139,11 @@ export default function App() {
 
   return (
     <div className="layout">
+      {/* F24 Email Sync Popup - Mostrato all'avvio */}
+      {showF24Sync && (
+        <F24EmailSync onClose={() => setShowF24Sync(false)} />
+      )}
+
       {/* Desktop Sidebar */}
       <aside className="sidebar desktop-sidebar">
         <div className="brand">
