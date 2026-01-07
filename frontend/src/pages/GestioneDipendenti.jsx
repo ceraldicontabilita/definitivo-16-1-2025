@@ -1549,17 +1549,21 @@ export default function GestioneDipendenti() {
               alignItems: 'center'
             }}>
               <span>📋 Dettaglio - {salariMovimenti.filter(mov => {
+                if (filtroAnnoDal2023 && mov.anno < 2023) return false;
                 if (filtroTabDipendente && !mov.dipendente?.toLowerCase().includes(filtroTabDipendente.toLowerCase())) return false;
                 if (filtroTabMese && mov.mese_nome !== filtroTabMese) return false;
                 if (filtroTabAnno && mov.anno !== parseInt(filtroTabAnno)) return false;
                 return true;
-              }).length} / {salariMovimenti.length} record</span>
-              {(filtroTabDipendente || filtroTabMese || filtroTabAnno) && (
+              }).length} / {salariMovimenti.length} record
+              {filtroAnnoDal2023 && <span style={{ color: '#3b82f6', fontWeight: 'bold' }}> (dal 2023)</span>}
+              </span>
+              {(filtroTabDipendente || filtroTabMese || filtroTabAnno || filtroAnnoDal2023) && (
                 <button
                   onClick={() => {
                     setFiltroTabDipendente('');
                     setFiltroTabMese('');
                     setFiltroTabAnno('');
+                    setFiltroAnnoDal2023(false);
                   }}
                   style={{
                     padding: '4px 12px',
