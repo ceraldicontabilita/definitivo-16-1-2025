@@ -370,16 +370,11 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
     """
     Ricalcola saldi e progressivi per tutti i dipendenti o uno specifico.
     
-    Formula Saldo mensile: Bonifico - Busta
-    - Saldo positivo = dipendente ha ricevuto più di quanto spettava (ci deve soldi)
-    - Saldo negativo = dipendente ha ricevuto meno di quanto spettava (gli dobbiamo soldi)
+    Per ogni record:
+    - Saldo = importo_bonifico - importo_busta (della singola riga)
+    - Progressivo = Somma cumulativa di tutti i saldi precedenti + saldo corrente
     
-    Progressivo = Somma cumulativa di tutti i saldi dall'anno_inizio (default: tutti)
-    
-    Args:
-        db: Database connection
-        anno_inizio: Anno da cui iniziare il calcolo (opzionale)
-        dipendente_filtro: Nome dipendente specifico (opzionale)
+    I record sono ordinati per anno, mese e data di creazione.
     """
     # Ottieni dipendenti da processare
     if dipendente_filtro:
@@ -388,16 +383,16 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
         dipendenti = await db["prima_nota_salari"].distinct("dipendente")
     
     for dipendente in dipendenti:
-        # Ordina per anno e mese (dal più vecchio al più recente)
+        # Ordina per anno, mese e data creazione (dal più vecchio al più recente)
         records = await db["prima_nota_salari"].find(
             {"dipendente": dipendente}
-        ).sort([("anno", 1), ("mese", 1)]).to_list(500)
+        ).sort([("anno", 1), ("mese", 1), ("created_at", 1)]).to_list(5000)
         
         # Progressivo parte da 0
         progressivo = 0
         
         for record in records:
-            # Ricalcola saldo mensile: Bonifico - Busta
+            # Saldo della singola riga: Bonifico - Busta
             importo_busta = record.get("importo_busta", 0) or 0
             importo_bonifico = record.get("importo_bonifico", 0) or 0
             saldo = importo_bonifico - importo_busta
