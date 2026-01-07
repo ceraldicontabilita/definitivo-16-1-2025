@@ -227,8 +227,12 @@ class EmailDocumentDownloader:
                         # Calcola hash per evitare duplicati
                         file_hash = calculate_file_hash(content)
                         
-                        # Categorizza
+                        # Categorizza - SOLO F24
                         category = categorize_document(filename, subject, sender)
+                        
+                        # Se non è F24, salta questo allegato
+                        if category is None:
+                            continue
                         
                         # Genera nome file univoco
                         timestamp = email_date.strftime('%Y%m%d_%H%M%S')
