@@ -94,6 +94,7 @@ async def upload_f24_commercialista(
         "sezione_inps": parsed.get("sezione_inps", []),
         "sezione_regioni": parsed.get("sezione_regioni", []),
         "sezione_tributi_locali": parsed.get("sezione_tributi_locali", []),
+        "sezione_inail": parsed.get("sezione_inail", []),
         "totali": parsed.get("totali", {}),
         "codici_univoci": parsed.get("codici_univoci", []),
         "has_ravvedimento": parsed.get("has_ravvedimento", False),
