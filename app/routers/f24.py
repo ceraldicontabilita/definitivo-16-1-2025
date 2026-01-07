@@ -723,3 +723,251 @@ async def get_codice_info(
         "descrizione": f"Codice {codice} non trovato",
         "tipo": "misto"
     })
+
+
+# ============== PARSING QUIETANZE F24 ==============
+from app.services.f24_parser import parse_quietanza_f24, generate_f24_summary
+import shutil
+
+
+@router.post(
+    "/quietanze/upload",
+    summary="Upload e parsing quietanza F24"
+)
+async def upload_quietanza_f24(
+    file: UploadFile = File(...)
+) -> Dict[str, Any]:
+    """
+    Upload e parsing di una quietanza F24 PDF.
+    Estrae automaticamente tutti i dati e li salva nel database.
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Il file deve essere un PDF")
+    
+    # Salva il file
+    file_id = str(uuid4())
+    file_path = os.path.join(F24_UPLOAD_DIR, f"{file_id}_{file.filename}")
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore salvataggio file: {str(e)}")
+    
+    # Parsing del PDF
+    try:
+        parsed_data = parse_quietanza_f24(file_path)
+    except Exception as e:
+        logger.error(f"Errore parsing F24: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore parsing PDF: {str(e)}")
+    
+    if "error" in parsed_data:
+        raise HTTPException(status_code=400, detail=parsed_data["error"])
+    
+    # Prepara documento per MongoDB
+    db = Database.get_db()
+    
+    # Genera chiave univoca per evitare duplicati
+    dg = parsed_data.get("dati_generali", {})
+    f24_key = f"{dg.get('codice_fiscale', '')}_{dg.get('data_pagamento', '')}_{dg.get('protocollo_telematico', '')}"
+    
+    # Verifica duplicato
+    existing = await db["quietanze_f24"].find_one({"f24_key": f24_key})
+    if existing:
+        return {
+            "success": False,
+            "message": "Quietanza già presente nel sistema",
+            "existing_id": existing.get("id"),
+            "data_pagamento": existing.get("dati_generali", {}).get("data_pagamento")
+        }
+    
+    # Salva nel database
+    documento = {
+        "id": file_id,
+        "f24_key": f24_key,
+        "file_name": file.filename,
+        "file_path": file_path,
+        "dati_generali": parsed_data.get("dati_generali", {}),
+        "sezione_erario": parsed_data.get("sezione_erario", []),
+        "sezione_inps": parsed_data.get("sezione_inps", []),
+        "sezione_inail": parsed_data.get("sezione_inail", []),
+        "sezione_regioni": parsed_data.get("sezione_regioni", []),
+        "sezione_tributi_locali": parsed_data.get("sezione_tributi_locali", []),
+        "totali": parsed_data.get("totali", {}),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db["quietanze_f24"].insert_one(documento)
+    
+    # Genera riepilogo
+    summary = generate_f24_summary(parsed_data)
+    
+    return {
+        "success": True,
+        "message": "Quietanza F24 elaborata con successo",
+        "id": file_id,
+        "file_name": file.filename,
+        "dati_generali": parsed_data.get("dati_generali", {}),
+        "totali": parsed_data.get("totali", {}),
+        "sezioni": {
+            "erario": len(parsed_data.get("sezione_erario", [])),
+            "inps": len(parsed_data.get("sezione_inps", [])),
+            "inail": len(parsed_data.get("sezione_inail", [])),
+            "regioni": len(parsed_data.get("sezione_regioni", [])),
+            "tributi_locali": len(parsed_data.get("sezione_tributi_locali", []))
+        },
+        "summary": summary
+    }
+
+
+@router.get(
+    "/quietanze",
+    summary="Lista quietanze F24"
+)
+async def list_quietanze_f24(
+    skip: int = 0,
+    limit: int = 50,
+    anno: Optional[int] = None,
+    mese: Optional[int] = None,
+    search: Optional[str] = None
+) -> Dict[str, Any]:
+    """Lista quietanze F24 con filtri."""
+    db = Database.get_db()
+    
+    query = {}
+    
+    # Filtro per anno
+    if anno:
+        query["dati_generali.data_pagamento"] = {"$regex": f"^{anno}"}
+    
+    # Filtro per anno e mese
+    if anno and mese:
+        mese_str = f"{mese:02d}"
+        query["dati_generali.data_pagamento"] = {"$regex": f"^{anno}-{mese_str}"}
+    
+    # Ricerca testuale
+    if search:
+        query["$or"] = [
+            {"dati_generali.codice_fiscale": {"$regex": search, "$options": "i"}},
+            {"dati_generali.ragione_sociale": {"$regex": search, "$options": "i"}},
+            {"dati_generali.protocollo_telematico": {"$regex": search, "$options": "i"}}
+        ]
+    
+    # Query con esclusione _id
+    quietanze = await db["quietanze_f24"].find(
+        query, {"_id": 0}
+    ).sort("dati_generali.data_pagamento", -1).skip(skip).limit(limit).to_list(limit)
+    
+    totale = await db["quietanze_f24"].count_documents(query)
+    
+    # Statistiche
+    stats_pipeline = [
+        {"$group": {
+            "_id": None,
+            "totale_pagato": {"$sum": "$totali.saldo_delega"},
+            "totale_debiti": {"$sum": "$totali.totale_debito"},
+            "totale_crediti": {"$sum": "$totali.totale_credito"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    stats_result = await db["quietanze_f24"].aggregate(stats_pipeline).to_list(1)
+    stats = stats_result[0] if stats_result else {}
+    
+    return {
+        "quietanze": quietanze,
+        "totale": totale,
+        "statistiche": {
+            "quietanze_count": stats.get("count", 0),
+            "totale_pagato": round(stats.get("totale_pagato", 0), 2),
+            "totale_debiti": round(stats.get("totale_debiti", 0), 2),
+            "totale_crediti": round(stats.get("totale_crediti", 0), 2)
+        }
+    }
+
+
+@router.get(
+    "/quietanze/{f24_id}",
+    summary="Dettaglio quietanza F24"
+)
+async def get_quietanza_f24(f24_id: str) -> Dict[str, Any]:
+    """Dettaglio completo di una quietanza F24."""
+    db = Database.get_db()
+    
+    quietanza = await db["quietanze_f24"].find_one({"id": f24_id}, {"_id": 0})
+    if not quietanza:
+        raise HTTPException(status_code=404, detail="Quietanza non trovata")
+    
+    # Genera riepilogo
+    quietanza["summary"] = generate_f24_summary(quietanza)
+    
+    return quietanza
+
+
+@router.delete(
+    "/quietanze/{f24_id}",
+    summary="Elimina quietanza F24"
+)
+async def delete_quietanza_f24(f24_id: str) -> Dict[str, Any]:
+    """Elimina una quietanza F24."""
+    db = Database.get_db()
+    
+    quietanza = await db["quietanze_f24"].find_one({"id": f24_id})
+    if not quietanza:
+        raise HTTPException(status_code=404, detail="Quietanza non trovata")
+    
+    # Elimina file fisico
+    file_path = quietanza.get("file_path")
+    if file_path and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            logger.warning(f"Impossibile eliminare file {file_path}: {e}")
+    
+    # Elimina da database
+    await db["quietanze_f24"].delete_one({"id": f24_id})
+    
+    return {
+        "success": True,
+        "message": "Quietanza eliminata con successo"
+    }
+
+
+@router.get(
+    "/quietanze/statistiche/tributi",
+    summary="Statistiche tributi F24"
+)
+async def statistiche_tributi_quietanze() -> Dict[str, Any]:
+    """Statistiche aggregate per tipo di tributo dalle quietanze."""
+    db = Database.get_db()
+    
+    # Tributi Erario
+    erario_pipeline = [
+        {"$unwind": "$sezione_erario"},
+        {"$group": {
+            "_id": "$sezione_erario.codice_tributo",
+            "totale_debito": {"$sum": "$sezione_erario.importo_debito"},
+            "totale_credito": {"$sum": "$sezione_erario.importo_credito"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"totale_debito": -1}}
+    ]
+    erario_stats = await db["quietanze_f24"].aggregate(erario_pipeline).to_list(50)
+    
+    # Contributi INPS
+    inps_pipeline = [
+        {"$unwind": "$sezione_inps"},
+        {"$group": {
+            "_id": "$sezione_inps.causale",
+            "totale_debito": {"$sum": "$sezione_inps.importo_debito"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"totale_debito": -1}}
+    ]
+    inps_stats = await db["quietanze_f24"].aggregate(inps_pipeline).to_list(20)
+    
+    return {
+        "erario": [{"codice": s["_id"], "debito": round(s["totale_debito"], 2), "credito": round(s.get("totale_credito", 0), 2), "count": s["count"]} for s in erario_stats],
+        "inps": [{"causale": s["_id"], "totale": round(s["totale_debito"], 2), "count": s["count"]} for s in inps_stats]
+    }
