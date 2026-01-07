@@ -360,8 +360,8 @@ async def get_cartelle_email() -> Dict[str, Any]:
     """Lista cartelle email disponibili."""
     import imaplib
     
-    email_user = os.environ.get("EMAIL_USER")
-    email_password = os.environ.get("EMAIL_APP_PASSWORD")
+    email_user = os.environ.get("EMAIL_USER") or os.environ.get("EMAIL_ADDRESS")
+    email_password = os.environ.get("EMAIL_APP_PASSWORD") or os.environ.get("EMAIL_PASSWORD")
     
     if not email_user or not email_password:
         return {"folders": ["INBOX"], "error": "Credenziali non configurate"}
