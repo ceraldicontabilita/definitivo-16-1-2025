@@ -60,6 +60,8 @@ import HACCPPortal from "./pages/HACCPPortal.jsx";
 import GestioneRiservata from "./pages/GestioneRiservata.jsx";
 // Dizionario Articoli
 import DizionarioArticoli from "./pages/DizionarioArticoli.jsx";
+// Liquidazione IVA
+import LiquidazioneIVA from "./pages/LiquidazioneIVA.jsx";
 
 const router = createBrowserRouter([
   // Portale HACCP standalone (login con codice 141574)
@@ -110,6 +112,7 @@ const router = createBrowserRouter([
       { path: "import-export", element: <ImportExport /> },
       { path: "admin", element: <AdminPage /> },
       { path: "iva", element: <IVA /> },
+      { path: "liquidazione-iva", element: <LiquidazioneIVA /> },
       { path: "metodi-pagamento", element: <MetodiPagamento /> },
       { path: "ordini-fornitori", element: <OrdiniFornitori /> },
       { path: "fornitori", element: <Fornitori /> },
