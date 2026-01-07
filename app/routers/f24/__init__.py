@@ -5,6 +5,7 @@ from . import f24_tributi
 from . import f24_public
 from . import quietanze
 from . import email_f24
+from . import f24_gestione_avanzata
 
 __all__ = [
     'f24_main',
@@ -12,5 +13,6 @@ __all__ = [
     'f24_tributi',
     'f24_public',
     'quietanze',
-    'email_f24'
+    'email_f24',
+    'f24_gestione_avanzata'
 ]
