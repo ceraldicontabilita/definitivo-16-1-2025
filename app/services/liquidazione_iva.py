@@ -45,7 +45,22 @@ def prev_month(year: int, month: int) -> tuple:
 
 def q2(v) -> Decimal:
     """Arrotonda a 2 decimali."""
-    return Decimal(str(v)).quantize(Decimal("0.01"))
+    if v is None:
+        return Decimal("0.00")
+    try:
+        return Decimal(str(v)).quantize(Decimal("0.01"))
+    except Exception:
+        return Decimal("0.00")
+
+
+def safe_decimal(v) -> Decimal:
+    """Converte un valore in Decimal in modo sicuro."""
+    if v is None:
+        return Decimal(0)
+    try:
+        return Decimal(str(v))
+    except Exception:
+        return Decimal(0)
 
 
 def parse_date(date_str: str) -> Optional[date]:
