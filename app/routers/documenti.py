@@ -393,3 +393,182 @@ async def get_cartelle_email() -> Dict[str, Any]:
             "folders": ["INBOX"],
             "error": str(e)
         }
+
+
+@router.post("/sync-f24-automatico")
+async def sync_f24_automatico(
+    giorni: int = Query(30, ge=1, le=365)
+) -> Dict[str, Any]:
+    """
+    Sincronizza automaticamente F24 dalle email.
+    - Scarica SOLO allegati F24
+    - Li processa automaticamente
+    - Li carica nella sezione F24
+    Chiamato all'avvio dell'app.
+    """
+    db = Database.get_db()
+    
+    email_user = os.environ.get("EMAIL_USER") or os.environ.get("EMAIL_ADDRESS")
+    email_password = os.environ.get("EMAIL_APP_PASSWORD") or os.environ.get("EMAIL_PASSWORD")
+    
+    if not email_user or not email_password:
+        return {
+            "success": False,
+            "error": "Credenziali email non configurate",
+            "f24_trovati": 0,
+            "f24_caricati": 0,
+            "dettagli": []
+        }
+    
+    try:
+        # Scarica documenti (solo F24)
+        result = await download_documents_from_email(
+            db=db,
+            email_user=email_user,
+            email_password=email_password,
+            since_days=giorni,
+            folder="INBOX"
+        )
+        
+        if not result.get("success"):
+            return {
+                "success": False,
+                "error": result.get("error", "Errore sconosciuto"),
+                "f24_trovati": 0,
+                "f24_caricati": 0,
+                "dettagli": []
+            }
+        
+        new_documents = result.get("documents", [])
+        f24_docs = [d for d in new_documents if d.get("category") == "f24"]
+        quietanze_docs = [d for d in new_documents if d.get("category") == "quietanza"]
+        
+        # Processa automaticamente gli F24
+        f24_caricati = []
+        f24_errori = []
+        
+        for doc in f24_docs:
+            try:
+                filepath = doc.get("filepath")
+                if not filepath or not os.path.exists(filepath):
+                    f24_errori.append({"file": doc["filename"], "errore": "File non trovato"})
+                    continue
+                
+                # Leggi il file
+                with open(filepath, 'rb') as f:
+                    file_content = f.read()
+                
+                # Chiama il parser F24
+                from app.services.f24_commercialista_parser import parse_f24_commercialista
+                
+                parsed = parse_f24_commercialista(file_content, doc["filename"])
+                
+                if parsed.get("success") and parsed.get("f24_data"):
+                    f24_data = parsed["f24_data"]
+                    
+                    # Aggiungi info email
+                    f24_data["email_source"] = {
+                        "subject": doc.get("email_subject", ""),
+                        "from": doc.get("email_from", ""),
+                        "date": doc.get("email_date", ""),
+                        "document_id": doc.get("id")
+                    }
+                    f24_data["auto_imported"] = True
+                    f24_data["import_date"] = datetime.now(timezone.utc).isoformat()
+                    
+                    # Salva nel database
+                    await db["f24_commercialista"].insert_one(f24_data)
+                    
+                    # Aggiorna stato documento
+                    await db["documents_inbox"].update_one(
+                        {"id": doc["id"]},
+                        {"$set": {
+                            "status": "processato",
+                            "processed": True,
+                            "processed_to": "f24_commercialista",
+                            "processed_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    
+                    f24_caricati.append({
+                        "file": doc["filename"],
+                        "importo": f24_data.get("totali", {}).get("saldo_netto", 0),
+                        "data_scadenza": f24_data.get("data_scadenza", ""),
+                        "tributi": len(f24_data.get("sezioni", {}).get("erario", {}).get("tributi", [])) + 
+                                  len(f24_data.get("sezioni", {}).get("inps", {}).get("tributi", []))
+                    })
+                else:
+                    f24_errori.append({
+                        "file": doc["filename"],
+                        "errore": parsed.get("error", "Parsing fallito")
+                    })
+                    
+            except Exception as e:
+                f24_errori.append({"file": doc["filename"], "errore": str(e)})
+        
+        # Processa quietanze
+        quietanze_caricate = 0
+        for doc in quietanze_docs:
+            try:
+                await db["documents_inbox"].update_one(
+                    {"id": doc["id"]},
+                    {"$set": {
+                        "status": "nuovo",
+                        "ready_for": "quietanze_f24"
+                    }}
+                )
+                quietanze_caricate += 1
+            except:
+                pass
+        
+        return {
+            "success": True,
+            "f24_trovati": len(f24_docs),
+            "f24_caricati": len(f24_caricati),
+            "f24_errori": len(f24_errori),
+            "quietanze_trovate": len(quietanze_docs),
+            "dettagli": f24_caricati,
+            "errori": f24_errori if f24_errori else None,
+            "messaggio": f"Trovati {len(f24_docs)} F24, caricati {len(f24_caricati)} con successo" if f24_docs else "Nessun nuovo F24 trovato nelle email"
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore sync F24: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "f24_trovati": 0,
+            "f24_caricati": 0,
+            "dettagli": []
+        }
+
+
+@router.get("/ultimo-sync")
+async def get_ultimo_sync() -> Dict[str, Any]:
+    """Restituisce info sull'ultimo sync F24."""
+    db = Database.get_db()
+    
+    # Ultimo documento scaricato
+    ultimo_doc = await db["documents_inbox"].find_one(
+        {"category": "f24"},
+        {"_id": 0, "downloaded_at": 1, "filename": 1}
+    )
+    
+    # Conta F24 da processare
+    da_processare = await db["documents_inbox"].count_documents({
+        "category": "f24",
+        "processed": {"$ne": True}
+    })
+    
+    # Ultimo F24 importato
+    ultimo_f24 = await db["f24_commercialista"].find_one(
+        {"auto_imported": True},
+        {"_id": 0, "file_name": 1, "import_date": 1}
+    )
+    
+    return {
+        "ultimo_download": ultimo_doc.get("downloaded_at") if ultimo_doc else None,
+        "ultimo_file": ultimo_doc.get("filename") if ultimo_doc else None,
+        "f24_da_processare": da_processare,
+        "ultimo_f24_importato": ultimo_f24
+    }
