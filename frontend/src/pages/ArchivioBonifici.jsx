@@ -28,6 +28,8 @@ export default function ArchivioBonifici() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ processed: 0, total: 0, imported: 0, errors: 0 });
   const [files, setFiles] = useState([]);
+  const [riconciliazioneStats, setRiconciliazioneStats] = useState(null);
+  const [riconciliando, setRiconciliando] = useState(false);
   const initialized = useRef(false);
 
   // Carica dati iniziali
