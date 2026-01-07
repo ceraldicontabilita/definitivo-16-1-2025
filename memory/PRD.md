@@ -138,6 +138,44 @@ class Database:
 
 ---
 
+## Ultime Implementazioni (7 Gen 2026 - Sessione Corrente Parte 12)
+
+### 28. Dashboard Riconciliazione F24 ✅ COMPLETATA
+Sistema completo per la riconciliazione a 3 livelli: F24 Commercialista → Quietanza → Banca.
+
+**Backend** (esistente, `/app/app/routers/f24_riconciliazione.py`):
+- `GET /api/f24-riconciliazione/dashboard` - Statistiche: F24 da pagare, pagati, quietanze caricate, alerts
+- `GET /api/f24-riconciliazione/commercialista` - Lista F24 con filtro status (da_pagare/pagato/eliminato)
+- `POST /api/f24-riconciliazione/commercialista/upload` - Upload PDF F24 commercialista
+- `GET /api/f24-riconciliazione/verifica-codice/{codice}` - Verifica stato pagamento codice tributo
+- `GET /api/f24-riconciliazione/alerts` - Lista alerts pendenti (ravvedimenti, duplicati)
+- `POST /api/f24-riconciliazione/alerts/{id}/conferma-elimina` - Conferma eliminazione F24 obsoleto
+- `POST /api/f24-riconciliazione/alerts/{id}/ignora` - Ignora alert
+
+**Frontend** (`/app/frontend/src/pages/RiconciliazioneF24.jsx`):
+- Dashboard con 4 cards: F24 Da Pagare, Pagati, Quietanze Caricate, Alerts Pendenti
+- Sezione "F24 in Scadenza" (prossimi 7 giorni)
+- Sezione "Alerts da Gestire" con azioni (Elimina F24, Ignora)
+- "Verifica Codice Tributo" - input + risultato con storico pagamenti
+- "Lista F24 Commercialista" - tabella espandibile con dettaglio sezioni (Erario, INPS, Regioni, Tributi Locali)
+- Upload PDF F24 con drag & drop
+- Note informative sul flusso di riconciliazione
+
+**Flusso di Lavoro**:
+1. Upload F24 Commercialista (stato: Da Pagare)
+2. Carica Quietanza dopo pagamento
+3. Riconciliazione automatica (confronto codici tributo)
+4. Gestione ravvedimenti: alert per eliminare F24 obsoleti
+
+**Stato Attuale**:
+- 2 Quietanze caricate (€12.938,97)
+- 0 F24 commercialista caricati
+- Sistema pronto per utilizzo
+
+**Test**: 21/21 passati (`/app/test_reports/iteration_36.json`)
+
+---
+
 ## Ultime Implementazioni (7 Gen 2026 - Sessione Corrente Parte 11)
 
 ### 27. Integrazione 3 Moduli Forniti dall'Utente ✅ COMPLETATA
