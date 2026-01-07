@@ -455,17 +455,17 @@ async def sync_f24_automatico(
                     f24_errori.append({"file": doc["filename"], "errore": "File non trovato"})
                     continue
                 
-                # Leggi il file
-                with open(filepath, 'rb') as f:
-                    file_content = f.read()
-                
-                # Chiama il parser F24
+                # Chiama il parser F24 con il filepath
                 from app.services.f24_commercialista_parser import parse_f24_commercialista
                 
-                parsed = parse_f24_commercialista(file_content, doc["filename"])
+                parsed = parse_f24_commercialista(filepath)
                 
                 if parsed.get("success") and parsed.get("f24_data"):
                     f24_data = parsed["f24_data"]
+                    
+                    # Rimuovi eventuali _id per evitare errori MongoDB
+                    if "_id" in f24_data:
+                        del f24_data["_id"]
                     
                     # Aggiungi info email
                     f24_data["email_source"] = {
@@ -477,8 +477,19 @@ async def sync_f24_automatico(
                     f24_data["auto_imported"] = True
                     f24_data["import_date"] = datetime.now(timezone.utc).isoformat()
                     
+                    # Controlla se già esiste (per evitare duplicati)
+                    existing = await db["f24_commercialista"].find_one({
+                        "file_name": f24_data.get("file_name")
+                    })
+                    
+                    if existing:
+                        f24_errori.append({"file": doc["filename"], "errore": "F24 già presente nel database"})
+                        continue
+                    
                     # Salva nel database
                     await db["f24_commercialista"].insert_one(f24_data)
+                    
+                    # Aggiorna stato documento
                     
                     # Aggiorna stato documento
                     await db["documents_inbox"].update_one(
