@@ -228,18 +228,23 @@ def riconcilia_f24_avanzato(
         # Cerca match in movimenti bancari
         match_bancario = None
         match_idx = None
+        best_match_diff = float('inf')
         
         for idx, mov in enumerate(movimenti_banca):
             if idx in movimenti_usati:
                 continue
             
             mov_importo = abs(mov.get("importo", 0))
+            diff = abs(f24_importo - mov_importo)
             
-            # Match per importo (tolleranza 0.50€)
-            if abs(f24_importo - mov_importo) <= 0.50:
+            # Match per importo (tolleranza 2.00€ per arrotondamenti, fino a 5€ per differenze decimali)
+            # Oppure tolleranza percentuale 0.5% per importi grandi
+            tolleranza = max(5.00, f24_importo * 0.005)  # 5€ o 0.5% dell'importo
+            
+            if diff <= tolleranza and diff < best_match_diff:
+                best_match_diff = diff
                 match_bancario = mov
                 match_idx = idx
-                break
         
         if match_bancario:
             # F24 PAGATO
