@@ -1,0 +1,85 @@
+{
+  "summary": "Tested Liquidazione IVA module for ERP system. Backend: 18/18 tests passed (100%). Frontend: All UI components verified working. Features: Monthly VAT calculation, comparison with accountant, annual summary, PDF export, invoice details by inclusion/exclusion criteria.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_iteration_34_liquidazione_iva.py",
+    "/app/test_reports/pytest/pytest_iteration_34.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Code is well-structured with proper separation of concerns (service layer + router layer)",
+    "Proper handling of temporal derogations (15-day and 12-day rules) for invoices from previous month",
+    "Note di Credito (TD04, TD08) correctly subtracted from IVA credito",
+    "PDF export uses reportlab with proper Italian formatting for currency",
+    "Frontend uses proper data-testid attributes for all interactive elements"
+  ],
+  "updated_files": [
+    "/app/tests/test_iteration_34_liquidazione_iva.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {},
+  "seed_data_creation": "No seed data created - used existing invoices and corrispettivi data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Liquidazione IVA module fully implemented and tested. Key pages: /liquidazione-iva. APIs: GET /api/liquidazione-iva/calcola/{anno}/{mese}, GET /api/liquidazione-iva/confronto/{anno}/{mese}, GET /api/liquidazione-iva/riepilogo-annuale/{anno}, GET /api/liquidazione-iva/export/pdf/{anno}/{mese}, GET /api/liquidazione-iva/dettaglio-fatture/{anno}/{mese}. Data sources: invoices collection (fatture acquisto), corrispettivi collection. Calculation includes: IVA debito from corrispettivi, IVA credito from purchase invoices, temporal derogations (15/12 day rules), note di credito handling.",
+  "verified_features": {
+    "calcola_liquidazione": {
+      "status": "WORKING",
+      "endpoint": "GET /api/liquidazione-iva/calcola/{anno}/{mese}",
+      "details": "Calculates monthly VAT liquidation with IVA debito (from corrispettivi), IVA credito (from invoices), handles temporal derogations and note di credito"
+    },
+    "confronto_commercialista": {
+      "status": "WORKING",
+      "endpoint": "GET /api/liquidazione-iva/confronto/{anno}/{mese}",
+      "details": "Compares calculated values with accountant values, shows differences with 1€ tolerance"
+    },
+    "riepilogo_annuale": {
+      "status": "WORKING",
+      "endpoint": "GET /api/liquidazione-iva/riepilogo-annuale/{anno}",
+      "details": "Shows all 12 months with progressive credit carry-over and annual totals"
+    },
+    "export_pdf": {
+      "status": "WORKING",
+      "endpoint": "GET /api/liquidazione-iva/export/pdf/{anno}/{mese}",
+      "details": "Generates PDF with Italian formatting, includes detail by VAT rate and statistics"
+    },
+    "dettaglio_fatture": {
+      "status": "WORKING",
+      "endpoint": "GET /api/liquidazione-iva/dettaglio-fatture/{anno}/{mese}",
+      "details": "Shows included/excluded invoices with reason (same month, deroga 15, deroga 12)"
+    },
+    "frontend_page": {
+      "status": "WORKING",
+      "url": "/liquidazione-iva",
+      "details": "Full UI with year/month selectors, Calcola button, PDF download, Confronto section, Riepilogo Annuale table, Dettaglio per Aliquota expansion"
+    }
+  },
+  "screenshots": [
+    ".screenshots/liquidazione_iva_initial.png",
+    ".screenshots/liquidazione_iva_calculated.png",
+    ".screenshots/liquidazione_iva_confronto.png",
+    ".screenshots/liquidazione_iva_riepilogo.png",
+    ".screenshots/liquidazione_iva_dettaglio.png"
+  ],
+  "test_data_used": {
+    "anno": 2026,
+    "mese": 1,
+    "iva_debito_result": 918.08,
+    "iva_credito_result": 16724.70,
+    "credito_da_riportare": 15806.62,
+    "fatture_incluse": 140,
+    "note_credito": 3,
+    "corrispettivi": 3
+  }
+}
