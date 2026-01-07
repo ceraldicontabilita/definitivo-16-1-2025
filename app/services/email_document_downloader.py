@@ -129,11 +129,13 @@ class EmailDocumentDownloader:
         folder: str = "INBOX",
         since_date: Optional[str] = None,
         search_criteria: Optional[str] = None,
+        search_f24_only: bool = True,
         limit: int = 50
     ) -> List[bytes]:
         """
         Cerca email con allegati.
         since_date: formato "01-Jan-2025"
+        search_f24_only: se True, cerca solo email con F24 nell'oggetto
         """
         if not self.connection:
             return []
@@ -147,6 +149,10 @@ class EmailDocumentDownloader:
                 criteria.append(f'SINCE {since_date}')
             if search_criteria:
                 criteria.append(search_criteria)
+            
+            # Se cerchiamo solo F24, aggiungi filtro oggetto
+            if search_f24_only:
+                criteria.append('(OR (SUBJECT "F24") (SUBJECT "f24"))')
             
             search_string = ' '.join(criteria) if criteria else 'ALL'
             
