@@ -3,19 +3,20 @@ import api from '../api';
 import { formatEuro } from '../lib/utils';
 import { 
   Download, RefreshCw, Trash2, FileText, Mail, Upload, 
-  CheckCircle, AlertCircle, Folder, Eye, ArrowRight, Filter
+  CheckCircle, AlertCircle, Folder, Eye, ArrowRight, Filter, Plus, X, Search
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 
 const CATEGORY_COLORS = {
-  f24: { bg: '#dbeafe', text: '#1e40af', icon: '📋' },
-  fattura: { bg: '#dcfce7', text: '#166534', icon: '🧾' },
-  busta_paga: { bg: '#fef3c7', text: '#92400e', icon: '💰' },
-  estratto_conto: { bg: '#f3e8ff', text: '#7c3aed', icon: '🏦' },
-  quietanza: { bg: '#cffafe', text: '#0891b2', icon: '✅' },
-  bonifico: { bg: '#fce7f3', text: '#be185d', icon: '💸' },
-  altro: { bg: '#f1f5f9', text: '#475569', icon: '📄' }
+  f24: { bg: '#dbeafe', text: '#1e40af', icon: '📋', label: 'F24' },
+  fattura: { bg: '#dcfce7', text: '#166534', icon: '🧾', label: 'Fatture' },
+  busta_paga: { bg: '#fef3c7', text: '#92400e', icon: '💰', label: 'Buste Paga' },
+  estratto_conto: { bg: '#f3e8ff', text: '#7c3aed', icon: '🏦', label: 'Estratti Conto' },
+  quietanza: { bg: '#cffafe', text: '#0891b2', icon: '✅', label: 'Quietanze' },
+  bonifico: { bg: '#fce7f3', text: '#be185d', icon: '💸', label: 'Bonifici' },
+  cartella_esattoriale: { bg: '#fee2e2', text: '#dc2626', icon: '⚠️', label: 'Cartelle Esattoriali' },
+  altro: { bg: '#f1f5f9', text: '#475569', icon: '📄', label: 'Altri' }
 };
 
 const STATUS_LABELS = {
@@ -23,6 +24,16 @@ const STATUS_LABELS = {
   processato: { label: 'Processato', color: '#16a34a', bg: '#dcfce7' },
   errore: { label: 'Errore', color: '#dc2626', bg: '#fef2f2' }
 };
+
+// Parole chiave predefinite per la ricerca email
+const DEFAULT_KEYWORDS = [
+  { id: 'f24', label: 'F24', keywords: 'f24,modello f24,tributi' },
+  { id: 'fattura', label: 'Fattura', keywords: 'fattura,invoice,ft.' },
+  { id: 'busta_paga', label: 'Busta Paga', keywords: 'busta paga,cedolino,lul' },
+  { id: 'estratto_conto', label: 'Estratto Conto', keywords: 'estratto conto,movimenti bancari' },
+  { id: 'cartella_esattoriale', label: 'Cartella Esattoriale', keywords: 'cartella esattoriale,agenzia entrate riscossione,equitalia,intimazione,ader' },
+  { id: 'bonifico', label: 'Bonifico', keywords: 'bonifico,sepa,disposizione pagamento' }
+];
 
 export default function Documenti() {
   const [documents, setDocuments] = useState([]);
@@ -33,10 +44,21 @@ export default function Documenti() {
   const [filtroStatus, setFiltroStatus] = useState('');
   const [categories, setCategories] = useState({});
   const [selectedDocs, setSelectedDocs] = useState(new Set());
-  const [giorniDownload, setGiorniDownload] = useState(30);
+  
+  // Impostazioni download
+  const [giorniDownload, setGiorniDownload] = useState(1460); // ~4 anni dal 2021
+  const [paroleChiaveSelezionate, setParoleChiaveSelezionate] = useState([]);
+  const [nuovaParolaChiave, setNuovaParolaChiave] = useState('');
+  const [customKeywords, setCustomKeywords] = useState([]);
+  const [showImportSettings, setShowImportSettings] = useState(false);
 
   useEffect(() => {
     loadData();
+    // Carica parole chiave personalizzate dal localStorage
+    const saved = localStorage.getItem('documentKeywords');
+    if (saved) {
+      setCustomKeywords(JSON.parse(saved));
+    }
   }, [filtroCategoria, filtroStatus]);
 
   const loadData = async () => {
@@ -63,15 +85,41 @@ export default function Documenti() {
   };
 
   const handleDownloadFromEmail = async () => {
-    if (!window.confirm(`Vuoi scaricare i documenti dalle email degli ultimi ${giorniDownload} giorni?`)) return;
+    // Costruisci la stringa delle parole chiave
+    let keywordsToSearch = [];
+    paroleChiaveSelezionate.forEach(id => {
+      const preset = DEFAULT_KEYWORDS.find(k => k.id === id);
+      if (preset) {
+        keywordsToSearch.push(...preset.keywords.split(',').map(k => k.trim()));
+      }
+    });
+    // Aggiungi parole chiave personalizzate
+    customKeywords.forEach(kw => {
+      if (paroleChiaveSelezionate.includes(kw.id)) {
+        keywordsToSearch.push(...kw.keywords.split(',').map(k => k.trim()));
+      }
+    });
+
+    const keywordsParam = keywordsToSearch.length > 0 ? keywordsToSearch.join(',') : '';
+    
+    const message = keywordsParam 
+      ? `Vuoi scaricare i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\nParole chiave: ${keywordsToSearch.slice(0, 5).join(', ')}${keywordsToSearch.length > 5 ? '...' : ''}`
+      : `Vuoi scaricare TUTTI i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\n⚠️ Nessuna parola chiave selezionata - verranno scaricati tutti gli allegati.`;
+    
+    if (!window.confirm(message)) return;
     
     setDownloading(true);
     try {
-      const res = await api.post(`/api/documenti/scarica-da-email?giorni=${giorniDownload}`);
+      let url = `/api/documenti/scarica-da-email?giorni=${giorniDownload}`;
+      if (keywordsParam) {
+        url += `&parole_chiave=${encodeURIComponent(keywordsParam)}`;
+      }
+      
+      const res = await api.post(url);
       
       if (res.data.success) {
         const stats = res.data.stats;
-        alert(`✅ Download completato!\n\nEmail controllate: ${stats.emails_checked}\nDocumenti trovati: ${stats.documents_found}\nNuovi documenti: ${stats.new_documents}\nDuplicati saltati: ${stats.duplicates_skipped}`);
+        alert(`✅ Download completato!\n\nEmail controllate: ${stats.emails_checked}\nDocumenti trovati: ${stats.documents_found}\nNuovi documenti: ${stats.new_documents}\nDuplicati saltati: ${stats.duplicates_skipped}\n\nCategorie:\n${Object.entries(stats.by_category || {}).map(([k, v]) => `  ${k}: ${v}`).join('\n')}`);
         loadData();
       } else {
         alert(`❌ Errore: ${res.data.error}`);
@@ -83,10 +131,37 @@ export default function Documenti() {
     }
   };
 
+  const addCustomKeyword = () => {
+    if (!nuovaParolaChiave.trim()) return;
+    const newKw = {
+      id: `custom_${Date.now()}`,
+      label: nuovaParolaChiave.trim(),
+      keywords: nuovaParolaChiave.trim().toLowerCase(),
+      custom: true
+    };
+    const updated = [...customKeywords, newKw];
+    setCustomKeywords(updated);
+    localStorage.setItem('documentKeywords', JSON.stringify(updated));
+    setNuovaParolaChiave('');
+  };
+
+  const removeCustomKeyword = (id) => {
+    const updated = customKeywords.filter(k => k.id !== id);
+    setCustomKeywords(updated);
+    localStorage.setItem('documentKeywords', JSON.stringify(updated));
+    setParoleChiaveSelezionate(prev => prev.filter(p => p !== id));
+  };
+
+  const toggleKeyword = (id) => {
+    setParoleChiaveSelezionate(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
   const handleProcessDocument = async (doc, destinazione) => {
     try {
       await api.post(`/api/documenti/documento/${doc.id}/processa?destinazione=${destinazione}`);
-      alert(`✅ Documento pronto per caricamento in ${destinazione}`);
+      alert(`✅ Documento processato e spostato in ${destinazione}`);
       loadData();
     } catch (error) {
       alert(`❌ Errore: ${error.response?.data?.detail || error.message}`);
