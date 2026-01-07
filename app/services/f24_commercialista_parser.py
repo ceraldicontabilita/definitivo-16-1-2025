@@ -126,32 +126,46 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     # Layout F24 standard:
     # - Colonna DEBITO (euro): X ~357-379, (centesimi): X ~388-389
     # - Colonna CREDITO (euro): X ~443-460, (centesimi): X ~474-475
-    # Soglia: se X < 420 è debito, se X >= 430 è credito
-    DEBITO_X_MAX = 410  # Numeri con X <= 410 sono debiti
+    # 
+    # IMPORTANTE: I numeri negli importi iniziano dopo X=340
+    # Prima di X=340 ci sono: codice tributo, rateazione, anno, codice regione/comune
+    IMPORTO_X_START = 340  # Gli importi iniziano dopo questa X
+    DEBITO_X_MAX = 410  # Numeri con 340 < X <= 410 sono debiti
     CREDITO_X_MIN = 440  # Numeri con X >= 440 sono crediti
     
     # Tracks tributi già estratti per evitare duplicati
     tributi_visti = set()
     
-    def extract_importo_from_parts(parts, x_threshold_debito=DEBITO_X_MAX, x_threshold_credito=CREDITO_X_MIN):
+    def extract_importo_from_row(row, x_start=IMPORTO_X_START, x_debito_max=DEBITO_X_MAX, x_credito_min=CREDITO_X_MIN):
         """
-        Estrae importo debito e credito da una lista di (x, word) ordinata per x.
-        Ritorna (importo_debito, importo_credito)
+        Estrae importo debito e credito da una riga, considerando solo numeri dopo x_start.
         """
         debito = 0.0
         credito = 0.0
         
-        # Raggruppa parti vicine (euro + centesimi)
+        # Filtra solo numeri nella zona importi
         debito_parts = []
         credito_parts = []
         
-        for x, word in parts:
-            if x <= x_threshold_debito:
+        for item in row:
+            x = item['x']
+            word = item['word']
+            
+            # Salta separatori
+            if word in [',', '+/–', '+/-']:
+                continue
+            
+            # Considera solo numeri (con eventuale punto decimale)
+            if not re.match(r'^[\d.]+$', word):
+                continue
+            
+            # Solo numeri dopo la zona degli importi
+            if x > x_start and x <= x_debito_max:
                 debito_parts.append((x, word))
-            elif x >= x_threshold_credito:
+            elif x >= x_credito_min:
                 credito_parts.append((x, word))
         
-        # Costruisci importo debito
+        # Costruisci importo debito (euro + centesimi)
         if len(debito_parts) >= 2:
             debito_parts.sort(key=lambda p: p[0])
             euro = debito_parts[0][1].replace('.', '').replace(',', '')
