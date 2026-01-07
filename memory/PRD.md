@@ -9,6 +9,12 @@
 
 ## 🆕 AGGIORNAMENTI RECENTI (7 Gen 2026) - v5.2.0
 
+### ✅ Bug Fix: Calcolo Progressivo Salari - Reset Annuale
+- **Problema**: Il saldo progressivo per i dipendenti non si resettava a inizio anno (es. Dicembre 2025 mostrava € -1.152 invece di € 332)
+- **Soluzione**: Modificata `ricalcola_progressivi_tutti()` in `/app/app/routers/accounting/prima_nota_salari.py` per resettare il progressivo a 0 all'inizio di ogni nuovo anno
+- **File modificato**: `/app/app/routers/accounting/prima_nota_salari.py`
+- **Endpoint per ricalcolo manuale**: `POST /api/prima-nota-salari/ricalcola-progressivi`
+
 ### ✅ Bug Fix: Bottoni Verdi "A Credito" in Scadenze IVA
 - **Problema**: I bottoni verdi non mostravano l'importo a credito
 - **Soluzione**: Aggiunto campo `a_credito` nelle API `/api/scadenze/iva/{anno}` e `/api/scadenze/iva-mensile/{anno}`
