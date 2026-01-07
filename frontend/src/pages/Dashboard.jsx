@@ -6,6 +6,7 @@ import { useAnnoGlobale } from "../contexts/AnnoContext";
 import { formatEuro } from "../lib/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
 import { Eye, EyeOff, TrendingUp, Lock } from "lucide-react";
+import WidgetVerificaCoerenza from "../components/WidgetVerificaCoerenza";
 
 export default function Dashboard() {
   const { anno } = useAnnoGlobale();
