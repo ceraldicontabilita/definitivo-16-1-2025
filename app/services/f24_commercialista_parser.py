@@ -319,7 +319,8 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                 for i, item in enumerate(row):
                     word = item['word']
                     
-                    if re.match(r'^38\d{2}$', word):
+                    # Codici regionali: 38xx (addizionale IRPEF) e 37xx (IRAP)
+                    if re.match(r'^(38\d{2}|379\d)$', word):
                         codice = word
                         rateazione = ""
                         anno = ""
