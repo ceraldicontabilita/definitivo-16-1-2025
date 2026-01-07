@@ -1697,6 +1697,35 @@ export default function GestioneDipendenti() {
                       <td style={{ padding: 12, textAlign: 'right', color: '#dc2626' }}>
                         {formatEuro(mov.importo_bonifico || 0)}
                       </td>
+                      <td style={{ padding: '8px 4px', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={mov.vincolo || false}
+                          onChange={async (e) => {
+                            try {
+                              const res = await fetch(`${API_BASE_URL}/api/prima-nota-salari/salari/${mov.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ vincolo: e.target.checked })
+                              });
+                              if (res.ok) {
+                                setSalariMovimenti(prev => prev.map(m => 
+                                  m.id === mov.id ? { ...m, vincolo: e.target.checked } : m
+                                ));
+                              }
+                            } catch (err) {
+                              console.error('Errore aggiornamento vincolo:', err);
+                            }
+                          }}
+                          style={{ 
+                            width: 20, 
+                            height: 20, 
+                            cursor: 'pointer',
+                            accentColor: '#10b981'
+                          }}
+                          title="Vincola questo record (esclude dal ricalcolo)"
+                        />
+                      </td>
                       <td style={{ 
                         padding: 12, 
                         textAlign: 'right', 
