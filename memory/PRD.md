@@ -59,6 +59,35 @@ Quando si produce una ricetta:
 **File**: `/app/app/routers/ricette.py`
 **Collezioni**: `produzioni`, `registro_lotti`
 
+### 5. F24 Commercialista → Quietanza → Riconciliazione (NUOVO ✅)
+Sistema completo di riconciliazione F24 a 3 livelli:
+1. **Upload F24 Commercialista** (PDF) → Parsing automatico → Status "DA PAGARE"
+2. **Upload Quietanza F24** (PDF) → Parsing automatico → Estrazione codici tributo
+3. **Riconciliazione per Codici Tributo** (NON per importo!)
+   - Match codice tributo + periodo = F24 PAGATO
+   - Gestione ravvedimento: differenza importo = sanzione
+   - F24 sostituiti: alert per eliminazione con conferma utente
+
+**API Endpoints** (`/api/f24-riconciliazione/`):
+- `POST /commercialista/upload` - Carica F24 da commercialista
+- `POST /riconcilia-quietanza?quietanza_id=xxx` - Riconcilia quietanza con F24
+- `GET /verifica-codice/{codice}?anno=2024&mese=12` - Verifica se codice pagato
+- `GET /dashboard` - Riepilogo riconciliazione
+- `GET /alerts` - Lista alert (F24 da eliminare, duplicati)
+- `POST /alerts/{id}/conferma-elimina` - Conferma eliminazione F24 sostituito
+
+**Collezioni**: `f24_commercialista`, `quietanze_f24`, `f24_riconciliazione_alerts`
+
+**Flusso Ravvedimento**:
+```
+F24 v1 (€1000)  →  F24 v2 + ravvedimento (€1060)  →  Quietanza (€1060)
+     ↓                      ↓                           ↓
+  DA PAGARE             DA PAGARE                Match codici
+     ↓                      ↓                           ↓
+                     Pagamento effettuato          F24 v2 = PAGATO
+                                                   F24 v1 = Alert "Eliminare?"
+```
+
 ---
 
 ## ⚠️ CONFIGURAZIONE DATABASE - CRITICA
