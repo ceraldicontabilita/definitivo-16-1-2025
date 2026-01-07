@@ -393,11 +393,16 @@ async def download_documents_from_email(
     email_password: str,
     since_days: int = 30,
     folder: str = "INBOX",
-    max_emails: int = 50  # Limita per velocità
+    max_emails: int = 200,
+    search_keywords: List[str] = None
 ) -> Dict[str, Any]:
     """
     Funzione principale per scaricare documenti da email.
     Salva i metadati nel database.
+    
+    Args:
+        search_keywords: Lista di parole chiave da cercare nell'oggetto email.
+                        Se None, scarica tutti i documenti senza filtro.
     """
     from datetime import timedelta
     
@@ -419,7 +424,7 @@ async def download_documents_from_email(
             folder=folder,
             since_date=since_date,
             limit=max_emails,
-            search_f24_only=True  # Cerca solo email con F24 nell'oggetto
+            search_keywords=search_keywords
         )
         
         # Salva nel database evitando duplicati
@@ -438,6 +443,7 @@ async def download_documents_from_email(
         
         stats["new_documents"] = len(new_documents)
         stats["duplicates_skipped"] = duplicates
+        stats["search_keywords"] = search_keywords
         
         return {
             "success": True,
