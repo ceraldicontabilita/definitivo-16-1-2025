@@ -232,6 +232,8 @@ app.include_router(centri_costo.router, prefix="/api/centri-costo", tags=["Centr
 app.include_router(magazzino_doppia_verita.router, prefix="/api/magazzino-dv", tags=["Magazzino Doppia Verità"])
 app.include_router(ricette.router, prefix="/api/ricette", tags=["Ricette e Produzione"])
 app.include_router(liquidazione_iva.router, prefix="/api", tags=["Liquidazione IVA"])
+app.include_router(comparatore_prezzi.router, prefix="/api", tags=["Comparatore Prezzi"])
+app.include_router(buste_paga.router, prefix="/api", tags=["Buste Paga"])
 
 @app.get("/")
 async def root():
