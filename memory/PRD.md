@@ -1,13 +1,51 @@
 # PRD - Azienda Semplice ERP
 
 ## Project Overview
-**Versione**: 5.0.0  
+**Versione**: 5.1.0  
 **Ultimo aggiornamento**: 7 Gennaio 2026  
 **Stack**: FastAPI (Python) + React + MongoDB + Claude AI
 
 ---
 
 ## 🆕 AGGIORNAMENTI RECENTI (7 Gen 2026)
+
+### ✅ Sistema Auto-Verifica Coerenza Dati
+**Nuovo sistema di controllo automatico** della consistenza dei dati tra tutte le sezioni:
+
+**Verifiche implementate:**
+1. **IVA Credito**: Fatture vs Liquidazione vs Confronto Commercialista
+2. **IVA Debito**: Corrispettivi vs Liquidazione vs Confronto Commercialista
+3. **Versamenti**: Registrazioni manuali (Cassa) vs Movimenti Bancari
+4. **Saldi**: Prima Nota Banca vs Estratto Conto
+5. **F24**: Tributi registrati vs Pagamenti bancari
+6. **Bonifici**: Registrati vs Effettivi in banca
+
+**Componenti:**
+- `/api/verifica-coerenza/*` - API backend per verifiche
+- `/app/frontend/src/pages/VerificaCoerenza.jsx` - Dashboard completa
+- `/app/frontend/src/components/WidgetVerificaCoerenza.jsx` - Widget per tutte le pagine
+- Link nel menu: `/verifica-coerenza`
+
+**Funzionalità:**
+- Confronto IVA mensile con tabella dettagliata
+- Segnalazione discrepanze con severità (critical, warning, info)
+- Widget in Dashboard che mostra "Dati coerenti" o alert
+- Suggerimenti per risolvere le discrepanze
+
+### ✅ Riconciliazione Bonifici con Estratto Conto
+- Pulsante "Avvia Riconciliazione" in Archivio Bonifici
+- Match automatico per importo esatto e data (±1 giorno)
+- Colonna con spunta verde ✅ per bonifici riconciliati
+- Card statistiche riconciliazione
+
+### ✅ Liquidazione IVA - Vista Mensile
+- Bottoni "📊 Trimestrale" e "📅 Mensile" nella pagina Scadenze
+- Vista mensile con tutti i 12 mesi
+- Totali annuali per valutare cambio regime (mensile/trimestrale)
+
+### ✅ Fix Eliminazione Prima Nota
+- I movimenti con status "deleted" non appaiono più nelle liste
+- Filtro applicato sia a Cassa che a Banca
 
 ### 🏗️ Refactoring Backend - Architettura Modulare
 **Riorganizzazione completa** del backend con struttura modulare:
