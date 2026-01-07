@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: "/fornitori", label: "Fornitori", icon: "📦", short: "Fornitori" },
   { to: "/iva", label: "Calcolo IVA", icon: "📊", short: "IVA" },
   { to: "/liquidazione-iva", label: "Liquidazione IVA", icon: "🧮", short: "Liquid." },
+  { to: "/riconciliazione-f24", label: "Riconciliazione F24", icon: "📋", short: "F24" },
   { to: "/prima-nota", label: "Prima Nota", icon: "📒", short: "P.Nota" },
   { to: "/controllo-mensile", label: "Controllo Mensile", icon: "📈", short: "Contr." },
   { to: "/riconciliazione", label: "Riconciliazione", icon: "🔄", short: "Riconc." },
