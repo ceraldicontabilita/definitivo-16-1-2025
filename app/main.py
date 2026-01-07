@@ -251,6 +251,7 @@ app.include_router(documents.router, prefix="/api/documents", tags=["Documents"]
 app.include_router(pianificazione.router, prefix="/api/pianificazione", tags=["Pianificazione"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(verifica_coerenza.router, prefix="/api/verifica-coerenza", tags=["Verifica Coerenza Dati"])
+app.include_router(documenti.router, prefix="/api/documenti", tags=["Gestione Documenti Email"])
 
 
 # =============================================================================
