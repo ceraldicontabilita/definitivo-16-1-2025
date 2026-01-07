@@ -80,172 +80,162 @@ def parse_quietanza_f24(pdf_path: str) -> Dict[str, Any]:
         "sezione_regioni": [],
         "sezione_tributi_locali": [],
         "totali": {},
-        "raw_text": text[:500]  # Solo per debug
+        "raw_text_preview": text[:200]  # Solo per debug
     }
     
     # ============================================
     # DATI GENERALI
     # ============================================
     
-    # Codice Fiscale (pattern: 11 cifre o 16 caratteri alfanumerici)
-    cf_match = re.search(r'(?:Codice\s*Fiscale|C\.F\.|Utente)[:\s]*([A-Z0-9]{11,16})', text, re.IGNORECASE)
-    if cf_match:
-        result["dati_generali"]["codice_fiscale"] = cf_match.group(1)
-    
-    # Ragione Sociale - cerca dopo CERALDI o simili nomi aziendali
-    rs_patterns = [
-        r'CERALDI\s+GROUP\s+S\.R\.L\.?',
-        r'([A-Z][A-Z\s]+(?:S\.R\.L\.|S\.P\.A\.|S\.N\.C\.|S\.A\.S\.))',
-        r'Dati\s*Anagrafici[:\s]*([A-Z][A-Z\s\.]+)',
+    # Codice Fiscale - dopo "Soggetto:" o "CODICE FISCALE"
+    cf_patterns = [
+        r'Soggetto:\s*[A-Z\s\.]+\(\s*(\d{11})\s*\)',
+        r'Utente:\s*(\d{11})',
+        r'\(\s*(\d{11})\s*\)',
     ]
-    for pattern in rs_patterns:
-        rs_match = re.search(pattern, text)
-        if rs_match:
-            result["dati_generali"]["ragione_sociale"] = rs_match.group(0).strip()
+    for pattern in cf_patterns:
+        cf_match = re.search(pattern, text, re.IGNORECASE)
+        if cf_match:
+            result["dati_generali"]["codice_fiscale"] = cf_match.group(1)
             break
     
-    # Data Pagamento
-    data_patterns = [
-        r'DATA\s*DEL\s*VERSAMENTO[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'Data\s*Pagamento[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'Pagamento\s*del[:\s]*(\d{2}/\d{2}/\d{4})',
-        r'(?:versato\s*il|pagato\s*il)[:\s]*(\d{2}/\d{2}/\d{4})',
-    ]
-    for pattern in data_patterns:
-        dp_match = re.search(pattern, text, re.IGNORECASE)
-        if dp_match:
-            result["dati_generali"]["data_pagamento"] = parse_data(dp_match.group(1))
-            break
+    # Ragione Sociale - dopo "Soggetto:"
+    rs_match = re.search(r'Soggetto:\s*([A-Z][A-Z\s\.]+(?:S\.R\.L\.|S\.P\.A\.|S\.N\.C\.|S\.A\.S\.))', text)
+    if rs_match:
+        result["dati_generali"]["ragione_sociale"] = rs_match.group(1).strip()
+    else:
+        # Fallback: cerca CERALDI GROUP S.R.L. o simili
+        rs_match2 = re.search(r'([A-Z][A-Z\s]+(?:S\.R\.L\.|S\.P\.A\.|S\.N\.C\.|S\.A\.S\.))', text)
+        if rs_match2:
+            result["dati_generali"]["ragione_sociale"] = rs_match2.group(1).strip()
     
-    # Protocollo Telematico
-    pt_match = re.search(r'Protocollo\s*Telematico[:\s]*(\d{17})', text, re.IGNORECASE)
+    # Protocollo Telematico - numero di 17 cifre
+    pt_match = re.search(r'(\d{17})', text)
     if pt_match:
         result["dati_generali"]["protocollo_telematico"] = pt_match.group(1)
     
-    # Saldo Delega (totale pagamento)
-    saldo_match = re.search(r'Saldo\s*delega[:\s]*([0-9.,]+)', text, re.IGNORECASE)
-    if saldo_match:
-        result["dati_generali"]["saldo_delega"] = parse_importo(saldo_match.group(1))
+    # Data e Ora documento
+    data_ora_match = re.search(r'Data:\s*(\d{2}/\d{2}/\d{4})\s*-\s*Ore:\s*(\d{2}:\d{2}:\d{2})', text)
+    if data_ora_match:
+        result["dati_generali"]["data_documento"] = parse_data(data_ora_match.group(1))
+        result["dati_generali"]["ora_documento"] = data_ora_match.group(2)
+    
+    # Data del versamento - pattern con cifre separate
+    # Pattern: 1 7 0 1 2 0 2 5 (17/01/2025)
+    data_vers_match = re.search(r'(\d)\s+(\d)\s+(\d)\s+(\d)\s+(\d)\s+(\d)\s+(\d)\s+(\d)\s+05034', text)
+    if data_vers_match:
+        giorno = data_vers_match.group(1) + data_vers_match.group(2)
+        mese = data_vers_match.group(3) + data_vers_match.group(4)
+        anno = data_vers_match.group(5) + data_vers_match.group(6) + data_vers_match.group(7) + data_vers_match.group(8)
+        result["dati_generali"]["data_pagamento"] = f"{anno}-{mese}-{giorno}"
+    
+    # Saldo Delega - pattern: 5.498,79 o simile prima di ABI
+    saldo_patterns = [
+        r'(\d{1,3}(?:\.\d{3})*,\d{2})\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*05034',  # Prima di data e ABI
+        r'Saldo\s*delega\s*[\n\s]*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})',
+        r',\s*(\d{1,3}(?:\.\d{3})*,\d{2})\s*\n',
+    ]
+    for pattern in saldo_patterns:
+        saldo_match = re.search(pattern, text)
+        if saldo_match:
+            result["dati_generali"]["saldo_delega"] = parse_importo(saldo_match.group(1))
+            break
     
     # ABI e CAB
-    abi_match = re.search(r'\bABI[:\s]*(\d{5})', text, re.IGNORECASE)
-    cab_match = re.search(r'\bCAB[:\s]*(\d{5})', text, re.IGNORECASE)
+    abi_match = re.search(r'\b(05034|03069|01030|03002|02008)\b', text)
     if abi_match:
         result["dati_generali"]["abi"] = abi_match.group(1)
+    
+    cab_match = re.search(r'05034\s*\n?\s*(\d{5})', text)
     if cab_match:
         result["dati_generali"]["cab"] = cab_match.group(1)
-    
-    # Numero Delegazione
-    nd_match = re.search(r'Numero\s*Delegazione[:\s]*(\d+)', text, re.IGNORECASE)
-    if nd_match:
-        result["dati_generali"]["numero_delegazione"] = nd_match.group(1)
     
     # ============================================
     # SEZIONE ERARIO
     # ============================================
-    # Pattern: codice tributo (4 cifre), periodo (MM/YYYY o YYYY), importi
+    # Pattern: ERARIO 1001 12 2024 2.610,51 0,00
     
-    erario_patterns = [
-        # Pattern standard: 1001 12/2024 2.610,51 0,00
-        r'\b(1001|1701|1627|1631|1703|1704|6001|6002|6013|6015|6099|3844|3843|1040|1038|1712|1713)\b\s*(\d{2}/\d{4}|\d{4})\s+([0-9.,]+)\s+([0-9.,]+)',
-    ]
-    
-    for pattern in erario_patterns:
-        for match in re.finditer(pattern, text):
-            codice = match.group(1)
-            periodo = match.group(2)
-            debito = parse_importo(match.group(3))
-            credito = parse_importo(match.group(4))
-            
-            result["sezione_erario"].append({
-                "codice_tributo": codice,
-                "periodo_riferimento": periodo,
-                "importo_debito": debito,
-                "importo_credito": credito,
-                "descrizione": get_descrizione_tributo_erario(codice)
-            })
+    erario_pattern = r'ERARIO\s+(\d{4})\s+(\d{0,2})\s*(\d{4})\s+([0-9.,]+)\s+([0-9.,]+)'
+    for match in re.finditer(erario_pattern, text):
+        codice = match.group(1)
+        mese = match.group(2) or "00"
+        anno = match.group(3)
+        debito = parse_importo(match.group(4))
+        credito = parse_importo(match.group(5))
+        
+        periodo = f"{mese}/{anno}" if mese != "00" else anno
+        
+        result["sezione_erario"].append({
+            "codice_tributo": codice,
+            "periodo_riferimento": periodo,
+            "importo_debito": debito,
+            "importo_credito": credito,
+            "descrizione": get_descrizione_tributo_erario(codice)
+        })
     
     # ============================================
     # SEZIONE INPS
     # ============================================
-    # Pattern: sede (4 cifre), causale (DM10, CXX, etc), matricola, periodo, importi
+    # Pattern: INPS 5100 DM10 5124776507 12 2024 3.628,00 0,00
     
-    inps_patterns = [
-        # 5100 DM10 5124776507 12/2024 3.628,00 0,00
-        r'\b(\d{4})\s+(DM10|CXX|RC01|C10|CF10)\s+([A-Z0-9]+)\s+(\d{1,2}/\d{4})\s+([0-9.,]+)\s+([0-9.,]+)',
-    ]
-    
-    for pattern in inps_patterns:
-        for match in re.finditer(pattern, text):
-            result["sezione_inps"].append({
-                "codice_sede": match.group(1),
-                "causale": match.group(2),
-                "matricola": match.group(3),
-                "periodo_riferimento": match.group(4),
-                "importo_debito": parse_importo(match.group(5)),
-                "importo_credito": parse_importo(match.group(6)),
-                "descrizione": get_descrizione_causale_inps(match.group(2))
-            })
+    inps_pattern = r'INPS\s+(\d{4})\s+(DM10|CXX|RC01|C10|CF10)\s+([A-Z0-9]+)\s+(\d{1,2})\s+(\d{4})\s+([0-9.,]+)\s+([0-9.,]+)'
+    for match in re.finditer(inps_pattern, text):
+        result["sezione_inps"].append({
+            "codice_sede": match.group(1),
+            "causale": match.group(2),
+            "matricola": match.group(3),
+            "periodo_riferimento": f"{match.group(4)}/{match.group(5)}",
+            "importo_debito": parse_importo(match.group(6)),
+            "importo_credito": parse_importo(match.group(7)),
+            "descrizione": get_descrizione_causale_inps(match.group(2))
+        })
     
     # ============================================
     # SEZIONE INAIL
     # ============================================
-    # Pattern: codice ufficio, codice atto, importo
+    # Pattern: INAIL con codice ufficio e atto
     
-    inail_patterns = [
-        r'\b(\d{5})\s+(\d+)\|([A-Z0-9\s]+)\s+([0-9.,]+)\s+([0-9.,]+)',
-    ]
-    
-    for pattern in inail_patterns:
-        for match in re.finditer(pattern, text):
-            result["sezione_inail"].append({
-                "codice_ufficio": match.group(1),
-                "codice_atto": match.group(2),
-                "estremi_identificativi": match.group(3).strip(),
-                "importo_debito": parse_importo(match.group(4)),
-                "importo_credito": parse_importo(match.group(5))
-            })
+    inail_pattern = r'INAIL\s+(\d{5})\s+(\d+)\|([A-Z0-9\s]+)\s+([0-9.,]+)\s+([0-9.,]+)'
+    for match in re.finditer(inail_pattern, text):
+        result["sezione_inail"].append({
+            "codice_ufficio": match.group(1),
+            "codice_atto": match.group(2),
+            "estremi_identificativi": match.group(3).strip(),
+            "importo_debito": parse_importo(match.group(4)),
+            "importo_credito": parse_importo(match.group(5))
+        })
     
     # ============================================
     # SEZIONE REGIONI
     # ============================================
-    # Pattern: codice regione (2 cifre), tributo (3802, 3801), periodo, importi
+    # Pattern: REGIONI 05 3802 00/12 2024 142,55 0,00
     
-    regioni_patterns = [
-        r'\b(\d{2})\s+(3801|3802|3805|3843)\s+(\d{2}/\d{2}/?\s*\d{4}|\d{4})\s+([0-9.,]+)\s+([0-9.,]+)',
-    ]
-    
-    for pattern in regioni_patterns:
-        for match in re.finditer(pattern, text):
-            result["sezione_regioni"].append({
-                "codice_regione": match.group(1),
-                "codice_tributo": match.group(2),
-                "periodo_riferimento": match.group(3).strip(),
-                "importo_debito": parse_importo(match.group(4)),
-                "importo_credito": parse_importo(match.group(5)),
-                "descrizione": get_descrizione_tributo_regioni(match.group(2))
-            })
+    regioni_pattern = r'REGIONI\s+(\d{2})\s+(\d{4})\s+(\d{2}/\d{2})\s*(\d{4})\s+([0-9.,]+)\s+([0-9.,]+)'
+    for match in re.finditer(regioni_pattern, text):
+        result["sezione_regioni"].append({
+            "codice_regione": match.group(1),
+            "codice_tributo": match.group(2),
+            "periodo_riferimento": f"{match.group(3)} {match.group(4)}",
+            "importo_debito": parse_importo(match.group(5)),
+            "importo_credito": parse_importo(match.group(6)),
+            "descrizione": get_descrizione_tributo_regioni(match.group(2))
+        })
     
     # ============================================
     # SEZIONE TRIBUTI LOCALI (IMU, TARI, etc.)
     # ============================================
-    # Pattern: codice comune (4 caratteri), tributo, periodo, importi
+    # Pattern: TRIB.LOCALI F839 1671 2024 0,00 32,73
     
-    locali_patterns = [
-        r'\b([A-Z]\d{3})\s+(1671|3918|3919|3914|3916|3917)\s+(\d{4})\s+([0-9.,]+)\s+([0-9.,]+)',
-        r'\b([A-Z]\d{3})\s+(\d{4})\s+(\d{2}/\d{2}/\d{4}|\d{4})\s+([0-9.,]+)\s+([0-9.,]+)',
-    ]
-    
-    for pattern in locali_patterns:
-        for match in re.finditer(pattern, text):
-            result["sezione_tributi_locali"].append({
-                "codice_comune": match.group(1),
-                "codice_tributo": match.group(2),
-                "periodo_riferimento": match.group(3),
-                "importo_debito": parse_importo(match.group(4)),
-                "importo_credito": parse_importo(match.group(5)),
-                "descrizione": get_descrizione_tributo_locale(match.group(2))
-            })
+    locali_pattern = r'TRIB\.LOCALI\s+([A-Z]\d{3})\s+(\d{4})\s+(\d{4})\s+([0-9.,]+)\s+([0-9.,]+)'
+    for match in re.finditer(locali_pattern, text):
+        result["sezione_tributi_locali"].append({
+            "codice_comune": match.group(1),
+            "codice_tributo": match.group(2),
+            "periodo_riferimento": match.group(3),
+            "importo_debito": parse_importo(match.group(4)),
+            "importo_credito": parse_importo(match.group(5)),
+            "descrizione": get_descrizione_tributo_locale(match.group(2))
+        })
     
     # ============================================
     # CALCOLO TOTALI
@@ -269,7 +259,7 @@ def parse_quietanza_f24(pdf_path: str) -> Dict[str, Any]:
     }
     
     # Rimuovi raw_text prima di restituire
-    del result["raw_text"]
+    del result["raw_text_preview"]
     
     return result
 
