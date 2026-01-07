@@ -421,13 +421,14 @@ async def sync_f24_automatico(
         }
     
     try:
-        # Scarica documenti (solo F24)
+        # Scarica documenti (solo F24) - max 30 email per velocità
         result = await download_documents_from_email(
             db=db,
             email_user=email_user,
             email_password=email_password,
             since_days=giorni,
-            folder="INBOX"
+            folder="INBOX",
+            max_emails=30
         )
         
         if not result.get("success"):
