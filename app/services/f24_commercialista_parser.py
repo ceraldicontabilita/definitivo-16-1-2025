@@ -179,6 +179,52 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     
     # Se non trovato, prova pattern semplice
     if not found_erario:
+        # Pattern specifico per formato: codice_tributo\nanno\nimporto (con spazio tra euro e centesimi)
+        # Es: "6011\n2025\n    1.211 90"
+        erario_specific_pattern = r'\b(6\d{3}|1\d{3}|3\d{3}|8\d{3})\s*\n\s*(\d{4})\s*\n\s*([0-9.,]+)\s+(\d{2})\b'
+        
+        for match in re.finditer(erario_specific_pattern, text):
+            codice = match.group(1)
+            anno = match.group(2)
+            euro_part = match.group(3).strip().replace('.', '').replace(',', '.')
+            cent_part = match.group(4)
+            
+            # Costruisci importo: "1.211" + "90" -> 1211.90
+            try:
+                euro_val = float(euro_part) if euro_part else 0
+                cent_val = float(cent_part) / 100 if cent_part else 0
+                debito = euro_val + cent_val
+            except ValueError:
+                debito = parse_importo(euro_part + '.' + cent_part)
+            
+            if debito > 0:
+                # Determina il mese dal codice tributo (es. 6011 = novembre)
+                mese = "00"
+                if codice.startswith("60"):
+                    mese_num = int(codice[2:])
+                    if 1 <= mese_num <= 12:
+                        mese = str(mese_num).zfill(2)
+                
+                tributo = {
+                    "codice_tributo": codice,
+                    "rateazione": "",
+                    "periodo_riferimento": parse_periodo(mese, anno),
+                    "anno": anno,
+                    "mese": mese,
+                    "importo_debito": round(debito, 2),
+                    "importo_credito": 0.0,
+                    "descrizione": get_descrizione_tributo(codice)
+                }
+                result["sezione_erario"].append(tributo)
+                found_erario = True
+                logger.info(f"Estratto tributo erario (specific): {codice} - €{debito}")
+                
+                if codice in CODICI_RAVVEDIMENTO:
+                    result["has_ravvedimento"] = True
+                    result["codici_ravvedimento"].append(codice)
+    
+    # Fallback: pattern generico
+    if not found_erario:
         for match in re.finditer(erario_simple_pattern, text):
             codice = match.group(1)
             anno = match.group(2)
