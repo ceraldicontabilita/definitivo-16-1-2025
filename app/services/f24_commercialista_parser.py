@@ -66,6 +66,7 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     """
     Parsa un F24 PDF della commercialista ed estrae tutti i dati.
+    Usa estrazione basata su coordinate per distinguere debiti da crediti.
     
     Returns:
         Dict con:
@@ -73,15 +74,10 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
         - sezione_erario: lista tributi erario
         - sezione_inps: lista contributi INPS
         - sezione_regioni: lista tributi regionali
-        - sezione_tributi_locali: lista tributi locali
+        - sezione_tributi_locali: lista tributi locali (con codice_comune)
         - totali: importo_debito, importo_credito, saldo
         - has_ravvedimento: True se contiene codici ravvedimento
     """
-    text = extract_text_from_pdf(pdf_path)
-    
-    if not text:
-        return {"error": "Impossibile estrarre testo dal PDF"}
-    
     result = {
         "dati_generali": {},
         "sezione_erario": [],
@@ -97,17 +93,27 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     # Codici ravvedimento noti
     CODICI_RAVVEDIMENTO = ['8901', '8902', '8903', '8904', '8906', '8907', '8911', '8913', '8918', '8926', '8929']
     
+    try:
+        doc = fitz.open(pdf_path)
+    except Exception as e:
+        logger.error(f"Errore apertura PDF: {e}")
+        return {"error": f"Impossibile aprire il PDF: {e}"}
+    
+    text = extract_text_from_pdf(pdf_path)
+    if not text:
+        doc.close()
+        return {"error": "Impossibile estrarre testo dal PDF"}
+    
     # ============================================
     # DATI GENERALI
     # ============================================
     
     # Codice Fiscale contribuente (11 o 16 caratteri)
-    # Può essere con spazi: "0 4 5 2 3 8 3 1 2 1 4"
     cf_patterns = [
         r'CODICE\s*FISCALE\s*[\n\s]*([A-Z0-9]{11,16})',
         r'(\d{11})\s*(?:cognome|ragione)',
-        r'\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b',  # CF persona fisica
-        r'(\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d)',  # CF con spazi
+        r'\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b',
+        r'(\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d\s*\d)',
     ]
     for pattern in cf_patterns:
         cf_match = re.search(pattern, text, re.IGNORECASE)
@@ -122,7 +128,7 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     if ragione_sociale_match:
         result["dati_generali"]["ragione_sociale"] = "CERALDI GROUP S.R.L."
     
-    # Data versamento - pattern: gg mm aaaa
+    # Data versamento
     data_patterns = [
         r'data\s*di\s*pagamento[:\s]*(\d{2})[/\s-](\d{2})[/\s-](\d{4})',
         r'(\d{2})\s+(\d{2})\s+(\d{4})\s*(?:SALDO|codice)',
@@ -135,11 +141,6 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
             result["dati_generali"]["data_versamento"] = f"{yyyy}-{mm}-{gg}"
             break
     
-    # Mese di riferimento (per identificare il periodo F24)
-    mese_rif_match = re.search(r'mese\s*di\s*riferimento[:\s]*([A-Za-z]+\s*\d{4}|\d{2}/\d{4})', text, re.IGNORECASE)
-    if mese_rif_match:
-        result["dati_generali"]["mese_riferimento"] = mese_rif_match.group(1)
-    
     # Tipo F24
     if 'SEMPLIFICATO' in text.upper():
         result["dati_generali"]["tipo_f24"] = "F24 Semplificato"
@@ -149,115 +150,283 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
         result["dati_generali"]["tipo_f24"] = "F24"
     
     # ============================================
-    # SEZIONE ERARIO
+    # ESTRAZIONE BASATA SU COORDINATE
     # ============================================
+    # Nel formato F24 standard:
+    # - Sezione ERARIO: debiti X ~350-390, crediti X ~440-480
+    # - Sezione Tributi Locali: codice comune nelle prime colonne (X < 100)
     
-    # Pattern universale per tributi F24:
-    # Formato 1: "codice rateazione anno euro centesimi" es: "1001 0010 2025 1.288 72"
-    # Formato 2: "codice anno euro centesimi" es: "1631 2024 1.568 32"
-    # Formato 3: "codice\nanno\neuro centesimi" es: "6011\n2025\n1.211 90"
+    # Soglie X per distinguere debiti da crediti nella sezione ERARIO
+    ERARIO_DEBITO_X_MIN = 340
+    ERARIO_DEBITO_X_MAX = 410
+    ERARIO_CREDITO_X_MIN = 420
+    ERARIO_CREDITO_X_MAX = 490
     
-    # Pattern principale - cerca OGNI occorrenza di codice tributo con importo
-    # Codici validi: 1xxx (IRPEF), 3xxx (Regioni/Locali), 6xxx (IVA), 8xxx (INAIL)
-    tributo_pattern = r'\b(1\d{3}|3\d{3}|6\d{3}|8\d{3})\s+(\d{4})?\s*(\d{4})\s+([0-9.,]+)\s+(\d{2})\b'
+    # Pattern per codici tributo
+    CODICI_ERARIO = re.compile(r'^(1\d{3}|6\d{3}|8\d{3})$')
+    CODICI_REGIONI = re.compile(r'^(38\d{2}|37\d{2})$')  # 38xx, 37xx
+    CODICI_LOCALI = re.compile(r'^(38\d{2}|37\d{2})$')  # Stesso per tributi locali
     
-    found_erario = False
-    tributi_estratti = []  # Lista per tenere traccia di tutti i tributi
-    
-    # Cerca in tutto il testo
-    for match in re.finditer(tributo_pattern, text):
-        codice = match.group(1)
-        rateazione = match.group(2) or ""
-        anno = match.group(3)
-        euro_str = match.group(4).replace('.', '').replace(',', '')
-        cent_str = match.group(5)
+    for page_num, page in enumerate(doc):
+        words = page.get_text('words')
         
-        # Calcola importo: "1.288" + "72" -> 1288.72
-        try:
-            importo = float(euro_str) + float(cent_str) / 100
-        except ValueError:
-            continue
+        # Raggruppa parole per riga (y coordinate simili, tolleranza 5)
+        rows = {}
+        for w in words:
+            x0, y0, x1, y1, word, block, line, word_n = w
+            y_key = round(y0 / 5) * 5  # Raggruppa ogni 5 pixel
+            if y_key not in rows:
+                rows[y_key] = []
+            rows[y_key].append({'x': x0, 'word': word, 'x1': x1})
         
-        if importo <= 0:
-            continue
-        
-        # Estrai mese da rateazione se disponibile (formato 00MM)
-        mese = rateazione[2:4] if len(rateazione) == 4 else "00"
-        
-        # Crea record tributo con tutti i dati
-        tributo = {
-            "codice_tributo": codice,
-            "rateazione": rateazione,
-            "periodo_riferimento": parse_periodo(mese, anno),
-            "anno": anno,
-            "mese": mese,
-            "importo_debito": round(importo, 2),
-            "importo_credito": 0.0,
-            "descrizione": get_descrizione_tributo(codice),
-            "match_pos": match.start()  # Per ordinare e rimuovere duplicati
-        }
-        
-        tributi_estratti.append(tributo)
-        found_erario = True
-        logger.info(f"Estratto tributo: {codice} anno {anno} rat {rateazione} - €{round(importo, 2)}")
-        
-        # Verifica ravvedimento
-        if codice in CODICI_RAVVEDIMENTO:
-            result["has_ravvedimento"] = True
-            result["codici_ravvedimento"].append(codice)
-    
-    # Rimuovi duplicati esatti (stesso codice, anno, rateazione, importo)
-    seen = set()
-    for t in tributi_estratti:
-        # Chiave univoca: codice + anno + rateazione + importo
-        key = f"{t['codice_tributo']}_{t['anno']}_{t['rateazione']}_{t['importo_debito']}"
-        if key not in seen:
-            seen.add(key)
-            # Rimuovi match_pos prima di salvare
-            del t['match_pos']
-            result["sezione_erario"].append(t)
-    
-    # FALLBACK: Pattern per F24 IVA commercialista (formato con newline)
-    if not found_erario:
-        erario_specific_pattern = r'\b(6\d{3}|1\d{3}|3\d{3}|8\d{3})\s*\n\s*(\d{4})\s*\n\s*([0-9.,]+)\s+(\d{2})\b'
-        for match in re.finditer(erario_specific_pattern, text):
-            codice = match.group(1)
-            anno = match.group(2)
-            euro_part = match.group(3).strip().replace('.', '').replace(',', '')
-            cent_part = match.group(4)
+        # Processa ogni riga
+        for y_key in sorted(rows.keys()):
+            row = sorted(rows[y_key], key=lambda r: r['x'])
+            row_words = [r['word'] for r in row]
+            row_text = ' '.join(row_words)
             
-            # Costruisci importo: "1.211" + "90" -> 1211.90
-            try:
-                euro_val = float(euro_part) if euro_part else 0
-                debito = euro_val + float(cent_part) / 100
-            except ValueError:
-                debito = 0
+            # ============================================
+            # SEZIONE ERARIO - Codici 1xxx, 6xxx
+            # ============================================
+            for i, item in enumerate(row):
+                word = item['word']
+                x = item['x']
+                
+                # Cerca codice tributo ERARIO (1xxx, 6xxx)
+                if re.match(r'^(1\d{3}|6\d{3})$', word):
+                    codice = word
+                    rateazione = ""
+                    anno = ""
+                    importo_debito = 0.0
+                    importo_credito = 0.0
+                    
+                    # Cerca rateazione e anno nelle parole successive
+                    for j in range(i+1, min(i+4, len(row))):
+                        next_word = row[j]['word']
+                        if re.match(r'^00\d{2}$', next_word):  # Rateazione 00MM
+                            rateazione = next_word
+                        elif re.match(r'^20\d{2}$', next_word):  # Anno 20XX
+                            anno = next_word
+                    
+                    # Cerca importi basandosi sulla posizione X
+                    for j in range(i+1, len(row)):
+                        next_word = row[j]['word']
+                        next_x = row[j]['x']
+                        
+                        # Controlla se è un importo (numero con virgola o punto)
+                        if re.match(r'^[\d.,]+$', next_word):
+                            # Verifica se c'è un numero successivo (centesimi)
+                            if j+1 < len(row) and re.match(r'^\d{2}$', row[j+1]['word']):
+                                euro_str = next_word.replace('.', '').replace(',', '')
+                                cent_str = row[j+1]['word']
+                                try:
+                                    importo = float(euro_str) + float(cent_str) / 100
+                                    
+                                    # Determina se è debito o credito basandosi su X
+                                    if ERARIO_DEBITO_X_MIN <= next_x <= ERARIO_DEBITO_X_MAX:
+                                        importo_debito = round(importo, 2)
+                                    elif ERARIO_CREDITO_X_MIN <= next_x <= ERARIO_CREDITO_X_MAX:
+                                        importo_credito = round(importo, 2)
+                                except ValueError:
+                                    pass
+                    
+                    if anno and (importo_debito > 0 or importo_credito > 0):
+                        mese = rateazione[2:4] if len(rateazione) == 4 else "00"
+                        tributo = {
+                            "codice_tributo": codice,
+                            "rateazione": rateazione,
+                            "periodo_riferimento": parse_periodo(mese, anno),
+                            "anno": anno,
+                            "mese": mese,
+                            "importo_debito": importo_debito,
+                            "importo_credito": importo_credito,
+                            "descrizione": get_descrizione_tributo(codice)
+                        }
+                        result["sezione_erario"].append(tributo)
+                        
+                        if codice in CODICI_RAVVEDIMENTO:
+                            result["has_ravvedimento"] = True
+                            result["codici_ravvedimento"].append(codice)
             
-            if debito > 0:
-                # Determina il mese dal codice tributo (es. 6011 = novembre)
-                mese = "00"
-                if codice.startswith("60"):
-                    mese_num = int(codice[2:])
-                    if 1 <= mese_num <= 12:
-                        mese = str(mese_num).zfill(2)
+            # ============================================
+            # SEZIONE REGIONI - Codici 38xx
+            # ============================================
+            # Pattern: "codice_regione codice_tributo rateazione anno importo"
+            # Es: "0 5 3802 0010 2024 142 88"
+            for i, item in enumerate(row):
+                word = item['word']
                 
-                tributo = {
-                    "codice_tributo": codice,
-                    "rateazione": "",
-                    "periodo_riferimento": parse_periodo(mese, anno),
-                    "anno": anno,
-                    "mese": mese,
-                    "importo_debito": round(debito, 2),
-                    "importo_credito": 0.0,
-                    "descrizione": get_descrizione_tributo(codice)
-                }
-                result["sezione_erario"].append(tributo)
-                found_erario = True
-                logger.info(f"Estratto tributo erario (specific): {codice} - €{round(debito,2)}")
+                if re.match(r'^38\d{2}$', word):
+                    codice = word
+                    codice_regione = ""
+                    rateazione = ""
+                    anno = ""
+                    importo_debito = 0.0
+                    importo_credito = 0.0
+                    
+                    # Cerca codice regione prima del codice tributo (es. "0 5")
+                    if i >= 2:
+                        prev1 = row[i-1]['word']
+                        prev2 = row[i-2]['word']
+                        if re.match(r'^\d$', prev1) and re.match(r'^\d$', prev2):
+                            codice_regione = prev2 + prev1
+                    
+                    # Cerca rateazione e anno
+                    for j in range(i+1, min(i+4, len(row))):
+                        next_word = row[j]['word']
+                        if re.match(r'^00\d{2}$', next_word):
+                            rateazione = next_word
+                        elif re.match(r'^20\d{2}$', next_word):
+                            anno = next_word
+                    
+                    # Cerca importi
+                    for j in range(i+1, len(row)):
+                        next_word = row[j]['word']
+                        next_x = row[j]['x']
+                        
+                        if re.match(r'^[\d.,]+$', next_word):
+                            if j+1 < len(row) and re.match(r'^\d{2}$', row[j+1]['word']):
+                                euro_str = next_word.replace('.', '').replace(',', '')
+                                cent_str = row[j+1]['word']
+                                try:
+                                    importo = float(euro_str) + float(cent_str) / 100
+                                    if ERARIO_DEBITO_X_MIN <= next_x <= ERARIO_DEBITO_X_MAX:
+                                        importo_debito = round(importo, 2)
+                                    elif ERARIO_CREDITO_X_MIN <= next_x <= ERARIO_CREDITO_X_MAX:
+                                        importo_credito = round(importo, 2)
+                                except ValueError:
+                                    pass
+                    
+                    if anno and (importo_debito > 0 or importo_credito > 0):
+                        mese = rateazione[2:4] if len(rateazione) == 4 else "00"
+                        tributo = {
+                            "codice_tributo": codice,
+                            "codice_regione": codice_regione,
+                            "rateazione": rateazione,
+                            "periodo_riferimento": parse_periodo(mese, anno),
+                            "anno": anno,
+                            "mese": mese,
+                            "importo_debito": importo_debito,
+                            "importo_credito": importo_credito,
+                            "descrizione": get_descrizione_tributo_regioni(codice)
+                        }
+                        result["sezione_regioni"].append(tributo)
+            
+            # ============================================
+            # SEZIONE TRIBUTI LOCALI - Codici 37xx, 38xx con codice comune
+            # ============================================
+            # Pattern: "B 9 9 0 3847 0010 2025 7 89" o "F 8 3 9 3797 2024 64 46"
+            for i, item in enumerate(row):
+                word = item['word']
                 
-                if codice in CODICI_RAVVEDIMENTO:
-                    result["has_ravvedimento"] = True
-                    result["codici_ravvedimento"].append(codice)
+                if re.match(r'^37\d{2}$', word):
+                    codice = word
+                    codice_comune = ""
+                    rateazione = ""
+                    anno = ""
+                    importo_debito = 0.0
+                    importo_credito = 0.0
+                    
+                    # Cerca codice comune prima del codice tributo (formato: "B 9 9 0" o "F 8 3 9")
+                    if i >= 4:
+                        # Ricostruisci codice comune dalle 4 parole precedenti
+                        comune_parts = []
+                        for k in range(i-4, i):
+                            if k >= 0 and len(row[k]['word']) == 1:
+                                comune_parts.append(row[k]['word'])
+                        if len(comune_parts) == 4:
+                            codice_comune = ''.join(comune_parts)  # Es: "B990" o "F839"
+                    
+                    # Cerca rateazione e anno
+                    for j in range(i+1, min(i+4, len(row))):
+                        next_word = row[j]['word']
+                        if re.match(r'^00\d{2}$', next_word):
+                            rateazione = next_word
+                        elif re.match(r'^20\d{2}$', next_word):
+                            anno = next_word
+                    
+                    # Cerca importi
+                    for j in range(i+1, len(row)):
+                        next_word = row[j]['word']
+                        next_x = row[j]['x']
+                        
+                        if re.match(r'^[\d.,]+$', next_word):
+                            if j+1 < len(row) and re.match(r'^\d{2}$', row[j+1]['word']):
+                                euro_str = next_word.replace('.', '').replace(',', '')
+                                cent_str = row[j+1]['word']
+                                try:
+                                    importo = float(euro_str) + float(cent_str) / 100
+                                    if ERARIO_DEBITO_X_MIN <= next_x <= ERARIO_DEBITO_X_MAX:
+                                        importo_debito = round(importo, 2)
+                                    elif ERARIO_CREDITO_X_MIN <= next_x <= ERARIO_CREDITO_X_MAX:
+                                        importo_credito = round(importo, 2)
+                                except ValueError:
+                                    pass
+                    
+                    if anno and (importo_debito > 0 or importo_credito > 0):
+                        mese = rateazione[2:4] if len(rateazione) == 4 else "00"
+                        tributo = {
+                            "codice_tributo": codice,
+                            "codice_comune": codice_comune,
+                            "rateazione": rateazione,
+                            "periodo_riferimento": parse_periodo(mese, anno),
+                            "anno": anno,
+                            "mese": mese,
+                            "importo_debito": importo_debito,
+                            "importo_credito": importo_credito,
+                            "descrizione": get_descrizione_tributo_locale(codice)
+                        }
+                        result["sezione_tributi_locali"].append(tributo)
+            
+            # ============================================
+            # SEZIONE INPS - Pattern: 5100 CXX/DM10 matricola mese anno importo
+            # ============================================
+            if '5100' in row_text or 'CXX' in row_text or 'DM10' in row_text:
+                for i, item in enumerate(row):
+                    word = item['word']
+                    if word in ['CXX', 'DM10', 'RC01', 'C10', 'CF10']:
+                        causale = word
+                        matricola = ""
+                        mese = ""
+                        anno = ""
+                        importo = 0.0
+                        
+                        # Cerca matricola, mese, anno, importo
+                        for j in range(i+1, len(row)):
+                            next_word = row[j]['word']
+                            if re.match(r'^[A-Z0-9]{8,12}$', next_word) and not matricola:
+                                matricola = next_word
+                            elif re.match(r'^(0[1-9]|1[0-2])$', next_word) and not mese:
+                                mese = next_word
+                            elif re.match(r'^20\d{2}$', next_word) and not anno:
+                                anno = next_word
+                            elif re.match(r'^[\d.,]+$', next_word):
+                                if j+1 < len(row) and re.match(r'^\d{2}$', row[j+1]['word']):
+                                    euro_str = next_word.replace('.', '').replace(',', '')
+                                    cent_str = row[j+1]['word']
+                                    try:
+                                        importo = float(euro_str) + float(cent_str) / 100
+                                    except ValueError:
+                                        pass
+                        
+                        if causale and anno and importo > 0:
+                            # Evita duplicati
+                            existing = [i for i in result["sezione_inps"] 
+                                       if i["causale"] == causale and i["matricola"] == matricola]
+                            if not existing:
+                                result["sezione_inps"].append({
+                                    "codice_sede": "5100",
+                                    "causale": causale,
+                                    "matricola": matricola,
+                                    "periodo_riferimento": f"{mese}/{anno}",
+                                    "mese": mese,
+                                    "anno": anno,
+                                    "importo_debito": round(importo, 2),
+                                    "importo_credito": 0.0,
+                                    "descrizione": get_descrizione_causale_inps(causale)
+                                })
+    
+    doc.close()
     
     # ============================================
     # SEZIONE INPS
