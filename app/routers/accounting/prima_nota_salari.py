@@ -39,7 +39,8 @@ MESI_MAP = {
 }
 
 MESI_NOMI = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
-             "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+             "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre",
+             "Tredicesima", "Quattordicesima"]
 
 
 def normalize_name(name: str) -> str:
