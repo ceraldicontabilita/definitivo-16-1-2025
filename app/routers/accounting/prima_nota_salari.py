@@ -450,15 +450,25 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
 async def ricalcola_progressivi(
     anno_inizio: Optional[int] = Query(None, description="Anno da cui iniziare il calcolo del progressivo (es. 2023)"),
     dipendente: Optional[str] = Query(None, description="Nome dipendente specifico (opzionale)"),
-    force_reset: bool = Query(False, description="Forza il reset dei progressivi prima del ricalcolo")
+    force_reset: bool = Query(False, description="Forza il reset dei progressivi prima del ricalcolo"),
+    anni_esclusi: Optional[str] = Query(None, description="Anni da escludere (separati da virgola, es. '2018,2019,2020')")
 ) -> Dict[str, Any]:
     """
     Ricalcola i progressivi per uno o tutti i dipendenti.
     Se anno_inizio è specificato, il progressivo parte da 0 a gennaio di quell'anno.
     Se dipendente è specificato, ricalcola solo per quel dipendente.
     Se force_reset è True, prima azzera tutti i progressivi e poi li ricalcola.
+    Se anni_esclusi è specificato, quei record vengono ignorati nel calcolo.
     """
     db = Database.get_db()
+    
+    # Parse anni esclusi
+    anni_esclusi_list = []
+    if anni_esclusi:
+        try:
+            anni_esclusi_list = [int(a.strip()) for a in anni_esclusi.split(',') if a.strip()]
+        except:
+            pass
     
     # Se force_reset, prima azzera i progressivi
     if force_reset:
@@ -471,13 +481,14 @@ async def ricalcola_progressivi(
         )
     
     # Ricalcola
-    await ricalcola_progressivi_tutti(db, anno_inizio, dipendente)
+    await ricalcola_progressivi_tutti(db, anno_inizio, dipendente, anni_esclusi_list)
     
     return {
-        "message": f"Progressivi ricalcolati{f' dal {anno_inizio}' if anno_inizio else ''}{f' per {dipendente}' if dipendente else ''}",
+        "message": f"Progressivi ricalcolati{f' dal {anno_inizio}' if anno_inizio else ''}{f' per {dipendente}' if dipendente else ''}{f' (esclusi: {anni_esclusi})' if anni_esclusi else ''}",
         "anno_inizio": anno_inizio,
         "dipendente": dipendente,
-        "force_reset": force_reset
+        "force_reset": force_reset,
+        "anni_esclusi": anni_esclusi_list
     }
 
 
