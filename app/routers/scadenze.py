@@ -224,6 +224,7 @@ async def get_scadenze_iva(anno: int) -> Dict[str, Any]:
             "saldo": round(saldo, 2),
             "da_versare": saldo > 0,
             "importo_versamento": round(max(saldo, 0), 2),
+            "a_credito": round(abs(min(saldo, 0)), 2),  # Importo a credito quando saldo < 0
             "stato": "da_versare" if saldo > 0 else "a_credito",
             "giorni_mancanti": _giorni_mancanti(data_scad)
         })
@@ -292,6 +293,7 @@ async def get_scadenze_iva_mensile(anno: int) -> Dict[str, Any]:
             "saldo": round(saldo, 2),
             "da_versare": saldo > 0,
             "importo_versamento": round(max(saldo, 0), 2),
+            "a_credito": round(abs(min(saldo, 0)), 2),  # Importo a credito quando saldo < 0
             "stato": "da_versare" if saldo > 0 else "a_credito",
             "giorni_mancanti": _giorni_mancanti(data_scad)
         })
