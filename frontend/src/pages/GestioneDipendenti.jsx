@@ -1102,6 +1102,61 @@ export default function GestioneDipendenti() {
             </select>
           </div>
           
+          {/* Bottoni Escludi Anni dal Calcolo Progressivo */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 8, 
+            marginBottom: 20, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            background: '#fef3c7',
+            padding: 12,
+            borderRadius: 8,
+            border: '1px solid #f59e0b'
+          }}>
+            <span style={{ fontWeight: 'bold', color: '#92400e', marginRight: 8 }}>🚫 Escludi anni dal calcolo:</span>
+            {[2018, 2019, 2020, 2021, 2022].map(anno => (
+              <button
+                key={anno}
+                onClick={() => {
+                  if (anniEsclusi.includes(anno)) {
+                    setAnniEsclusi(anniEsclusi.filter(a => a !== anno));
+                  } else {
+                    setAnniEsclusi([...anniEsclusi, anno]);
+                  }
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  border: anniEsclusi.includes(anno) ? '2px solid #dc2626' : '1px solid #d1d5db',
+                  background: anniEsclusi.includes(anno) ? '#fee2e2' : 'white',
+                  color: anniEsclusi.includes(anno) ? '#dc2626' : '#374151',
+                  fontWeight: anniEsclusi.includes(anno) ? 'bold' : 'normal',
+                  cursor: 'pointer',
+                  textDecoration: anniEsclusi.includes(anno) ? 'line-through' : 'none'
+                }}
+              >
+                {anno}
+              </button>
+            ))}
+            {anniEsclusi.length > 0 && (
+              <button
+                onClick={() => setAnniEsclusi([])}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: '#6b7280',
+                  color: 'white',
+                  cursor: 'pointer',
+                  marginLeft: 8
+                }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+          
           {/* Pulsanti Importazione - NUOVI */}
           <div style={{ 
             display: 'flex', 
