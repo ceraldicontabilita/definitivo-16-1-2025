@@ -363,8 +363,7 @@ async def create_f24(
     summary="Upload F24 form"
 )
 async def upload_f24(
-    file: UploadFile = File(...),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    file: UploadFile = File(...)
 ) -> Dict[str, Any]:
     """Upload F24 form file."""
     db = Database.get_db()
@@ -376,8 +375,7 @@ async def upload_f24(
         "content_type": file.content_type,
         "size": len(contents),
         "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "user_id": current_user["user_id"]
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db["f24"].insert_one(doc)
     
