@@ -1221,6 +1221,29 @@ export default function GestioneDipendenti() {
                 </div>
               </div>
             </div>
+            {/* Bottone Ricalcola Progressivi */}
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={handleRicalcolaProgressiviDal2023}
+                disabled={ricalcolandoProgressivi}
+                style={{
+                  padding: '10px 20px',
+                  background: ricalcolandoProgressivi ? '#9ca3af' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: ricalcolandoProgressivi ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+                data-testid="btn-ricalcola-progressivi-2023"
+              >
+                {ricalcolandoProgressivi ? '⏳ Ricalcolo in corso...' : '🔄 Ricalcola Progressivi dal 2023'}
+              </button>
+            </div>
           </div>
 
           {/* Tabella Prima Nota Salari - NUOVA STRUTTURA */}
