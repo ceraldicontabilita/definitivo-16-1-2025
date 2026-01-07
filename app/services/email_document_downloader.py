@@ -355,7 +355,8 @@ async def download_documents_from_email(
         documents, stats = downloader.download_all_attachments(
             folder=folder,
             since_date=since_date,
-            limit=max_emails  # Limita il numero di email per velocità
+            limit=max_emails,
+            search_f24_only=True  # Cerca solo email con F24 nell'oggetto
         )
         
         # Salva nel database evitando duplicati
