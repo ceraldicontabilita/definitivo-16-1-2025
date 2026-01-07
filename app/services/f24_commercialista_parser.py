@@ -152,76 +152,74 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     # SEZIONE ERARIO
     # ============================================
     
-    # Pattern per formato consulente lavoro: codice | rateazione | anno | importo_euro | centesimi
-    # Es: "1001 0010 2025 1.288 72" o "1631 2024 1.568 32"
-    erario_consulente_pattern = r'\b(\d{4})\s+(\d{4})?\s*(\d{4})\s+([0-9.,]+)\s+(\d{2})\b'
+    # Pattern universale per tributi F24:
+    # Formato 1: "codice rateazione anno euro centesimi" es: "1001 0010 2025 1.288 72"
+    # Formato 2: "codice anno euro centesimi" es: "1631 2024 1.568 32"
+    # Formato 3: "codice\nanno\neuro centesimi" es: "6011\n2025\n1.211 90"
     
-    # Pattern per tributi erario standard: codice (4 cifre) | rateazione | mese | anno | importo debito | importo credito
-    # Esempio: 1001 0101 12 2024 2.610,51
-    erario_pattern = r'\b(\d{4})\s+(\d{4})?\s*(\d{2})?\s*(\d{4})\s+([0-9.,]+)\s*([0-9.,]*)'
+    # Pattern principale - cerca OGNI occorrenza di codice tributo con importo
+    # Codici validi: 1xxx (IRPEF), 3xxx (Regioni/Locali), 6xxx (IVA), 8xxx (INAIL)
+    tributo_pattern = r'\b(1\d{3}|3\d{3}|6\d{3}|8\d{3})\s+(\d{4})?\s*(\d{4})\s+([0-9.,]+)\s+(\d{2})\b'
     
-    # Pattern specifico per formato: codice_tributo\nanno\nimporto (con spazio tra euro e centesimi)
-    # Es: "6011\n2025\n    1.211 90"
-    erario_specific_pattern = r'\b(6\d{3}|1\d{3}|3\d{3}|8\d{3})\s*\n\s*(\d{4})\s*\n\s*([0-9.,]+)\s+(\d{2})\b'
-    
-    # Cerca nella sezione ERARIO
-    erario_section = re.search(r'SEZIONE\s*ERARIO(.*?)(?:SEZIONE|INPS|REGIONI|IMU|ALTRI|SALDO\s*FINALE|$)', text, re.DOTALL | re.IGNORECASE)
-    
-    # Se non trova sezione, cerca in tutto il testo
-    section_text = erario_section.group(1) if erario_section else text
-    
-    # PRIORITÀ 1: Pattern consulente lavoro (gestisce decimali separati da spazio)
     found_erario = False
-    codici_visti_erario = set()
+    tributi_estratti = []  # Lista per tenere traccia di tutti i tributi
     
-    for match in re.finditer(erario_consulente_pattern, section_text):
+    # Cerca in tutto il testo
+    for match in re.finditer(tributo_pattern, text):
         codice = match.group(1)
         rateazione = match.group(2) or ""
         anno = match.group(3)
         euro_str = match.group(4).replace('.', '').replace(',', '')
         cent_str = match.group(5)
         
-        # Verifica che sia un codice tributo valido (1xxx, 3xxx, 6xxx, 8xxx)
-        if not (codice.startswith('1') or codice.startswith('3') or codice.startswith('6') or codice.startswith('8')):
-            continue
-        
         # Calcola importo: "1.288" + "72" -> 1288.72
         try:
             importo = float(euro_str) + float(cent_str) / 100
         except ValueError:
-            importo = 0
-        
-        # Chiave univoca per evitare duplicati
-        key = f"{codice}_{anno}_{rateazione}_{importo}"
-        if key in codici_visti_erario:
             continue
-        codici_visti_erario.add(key)
         
-        if importo > 0:
-            # Estrai mese da rateazione se disponibile (formato 00MM)
-            mese = rateazione[2:4] if len(rateazione) == 4 else "00"
-            
-            tributo = {
-                "codice_tributo": codice,
-                "rateazione": rateazione,
-                "periodo_riferimento": parse_periodo(mese, anno),
-                "anno": anno,
-                "mese": mese,
-                "importo_debito": round(importo, 2),
-                "importo_credito": 0.0,
-                "descrizione": get_descrizione_tributo(codice)
-            }
-            result["sezione_erario"].append(tributo)
-            found_erario = True
-            logger.info(f"Estratto tributo erario (consulente): {codice} - €{round(importo, 2)}")
-            
-            # Verifica ravvedimento
-            if codice in CODICI_RAVVEDIMENTO:
-                result["has_ravvedimento"] = True
-                result["codici_ravvedimento"].append(codice)
+        if importo <= 0:
+            continue
+        
+        # Estrai mese da rateazione se disponibile (formato 00MM)
+        mese = rateazione[2:4] if len(rateazione) == 4 else "00"
+        
+        # Crea record tributo con tutti i dati
+        tributo = {
+            "codice_tributo": codice,
+            "rateazione": rateazione,
+            "periodo_riferimento": parse_periodo(mese, anno),
+            "anno": anno,
+            "mese": mese,
+            "importo_debito": round(importo, 2),
+            "importo_credito": 0.0,
+            "descrizione": get_descrizione_tributo(codice),
+            "match_pos": match.start()  # Per ordinare e rimuovere duplicati
+        }
+        
+        tributi_estratti.append(tributo)
+        found_erario = True
+        logger.info(f"Estratto tributo: {codice} anno {anno} rat {rateazione} - €{round(importo, 2)}")
+        
+        # Verifica ravvedimento
+        if codice in CODICI_RAVVEDIMENTO:
+            result["has_ravvedimento"] = True
+            result["codici_ravvedimento"].append(codice)
     
-    # PRIORITÀ 2: Pattern specifico per formato Sistemi/Zucchetti (newline tra campi)
+    # Rimuovi duplicati esatti (stesso codice, anno, rateazione, importo)
+    seen = set()
+    for t in tributi_estratti:
+        # Chiave univoca: codice + anno + rateazione + importo
+        key = f"{t['codice_tributo']}_{t['anno']}_{t['rateazione']}_{t['importo_debito']}"
+        if key not in seen:
+            seen.add(key)
+            # Rimuovi match_pos prima di salvare
+            del t['match_pos']
+            result["sezione_erario"].append(t)
+    
+    # FALLBACK: Pattern per F24 IVA commercialista (formato con newline)
     if not found_erario:
+        erario_specific_pattern = r'\b(6\d{3}|1\d{3}|3\d{3}|8\d{3})\s*\n\s*(\d{4})\s*\n\s*([0-9.,]+)\s+(\d{2})\b'
         for match in re.finditer(erario_specific_pattern, text):
             codice = match.group(1)
             anno = match.group(2)
