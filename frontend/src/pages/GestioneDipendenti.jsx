@@ -1293,44 +1293,6 @@ export default function GestioneDipendenti() {
             >
               🔄 Aggiorna
             </button>
-            
-            {/* Bottone Ricalcola con anni esclusi */}
-            <button
-              onClick={async () => {
-                if (anniEsclusi.length === 0 && !window.confirm('Vuoi ricalcolare tutti i progressivi?')) return;
-                try {
-                  const params = new URLSearchParams();
-                  params.append('force_reset', 'true');
-                  if (anniEsclusi.length > 0) {
-                    params.append('anni_esclusi', anniEsclusi.join(','));
-                  }
-                  if (filtroDipendente) {
-                    params.append('dipendente', filtroDipendente);
-                  }
-                  const res = await fetch(`${API_BASE_URL}/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`, {
-                    method: 'POST'
-                  });
-                  const data = await res.json();
-                  alert(data.message || 'Progressivi ricalcolati!');
-                  loadPrimaNotaSalari();
-                } catch (err) {
-                  alert('Errore: ' + err.message);
-                }
-              }}
-              style={{
-                padding: '10px 20px',
-                background: anniEsclusi.length > 0 
-                  ? 'linear-gradient(135deg, #f59e0b, #d97706)' 
-                  : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                color: 'white',
-                border: 'none',
-                borderRadius: 8,
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              🔢 Ricalcola Progressivi {anniEsclusi.length > 0 ? `(escludi ${anniEsclusi.join(', ')})` : ''}
-            </button>
           </div>
 
           {/* Risultato import PAGHE */}
