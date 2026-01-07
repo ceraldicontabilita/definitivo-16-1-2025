@@ -290,25 +290,64 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
     # SEZIONE INPS
     # ============================================
     
-    # Pattern INPS: codice sede | causale | matricola | periodo | importo
-    inps_pattern = r'(\d{4})\s+(DM10|CXX|RC01|C10|CF10)\s+([A-Z0-9]+)\s+(\d{2})\s*(\d{4})\s+([0-9.,]+)'
+    # Pattern INPS migliorato per vari formati:
+    # 5100 CXX 80143NAPOLI 10 2025 420 00
+    # 5100 DM10 5124776507 10 2025 5.357 00
+    inps_patterns = [
+        # Pattern standard: codice | causale | matricola | mese | anno | importo (con spazi nei decimali)
+        r'5100\s+(CXX|DM10|RC01|C10|CF10)\s+(\d+[A-Z]*|\d+)\s+(\d{2})\s+(\d{4})\s+([0-9.,]+)\s*(\d{2})?',
+        # Pattern alternativo senza codice sede
+        r'\b(CXX|DM10|RC01|C10|CF10)\s+([A-Z0-9]+)\s+(\d{2})\s+(\d{4})\s+([0-9.,]+)',
+    ]
     
-    inps_section = re.search(r'INPS(.*?)(?:REGIONI|IMU|ALTRI|TOTALE|$)', text, re.DOTALL | re.IGNORECASE)
-    if inps_section:
-        section_text = inps_section.group(1)
-        
-        for match in re.finditer(inps_pattern, section_text):
-            result["sezione_inps"].append({
-                "codice_sede": match.group(1),
-                "causale": match.group(2),
-                "matricola": match.group(3),
-                "periodo_riferimento": f"{match.group(4)}/{match.group(5)}",
-                "mese": match.group(4),
-                "anno": match.group(5),
-                "importo_debito": parse_importo(match.group(6)),
-                "importo_credito": 0.0,
-                "descrizione": get_descrizione_causale_inps(match.group(2))
-            })
+    # Cerca prima nella sezione INPS specifica
+    inps_section = re.search(r'SEZIONE\s*INPS(.*?)(?:SEZIONE|REGIONI|IMU|ALTRI|SALDO|$)', text, re.DOTALL | re.IGNORECASE)
+    search_text = inps_section.group(1) if inps_section else text
+    
+    for pattern in inps_patterns:
+        for match in re.finditer(pattern, search_text):
+            groups = match.groups()
+            
+            if pattern.startswith('5100'):
+                # Pattern con codice sede 5100
+                causale = groups[0]
+                matricola = groups[1]
+                mese = groups[2]
+                anno = groups[3]
+                importo_str = groups[4]
+                cent = groups[5] if len(groups) > 5 and groups[5] else None
+            else:
+                # Pattern senza codice sede
+                causale = groups[0]
+                matricola = groups[1]
+                mese = groups[2]
+                anno = groups[3]
+                importo_str = groups[4]
+                cent = None
+            
+            # Calcola importo
+            if cent:
+                # Formato "5.357 00" -> 5357.00
+                importo_str = importo_str.replace('.', '').replace(',', '.')
+                importo = float(importo_str) + float(cent) / 100
+            else:
+                importo = parse_importo(importo_str)
+            
+            # Evita duplicati
+            existing = [i for i in result["sezione_inps"] if i["causale"] == causale and i["matricola"] == matricola]
+            if not existing and importo > 0:
+                result["sezione_inps"].append({
+                    "codice_sede": "5100",
+                    "causale": causale,
+                    "matricola": matricola,
+                    "periodo_riferimento": f"{mese}/{anno}",
+                    "mese": mese,
+                    "anno": anno,
+                    "importo_debito": round(importo, 2),
+                    "importo_credito": 0.0,
+                    "descrizione": get_descrizione_causale_inps(causale)
+                })
+                logger.info(f"Estratto INPS: {causale} {matricola} - €{round(importo, 2)}")
     
     # ============================================
     # SEZIONE REGIONI
