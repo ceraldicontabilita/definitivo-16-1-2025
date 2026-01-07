@@ -40,6 +40,7 @@ export default function ArchivioBonifici() {
     loadTransfers();
     loadSummary();
     loadCount();
+    loadRiconciliazioneStats();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
