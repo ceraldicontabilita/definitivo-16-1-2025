@@ -147,8 +147,8 @@ def compute_vat_liquidation_from_db(
         # Verifica che il corrispettivo sia nel periodo
         if period_start <= data_corr <= period_end:
             # IVA dal corrispettivo
-            totale_iva = Decimal(str(corr.get("totale_iva", 0) or 0))
-            totale = Decimal(str(corr.get("totale", 0) or 0))
+            totale_iva = safe_decimal(corr.get("totale_iva", 0) or 0)
+            totale = safe_decimal(corr.get("totale", 0) or 0)
             
             iva_debito += totale_iva
             
