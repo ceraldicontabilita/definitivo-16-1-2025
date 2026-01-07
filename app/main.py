@@ -103,6 +103,7 @@ from app.routers import (
     accounting_f24,
     f24_public,
     f24_riconciliazione,
+    email_f24,
     haccp_report_pdf,
     simple_exports,
     email_notifications,
