@@ -703,7 +703,7 @@ export default function GestioneDipendenti() {
               <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
                 <div>Nessun contratto registrato</div>
-                <div style={{ fontSize: 13, marginTop: 8 }}>Clicca "Nuovo Contratto" o importa da Excel</div>
+                <div style={{ fontSize: 13, marginTop: 8 }}>Clicca &quot;Nuovo Contratto&quot; o importa da Excel</div>
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
