@@ -17,6 +17,9 @@ const TIPOLOGIE_CONTRATTO = [
 ];
 
 const ContrattiTab = memo(function ContrattiTab({ dipendenti = [] }) {
+  // Debug: log dipendenti
+  console.log('ContrattiTab dipendenti:', dipendenti?.length || 0);
+  
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
