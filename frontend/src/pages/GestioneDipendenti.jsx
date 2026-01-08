@@ -37,6 +37,9 @@ export default function GestioneDipendenti() {
   const [newDipendente, setNewDipendente] = useState(DEFAULT_DIPENDENTE);
   const [generatingContract, setGeneratingContract] = useState(false);
 
+  // Periodo state (per Libro Unico)
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+
   // Libro Unico state
   const [libroUnicoSalaries, setLibroUnicoSalaries] = useState([]);
   const [loadingLibroUnico, setLoadingLibroUnico] = useState(false);
