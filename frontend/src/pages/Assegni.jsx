@@ -47,14 +47,35 @@ export default function Assegni() {
         check_number: newCheck.check_number,
         bank: newCheck.bank,
         due_date: newCheck.due_date,
-        status: "pending"
+        status: "pending",
+        fornitore: newCheck.fornitore,
+        numero_fattura: newCheck.numero_fattura
       });
       setShowForm(false);
-      setNewCheck({ type: "emesso", amount: "", beneficiary: "", check_number: "", bank: "", due_date: new Date().toISOString().split("T")[0] });
+      setNewCheck({ type: "emesso", amount: "", beneficiary: "", check_number: "", bank: "", due_date: new Date().toISOString().split("T")[0], fornitore: "", numero_fattura: "" });
       loadChecks();
     } catch (e) {
       setErr("Errore: " + (e.response?.data?.detail || e.message));
     }
+  }
+
+  async function handleUpdateCheck(id) {
+    try {
+      await api.put(`/api/assegni/${id}`, editData);
+      setEditingId(null);
+      setEditData({});
+      loadChecks();
+    } catch (e) {
+      setErr("Errore aggiornamento: " + (e.response?.data?.detail || e.message));
+    }
+  }
+
+  function startEdit(check) {
+    setEditingId(check.id);
+    setEditData({
+      fornitore: check.fornitore || check.beneficiary || "",
+      numero_fattura: check.numero_fattura || ""
+    });
   }
 
   return (
