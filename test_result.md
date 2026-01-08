@@ -168,3 +168,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Ho corretto il bug dei bottoni anni 2018-2022. Il problema era che il codice usava API_BASE_URL che non era definito. Ho sostituito le chiamate fetch con api.post(). Testa i seguenti scenari: 1) Clicca sui bottoni 2018-2022 e verifica che il ricalcolo avvenga senza errori nella console, 2) Verifica che il modale Aggiusta Saldo si apra cliccando sul bottone verde '+Aggiustamento Saldo' e si chiuda cliccando 'Annulla'"
+  - agent: "testing"
+    message: "✅ TESTING COMPLETATO CON SUCCESSO! Entrambe le funzionalità testate funzionano perfettamente: 1) Bottoni esclusione anni 2018-2022: cambiano stato visivo correttamente (rosso con strikethrough), eseguono API calls senza errori, Reset button funziona. 2) Modal Aggiustamento Saldo: si apre e chiude correttamente, tutti i form fields presenti. Nessun errore JavaScript rilevato. Le correzioni del main agent hanno risolto completamente i problemi segnalati dall'utente."
