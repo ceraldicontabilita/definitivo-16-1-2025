@@ -259,6 +259,7 @@ app.include_router(documenti.router, prefix="/api/documenti", tags=["Gestione Do
 app.include_router(operazioni_da_confermare.router, prefix="/api/operazioni-da-confermare", tags=["Operazioni da Confermare"])
 app.include_router(previsioni_acquisti.router, prefix="/api/previsioni-acquisti", tags=["Previsioni Acquisti"])
 app.include_router(cedolini.router, prefix="/api/cedolini", tags=["Cedolini Paga"])
+app.include_router(tfr.router, prefix="/api/tfr", tags=["TFR"])
 
 
 # =============================================================================
