@@ -151,10 +151,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Verifica che Prima Nota Salari funzioni con il nuovo store Zustand"
-    - "Test bottoni esclusione anni"
-    - "Test modale Aggiustamento Saldo"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
