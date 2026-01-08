@@ -549,7 +549,7 @@ export default function Documenti() {
                 )}
                 <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
                   💡 Crea parole chiave personalizzate per categorizzare automaticamente i documenti.
-                  Es: "cartella esattoriale" creerà una cartella "Cartelle Esattoriali".
+                  Es: &quot;cartella esattoriale&quot; creerà una cartella &quot;Cartelle Esattoriali&quot;.
                 </p>
               </div>
               
