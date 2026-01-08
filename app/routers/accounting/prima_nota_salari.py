@@ -392,10 +392,10 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
     
     Per ogni record:
     - Saldo = importo_bonifico - importo_busta (della singola riga)
-    - Progressivo = Somma cumulativa di tutti i saldi precedenti + saldo corrente
+    - Progressivo = Somma cumulativa di tutti i saldi dei record NON esclusi
     
     I record sono ordinati per anno, mese e data di creazione.
-    Gli anni in anni_esclusi vengono saltati nel calcolo del progressivo.
+    Gli anni in anni_esclusi vengono completamente ignorati nel calcolo del progressivo.
     I record con vincolo=True non vengono modificati.
     """
     if anni_esclusi is None:
@@ -428,10 +428,12 @@ async def ricalcola_progressivi_tutti(db, anno_inizio: int = None, dipendente_fi
             
             anno_record = record.get("anno", 0)
             
-            # Se l'anno è escluso, non aggiorna il progressivo
+            # Se l'anno è escluso, imposta progressivo a 0 e NON lo aggiunge al cumulo
             if anno_record in anni_esclusi:
                 prog_value = 0
+                # NON aggiungiamo saldo al progressivo cumulativo
             elif anno_inizio is None or anno_record >= anno_inizio:
+                # Aggiungi il saldo al progressivo cumulativo
                 progressivo += saldo
                 prog_value = round(progressivo, 2)
             else:
