@@ -155,31 +155,46 @@ export default function Documenti() {
     const keywordsParam = keywordsToSearch.length > 0 ? keywordsToSearch.join(',') : '';
     
     const message = keywordsParam 
-      ? `Vuoi scaricare i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\nParole chiave: ${keywordsToSearch.slice(0, 5).join(', ')}${keywordsToSearch.length > 5 ? '...' : ''}`
-      : `Vuoi scaricare TUTTI i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\n⚠️ Nessuna parola chiave selezionata - verranno scaricati tutti gli allegati.`;
+      ? `Vuoi scaricare i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\nParole chiave: ${keywordsToSearch.slice(0, 5).join(', ')}${keywordsToSearch.length > 5 ? '...' : ''}\n\nIl download avverrà in background.`
+      : `Vuoi scaricare TUTTI i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\n⚠️ Nessuna parola chiave selezionata - verranno scaricati tutti gli allegati.\n\nIl download avverrà in background.`;
     
     if (!window.confirm(message)) return;
     
     setDownloading(true);
+    setTaskStatus({ status: 'pending', message: 'Avvio download...' });
+    
     try {
-      let url = `/api/documenti/scarica-da-email?giorni=${giorniDownload}`;
+      // Avvia download in background
+      let url = `/api/documenti/scarica-da-email?giorni=${giorniDownload}&background=true`;
       if (keywordsParam) {
         url += `&parole_chiave=${encodeURIComponent(keywordsParam)}`;
       }
       
       const res = await api.post(url);
       
-      if (res.data.success) {
+      if (res.data.background && res.data.task_id) {
+        // Salva task e avvia polling
+        setBackgroundTask(res.data.task_id);
+        
+        // Polling ogni 2 secondi
+        pollingRef.current = setInterval(() => {
+          pollTaskStatus(res.data.task_id);
+        }, 2000);
+        
+        // Prima chiamata immediata
+        pollTaskStatus(res.data.task_id);
+      } else if (res.data.success) {
+        // Fallback sincrono (non dovrebbe accadere)
         const stats = res.data.stats;
-        alert(`✅ Download completato!\n\nEmail controllate: ${stats.emails_checked}\nDocumenti trovati: ${stats.documents_found}\nNuovi documenti: ${stats.new_documents}\nDuplicati saltati: ${stats.duplicates_skipped}\n\nCategorie:\n${Object.entries(stats.by_category || {}).map(([k, v]) => `  ${k}: ${v}`).join('\n')}`);
+        alert(`✅ Download completato!\n\nEmail controllate: ${stats.emails_checked}\nDocumenti trovati: ${stats.documents_found}\nNuovi documenti: ${stats.new_documents}\nDuplicati saltati: ${stats.duplicates_skipped}`);
         loadData();
-      } else {
-        alert(`❌ Errore: ${res.data.error}`);
+        setDownloading(false);
       }
     } catch (error) {
       alert(`❌ Errore download: ${error.response?.data?.detail || error.message}`);
-    } finally {
       setDownloading(false);
+      setBackgroundTask(null);
+      setTaskStatus(null);
     }
   };
 
