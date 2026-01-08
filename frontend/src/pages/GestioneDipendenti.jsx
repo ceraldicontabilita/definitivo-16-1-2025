@@ -1355,32 +1355,38 @@ export default function GestioneDipendenti() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 16 }}>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Records</div>
-                <div style={{ fontSize: 28, fontWeight: 'bold' }}>{salariMovimenti.length}</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>
+                  {salariMovimenti.filter(m => !anniEsclusi.includes(m.anno)).length}
+                  {anniEsclusi.length > 0 && <span style={{ fontSize: 14, opacity: 0.7 }}> / {salariMovimenti.length}</span>}
+                </div>
               </div>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Buste</div>
                 <div style={{ fontSize: 24, fontWeight: 'bold' }}>
-                  {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo_busta || 0), 0))}
+                  {formatEuro(salariMovimenti.filter(m => !anniEsclusi.includes(m.anno)).reduce((sum, m) => sum + (m.importo_busta || 0), 0))}
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Bonifici</div>
                 <div style={{ fontSize: 24, fontWeight: 'bold' }}>
-                  {formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo_bonifico || 0), 0))}
+                  {formatEuro(salariMovimenti.filter(m => !anniEsclusi.includes(m.anno)).reduce((sum, m) => sum + (m.importo_bonifico || 0), 0))}
                 </div>
               </div>
               <div>
                 <div style={{ fontSize: 12, opacity: 0.8 }}>
                   {filtroDipendente ? 'Saldo Progressivo' : 'Differenza'}
+                  {anniEsclusi.length > 0 && <span style={{ fontSize: 10, display: 'block' }}>(esclusi: {anniEsclusi.join(', ')})</span>}
                 </div>
                 <div style={{ 
                   fontSize: 24, 
                   fontWeight: 'bold',
                   color: (() => {
+                    // Filtra i record escludendo gli anni selezionati
+                    const recordsFiltrati = salariMovimenti.filter(m => !anniEsclusi.includes(m.anno));
                     // Se c'è un filtro dipendente, mostra l'ultimo progressivo (ordine cronologico)
-                    if (filtroDipendente && salariMovimenti.length > 0) {
+                    if (filtroDipendente && recordsFiltrati.length > 0) {
                       // Ordina per anno e mese per trovare l'ultimo record
-                      const sorted = [...salariMovimenti].sort((a, b) => {
+                      const sorted = [...recordsFiltrati].sort((a, b) => {
                         if (a.anno !== b.anno) return b.anno - a.anno;
                         return b.mese - a.mese;
                       });
@@ -1388,20 +1394,22 @@ export default function GestioneDipendenti() {
                       return ultimoProgressivo >= 0 ? '#22c55e' : '#ef4444';
                     }
                     // Altrimenti mostra la differenza totale
-                    return salariMovimenti.reduce((sum, m) => sum + (m.importo_bonifico || 0) - (m.importo_busta || 0), 0) >= 0 ? '#22c55e' : '#ef4444';
+                    return recordsFiltrati.reduce((sum, m) => sum + (m.importo_bonifico || 0) - (m.importo_busta || 0), 0) >= 0 ? '#22c55e' : '#ef4444';
                   })()
                 }}>
                   {(() => {
+                    // Filtra i record escludendo gli anni selezionati
+                    const recordsFiltrati = salariMovimenti.filter(m => !anniEsclusi.includes(m.anno));
                     // Se c'è un filtro dipendente, mostra l'ultimo progressivo
-                    if (filtroDipendente && salariMovimenti.length > 0) {
-                      const sorted = [...salariMovimenti].sort((a, b) => {
+                    if (filtroDipendente && recordsFiltrati.length > 0) {
+                      const sorted = [...recordsFiltrati].sort((a, b) => {
                         if (a.anno !== b.anno) return b.anno - a.anno;
                         return b.mese - a.mese;
                       });
                       return formatEuro(sorted[0]?.progressivo || 0);
                     }
                     // Altrimenti mostra la differenza totale
-                    return formatEuro(salariMovimenti.reduce((sum, m) => sum + (m.importo_bonifico || 0) - (m.importo_busta || 0), 0));
+                    return formatEuro(recordsFiltrati.reduce((sum, m) => sum + (m.importo_bonifico || 0) - (m.importo_busta || 0), 0));
                   })()}
                 </div>
               </div>
