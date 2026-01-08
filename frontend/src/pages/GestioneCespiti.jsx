@@ -4,495 +4,203 @@ import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '../components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { 
-  Building2, 
-  Users, 
-  Calendar, 
-  Calculator,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Euro,
-  FileText,
-  Plus
-} from 'lucide-react';
+import { Building2, Users, Calendar, Calculator, AlertTriangle, Plus } from 'lucide-react';
 
-// Simple Label component
-const Label = ({ children, className = '' }) => (
-  <label className={`text-sm font-medium leading-none ${className}`}>{children}</label>
-);
+const Label = ({ children }) => <label className="text-xs font-medium text-slate-600">{children}</label>;
 
 export default function GestioneCespiti() {
   const { anno } = useAnnoGlobale();
   const [activeTab, setActiveTab] = useState('cespiti');
   const [loading, setLoading] = useState(false);
-  
-  // Cespiti state
   const [cespiti, setCespiti] = useState([]);
   const [riepilogoCespiti, setRiepilogoCespiti] = useState(null);
   const [categorie, setCategorie] = useState([]);
-  const [showNuovoCespite, setShowNuovoCespite] = useState(false);
-  const [nuovoCespite, setNuovoCespite] = useState({
-    descrizione: '',
-    categoria: '',
-    data_acquisto: '',
-    valore_acquisto: '',
-    fornitore: '',
-    numero_fattura: ''
-  });
-  
-  // TFR state
+  const [showForm, setShowForm] = useState(false);
+  const [nuovoCespite, setNuovoCespite] = useState({ descrizione: '', categoria: '', data_acquisto: '', valore_acquisto: '', fornitore: '' });
   const [riepilogoTFR, setRiepilogoTFR] = useState(null);
-  
-  // Scadenzario state
   const [scadenzario, setScadenzario] = useState(null);
   const [urgenti, setUrgenti] = useState(null);
 
   useEffect(() => {
-    if (activeTab === 'cespiti') {
-      loadCespiti();
-      loadCategorie();
-    } else if (activeTab === 'tfr') {
-      loadTFR();
-    } else if (activeTab === 'scadenzario') {
-      loadScadenzario();
-    }
+    if (activeTab === 'cespiti') { loadCespiti(); loadCategorie(); }
+    else if (activeTab === 'tfr') { loadTFR(); }
+    else if (activeTab === 'scadenzario') { loadScadenzario(); }
   }, [activeTab, anno]);
 
   const loadCespiti = async () => {
     try {
       setLoading(true);
-      const [cespitiRes, riepilogoRes] = await Promise.all([
-        api.get('/api/cespiti/?attivi=true'),
-        api.get('/api/cespiti/riepilogo')
-      ]);
-      setCespiti(cespitiRes.data);
-      setRiepilogoCespiti(riepilogoRes.data);
-    } catch (error) {
-      console.error('Error loading cespiti:', error);
-    } finally {
-      setLoading(false);
-    }
+      const [c, r] = await Promise.all([api.get('/api/cespiti/?attivi=true'), api.get('/api/cespiti/riepilogo')]);
+      setCespiti(c.data); setRiepilogoCespiti(r.data);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
-
-  const loadCategorie = async () => {
-    try {
-      const res = await api.get('/api/cespiti/categorie');
-      setCategorie(res.data.categorie);
-    } catch (error) {
-      console.error('Error loading categorie:', error);
-    }
-  };
-
-  const loadTFR = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/api/tfr/riepilogo-aziendale?anno=${anno}`);
-      setRiepilogoTFR(res.data);
-    } catch (error) {
-      console.error('Error loading TFR:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const loadCategorie = async () => { try { const r = await api.get('/api/cespiti/categorie'); setCategorie(r.data.categorie); } catch (e) {} };
+  const loadTFR = async () => { try { setLoading(true); const r = await api.get(`/api/tfr/riepilogo-aziendale?anno=${anno}`); setRiepilogoTFR(r.data); } catch (e) {} finally { setLoading(false); } };
   const loadScadenzario = async () => {
     try {
       setLoading(true);
-      const [scadRes, urgRes] = await Promise.all([
-        api.get(`/api/scadenzario-fornitori/?anno=${anno}`),
-        api.get('/api/scadenzario-fornitori/urgenti')
-      ]);
-      setScadenzario(scadRes.data);
-      setUrgenti(urgRes.data);
-    } catch (error) {
-      console.error('Error loading scadenzario:', error);
-    } finally {
-      setLoading(false);
-    }
+      const [s, u] = await Promise.all([api.get(`/api/scadenzario-fornitori/?anno=${anno}`), api.get('/api/scadenzario-fornitori/urgenti')]);
+      setScadenzario(s.data); setUrgenti(u.data);
+    } catch (e) {} finally { setLoading(false); }
   };
 
   const handleCreaCespite = async () => {
-    if (!nuovoCespite.descrizione || !nuovoCespite.categoria || !nuovoCespite.valore_acquisto) {
-      alert('Compila tutti i campi obbligatori');
-      return;
-    }
+    if (!nuovoCespite.descrizione || !nuovoCespite.categoria || !nuovoCespite.valore_acquisto) return alert('Campi obbligatori');
     try {
-      await api.post('/api/cespiti/', {
-        ...nuovoCespite,
-        valore_acquisto: parseFloat(nuovoCespite.valore_acquisto)
-      });
-      setShowNuovoCespite(false);
-      setNuovoCespite({
-        descrizione: '',
-        categoria: '',
-        data_acquisto: '',
-        valore_acquisto: '',
-        fornitore: '',
-        numero_fattura: ''
-      });
+      await api.post('/api/cespiti/', { ...nuovoCespite, valore_acquisto: parseFloat(nuovoCespite.valore_acquisto) });
+      setShowForm(false); setNuovoCespite({ descrizione: '', categoria: '', data_acquisto: '', valore_acquisto: '', fornitore: '' });
       loadCespiti();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    }
+    } catch (e) { alert('Errore: ' + (e.response?.data?.detail || e.message)); }
   };
 
-  const handleCalcolaAmmortamenti = async () => {
-    if (!window.confirm(`Calcolare e registrare ammortamenti per l'anno ${anno}?`)) return;
-    try {
-      const res = await api.post(`/api/cespiti/registra/${anno}`);
-      alert(res.data.messaggio);
-      loadCespiti();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    }
+  const handleCalcolaAmm = async () => {
+    if (!window.confirm(`Calcolare ammortamenti ${anno}?`)) return;
+    try { const r = await api.post(`/api/cespiti/registra/${anno}`); alert(r.data.messaggio); loadCespiti(); } catch (e) { alert('Errore'); }
   };
 
-  const formatEuro = (val) => {
-    if (val === null || val === undefined) return '-';
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val);
-  };
+  const fmt = (v) => v != null ? new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v) : '-';
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="gestione-cespiti-page">
-      {/* Header */}
+    <div className="p-3 space-y-3" data-testid="gestione-cespiti-page">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-            <Building2 className="w-8 h-8 text-indigo-600" />
-            Gestione Cespiti e TFR
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Beni ammortizzabili, TFR e scadenzario fornitori
-          </p>
-        </div>
-        <div className="text-lg font-semibold text-slate-600">
-          Anno {anno}
-        </div>
+        <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-indigo-600" /> Cespiti & TFR
+        </h1>
+        <span className="text-sm font-semibold text-slate-600">{anno}</span>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-3">
-          <TabsTrigger value="cespiti" className="flex items-center gap-2">
-            <Building2 className="w-4 h-4" />
-            Cespiti
-          </TabsTrigger>
-          <TabsTrigger value="tfr" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            TFR
-          </TabsTrigger>
-          <TabsTrigger value="scadenzario" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Scadenzario
-          </TabsTrigger>
+        <TabsList className="h-8">
+          <TabsTrigger value="cespiti" className="text-xs h-7 px-3"><Building2 className="w-3 h-3 mr-1" />Cespiti</TabsTrigger>
+          <TabsTrigger value="tfr" className="text-xs h-7 px-3"><Users className="w-3 h-3 mr-1" />TFR</TabsTrigger>
+          <TabsTrigger value="scadenzario" className="text-xs h-7 px-3"><Calendar className="w-3 h-3 mr-1" />Scadenzario</TabsTrigger>
         </TabsList>
 
-        {/* TAB CESPITI */}
-        <TabsContent value="cespiti" className="space-y-6">
-          {/* Riepilogo */}
+        {/* CESPITI */}
+        <TabsContent value="cespiti" className="mt-2 space-y-2">
           {riepilogoCespiti && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-blue-600">Cespiti Attivi</p>
-                  <p className="text-2xl font-bold text-blue-800">{riepilogoCespiti.totali.num_cespiti}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-green-50 border-green-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-green-600">Valore Acquisto</p>
-                  <p className="text-2xl font-bold text-green-800">{formatEuro(riepilogoCespiti.totali.valore_acquisto)}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-amber-50 border-amber-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-amber-600">Fondo Amm.to</p>
-                  <p className="text-2xl font-bold text-amber-800">{formatEuro(riepilogoCespiti.totali.fondo_ammortamento)}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-purple-50 border-purple-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-purple-600">Valore Netto</p>
-                  <p className="text-2xl font-bold text-purple-800">{formatEuro(riepilogoCespiti.totali.valore_netto_contabile)}</p>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="bg-blue-50 p-2 rounded text-center"><p className="text-xs text-blue-600">Cespiti</p><p className="text-lg font-bold text-blue-800">{riepilogoCespiti.totali.num_cespiti}</p></div>
+              <div className="bg-green-50 p-2 rounded text-center"><p className="text-xs text-green-600">Val. Acq.</p><p className="text-lg font-bold text-green-800">{fmt(riepilogoCespiti.totali.valore_acquisto)}</p></div>
+              <div className="bg-amber-50 p-2 rounded text-center"><p className="text-xs text-amber-600">Fondo</p><p className="text-lg font-bold text-amber-800">{fmt(riepilogoCespiti.totali.fondo_ammortamento)}</p></div>
+              <div className="bg-purple-50 p-2 rounded text-center"><p className="text-xs text-purple-600">Netto</p><p className="text-lg font-bold text-purple-800">{fmt(riepilogoCespiti.totali.valore_netto_contabile)}</p></div>
             </div>
           )}
-
-          {/* Azioni */}
-          <div className="flex gap-4">
-            <Button onClick={() => setShowNuovoCespite(true)} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Nuovo Cespite
-            </Button>
-            <Button onClick={handleCalcolaAmmortamenti} variant="outline" className="flex items-center gap-2">
-              <Calculator className="w-4 h-4" />
-              Calcola Ammortamenti {anno}
-            </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowForm(!showForm)} size="sm" className="h-7 text-xs"><Plus className="w-3 h-3 mr-1" />Nuovo</Button>
+            <Button onClick={handleCalcolaAmm} variant="outline" size="sm" className="h-7 text-xs"><Calculator className="w-3 h-3 mr-1" />Ammort. {anno}</Button>
           </div>
-
-          {/* Form Nuovo Cespite */}
-          {showNuovoCespite && (
-            <Card className="border-2 border-blue-200">
-              <CardHeader>
-                <CardTitle>Nuovo Cespite</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Descrizione *</Label>
-                    <Input 
-                      value={nuovoCespite.descrizione}
-                      onChange={(e) => setNuovoCespite({...nuovoCespite, descrizione: e.target.value})}
-                      placeholder="Es: Forno professionale"
-                    />
-                  </div>
-                  <div>
-                    <Label>Categoria *</Label>
-                    <Select 
-                      value={nuovoCespite.categoria}
-                      onValueChange={(v) => setNuovoCespite({...nuovoCespite, categoria: v})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleziona categoria..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categorie.map(c => (
-                          <SelectItem key={c.codice} value={c.codice}>
-                            {c.descrizione} ({c.coefficiente}%)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+          {showForm && (
+            <Card className="border-blue-200 shadow-sm">
+              <CardContent className="p-2 space-y-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div><Label>Descrizione*</Label><Input value={nuovoCespite.descrizione} onChange={(e) => setNuovoCespite({...nuovoCespite, descrizione: e.target.value})} className="h-7 text-xs" placeholder="Es: Forno" /></div>
+                  <div><Label>Categoria*</Label>
+                    <Select value={nuovoCespite.categoria} onValueChange={(v) => setNuovoCespite({...nuovoCespite, categoria: v})}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="..." /></SelectTrigger>
+                      <SelectContent>{categorie.map(c => <SelectItem key={c.codice} value={c.codice} className="text-xs">{c.descrizione} ({c.coefficiente}%)</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label>Data Acquisto *</Label>
-                    <Input 
-                      type="date"
-                      value={nuovoCespite.data_acquisto}
-                      onChange={(e) => setNuovoCespite({...nuovoCespite, data_acquisto: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Valore Acquisto *</Label>
-                    <Input 
-                      type="number"
-                      value={nuovoCespite.valore_acquisto}
-                      onChange={(e) => setNuovoCespite({...nuovoCespite, valore_acquisto: e.target.value})}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div>
-                    <Label>Fornitore</Label>
-                    <Input 
-                      value={nuovoCespite.fornitore}
-                      onChange={(e) => setNuovoCespite({...nuovoCespite, fornitore: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>N. Fattura</Label>
-                    <Input 
-                      value={nuovoCespite.numero_fattura}
-                      onChange={(e) => setNuovoCespite({...nuovoCespite, numero_fattura: e.target.value})}
-                    />
-                  </div>
+                  <div><Label>Data Acq.*</Label><Input type="date" value={nuovoCespite.data_acquisto} onChange={(e) => setNuovoCespite({...nuovoCespite, data_acquisto: e.target.value})} className="h-7 text-xs" /></div>
+                  <div><Label>Valore*</Label><Input type="number" value={nuovoCespite.valore_acquisto} onChange={(e) => setNuovoCespite({...nuovoCespite, valore_acquisto: e.target.value})} className="h-7 text-xs" placeholder="0" /></div>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={handleCreaCespite}>Salva Cespite</Button>
-                  <Button variant="outline" onClick={() => setShowNuovoCespite(false)}>Annulla</Button>
+                  <Button onClick={handleCreaCespite} size="sm" className="h-7 text-xs">Salva</Button>
+                  <Button onClick={() => setShowForm(false)} variant="outline" size="sm" className="h-7 text-xs">Annulla</Button>
                 </div>
               </CardContent>
             </Card>
           )}
-
-          {/* Lista Cespiti */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Lista Cespiti</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8">Caricamento...</div>
-              ) : cespiti.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">Nessun cespite registrato</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-100">
-                      <tr>
-                        <th className="px-4 py-2 text-left">Descrizione</th>
-                        <th className="px-4 py-2 text-left">Categoria</th>
-                        <th className="px-4 py-2 text-center">Coeff.</th>
-                        <th className="px-4 py-2 text-right">Valore Acq.</th>
-                        <th className="px-4 py-2 text-right">Fondo Amm.</th>
-                        <th className="px-4 py-2 text-right">Val. Residuo</th>
-                        <th className="px-4 py-2 text-center">Stato</th>
+          <Card className="shadow-sm">
+            <CardContent className="p-2">
+              {loading ? <div className="text-center py-2 text-xs text-slate-500">Caricamento...</div>
+              : cespiti.length === 0 ? <div className="text-center py-2 text-xs text-slate-500">Nessun cespite</div>
+              : (
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="px-2 py-1 text-left">Descrizione</th>
+                      <th className="px-2 py-1 text-left">Categoria</th>
+                      <th className="px-2 py-1 text-center">%</th>
+                      <th className="px-2 py-1 text-right">Valore</th>
+                      <th className="px-2 py-1 text-right">Fondo</th>
+                      <th className="px-2 py-1 text-right">Residuo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cespiti.map((c, i) => (
+                      <tr key={i} className="border-b hover:bg-slate-50">
+                        <td className="px-2 py-1 font-medium">{c.descrizione}</td>
+                        <td className="px-2 py-1 text-slate-600">{c.categoria}</td>
+                        <td className="px-2 py-1 text-center">{c.coefficiente_ammortamento}%</td>
+                        <td className="px-2 py-1 text-right">{fmt(c.valore_acquisto)}</td>
+                        <td className="px-2 py-1 text-right text-amber-600">{fmt(c.fondo_ammortamento)}</td>
+                        <td className="px-2 py-1 text-right font-semibold">{fmt(c.valore_residuo)}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {cespiti.map((c, idx) => (
-                        <tr key={c.id || idx} className="border-b hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium">{c.descrizione}</td>
-                          <td className="px-4 py-3 text-slate-600">{c.categoria_descrizione || c.categoria}</td>
-                          <td className="px-4 py-3 text-center">{c.coefficiente_ammortamento}%</td>
-                          <td className="px-4 py-3 text-right">{formatEuro(c.valore_acquisto)}</td>
-                          <td className="px-4 py-3 text-right text-amber-600">{formatEuro(c.fondo_ammortamento)}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{formatEuro(c.valore_residuo)}</td>
-                          <td className="px-4 py-3 text-center">
-                            {c.ammortamento_completato ? (
-                              <span className="text-green-600">✓ Completato</span>
-                            ) : (
-                              <span className="text-blue-600">In corso</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* TAB TFR */}
-        <TabsContent value="tfr" className="space-y-6">
+        {/* TFR */}
+        <TabsContent value="tfr" className="mt-2 space-y-2">
           {riepilogoTFR && (
             <>
-              {/* Riepilogo */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-indigo-50 border-indigo-200">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-indigo-600">Fondo TFR Totale</p>
-                    <p className="text-3xl font-bold text-indigo-800">{formatEuro(riepilogoTFR.totale_fondo_tfr)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-50 border-green-200">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-green-600">Accantonato {anno}</p>
-                    <p className="text-2xl font-bold text-green-800">{formatEuro(riepilogoTFR.accantonamenti_anno.totale_accantonato)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-red-50 border-red-200">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-red-600">Liquidato {anno}</p>
-                    <p className="text-2xl font-bold text-red-800">{formatEuro(riepilogoTFR.liquidazioni_anno.totale_netto)}</p>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-indigo-50 p-2 rounded text-center"><p className="text-xs text-indigo-600">Fondo TFR</p><p className="text-xl font-bold text-indigo-800">{fmt(riepilogoTFR.totale_fondo_tfr)}</p></div>
+                <div className="bg-green-50 p-2 rounded text-center"><p className="text-xs text-green-600">Accantonato {anno}</p><p className="text-lg font-bold text-green-800">{fmt(riepilogoTFR.accantonamenti_anno.totale_accantonato)}</p></div>
+                <div className="bg-red-50 p-2 rounded text-center"><p className="text-xs text-red-600">Liquidato {anno}</p><p className="text-lg font-bold text-red-800">{fmt(riepilogoTFR.liquidazioni_anno.totale_netto)}</p></div>
               </div>
-
-              {/* Dettaglio per dipendente */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    TFR per Dipendente
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {riepilogoTFR.dettaglio_dipendenti.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">Nessun TFR accantonato</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {riepilogoTFR.dettaglio_dipendenti.map((d, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                          <span className="font-medium">{d.nome}</span>
-                          <span className="text-lg font-bold text-indigo-700">{formatEuro(d.tfr_accantonato)}</span>
-                        </div>
-                      ))}
+              <Card className="shadow-sm">
+                <CardHeader className="py-1 px-2"><CardTitle className="text-xs">TFR per Dipendente</CardTitle></CardHeader>
+                <CardContent className="p-2">
+                  {riepilogoTFR.dettaglio_dipendenti.length === 0 ? <div className="text-xs text-slate-500 text-center">Nessun TFR</div>
+                  : <div className="space-y-1">{riepilogoTFR.dettaglio_dipendenti.map((d, i) => (
+                    <div key={i} className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-xs">
+                      <span>{d.nome}</span><span className="font-bold text-indigo-700">{fmt(d.tfr_accantonato)}</span>
                     </div>
-                  )}
+                  ))}</div>}
                 </CardContent>
               </Card>
             </>
           )}
         </TabsContent>
 
-        {/* TAB SCADENZARIO */}
-        <TabsContent value="scadenzario" className="space-y-6">
-          {/* Urgenti */}
+        {/* SCADENZARIO */}
+        <TabsContent value="scadenzario" className="mt-2 space-y-2">
           {urgenti && urgenti.num_urgenti > 0 && (
-            <Card className="border-2 border-red-300 bg-red-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-700">
-                  <AlertTriangle className="w-5 h-5" />
-                  Fatture Urgenti ({urgenti.num_urgenti})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-center p-3 bg-white rounded-lg">
-                    <p className="text-sm text-red-600">Scadute</p>
-                    <p className="text-xl font-bold text-red-800">{urgenti.num_scadute}</p>
-                    <p className="text-lg font-semibold">{formatEuro(urgenti.totale_scaduto)}</p>
-                  </div>
-                  <div className="text-center p-3 bg-white rounded-lg">
-                    <p className="text-sm text-amber-600">In Scadenza</p>
-                    <p className="text-xl font-bold text-amber-800">{urgenti.num_urgenti - urgenti.num_scadute}</p>
-                    <p className="text-lg font-semibold">{formatEuro(urgenti.totale_urgente - urgenti.totale_scaduto)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-red-50 border border-red-200 rounded p-2">
+              <div className="flex items-center gap-2 text-red-700 text-xs font-semibold mb-1">
+                <AlertTriangle className="w-4 h-4" />Urgenti: {urgenti.num_urgenti} fatture
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white p-1.5 rounded text-center"><p className="text-xs text-red-600">Scadute</p><p className="font-bold text-red-800">{urgenti.num_scadute} | {fmt(urgenti.totale_scaduto)}</p></div>
+                <div className="bg-white p-1.5 rounded text-center"><p className="text-xs text-amber-600">In Scadenza</p><p className="font-bold text-amber-800">{urgenti.num_urgenti - urgenti.num_scadute} | {fmt(urgenti.totale_urgente - urgenti.totale_scaduto)}</p></div>
+              </div>
+            </div>
           )}
-
-          {/* Riepilogo Scadenzario */}
           {scadenzario && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-slate-50">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-slate-600">Totale Fatture</p>
-                    <p className="text-2xl font-bold">{scadenzario.riepilogo.totale_fatture}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-blue-600">Da Pagare</p>
-                    <p className="text-2xl font-bold text-blue-800">{formatEuro(scadenzario.riepilogo.totale_da_pagare)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-red-50 border-red-200">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-red-600">Scaduto</p>
-                    <p className="text-2xl font-bold text-red-800">{formatEuro(scadenzario.riepilogo.totale_scaduto)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-amber-50 border-amber-200">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-sm text-amber-600">Prossimi 7gg</p>
-                    <p className="text-2xl font-bold text-amber-800">{scadenzario.riepilogo.num_prossimi_7gg}</p>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-slate-50 p-2 rounded text-center"><p className="text-xs text-slate-600">Fatture</p><p className="text-lg font-bold">{scadenzario.riepilogo.totale_fatture}</p></div>
+                <div className="bg-blue-50 p-2 rounded text-center"><p className="text-xs text-blue-600">Da Pagare</p><p className="text-lg font-bold text-blue-800">{fmt(scadenzario.riepilogo.totale_da_pagare)}</p></div>
+                <div className="bg-red-50 p-2 rounded text-center"><p className="text-xs text-red-600">Scaduto</p><p className="text-lg font-bold text-red-800">{fmt(scadenzario.riepilogo.totale_scaduto)}</p></div>
+                <div className="bg-amber-50 p-2 rounded text-center"><p className="text-xs text-amber-600">7gg</p><p className="text-lg font-bold text-amber-800">{scadenzario.riepilogo.num_prossimi_7gg}</p></div>
               </div>
-
-              {/* Top Fornitori */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Fornitori per Debito</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {scadenzario.per_fornitore.slice(0, 10).map((f, idx) => (
-                      <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                        <div>
-                          <span className="font-medium">{f.fornitore}</span>
-                          <span className="text-sm text-slate-500 ml-2">({f.num_fatture} fatture)</span>
-                        </div>
-                        <span className="text-lg font-bold text-slate-800">{formatEuro(f.totale)}</span>
-                      </div>
-                    ))}
-                  </div>
+              <Card className="shadow-sm">
+                <CardHeader className="py-1 px-2"><CardTitle className="text-xs">Top Fornitori</CardTitle></CardHeader>
+                <CardContent className="p-2">
+                  <div className="space-y-1">{scadenzario.per_fornitore.slice(0, 8).map((f, i) => (
+                    <div key={i} className="flex justify-between items-center p-1.5 bg-slate-50 rounded text-xs">
+                      <span className="truncate max-w-[200px]">{f.fornitore} <span className="text-slate-400">({f.num_fatture})</span></span>
+                      <span className="font-bold">{fmt(f.totale)}</span>
+                    </div>
+                  ))}</div>
                 </CardContent>
               </Card>
             </>
