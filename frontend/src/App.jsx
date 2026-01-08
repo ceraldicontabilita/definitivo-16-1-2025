@@ -32,6 +32,7 @@ const NAV_ITEMS = [
     ]
   },
   { to: "/magazzino", label: "Magazzino", icon: "🏭", short: "Magaz." },
+  { to: "/previsioni-acquisti", label: "Previsioni Acquisti", icon: "📊", short: "Previs." },
   { to: "/ricerca-prodotti", label: "Ricerca Prodotti", icon: "🔍", short: "Ricerca" },
   { to: "/ordini-fornitori", label: "Ordini Fornitori", icon: "📝", short: "Ordini" },
   { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝", short: "Assegni" },
