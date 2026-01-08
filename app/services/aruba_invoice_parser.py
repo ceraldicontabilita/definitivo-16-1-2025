@@ -1,6 +1,7 @@
 """
 Parser per email notifiche fatture da Aruba
 Estrae: fornitore, numero fattura, data, importo
+Include riconciliazione automatica con estratto conto bancario
 """
 
 import imaplib
@@ -9,7 +10,7 @@ import re
 import os
 import hashlib
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from bs4 import BeautifulSoup
 import logging
 
@@ -17,6 +18,121 @@ logger = logging.getLogger(__name__)
 
 ARUBA_SENDER = "noreply@fatturazioneelettronica.aruba.it"
 ARUBA_SUBJECT = "Hai ricevuto una nuova fattura"
+
+
+def extract_check_number(descrizione: str) -> Optional[str]:
+    """
+    Estrae il numero di assegno dalla descrizione del movimento bancario.
+    
+    Patterns supportati:
+    - "NUM: 0208770631"
+    - "ASSEGNO N. 12345"
+    - "ASS. 12345"
+    """
+    if not descrizione:
+        return None
+    
+    patterns = [
+        r'NUM:\s*(\d+)',
+        r'ASSEGNO\s*N\.?\s*(\d+)',
+        r'ASS\.?\s*N?\.?\s*(\d+)',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, descrizione, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    
+    return None
+
+
+def determine_payment_method(descrizione: str) -> Tuple[str, Optional[str]]:
+    """
+    Determina il metodo di pagamento dalla descrizione del movimento bancario.
+    
+    Returns:
+        Tuple[metodo, numero_assegno]
+    """
+    if not descrizione:
+        return ("bonifico", None)
+    
+    desc_upper = descrizione.upper()
+    
+    if "ASSEGNO" in desc_upper or "ASS." in desc_upper:
+        numero_assegno = extract_check_number(descrizione)
+        return ("assegno", numero_assegno)
+    elif "BONIFICO" in desc_upper or "BON." in desc_upper:
+        return ("banca", None)
+    elif "SEPA" in desc_upper:
+        return ("banca", None)
+    elif "CARTA" in desc_upper or "POS" in desc_upper:
+        return ("banca", None)
+    else:
+        return ("bonifico", None)
+
+
+async def find_bank_match(db, importo: float, data_documento: str, fornitore: str) -> Optional[Dict[str, Any]]:
+    """
+    Cerca un movimento corrispondente nell'estratto conto bancario.
+    
+    Criteri di match:
+    - Stesso importo (tolleranza ±0.50€)
+    - Data vicina (±60 giorni dalla data documento)
+    - Tipo uscita
+    
+    Returns:
+        Dict con info del movimento trovato o None
+    """
+    try:
+        # Tolleranza importo
+        importo_min = importo - 0.50
+        importo_max = importo + 0.50
+        
+        # Cerca nella collezione estratto_conto
+        # Prima prova match esatto per importo
+        query = {
+            "tipo": "uscita",
+            "$or": [
+                {"importo": {"$gte": importo_min, "$lte": importo_max}},
+                {"importo": {"$gte": -importo_max, "$lte": -importo_min}}  # Alcuni sistemi usano valori negativi per uscite
+            ]
+        }
+        
+        # Se abbiamo la data, filtriamo anche per data vicina
+        if data_documento:
+            try:
+                data_doc = datetime.strptime(data_documento, "%Y-%m-%d")
+                data_min = (data_doc - timedelta(days=60)).strftime("%Y-%m-%d")
+                data_max = (data_doc + timedelta(days=60)).strftime("%Y-%m-%d")
+                query["data"] = {"$gte": data_min, "$lte": data_max}
+            except:
+                pass
+        
+        # Cerca match
+        cursor = db["estratto_conto"].find(query, {"_id": 0}).limit(10)
+        matches = await cursor.to_list(10)
+        
+        if not matches:
+            return None
+        
+        # Se c'è un solo match, usalo
+        if len(matches) == 1:
+            return matches[0]
+        
+        # Se ci sono più match, cerca quello con fornitore simile nella descrizione
+        fornitore_parts = fornitore.upper().split()[:2]  # Prime 2 parole del fornitore
+        
+        for match in matches:
+            desc = (match.get("descrizione") or "").upper()
+            if any(part in desc for part in fornitore_parts if len(part) > 3):
+                return match
+        
+        # Altrimenti ritorna il primo (per importo)
+        return matches[0]
+        
+    except Exception as e:
+        logger.error(f"Errore ricerca match bancario: {e}")
+        return None
 
 
 def parse_aruba_email_body(html_content: str) -> Optional[Dict[str, Any]]:
