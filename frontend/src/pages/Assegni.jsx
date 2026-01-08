@@ -7,13 +7,17 @@ export default function Assegni() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [err, setErr] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
   const [newCheck, setNewCheck] = useState({
     type: "emesso",
     amount: "",
     beneficiary: "",
     check_number: "",
     bank: "",
-    due_date: new Date().toISOString().split("T")[0]
+    due_date: new Date().toISOString().split("T")[0],
+    fornitore: "",
+    numero_fattura: ""
   });
 
   useEffect(() => {
