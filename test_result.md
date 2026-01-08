@@ -148,19 +148,16 @@ backend:
         agent: "testing"
         comment: "✅ BACKEND TESTING COMPLETATO - SUCCESS RATE 100%! Testati 12 endpoint principali: Dipendenti (22), Fatture 2025, Prima Nota Cassa/Banca, Estratto Conto, Operazioni da Confermare, Previsioni Acquisti, Assegni, HACCP Temperature, F24 Public Models, Health Check. Nessuna regressione rilevata dopo refactoring. Struttura modulare funziona perfettamente."
 
-  - task: "Logica Assegni Multipli"
+  - task: "Parsing F24 da Email (Issue P2)"
     implemented: true
     working: true
-    file: "app/services/aruba_invoice_parser.py, app/routers/operazioni_da_confermare.py"
-    priority: "high"
+    file: "app/routers/documenti.py"
+    priority: "medium"
     needs_retesting: false
     status_history:
       - working: true
         agent: "main"
-        comment: "Logica già presente e integrata: find_multiple_checks_match() cerca combinazioni 2-4 assegni. Endpoint conferma gestisce assegni multipli (linee 209-232). Status 'da_verificare' per casi dubbi."
-      - working: true
-        agent: "testing"
-        comment: "✅ VERIFICATO: API /operazioni-da-confermare/lista funziona correttamente. Endpoint per conferma operazioni accessibile. Logica assegni multipli integrata nel sistema."
+        comment: "BUG RISOLTO: L'endpoint sync-f24-automatico verificava 'parsed.get(\"success\")' ma il parser restituisce direttamente il risultato. Corretto per verificare 'not parsed.get(\"error\") and (parsed.get(\"sezione_erario\") or ...)'. Tutti gli 11 documenti F24 nel database sono stati processati correttamente."
 
 metadata:
   created_by: "main_agent"
