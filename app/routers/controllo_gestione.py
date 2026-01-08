@@ -186,8 +186,8 @@ async def get_trend_mensile(anno: int = Query(...)) -> Dict[str, Any]:
 
 @router.get("/costi-per-categoria")
 async def get_costi_per_categoria(
-    anno: int = Query(...),
-    mese: int = Query(None)
+    anno: int,
+    mese: int = None
 ) -> Dict[str, Any]:
     """
     Breakdown dei costi per categoria.
