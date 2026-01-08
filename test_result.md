@@ -159,9 +159,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Verifica dropdown dipendenti in tab Contratti e Libretti Sanitari"
-    - "Verifica pagina Previsioni Acquisti con tutte le funzionalità"
+    - "Investigare problema React Query - infinite loading"
+    - "Verificare configurazione CORS e integrazione API"
+  stuck_tasks:
+    - "Dropdown Dipendenti in Contratti e Libretti"
+    - "Pagina Previsioni Acquisti"
   test_all: false
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "main"
