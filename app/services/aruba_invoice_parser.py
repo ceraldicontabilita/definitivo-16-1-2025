@@ -317,6 +317,43 @@ async def fetch_aruba_invoices(
                 else:
                     anno_fiscale = datetime.now().year
                 
+                # === RICONCILIAZIONE AUTOMATICA CON ESTRATTO CONTO ===
+                riconciliato_auto = False
+                numero_assegno_auto = None
+                estratto_conto_match = None
+                
+                bank_match = await find_bank_match(
+                    db, 
+                    invoice_data["totale"], 
+                    invoice_data["data_documento"],
+                    invoice_data["fornitore"]
+                )
+                
+                if bank_match:
+                    riconciliato_auto = True
+                    estratto_conto_match = {
+                        "id": bank_match.get("id"),
+                        "descrizione": bank_match.get("descrizione"),
+                        "data": bank_match.get("data"),
+                        "importo": bank_match.get("importo")
+                    }
+                    
+                    # Determina metodo di pagamento dalla descrizione bancaria
+                    metodo_from_bank, numero_assegno_auto = determine_payment_method(
+                        bank_match.get("descrizione")
+                    )
+                    
+                    # Se trovato match, usa il metodo dall'estratto conto
+                    if metodo_from_bank == "assegno":
+                        metodo_pagamento_proposto = "assegno"
+                    elif metodo_from_bank == "banca":
+                        metodo_pagamento_proposto = "banca"
+                    
+                    stats["riconciliate_auto"] += 1
+                    logger.info(f"Riconciliata auto: {invoice_data['fornitore'][:30]} | €{invoice_data['totale']} -> {metodo_pagamento_proposto}")
+                else:
+                    stats["non_riconciliate"] += 1
+                
                 # Salva in operazioni_da_confermare
                 operazione = {
                     "id": hashlib.md5(f"{email_hash}{datetime.now().isoformat()}".encode()).hexdigest()[:16],
@@ -331,9 +368,11 @@ async def fetch_aruba_invoices(
                     "netto_pagare": invoice_data["netto_pagare"],
                     "metodo_pagamento_proposto": metodo_pagamento_proposto,
                     "metodo_pagamento_confermato": None,
-                    "numero_assegno": None,
-                    "stato": "da_confermare",  # da_confermare, confermato, inserito_in_prima_nota
+                    "numero_assegno": numero_assegno_auto,  # Pre-compilato se trovato
+                    "stato": "da_confermare",
                     "prima_nota_id": None,
+                    "riconciliato_auto": riconciliato_auto,
+                    "estratto_conto_match": estratto_conto_match,
                     "email_date": email_date,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "confirmed_at": None,
