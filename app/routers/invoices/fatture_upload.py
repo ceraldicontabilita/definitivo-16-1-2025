@@ -273,6 +273,24 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
         giorni_pagamento = supplier.get("giorni_pagamento", 30) if supplier else 30
         supplier_id = supplier.get("id") if supplier else None
         
+        # === RICONCILIAZIONE ASSEGNI ===
+        # Se il metodo è assegno, cerca i numeri degli assegni nell'estratto conto
+        numeri_assegni = None
+        riconciliazione_assegni = None
+        
+        if metodo_pagamento == "assegno":
+            importo_fattura = parsed.get("total_amount", 0)
+            data_fattura_ricerca = parsed.get("invoice_date", "")
+            fornitore_nome = parsed.get("supplier_name", "")
+            
+            riconciliazione_assegni = await find_check_numbers_for_invoice(
+                db, importo_fattura, data_fattura_ricerca, fornitore_nome
+            )
+            
+            if riconciliazione_assegni:
+                numeri_assegni = riconciliazione_assegni.get("numero_assegno")
+                logger.info(f"Assegni trovati per fattura {parsed.get('invoice_number')}: {numeri_assegni}")
+        
         data_fattura_str = parsed.get("invoice_date", "")
         data_scadenza = None
         if data_fattura_str:
