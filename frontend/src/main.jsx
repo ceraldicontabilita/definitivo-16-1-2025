@@ -81,6 +81,7 @@ const Scadenze = lazy(() => import("./pages/Scadenze.jsx"));
 
 // Dipendenti
 const GestioneDipendenti = lazy(() => import("./pages/GestioneDipendenti.jsx"));
+const Cedolini = lazy(() => import("./pages/Cedolini.jsx"));
 
 // Finanziaria & Assegni
 const Finanziaria = lazy(() => import("./pages/Finanziaria.jsx"));
