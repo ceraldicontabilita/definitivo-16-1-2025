@@ -97,45 +97,50 @@ export default function OperazioniDaConfermare() {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+    <div style={{ padding: '16px 12px', maxWidth: 1400, margin: '0 auto' }}>
+      {/* Header - Responsive */}
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        gap: 12,
+        marginBottom: 20 
+      }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 'bold', color: '#1e293b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 'bold', color: '#1e293b' }}>
               📋 Operazioni da Confermare
             </h1>
             <span style={{
-              padding: '6px 12px',
+              padding: '4px 10px',
               background: '#3b82f6',
               color: 'white',
-              borderRadius: 20,
-              fontSize: 14,
+              borderRadius: 16,
+              fontSize: 12,
               fontWeight: 'bold',
               display: 'flex',
               alignItems: 'center',
-              gap: 6
+              gap: 4
             }}>
-              <Calendar size={14} />
-              Anno {annoGlobale}
+              <Calendar size={12} />
+              {annoGlobale}
             </span>
           </div>
-          <p style={{ margin: '8px 0 0', color: '#64748b' }}>
-            Fatture ricevute via email in attesa di conferma metodo di pagamento
+          <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13 }}>
+            Fatture da email in attesa di conferma
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Button onClick={loadData} disabled={loading} variant="outline">
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button onClick={loadData} disabled={loading} variant="outline" style={{ padding: '8px 12px', fontSize: 13 }}>
+            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
             Aggiorna
           </Button>
           <Button 
             onClick={handleSyncEmail} 
             disabled={syncing}
-            style={{ background: '#7c3aed', color: 'white' }}
+            style={{ background: '#7c3aed', color: 'white', padding: '8px 12px', fontSize: 13 }}
           >
-            <Mail className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Sincronizzazione...' : 'Sync Email Aruba'}
+            <Mail className={`h-4 w-4 mr-1 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Sync...' : 'Sync Email'}
           </Button>
         </div>
       </div>
