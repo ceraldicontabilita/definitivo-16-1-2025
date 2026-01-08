@@ -4,8 +4,8 @@
  * - useCallback per funzioni stabili
  * - Virtualizzazione per liste lunghe
  */
-import React, { memo, useCallback, useMemo, useState } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, { memo, useCallback, useState } from 'react';
+import { List } from 'react-window';
 import { formatEuro } from '../../lib/utils';
 
 // Costanti
