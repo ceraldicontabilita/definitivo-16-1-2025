@@ -1,23 +1,16 @@
 """
 Routers package.
 API endpoints for all modules.
+Organizzati in sottocartelle per modulo.
 """
-from . import (
-    auth, invoices, suppliers, warehouse, accounting, haccp,
-    cash, bank,
-    chart_of_accounts, exports, finanziaria
-)
+# I moduli principali sono nelle sottocartelle:
+# - accounting/ (prima nota, bilancio, f24, etc.)
+# - bank/ (estratto conto, assegni, bonifici)
+# - employees/ (dipendenti, contratti, buste paga)
+# - f24/ (gestione F24)
+# - haccp/ (temperature, sanificazioni)
+# - invoices/ (fatture, corrispettivi)
+# - reports/ (export, analytics)
+# - warehouse/ (magazzino, prodotti)
 
-__all__ = [
-    "auth",
-    "invoices",
-    "suppliers",
-    "warehouse",
-    "accounting",
-    "haccp",
-    "cash",
-    "bank",
-    "chart_of_accounts",
-    "exports",
-    "finanziaria"
-]
+__all__ = []
