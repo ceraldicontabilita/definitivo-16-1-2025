@@ -266,6 +266,7 @@ app.include_router(scadenzario_fornitori.router, prefix="/api/scadenzario-fornit
 app.include_router(calcolo_iva.router, prefix="/api/calcolo-iva", tags=["Calcolo IVA"])
 app.include_router(controllo_gestione.router, prefix="/api/controllo-gestione", tags=["Controllo Gestione"])
 app.include_router(indici_bilancio.router, prefix="/api/indici-bilancio", tags=["Indici di Bilancio"])
+app.include_router(chiusura_esercizio.router, prefix="/api/chiusura-esercizio", tags=["Chiusura Esercizio"])
 
 
 # =============================================================================
