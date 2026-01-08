@@ -140,6 +140,7 @@ async def conferma_operazione(
     
     prima_nota_id = None
     assegno_id = None
+    anno_fiscale = operazione.get("anno", datetime.now().year)
     
     # Inserisci in Prima Nota
     if metodo == "cassa":
@@ -151,6 +152,7 @@ async def conferma_operazione(
             "description": f"Fattura {operazione['numero_fattura']} - {operazione['fornitore']}",
             "category": "fattura_fornitore",
             "date": datetime.now(timezone.utc).isoformat(),
+            "anno": anno_fiscale,  # Anno fiscale per separazione contabilità
             "fornitore": operazione["fornitore"],
             "numero_fattura": operazione["numero_fattura"],
             "data_fattura": operazione["data_documento"],
@@ -170,6 +172,7 @@ async def conferma_operazione(
             "description": f"Fattura {operazione['numero_fattura']} - {operazione['fornitore']}",
             "category": "fattura_fornitore",
             "date": datetime.now(timezone.utc).isoformat(),
+            "anno": anno_fiscale,
             "fornitore": operazione["fornitore"],
             "numero_fattura": operazione["numero_fattura"],
             "data_fattura": operazione["data_documento"],
@@ -189,6 +192,7 @@ async def conferma_operazione(
             "description": f"Assegno n.{numero_assegno} - Fattura {operazione['numero_fattura']} - {operazione['fornitore']}",
             "category": "assegno_emesso",
             "date": datetime.now(timezone.utc).isoformat(),
+            "anno": anno_fiscale,
             "fornitore": operazione["fornitore"],
             "numero_fattura": operazione["numero_fattura"],
             "data_fattura": operazione["data_documento"],
