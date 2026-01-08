@@ -1,6 +1,10 @@
-// Prima Nota Components Export
-export { PrimaNotaSummaryCards } from './PrimaNotaSummaryCards';
-export { PrimaNotaAutomationPanel } from './PrimaNotaAutomationPanel';
-export { PrimaNotaMovementsTable } from './PrimaNotaMovementsTable';
-export { PrimaNotaNewMovementModal } from './PrimaNotaNewMovementModal';
-export { QuickEntryPanel } from './QuickEntryPanel';
+// Prima Nota Components - Optimized exports
+export {
+  YearExclusionButtons,
+  SummaryCard,
+  PeriodFilters,
+  ActionButtons,
+  VirtualizedSalariTable,
+  AggiustamentoModal,
+  ImportResultAlert
+} from './PrimaNotaComponents';
