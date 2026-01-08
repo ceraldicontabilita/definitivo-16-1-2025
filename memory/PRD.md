@@ -2,6 +2,30 @@
 # Documento di riferimento centralizzato
 # AGGIORNATO: 2026-01-08
 
+## 🧮 PRINCIPI RAGIONERIA IMPLEMENTATI
+
+### 1. Gestione Sconti
+- **Sconto incondizionato**: Già nel prezzo, IVA calcolata sul netto
+- **Sconto condizionato**: Genera nota di credito (TD04) con storno IVA
+
+### 2. Gestione Resi
+- Genera nota di credito automatica
+- Storno ricavo e IVA secondo art. 26 DPR 633/72
+
+### 3. Gestione Storni
+- Registrazione movimento opposto (inversione dare/avere)
+- Tracciabilità movimento originale
+
+### 4. Duplicazione IVA (Fattura + Corrispettivo)
+- Campo `inclusa_in_corrispettivo` sulle fatture emesse
+- Esclusione automatica dal calcolo IVA periodica
+- Servizio: `/app/app/services/ragioneria_service.py`
+
+### 5. Codici Tributo F24 (Aggiornati 2025)
+- **100+ codici** con descrizioni complete
+- Nuovi codici L. 207/2024 (2007, 2008, 3881, 3882)
+- File: `/app/app/services/f24_commercialista_parser.py`
+
 ================================================================================
 
 ## 🗄️ DATABASE UNICO
