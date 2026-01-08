@@ -263,11 +263,14 @@ const LibrettiSanitariTab = memo(function LibrettiSanitariTab({ dipendenti = [] 
                   required
                 >
                   <option value="">-- Seleziona --</option>
-                  {dipendenti.map(d => (
-                    <option key={d.id} value={d.cognome ? `${d.nome} ${d.cognome}` : d.nome}>
-                      {d.cognome ? `${d.nome} ${d.cognome}` : d.nome}
-                    </option>
-                  ))}
+                  {dipendenti.map(d => {
+                    const nomeCompleto = d.nome_completo || `${d.cognome || ''} ${d.nome || ''}`.trim();
+                    return (
+                      <option key={d.id} value={nomeCompleto}>
+                        {nomeCompleto}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
