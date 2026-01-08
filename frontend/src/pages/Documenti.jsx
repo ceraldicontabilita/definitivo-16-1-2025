@@ -480,7 +480,7 @@ export default function Documenti() {
                     </Button>
                   </div>
                   <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
-                    💡 Ogni keyword può contenere più varianti separate da virgola. Es: "cartella,ader,equitalia"
+                    💡 Ogni keyword può contenere più varianti separate da virgola. Es: &quot;cartella,ader,equitalia&quot;
                   </p>
                 </div>
                 
