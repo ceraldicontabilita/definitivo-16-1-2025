@@ -122,15 +122,15 @@ class BackendTester:
             "Prima Nota Banca 2025"
         )
         
-        # 5. Estratto Conto 2025
+        # 5. Estratto Conto 2025 - Correct endpoint
         self.test_api_endpoint(
-            "/estratto-conto?anno=2025",
+            "/estratto-conto-movimenti/movimenti?anno=2025",
             "Estratto Conto 2025"
         )
         
-        # 6. Operazioni da Confermare 2025 - Should return statistics
+        # 6. Operazioni da Confermare 2025 - Should return statistics (correct method)
         self.test_api_endpoint(
-            "/operazioni-da-confermare/2025",
+            "/operazioni-da-confermare/lista?anno=2025",
             "Operazioni da Confermare 2025"
         )
         
@@ -152,16 +152,16 @@ class BackendTester:
             "Assegni API"
         )
         
-        # 10. HACCP Temperature
+        # 10. HACCP Temperature - Correct endpoint (requires auth, test without auth first)
         self.test_api_endpoint(
-            "/haccp/temperature",
+            "/haccp/temperatures",
             "HACCP Temperature"
         )
         
-        # 11. F24 API
+        # 11. F24 API - Test public endpoint first
         self.test_api_endpoint(
-            "/f24",
-            "F24 API"
+            "/f24/dashboard/summary",
+            "F24 Dashboard Summary"
         )
         
         # Additional health checks
