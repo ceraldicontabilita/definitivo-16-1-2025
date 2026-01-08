@@ -167,6 +167,7 @@ const router = createBrowserRouter([
       { path: "haccp/oli-frittura", element: <LazyPage><HACCP /></LazyPage> },
       { path: "haccp/non-conformita", element: <LazyPage><HACCP /></LazyPage> },
       { path: "dipendenti", element: <LazyPage><GestioneDipendenti /></LazyPage> },
+      { path: "cedolini", element: <LazyPage><Cedolini /></LazyPage> },
       { path: "f24", element: <LazyPage><F24 /></LazyPage> },
       { path: "finanziaria", element: <LazyPage><Finanziaria /></LazyPage> },
       { path: "assegni", element: <LazyPage><Assegni /></LazyPage> },
