@@ -134,7 +134,7 @@ from app.routers import (
     riconciliazione_fornitori, ordini_fornitori, payroll, documents,
     pianificazione, admin, verifica_coerenza, documenti,
     operazioni_da_confermare, previsioni_acquisti,
-    cedolini, tfr
+    cedolini, tfr, cespiti, scadenzario_fornitori, calcolo_iva
 )
 
 
