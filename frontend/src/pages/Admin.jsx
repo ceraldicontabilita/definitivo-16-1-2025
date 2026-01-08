@@ -204,7 +204,7 @@ export default function Admin() {
       <div className="card">
         <div className="h1">🔗 Link Utili</div>
         <div style={{ display: 'grid', gap: 10 }}>
-          <a href={`${BACKEND_URL}/api/docs`} target="_blank" rel="noopener noreferrer" 
+          <a href={`${BACKEND_URL}/docs`} target="_blank" rel="noopener noreferrer" 
              style={{ color: '#2196f3', textDecoration: 'none' }}>
             📖 Documentazione API (Swagger)
           </a>
