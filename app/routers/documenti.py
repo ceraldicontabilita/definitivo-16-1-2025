@@ -553,8 +553,16 @@ async def sync_f24_automatico(
                 
                 parsed = parse_f24_commercialista(filepath)
                 
-                if parsed.get("success") and parsed.get("f24_data"):
-                    f24_data = parsed["f24_data"]
+                # Il parser restituisce direttamente il risultato (non un wrapper con 'success')
+                # Verifica che non ci sia un errore e che ci siano dati
+                if not parsed.get("error") and (parsed.get("sezione_erario") or parsed.get("sezione_inps") or parsed.get("totali")):
+                    # Il parsed È già f24_data
+                    f24_data = parsed
+                    
+                    # Aggiungi ID e filename
+                    from uuid import uuid4
+                    f24_data["id"] = str(uuid4())
+                    f24_data["file_name"] = doc["filename"]
                     
                     # Rimuovi eventuali _id per evitare errori MongoDB
                     if "_id" in f24_data:
@@ -583,8 +591,6 @@ async def sync_f24_automatico(
                     await db["f24_commercialista"].insert_one(f24_data)
                     
                     # Aggiorna stato documento
-                    
-                    # Aggiorna stato documento
                     await db["documents_inbox"].update_one(
                         {"id": doc["id"]},
                         {"$set": {
@@ -598,9 +604,8 @@ async def sync_f24_automatico(
                     f24_caricati.append({
                         "file": doc["filename"],
                         "importo": f24_data.get("totali", {}).get("saldo_netto", 0),
-                        "data_scadenza": f24_data.get("data_scadenza", ""),
-                        "tributi": len(f24_data.get("sezioni", {}).get("erario", {}).get("tributi", [])) + 
-                                  len(f24_data.get("sezioni", {}).get("inps", {}).get("tributi", []))
+                        "data_scadenza": f24_data.get("dati_generali", {}).get("data_versamento", ""),
+                        "tributi": len(f24_data.get("sezione_erario", [])) + len(f24_data.get("sezione_inps", []))
                     })
                 else:
                     f24_errori.append({
