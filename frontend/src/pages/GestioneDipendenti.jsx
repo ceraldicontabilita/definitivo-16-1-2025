@@ -328,7 +328,13 @@ export default function GestioneDipendenti() {
       )}
 
       {/* TAB: Libretti Sanitari - Componente Ottimizzato */}
-      {activeTab === 'libretti' && <LibrettiSanitariTab dipendenti={dipendenti} />}
+      {activeTab === 'libretti' && (
+        loading ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento dipendenti...</div>
+        ) : (
+          <LibrettiSanitariTab dipendenti={dipendenti} />
+        )
+      )}
     </div>
   );
 }
