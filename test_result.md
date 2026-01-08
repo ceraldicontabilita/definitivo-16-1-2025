@@ -164,14 +164,15 @@ backend:
 
 metadata:
   created_by: "main_agent"
-  version: "7.0"
-  test_sequence: 7
+  version: "8.0"
+  test_sequence: 8
   run_ui: true
 
 test_plan:
   current_focus:
-    - "Test completo dopo refactoring: tutte le funzionalità principali"
-  test_all: true
+    - "Frontend testing: dropdown dipendenti (23 opzioni) e previsioni acquisti (statistiche + costo €13.000)"
+  test_all: false
+  backend_testing_completed: true
 
 agent_communication:
   - agent: "main"
