@@ -124,7 +124,7 @@ frontend:
     file: "frontend/src/pages/GestioneDipendenti.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
@@ -132,18 +132,24 @@ frontend:
       - working: true
         agent: "main"
         comment: "Bug corretto: sostituito API_BASE_URL (variabile non definita) con api.post() - testato con screenshot, bottoni funzionano visivamente"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTATO CON PLAYWRIGHT: Bottoni 2018-2022 funzionano perfettamente. Visual state cambia correttamente (rosso con strikethrough quando selezionati). Reset button funziona. API calls vengono eseguite senza errori JavaScript. Ricalcolo progressivi funziona."
 
   - task: "Modale Aggiusta Saldo chiusura"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/GestioneDipendenti.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "user"
         comment: "Utente ha segnalato che la finestra aggiusto saldo non si chiude"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTATO CON PLAYWRIGHT: Modal Aggiustamento Saldo funziona correttamente. Si apre cliccando il bottone verde 'Aggiustamento Saldo', si chiude correttamente con il bottone 'Annulla'. Modal non si chiude cliccando fuori (comportamento corretto per evitare perdita dati). Tutti i form fields sono presenti e funzionali."
 
 metadata:
   created_by: "main_agent"
