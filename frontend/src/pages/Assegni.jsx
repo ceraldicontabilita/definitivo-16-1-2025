@@ -155,6 +155,9 @@ export default function Assegni() {
 
       <div className="card">
         <div className="h1">Elenco Assegni ({checks.length})</div>
+        <p style={{ fontSize: 12, color: "#666", marginBottom: 10 }}>
+          💡 Compila Fornitore e N. Fattura per aiutare la riconciliazione automatica
+        </p>
         {loading ? (
           <div className="small">Caricamento...</div>
         ) : checks.length === 0 ? (
@@ -167,9 +170,11 @@ export default function Assegni() {
                 <th style={{ padding: 8 }}>Numero</th>
                 <th style={{ padding: 8 }}>Importo</th>
                 <th style={{ padding: 8 }}>Beneficiario</th>
-                <th style={{ padding: 8 }}>Banca</th>
+                <th style={{ padding: 8 }}>Fornitore</th>
+                <th style={{ padding: 8 }}>N. Fattura</th>
                 <th style={{ padding: 8 }}>Scadenza</th>
                 <th style={{ padding: 8 }}>Stato</th>
+                <th style={{ padding: 8 }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
@@ -184,9 +189,37 @@ export default function Assegni() {
                       {c.type === "emesso" ? "↑ Emesso" : "↓ Ricevuto"}
                     </span>
                   </td>
-                  <td style={{ padding: 8 }}>{c.check_number || "-"}</td>
-                  <td style={{ padding: 8, fontWeight: "bold" }}>{formatEuro(c.amount)}</td>
-                  <td style={{ padding: 8 }}>{c.beneficiary}</td>
+                  <td style={{ padding: 8 }}>{c.check_number || c.numero || "-"}</td>
+                  <td style={{ padding: 8, fontWeight: "bold" }}>{formatEuro(c.amount || c.importo)}</td>
+                  <td style={{ padding: 8 }}>{c.beneficiary || c.beneficiario || "-"}</td>
+                  <td style={{ padding: 8 }}>
+                    {editingId === c.id ? (
+                      <input
+                        value={editData.fornitore || ""}
+                        onChange={(e) => setEditData({ ...editData, fornitore: e.target.value })}
+                        style={{ width: 120, padding: 4 }}
+                        placeholder="Fornitore"
+                      />
+                    ) : (
+                      <span style={{ color: c.fornitore ? "#333" : "#999" }}>
+                        {c.fornitore || "-"}
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ padding: 8 }}>
+                    {editingId === c.id ? (
+                      <input
+                        value={editData.numero_fattura || ""}
+                        onChange={(e) => setEditData({ ...editData, numero_fattura: e.target.value })}
+                        style={{ width: 80, padding: 4 }}
+                        placeholder="N. Fatt."
+                      />
+                    ) : (
+                      <span style={{ color: c.numero_fattura ? "#333" : "#999" }}>
+                        {c.numero_fattura || "-"}
+                      </span>
+                    )}
+                  </td>
                   <td style={{ padding: 8 }}>{c.bank || "-"}</td>
                   <td style={{ padding: 8 }}>{formatDateIT(c.due_date) || "-"}</td>
                   <td style={{ padding: 8 }}>{c.status || "pending"}</td>
