@@ -322,3 +322,53 @@ export default function GestioneDipendenti() {
     </div>
   );
 }
+
+// Componenti helper
+function TabButton({ active, onClick, icon, label, color, testId }) {
+  return (
+    <button
+      onClick={onClick}
+      data-testid={testId}
+      style={{
+        flex: 1,
+        padding: '12px 16px',
+        border: 'none',
+        borderRadius: 8,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        fontWeight: active ? 'bold' : 'normal',
+        background: active ? color : 'transparent',
+        color: active ? 'white' : '#64748b',
+        transition: 'all 0.2s',
+        position: 'relative',
+        zIndex: 10,
+        pointerEvents: 'auto'
+      }}
+    >
+      <span>{icon}</span>
+      <span className="tab-label">{label}</span>
+    </button>
+  );
+}
+
+function KPICard({ title, value, color, icon }) {
+  return (
+    <div style={{ 
+      background: `${color}15`, 
+      padding: 'clamp(12px, 2vw, 16px)', 
+      borderRadius: 10,
+      borderLeft: `4px solid ${color}`
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: 12, color: '#6b7280' }}>{title}</div>
+          <div style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 'bold', color }}>{value}</div>
+        </div>
+        <span style={{ fontSize: 24 }}>{icon}</span>
+      </div>
+    </div>
+  );
+}
