@@ -319,7 +319,7 @@ async def get_budget(anno: int) -> Dict[str, Any]:
 @router.get("/budget-vs-consuntivo/{anno}")
 async def get_budget_vs_consuntivo(
     anno: int,
-    mese: int = Query(None)
+    mese: int = None
 ) -> Dict[str, Any]:
     """
     Confronto budget vs consuntivo.
