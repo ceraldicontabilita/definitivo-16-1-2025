@@ -377,6 +377,14 @@ class VerificaCoerenza:
         risultati["riepilogo"]["warning"] = len([d for d in self.discrepanze if d["severita"] == "warning"])
         risultati["riepilogo"]["info"] = len([d for d in self.discrepanze if d["severita"] == "info"])
         
+        # Calcola stato_generale basato sulle discrepanze
+        if risultati["riepilogo"]["critical"] > 0:
+            risultati["stato_generale"] = "CRITICO"
+        elif risultati["riepilogo"]["warning"] > 0:
+            risultati["stato_generale"] = "ATTENZIONE"
+        else:
+            risultati["stato_generale"] = "OK"
+        
         return risultati
     
     async def verifica_coerenza_iva_tra_pagine(self, anno: int, mese: int) -> Dict[str, Any]:

@@ -61,10 +61,10 @@ export default function Admin() {
   async function exportAllData(format) {
     setExporting(true);
     try {
-      const collections = ['invoices', 'suppliers', 'employees', 'haccp_temperature_frigoriferi', 'prima_nota_cassa'];
+      const collections = ['invoices', 'suppliers', 'employees', 'haccp', 'cash'];
       
       for (const col of collections) {
-        const url = `${BACKEND_URL}/api/simple-exports/${col}?format=${format}`;
+        const url = `${BACKEND_URL}/api/exports/${col}?format=${format}`;
         window.open(url, '_blank');
         await new Promise(r => setTimeout(r, 500)); // delay between downloads
       }
@@ -130,24 +130,7 @@ export default function Admin() {
         </p>
         <div style={{ display: 'flex', gap: 15, flexWrap: 'wrap' }}>
           <button
-            onClick={() => exportAllData('json')}
-            disabled={exporting}
-            style={{
-              padding: '12px 24px',
-              background: exporting ? '#ccc' : '#2196f3',
-              color: 'white',
-              border: 'none',
-              borderRadius: 6,
-              cursor: exporting ? 'wait' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8
-            }}
-          >
-            📄 Export JSON
-          </button>
-          <button
-            onClick={() => exportAllData('excel')}
+            onClick={() => exportAllData('xlsx')}
             disabled={exporting}
             style={{
               padding: '12px 24px',
@@ -160,6 +143,7 @@ export default function Admin() {
               alignItems: 'center',
               gap: 8
             }}
+            data-testid="btn-export-excel"
           >
             📊 Export Excel
           </button>
@@ -220,7 +204,7 @@ export default function Admin() {
       <div className="card">
         <div className="h1">🔗 Link Utili</div>
         <div style={{ display: 'grid', gap: 10 }}>
-          <a href={`${BACKEND_URL}/docs`} target="_blank" rel="noopener noreferrer" 
+          <a href={`${BACKEND_URL}/api/docs`} target="_blank" rel="noopener noreferrer" 
              style={{ color: '#2196f3', textDecoration: 'none' }}>
             📖 Documentazione API (Swagger)
           </a>
