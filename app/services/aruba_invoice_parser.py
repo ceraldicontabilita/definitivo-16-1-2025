@@ -188,6 +188,16 @@ async def fetch_aruba_invoices(
                     metodo_pagamento_proposto = fornitore_db.get("metodo_pagamento", "bonifico")
                     fornitore_id = fornitore_db.get("id")
                 
+                # Estrai anno dalla data documento per separazione fiscale
+                anno_fiscale = None
+                if invoice_data["data_documento"]:
+                    try:
+                        anno_fiscale = int(invoice_data["data_documento"].split("-")[0])
+                    except:
+                        anno_fiscale = datetime.now().year
+                else:
+                    anno_fiscale = datetime.now().year
+                
                 # Salva in operazioni_da_confermare
                 operazione = {
                     "id": hashlib.md5(f"{email_hash}{datetime.now().isoformat()}".encode()).hexdigest()[:16],
@@ -196,6 +206,7 @@ async def fetch_aruba_invoices(
                     "fornitore_id": fornitore_id,
                     "numero_fattura": invoice_data["numero_fattura"],
                     "data_documento": invoice_data["data_documento"],
+                    "anno": anno_fiscale,  # Anno fiscale per separazione contabilità
                     "tipo_documento": invoice_data["tipo_documento"],
                     "importo": invoice_data["totale"],
                     "netto_pagare": invoice_data["netto_pagare"],
