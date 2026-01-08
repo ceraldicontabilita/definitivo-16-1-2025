@@ -141,11 +141,15 @@ backend:
     working: true
     file: "app/routers/previsioni_acquisti.py"
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    stuck_count: 0
     status_history:
       - working: true
         agent: "main"
         comment: "Endpoint funzionanti: GET /statistiche, GET /previsioni, POST /popola-storico, GET /confronto-ordine. Database pulito, collezione acquisti_prodotti con 18858 record da 3376 fatture"
+      - working: true
+        agent: "testing"
+        comment: "VERIFIED: API /api/previsioni-acquisti/statistiche restituisce dati reali con prodotti tracciati (CAT.A UOVA FRESCHE, FARINA 00 CAPUTO RINFORZ., ZUCCHERO RAF.SEM.ERIDANIA, etc.) con medie giornaliere/settimanali e trend. Backend completamente funzionante."
 
 metadata:
   created_by: "main_agent"
