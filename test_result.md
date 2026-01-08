@@ -150,6 +150,11 @@ frontend:
     working: true
     file: "frontend/src/components/dipendenti/LibroUnicoTab.jsx"
     priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "SUCCESS: Filtri periodo (Mese/Anno) presenti, bottoni Upload/Export/Aggiorna funzionanti, card riepilogo verde con gradient corretto"
 
   - task: "LibrettiSanitariTab con React Query"
     implemented: true
