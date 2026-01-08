@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<postacert tipo="avvenuta-consegna" errore="nessuno">
+    <intestazione>
+        <mittente>ceraldigroupsrl@legalmail.it</mittente>
+        <destinatari tipo="certificato">e-distribuzione@pec.e-distribuzione.it</destinatari>
+        <destinatari tipo="certificato">customercare@pec.e-distribuzione.it</destinatari>
+        <destinatari tipo="certificato">ambrosioumbertosrl@pec.it</destinatari>
+        <destinatari tipo="certificato">acea.spa@pec.aceaspa.it</destinatari>
+        <destinatari tipo="certificato">betonscommesse@pec.it</destinatari>
+        <destinatari tipo="certificato">fiordiburrosas@pec.it</destinatari>
+        <destinatari tipo="certificato">maresocieta@pec.it</destinatari>
+        <destinatari tipo="certificato">servizio.clienti.enelenergia@pec.enel.it</destinatari>
+        <destinatari tipo="certificato">itesoridirita@pec.it</destinatari>
+        <destinatari tipo="certificato">reclami@pec.audaxenergia.it</destinatari>
+        <destinatari tipo="certificato">2a.energia@pec.a2a.eu</destinatari>
+        <risposte>CERALDI GROUP &lt;ceraldigroupsrl@legalmail.it&gt;</risposte>
+        <oggetto>Istanza urgente e diffida - richiesta riprogrammazione/riduzione interruzione programmata energia elettrica del 19/12/2025 (09:00-16:00) - POD [IT001E80648335] - Utenza non domestica (attivita&apos; commerciale BAR PASTICCERIA).</oggetto>
+    </intestazione>
+    <dati>
+        <gestore-emittente>ARUBA PEC S.p.A.</gestore-emittente>
+        <data zona="+0100">
+            <giorno>17/12/2025</giorno>
+            <ora>19:37:02</ora>
+        </data>
+        <identificativo>3053BC64.02021718.2D998FA3.C2D1BA72.posta-certificata@legalmail.it</identificativo>
+        <msgid>&lt;674968565.69092.1765996489901@mweb-be-7dd77959c-ffzwh&gt;</msgid>
+        <ricevuta tipo="completa"/>
+        <consegna>ambrosioumbertosrl@pec.it</consegna>
+    </dati>
+</postacert>
+

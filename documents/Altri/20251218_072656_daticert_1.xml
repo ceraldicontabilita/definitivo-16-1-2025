@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<postacert tipo="posta-certificata" errore="nessuno">
+    <intestazione>
+        <mittente>fattureclienti@pec.kimbo.it</mittente>
+        <destinatari tipo="certificato">CERALDIGROUPSRL@LEGALMAIL.IT</destinatari>
+        <risposte>fattureclienti@pec.kimbo.it</risposte>
+        <oggetto>Kimbo - Invio documenti contabili [IT FATTURE VENDITE (M)_5010_0070045803_20251217]</oggetto>
+    </intestazione>
+    <dati>
+        <gestore-emittente>Register S.p.A.</gestore-emittente>
+        <data zona="+0100">
+            <giorno>18/12/2025</giorno>
+            <ora>07:26:56</ora>
+        </data>
+        <identificativo>opec228.20251218072656.30604.03.1.10@pec-email.com</identificativo>
+        <msgid>&lt;3008074.251766039216255.JavaMail.root@waserp2.cdb.aziende.locale&gt;</msgid>
+        <ricevuta tipo="completa" />
+    </dati>
+</postacert>
