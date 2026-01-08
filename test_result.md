@@ -101,3 +101,64 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "I saldi non funzionano con il bottone ricalcola neanche con i bottoni 2018 2019 2020 2021 2022"
+
+backend:
+  - task: "Ricalcola progressivi API"
+    implemented: true
+    working: true
+    file: "app/routers/accounting/prima_nota_salari.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "API endpoint /api/prima-nota-salari/ricalcola-progressivi funziona - testato con curl"
+
+frontend:
+  - task: "Bottoni esclusione anni 2018-2022"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/GestioneDipendenti.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Utente ha segnalato che i saldi non funzionano con i bottoni 2018-2022"
+      - working: true
+        agent: "main"
+        comment: "Bug corretto: sostituito API_BASE_URL (variabile non definita) con api.post() - testato con screenshot, bottoni funzionano visivamente"
+
+  - task: "Modale Aggiusta Saldo chiusura"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/GestioneDipendenti.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "Utente ha segnalato che la finestra aggiusto saldo non si chiude"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Bottoni esclusione anni 2018-2022"
+    - "Modale Aggiusta Saldo chiusura"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Ho corretto il bug dei bottoni anni 2018-2022. Il problema era che il codice usava API_BASE_URL che non era definito. Ho sostituito le chiamate fetch con api.post(). Testa i seguenti scenari: 1) Clicca sui bottoni 2018-2022 e verifica che il ricalcolo avvenga senza errori nella console, 2) Verifica che il modale Aggiusta Saldo si apra cliccando sul bottone verde '+Aggiustamento Saldo' e si chiuda cliccando 'Annulla'"
