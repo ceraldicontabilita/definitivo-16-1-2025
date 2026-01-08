@@ -65,8 +65,8 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://payroll-tracker-53.preview.emergentagent.com/controllo-mensile",
-    "IVA": "https://payroll-tracker-53.preview.emergentagent.com/iva"
+    "Controllo Mensile": "https://dipendenti-fix.preview.emergentagent.com/controllo-mensile",
+    "IVA": "https://dipendenti-fix.preview.emergentagent.com/iva"
   },
   "quarterly_iva_data_2025": {
     "Q1_Gen_Feb_Mar": {

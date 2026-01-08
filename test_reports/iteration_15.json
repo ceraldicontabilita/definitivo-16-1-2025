@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://payroll-tracker-53.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://payroll-tracker-53.preview.emergentagent.com/prima-nota",
-    "IVA": "https://payroll-tracker-53.preview.emergentagent.com/iva",
-    "Dipendenti": "https://payroll-tracker-53.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://dipendenti-fix.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://dipendenti-fix.preview.emergentagent.com/prima-nota",
+    "IVA": "https://dipendenti-fix.preview.emergentagent.com/iva",
+    "Dipendenti": "https://dipendenti-fix.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",

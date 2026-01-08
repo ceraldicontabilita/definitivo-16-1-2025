@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://payroll-tracker-53.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://payroll-tracker-53.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://payroll-tracker-53.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://dipendenti-fix.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://dipendenti-fix.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://dipendenti-fix.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {
