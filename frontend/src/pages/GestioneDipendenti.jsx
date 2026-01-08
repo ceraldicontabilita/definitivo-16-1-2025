@@ -1137,10 +1137,8 @@ export default function GestioneDipendenti() {
                     if (filtroDipendente) {
                       params.append('dipendente', filtroDipendente);
                     }
-                    await fetch(`${API_BASE_URL}/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`, {
-                      method: 'POST'
-                    });
-                    loadPrimaNotaSalari();
+                    await api.post(`/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`);
+                    await loadPrimaNotaSalari();
                   } catch (err) {
                     console.error('Errore ricalcolo:', err);
                   }
@@ -1170,10 +1168,8 @@ export default function GestioneDipendenti() {
                     if (filtroDipendente) {
                       params.append('dipendente', filtroDipendente);
                     }
-                    await fetch(`${API_BASE_URL}/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`, {
-                      method: 'POST'
-                    });
-                    loadPrimaNotaSalari();
+                    await api.post(`/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`);
+                    await loadPrimaNotaSalari();
                   } catch (err) {
                     console.error('Errore ricalcolo:', err);
                   }
@@ -1739,16 +1735,13 @@ export default function GestioneDipendenti() {
                           checked={mov.vincolo || false}
                           onChange={async (e) => {
                             try {
-                              const res = await fetch(`${API_BASE_URL}/api/prima-nota-salari/salari/${mov.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ vincolo: e.target.checked })
+                              await api.put(`/api/prima-nota-salari/salari/${mov.id}`, {
+                                ...mov,
+                                vincolo: e.target.checked
                               });
-                              if (res.ok) {
-                                setSalariMovimenti(prev => prev.map(m => 
-                                  m.id === mov.id ? { ...m, vincolo: e.target.checked } : m
-                                ));
-                              }
+                              setSalariMovimenti(prev => prev.map(m => 
+                                m.id === mov.id ? { ...m, vincolo: e.target.checked } : m
+                              ));
                             } catch (err) {
                               console.error('Errore aggiornamento vincolo:', err);
                             }
