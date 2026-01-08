@@ -79,10 +79,8 @@ export default function GestioneDipendenti() {
   }, [search, filterMansione]);
 
   useEffect(() => {
-    if (activeTab === 'salari') {
-      loadPrimaNotaSalari();
-      loadDipendentiLista();
-    } else if (activeTab === 'libro-unico') {
+    // Prima Nota ora gestito da Zustand store nel componente PrimaNotaSalariTab
+    if (activeTab === 'libro-unico') {
       loadLibroUnico();
     } else if (activeTab === 'libretti') {
       loadLibretti();
@@ -90,7 +88,7 @@ export default function GestioneDipendenti() {
       loadContratti();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedYear, selectedYearPrimaNota, selectedMonth, filtroDipendente]);
+  }, [activeTab, selectedYear]);
 
 
   const loadData = async () => {
@@ -114,36 +112,6 @@ export default function GestioneDipendenti() {
       setContractTypes(res.data);
     } catch (error) {
       console.error('Error loading contract types:', error);
-    }
-  };
-
-  const loadPrimaNotaSalari = async () => {
-    try {
-      setLoadingSalari(true);
-      // Usa il NUOVO endpoint prima-nota-salari
-      let url = `/api/prima-nota-salari/salari?`;
-      const params = [];
-      if (selectedYearPrimaNota) params.push(`anno=${selectedYearPrimaNota}`);
-      if (selectedMonth) params.push(`mese=${selectedMonth}`);
-      if (filtroDipendente) params.push(`dipendente=${encodeURIComponent(filtroDipendente)}`);
-      url += params.join('&');
-      
-      const res = await api.get(url).catch(() => ({ data: [] }));
-      setSalariMovimenti(res.data || []);
-    } catch (error) {
-      console.error('Error loading prima nota salari:', error);
-      setSalariMovimenti([]);
-    } finally {
-      setLoadingSalari(false);
-    }
-  };
-
-  const loadDipendentiLista = async () => {
-    try {
-      const res = await api.get('/api/prima-nota-salari/dipendenti-lista').catch(() => ({ data: [] }));
-      setDipendentiLista(res.data || []);
-    } catch (error) {
-      console.error('Error loading dipendenti lista:', error);
     }
   };
 
