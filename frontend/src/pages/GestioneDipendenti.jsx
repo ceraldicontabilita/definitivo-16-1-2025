@@ -306,13 +306,7 @@ export default function GestioneDipendenti() {
 
 
       {/* TAB: Contratti - Componente Ottimizzato */}
-      {activeTab === 'contratti' && (
-        loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento dipendenti...</div>
-        ) : (
-          <ContrattiTab dipendenti={dipendenti} />
-        )
-      )}
+      {activeTab === 'contratti' && <ContrattiTab />}
 
       {/* TAB: Prima Nota Salari - Componente Ottimizzato */}
       {activeTab === 'salari' && <PrimaNotaSalariTab />}
@@ -328,13 +322,7 @@ export default function GestioneDipendenti() {
       )}
 
       {/* TAB: Libretti Sanitari - Componente Ottimizzato */}
-      {activeTab === 'libretti' && (
-        loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento dipendenti...</div>
-        ) : (
-          <LibrettiSanitariTab dipendenti={dipendenti} />
-        )
-      )}
+      {activeTab === 'libretti' && <LibrettiSanitariTab />}
     </div>
   );
 }
