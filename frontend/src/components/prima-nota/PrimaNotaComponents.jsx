@@ -2,10 +2,8 @@
  * Componenti ottimizzati per Prima Nota Salari
  * - React.memo per evitare re-render inutili
  * - useCallback per funzioni stabili
- * - Virtualizzazione per liste lunghe
  */
 import React, { memo, useCallback, useState } from 'react';
-import { List } from 'react-window';
 import { formatEuro } from '../../lib/utils';
 
 // Costanti
