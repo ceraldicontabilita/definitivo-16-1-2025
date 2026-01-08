@@ -342,16 +342,23 @@ export default function OperazioniDaConfermare() {
                           BANCA
                         </Button>
                         <Button
-                          onClick={() => handleAssegnoClick(op.id)}
+                          onClick={() => {
+                            // Se ha già numero assegno pre-compilato, conferma direttamente
+                            if (op.numero_assegno) {
+                              handleConferma(op.id, 'assegno', op.numero_assegno);
+                            } else {
+                              handleAssegnoClick(op.id);
+                            }
+                          }}
                           disabled={confirmingId === op.id}
                           style={{
-                            background: '#d97706',
+                            background: op.numero_assegno ? '#059669' : '#d97706',
                             color: 'white',
                             padding: '12px 16px'
                           }}
                         >
                           <FileCheck className="h-4 w-4 mr-2" />
-                          ASSEGNO
+                          {op.numero_assegno ? `ASSEGNO #${op.numero_assegno}` : 'ASSEGNO'}
                         </Button>
                         <Button
                           onClick={() => handleDelete(op.id)}
