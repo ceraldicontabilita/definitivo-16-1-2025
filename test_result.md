@@ -102,82 +102,33 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Miglioramento pagina Documenti: 1) Periodo sync ridotto a 10 giorni, 2) Campi separati per keyword personalizzate, 3) Download in background con popup stato"
+user_problem_statement: "Implementazione sistema Operazioni da Confermare per fatture ricevute via email Aruba, con separazione per anno fiscale"
 
 frontend:
-  - task: "Code Splitting con React.lazy + Suspense"
+  - task: "Pagina Operazioni da Confermare"
     implemented: true
     working: true
-    file: "frontend/src/main.jsx"
+    file: "frontend/src/pages/OperazioniDaConfermare.jsx"
     priority: "high"
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "40+ pagine lazy loaded con React.lazy() e Suspense"
-
-  - task: "React Query per caching API"
-    implemented: true
-    working: true
-    file: "frontend/src/lib/queryClient.js"
-    priority: "high"
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "QueryClient configurato con cache 5min, GC 30min"
-
-  - task: "Zustand Store Prima Nota"
-    implemented: true
-    working: true
-    file: "frontend/src/stores/primaNotaStore.js"
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "testing"
-        comment: "SUCCESS: Filtri periodo funzionanti, bottoni esclusione anni 2018-2022 con cambio stato visivo, card riepilogo arancione presente"
-
-  - task: "Refactoring GestioneDipendenti"
-    implemented: true
-    working: true
-    file: "frontend/src/pages/GestioneDipendenti.jsx"
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Da 2627 a 374 righe (-86%). Tab estratti in componenti separati"
-      - working: true
-        agent: "testing"
-        comment: "FINAL TEST SUCCESS: Tutti i 4 tab funzionanti (Anagrafica, Contratti, Prima Nota, Libro Unico). KPI cards, filtri, bottoni, modal, React Query caching - tutto perfetto. Nessun errore JavaScript."
-
-  - task: "Pagina Documenti - Download background e keyword"
-    implemented: true
-    working: true
-    file: "frontend/src/pages/Documenti.jsx"
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Implementato: 1) Default 10 giorni, 2) Campo keyword personalizzate con varianti, 3) Download in background con polling stato task, 4) Popup visivo durante download"
-      - working: true
-        agent: "testing"
-        comment: "SUCCESS: Tutti i test completati con successo. 1) Caricamento pagina OK, 2) KPI cards presenti (109 Totali, 98 Da Processare, 11 Processati, Spazio Usato), 3) Pannello Impostazioni funzionante con periodo default 10 giorni, 4) Parole chiave predefinite presenti (F24, Fattura, Busta Paga, Estratto Conto, Cartella Esattoriale, Bonifico), 5) Selezione/deselezione F24 funzionante, 6) Campo keyword personalizzate con input e pulsante Aggiungi, 7) Sezione 'Le tue parole chiave personalizzate' con checkbox e pulsante elimina, 8) Warning 'Nessuna parola chiave selezionata' presente, 9) Pulsante 'Scarica da Email' presente. Download in background non testato per evitare elaborazione email reale. Tutte le funzionalità richieste implementate correttamente."
+        comment: "Implementato: parser email Aruba, lista operazioni con filtro anno, pulsanti CASSA/BANCA/ASSEGNO, inserimento Prima Nota e Gestione Assegni"
 
 metadata:
   created_by: "main_agent"
-  version: "4.0"
-  test_sequence: 4
+  version: "5.0"
+  test_sequence: 5
   run_ui: true
 
 test_plan:
   current_focus:
-    - "Pagina Documenti - verifica download in background"
-    - "Verifica campo keyword personalizzate"
+    - "Pagina Operazioni da Confermare - verifica flusso completo"
   test_all: false
 
 agent_communication:
   - agent: "main"
-    message: "Implementate le modifiche richieste alla pagina Documenti: 1) Periodo default ridotto a 10 giorni con opzione nel dropdown, 2) Sezione keyword personalizzate con campo input e lista con checkbox, 3) Download in background con endpoint /api/documenti/scarica-da-email?background=true e polling stato task. TEST DA FARE: a) Aprire pagina documenti, b) Cliccare Impostazioni, c) Verificare periodo default 10 giorni, d) Aggiungere keyword personalizzata, e) Selezionare keyword, f) Cliccare 'Scarica da Email' e verificare popup stato in background"
+    message: "Implementato sistema Operazioni da Confermare. TEST DA FARE: 1) Vai a /operazioni-da-confermare, 2) Verifica anno 2026 selezionato mostra 12 fatture da confermare, 3) Cambia anno a 2025, verifica 119 fatture, 4) Seleziona una fattura e clicca BANCA per confermarla, 5) Clicca ASSEGNO su un'altra e inserisci numero assegno, 6) Verifica che le confermate appaiano nella sezione 'Confermate'"
   - agent: "testing"
     message: "TESTING COMPLETATO CON SUCCESSO: Tutti i test richiesti sono stati eseguiti e verificati. La pagina Documenti funziona correttamente con tutte le nuove funzionalità implementate: 1) Caricamento pagina senza errori JavaScript, 2) KPI cards presenti e funzionanti, 3) Pannello Impostazioni si apre correttamente, 4) Periodo default 10 giorni verificato, 5) Tutte le opzioni periodo presenti (10, 30, 60, 90 giorni, 6 mesi, anno, 2 anni), 6) Parole chiave predefinite presenti e selezionabili, 7) Funzionalità F24 selezione/deselezione testata, 8) Campo keyword personalizzate funzionante con aggiunta 'Test Keyword', 9) Sezione custom keywords con checkbox e pulsante elimina, 10) Warning per nessuna keyword selezionata presente, 11) Pulsante download presente. Background download non testato per evitare elaborazione email reale. Tutte le funzionalità richieste sono implementate e funzionanti."
