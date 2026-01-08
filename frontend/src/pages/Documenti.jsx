@@ -569,6 +569,57 @@ export default function Documenti() {
         </CardContent>
       </Card>
 
+      {/* Popup stato download in background */}
+      {downloading && taskStatus && (
+        <Card style={{ 
+          marginBottom: 24, 
+          border: '2px solid #3b82f6',
+          background: 'linear-gradient(135deg, #eff6ff, #dbeafe)'
+        }}>
+          <CardContent className="pt-4">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ 
+                width: 48, 
+                height: 48, 
+                borderRadius: '50%', 
+                background: '#3b82f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', fontSize: 16, color: '#1e40af', marginBottom: 4 }}>
+                  📧 Download Email in corso...
+                </div>
+                <div style={{ fontSize: 13, color: '#3b82f6' }}>
+                  {taskStatus.message || 'Elaborazione...'}
+                </div>
+                {taskStatus.status === 'in_progress' && (
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                    Puoi continuare a navigare, ti avviseremo al completamento.
+                  </div>
+                )}
+              </div>
+              <div style={{ 
+                padding: '8px 16px', 
+                background: '#dbeafe', 
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 'bold',
+                color: '#1e40af'
+              }}>
+                {taskStatus.status === 'pending' ? '⏳ In attesa' : 
+                 taskStatus.status === 'in_progress' ? '🔄 In esecuzione' : 
+                 taskStatus.status === 'completed' ? '✅ Completato' : 
+                 taskStatus.status === 'error' ? '❌ Errore' : '...'}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filtri */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
