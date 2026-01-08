@@ -130,30 +130,66 @@ DB_NAME: dalla variabile ambiente DB_NAME in backend/.env
 
 ================================================================================
 
-## 📁 STRUTTURA FILE BACKEND
+## 📁 STRUTTURA FILE BACKEND (POST-REFACTORING)
 
 ```
 /app/app/
 ├── main.py                      # Entry point FastAPI
 ├── database.py                  # Connessione MongoDB UNICA
 ├── config.py                    # Configurazioni
-├── routers/
-│   ├── accounting/
-│   │   ├── prima_nota_cassa.py
-│   │   ├── prima_nota_banca.py
-│   │   └── prima_nota_salari.py
-│   ├── invoices/
-│   │   ├── fatture.py
-│   │   └── fatture_upload.py    # Upload XML + registra acquisti
-│   ├── dipendenti.py
+├── services/
+│   └── aruba_invoice_parser.py  # Parser email Aruba + riconciliazione
+├── routers/                     # 36 file core
+│   ├── auth.py, admin.py        # Autenticazione
+│   ├── suppliers.py             # Fornitori
+│   ├── cash.py, cash_register*.py  # Cassa
 │   ├── documenti.py             # Download email
-│   ├── estratto_conto.py
-│   ├── operazioni_da_confermare.py
-│   ├── previsioni_acquisti.py   # Statistiche e previsioni
-│   └── ...
-└── services/
-    └── aruba_invoice_parser.py  # Parser email Aruba
+│   ├── operazioni_da_confermare.py  # Fatture da confermare
+│   ├── previsioni_acquisti.py   # Statistiche acquisti
+│   ├── ... (altri 30 file core)
+│   │
+│   ├── accounting/              # ✅ MODULO ORGANIZZATO
+│   │   ├── prima_nota.py, prima_nota_automation.py, prima_nota_salari.py
+│   │   ├── piano_conti.py, bilancio.py, centri_costo.py
+│   │   ├── iva_calcolo.py, liquidazione_iva.py
+│   │   └── regole_categorizzazione.py, contabilita_avanzata.py
+│   │
+│   ├── bank/                    # ✅ MODULO ORGANIZZATO
+│   │   ├── estratto_conto.py, bank_statement_*.py
+│   │   ├── assegni.py, archivio_bonifici.py
+│   │   └── pos_accredito.py, riconciliazione_f24_banca.py
+│   │
+│   ├── employees/               # ✅ MODULO ORGANIZZATO
+│   │   ├── dipendenti.py, employee_contracts.py
+│   │   ├── buste_paga.py, employees_payroll.py
+│   │   └── shifts.py, staff.py
+│   │
+│   ├── f24/                     # ✅ MODULO ORGANIZZATO
+│   │   ├── f24_main.py, f24_riconciliazione.py
+│   │   ├── f24_tributi.py, f24_public.py
+│   │   └── quietanze.py, email_f24.py, f24_gestione_avanzata.py
+│   │
+│   ├── haccp/                   # ✅ MODULO ORGANIZZATO
+│   │   ├── haccp_main.py, haccp_completo.py
+│   │   ├── haccp_sanifications.py, haccp_technical_sheets.py
+│   │   └── haccp_report_pdf.py, haccp_auth.py, haccp_libro_unico.py
+│   │
+│   ├── invoices/                # ✅ MODULO ORGANIZZATO
+│   │   ├── invoices_main.py, fatture_upload.py
+│   │   ├── invoices_emesse.py, invoices_export.py
+│   │   └── corrispettivi.py
+│   │
+│   ├── reports/                 # ✅ MODULO ORGANIZZATO
+│   │   ├── report_pdf.py, exports.py, simple_exports.py
+│   │   ├── analytics.py, dashboard.py
+│   │
+│   └── warehouse/               # ✅ MODULO ORGANIZZATO
+│       ├── warehouse_main.py, magazzino.py, magazzino_products.py
+│       ├── magazzino_doppia_verita.py, products.py, products_catalog.py
+│       └── lotti.py, ricette.py, tracciabilita.py, dizionario_articoli.py
 ```
+
+**REFACTORING COMPLETATO**: Eliminati 58 file duplicati dalla root (backup in /app/backup_routers_root_20260108/)
 
 ## 📁 STRUTTURA FILE FRONTEND
 
