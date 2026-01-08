@@ -260,5 +260,30 @@ invoices.linee → acquisti_prodotti → statistiche/previsioni
 
 ================================================================================
 
+================================================================================
+
+## 🚨 NOTE PER AGENTI FUTURI
+
+### Prima di ogni operazione:
+1. Leggere questo file PRD.md
+2. Verificare che si stia usando `azienda_erp_db`
+3. Non creare nuovi database MAI
+
+### Collezioni che richiedono attenzione duplicati:
+- `acquisti_prodotti`: check `fattura_id` + `descrizione_normalizzata`
+- `invoices`: check `invoice_number` + `supplier_name` + `invoice_date`
+- `operazioni_da_confermare`: check unicità prima di inserire
+
+### Comandi utili per debug:
+```bash
+# Conta documenti in una collezione
+python3 -c "import asyncio; from motor.motor_asyncio import AsyncIOMotorClient; import os; asyncio.run((lambda: AsyncIOMotorClient(os.environ['MONGO_URL'])['azienda_erp_db']['COLLEZIONE'].count_documents({}))())"
+
+# Lista database (deve essere solo azienda_erp_db)
+python3 -c "import asyncio; from motor.motor_asyncio import AsyncIOMotorClient; import os; print(asyncio.run(AsyncIOMotorClient(os.environ['MONGO_URL']).list_database_names()))"
+```
+
+================================================================================
+
 # ULTIMO AGGIORNAMENTO: 2026-01-08
-# VERSIONE: 2.0
+# VERSIONE: 2.1
