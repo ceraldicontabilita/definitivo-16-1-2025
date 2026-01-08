@@ -235,12 +235,17 @@ export default function OperazioniDaConfermare() {
                       border: isRiconciliato ? '2px solid #22c55e' : '1px solid #e2e8f0'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+                    {/* Layout responsive: colonna su mobile, riga su desktop */}
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      gap: 12
+                    }}>
                       {/* Info Fattura */}
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
                           <Building2 size={18} color="#64748b" />
-                          <span style={{ fontWeight: 'bold', fontSize: 16, color: '#1e293b' }}>
+                          <span style={{ fontWeight: 'bold', fontSize: 15, color: '#1e293b' }}>
                             {op.fornitore}
                           </span>
                           {op.fornitore_id && (
