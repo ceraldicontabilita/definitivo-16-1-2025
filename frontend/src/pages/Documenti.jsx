@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api';
 import { formatEuro } from '../lib/utils';
 import { 
   Download, RefreshCw, Trash2, FileText, Mail, Upload, 
-  CheckCircle, AlertCircle, Folder, Eye, ArrowRight, Filter, Plus, X, Search
+  CheckCircle, AlertCircle, Folder, Eye, ArrowRight, Filter, Plus, X, Search, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
