@@ -501,6 +501,7 @@ export default function DizionarioArticoli() {
             borderTop: '1px solid #e2e8f0',
             display: 'flex',
             justifyContent: 'center',
+            alignItems: 'center',
             gap: 12
           }}>
             <button
@@ -513,22 +514,24 @@ export default function DizionarioArticoli() {
                 background: page === 0 ? '#f1f5f9' : 'white',
                 cursor: page === 0 ? 'not-allowed' : 'pointer'
               }}
+              data-testid="btn-pagina-precedente"
             >
               ← Precedente
             </button>
             <span style={{ padding: '8px 16px', color: '#64748b' }}>
-              Pagina {page + 1}
+              Pagina {page + 1} di {Math.max(1, Math.ceil(total / limit))} ({total} articoli)
             </span>
             <button
               onClick={() => setPage(page + 1)}
-              disabled={articoli.length < limit}
+              disabled={(page + 1) * limit >= total}
               style={{
                 padding: '8px 16px',
                 borderRadius: 6,
                 border: '1px solid #e2e8f0',
-                background: articoli.length < limit ? '#f1f5f9' : 'white',
-                cursor: articoli.length < limit ? 'not-allowed' : 'pointer'
+                background: (page + 1) * limit >= total ? '#f1f5f9' : 'white',
+                cursor: (page + 1) * limit >= total ? 'not-allowed' : 'pointer'
               }}
+              data-testid="btn-pagina-successiva"
             >
               Successiva →
             </button>
