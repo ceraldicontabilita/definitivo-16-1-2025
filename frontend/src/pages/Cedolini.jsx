@@ -4,45 +4,12 @@ import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '../components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { 
-  Calculator, 
-  Users, 
-  Euro, 
-  FileText, 
-  CheckCircle,
-  Clock,
-  TrendingUp,
-  Building2,
-  Wallet
-} from 'lucide-react';
+import { Calculator, Users, FileText, CheckCircle, Clock, Building2 } from 'lucide-react';
 
-// Simple Label component
-const Label = ({ children, className = '' }) => (
-  <label className={`text-sm font-medium leading-none ${className}`}>{children}</label>
-);
-
-const MESI = [
-  { value: 1, label: 'Gennaio' },
-  { value: 2, label: 'Febbraio' },
-  { value: 3, label: 'Marzo' },
-  { value: 4, label: 'Aprile' },
-  { value: 5, label: 'Maggio' },
-  { value: 6, label: 'Giugno' },
-  { value: 7, label: 'Luglio' },
-  { value: 8, label: 'Agosto' },
-  { value: 9, label: 'Settembre' },
-  { value: 10, label: 'Ottobre' },
-  { value: 11, label: 'Novembre' },
-  { value: 12, label: 'Dicembre' }
-];
+const Label = ({ children }) => <label className="text-xs font-medium text-slate-600">{children}</label>;
+const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 
 export default function Cedolini() {
   const { anno } = useAnnoGlobale();
@@ -50,41 +17,23 @@ export default function Cedolini() {
   const [dipendenti, setDipendenti] = useState([]);
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  
-  // Form state
   const [selectedDipendente, setSelectedDipendente] = useState('');
   const [selectedMese, setSelectedMese] = useState(new Date().getMonth() + 1);
   const [oreLavorate, setOreLavorate] = useState('160');
   const [straordinari, setStraordinari] = useState('0');
   const [festivita, setFestivita] = useState('0');
-  
-  // Result state
   const [stima, setStima] = useState(null);
-  
-  // Lista cedolini
   const [cedolini, setCedolini] = useState([]);
   const [riepilogo, setRiepilogo] = useState(null);
 
-  useEffect(() => {
-    loadDipendenti();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'storico') {
-      loadCedolini();
-      loadRiepilogo();
-    }
-  }, [activeTab, selectedMese, anno]);
+  useEffect(() => { loadDipendenti(); }, []);
+  useEffect(() => { if (activeTab === 'storico') { loadCedolini(); loadRiepilogo(); } }, [activeTab, selectedMese, anno]);
 
   const loadDipendenti = async () => {
     try {
       const res = await api.get('/api/dipendenti');
-      const attivi = res.data.filter(d => d.status === 'attivo' || d.status === 'active');
-      setDipendenti(attivi);
-    } catch (error) {
-      console.error('Error loading dipendenti:', error);
-    }
+      setDipendenti(res.data.filter(d => d.status === 'attivo' || d.status === 'active'));
+    } catch (e) { console.error(e); }
   };
 
   const loadCedolini = async () => {
@@ -92,325 +41,137 @@ export default function Cedolini() {
       setLoading(true);
       const res = await api.get(`/api/cedolini/lista/${anno}/${selectedMese}`);
       setCedolini(res.data);
-    } catch (error) {
-      console.error('Error loading cedolini:', error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
   const loadRiepilogo = async () => {
     try {
       const res = await api.get(`/api/cedolini/riepilogo-mensile/${anno}/${selectedMese}`);
       setRiepilogo(res.data);
-    } catch (error) {
-      console.error('Error loading riepilogo:', error);
-    }
+    } catch (e) { console.error(e); }
   };
 
   const handleCalcola = async () => {
-    if (!selectedDipendente) {
-      alert('Seleziona un dipendente');
-      return;
-    }
-    
+    if (!selectedDipendente) return alert('Seleziona un dipendente');
     try {
       setCalculating(true);
       const res = await api.post('/api/cedolini/stima', {
-        dipendente_id: selectedDipendente,
-        mese: selectedMese,
-        anno: anno,
+        dipendente_id: selectedDipendente, mese: selectedMese, anno,
         ore_lavorate: parseFloat(oreLavorate) || 0,
         straordinari_ore: parseFloat(straordinari) || 0,
         festivita_ore: parseFloat(festivita) || 0
       });
       setStima(res.data);
-    } catch (error) {
-      console.error('Error calculating:', error);
-      alert('Errore nel calcolo: ' + (error.response?.data?.detail || error.message));
-    } finally {
-      setCalculating(false);
-    }
+    } catch (e) { alert('Errore: ' + (e.response?.data?.detail || e.message)); } finally { setCalculating(false); }
   };
 
   const handleConferma = async () => {
-    if (!stima) return;
-    
-    if (!window.confirm(`Confermare cedolino di ${stima.dipendente_nome}?\nNetto: €${stima.netto_in_busta.toFixed(2)}\nCosto Azienda: €${stima.costo_totale_azienda.toFixed(2)}`)) {
-      return;
-    }
-    
+    if (!stima || !window.confirm(`Confermare cedolino?\nNetto: €${stima.netto_in_busta.toFixed(2)}`)) return;
     try {
-      setConfirming(true);
       await api.post('/api/cedolini/conferma', stima);
-      alert('Cedolino confermato e registrato in contabilità');
+      alert('Cedolino confermato');
       setStima(null);
       setSelectedDipendente('');
-      if (activeTab === 'storico') {
-        loadCedolini();
-        loadRiepilogo();
-      }
-    } catch (error) {
-      console.error('Error confirming:', error);
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    } finally {
-      setConfirming(false);
-    }
+    } catch (e) { alert('Errore: ' + (e.response?.data?.detail || e.message)); }
   };
 
-  const formatEuro = (val) => {
-    if (val === null || val === undefined) return '-';
-    return new Intl.NumberFormat('it-IT', { 
-      style: 'currency', 
-      currency: 'EUR' 
-    }).format(val);
-  };
+  const fmt = (v) => v != null ? new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v) : '-';
 
   return (
-    <div className="container mx-auto p-6 space-y-6" data-testid="cedolini-page">
-      {/* Header */}
+    <div className="p-3 space-y-3" data-testid="cedolini-page">
+      {/* Header compatto */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-            <FileText className="w-8 h-8 text-blue-600" />
-            Cedolini Paga
-          </h1>
-          <p className="text-slate-500 mt-1">
-            Calcolo buste paga e costo aziendale
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
+        <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-blue-600" /> Cedolini Paga
+        </h1>
+        <div className="flex items-center gap-2">
           <Select value={selectedMese.toString()} onValueChange={(v) => setSelectedMese(parseInt(v))}>
-            <SelectTrigger className="w-40" data-testid="mese-select">
-              <SelectValue placeholder="Mese" />
-            </SelectTrigger>
+            <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {MESI.map(m => (
-                <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
-              ))}
+              {MESI.map((m, i) => <SelectItem key={i} value={(i+1).toString()}>{m}</SelectItem>)}
             </SelectContent>
           </Select>
-          <div className="text-lg font-semibold text-slate-600">
-            {anno}
-          </div>
+          <span className="text-sm font-semibold text-slate-600">{anno}</span>
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="calcola" className="flex items-center gap-2">
-            <Calculator className="w-4 h-4" />
-            Calcola Cedolino
-          </TabsTrigger>
-          <TabsTrigger value="storico" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Storico
-          </TabsTrigger>
+        <TabsList className="h-8">
+          <TabsTrigger value="calcola" className="text-xs h-7 px-3"><Calculator className="w-3 h-3 mr-1" />Calcola</TabsTrigger>
+          <TabsTrigger value="storico" className="text-xs h-7 px-3"><FileText className="w-3 h-3 mr-1" />Storico</TabsTrigger>
         </TabsList>
 
-        {/* TAB: Calcola */}
-        <TabsContent value="calcola" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Form Input */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-600" />
-                  Dati Cedolino
-                </CardTitle>
+        {/* TAB CALCOLA */}
+        <TabsContent value="calcola" className="mt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {/* Form */}
+            <Card className="shadow-sm">
+              <CardHeader className="py-2 px-3">
+                <CardTitle className="text-sm flex items-center gap-1"><Users className="w-4 h-4 text-blue-600" />Dati</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-3 space-y-2">
                 <div>
                   <Label>Dipendente</Label>
-                  <Select 
-                    value={selectedDipendente} 
-                    onValueChange={setSelectedDipendente}
-                  >
-                    <SelectTrigger data-testid="dipendente-select">
-                      <SelectValue placeholder="Seleziona dipendente..." />
-                    </SelectTrigger>
+                  <Select value={selectedDipendente} onValueChange={setSelectedDipendente}>
+                    <SelectTrigger className="h-8 text-xs" data-testid="dipendente-select"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
                     <SelectContent>
-                      {dipendenti.map(d => (
-                        <SelectItem key={d.id} value={d.id}>
-                          {d.nome_completo || `${d.cognome} ${d.nome}`}
-                        </SelectItem>
-                      ))}
+                      {dipendenti.map(d => <SelectItem key={d.id} value={d.id} className="text-xs">{d.nome_completo}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label>Ore Lavorate</Label>
-                    <Input 
-                      type="number"
-                      value={oreLavorate}
-                      onChange={(e) => setOreLavorate(e.target.value)}
-                      placeholder="160"
-                      data-testid="ore-lavorate-input"
-                    />
-                  </div>
-                  <div>
-                    <Label>Straordinari (ore)</Label>
-                    <Input 
-                      type="number"
-                      value={straordinari}
-                      onChange={(e) => setStraordinari(e.target.value)}
-                      placeholder="0"
-                      data-testid="straordinari-input"
-                    />
-                  </div>
-                  <div>
-                    <Label>Festività (ore)</Label>
-                    <Input 
-                      type="number"
-                      value={festivita}
-                      onChange={(e) => setFestivita(e.target.value)}
-                      placeholder="0"
-                      data-testid="festivita-input"
-                    />
-                  </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div><Label>Ore</Label><Input type="number" value={oreLavorate} onChange={(e) => setOreLavorate(e.target.value)} className="h-8 text-xs" /></div>
+                  <div><Label>Straord.</Label><Input type="number" value={straordinari} onChange={(e) => setStraordinari(e.target.value)} className="h-8 text-xs" /></div>
+                  <div><Label>Festività</Label><Input type="number" value={festivita} onChange={(e) => setFestivita(e.target.value)} className="h-8 text-xs" /></div>
                 </div>
-
-                <Button 
-                  onClick={handleCalcola}
-                  disabled={calculating || !selectedDipendente}
-                  className="w-full"
-                  data-testid="calcola-btn"
-                >
-                  {calculating ? (
-                    <>
-                      <Clock className="w-4 h-4 mr-2 animate-spin" />
-                      Calcolo in corso...
-                    </>
-                  ) : (
-                    <>
-                      <Calculator className="w-4 h-4 mr-2" />
-                      Calcola Cedolino
-                    </>
-                  )}
+                <Button onClick={handleCalcola} disabled={calculating || !selectedDipendente} className="w-full h-8 text-xs">
+                  {calculating ? <Clock className="w-3 h-3 mr-1 animate-spin" /> : <Calculator className="w-3 h-3 mr-1" />}
+                  {calculating ? 'Calcolo...' : 'Calcola'}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Risultato Stima */}
+            {/* Risultato */}
             {stima && (
-              <Card className="border-2 border-blue-200 bg-blue-50/30">
-                <CardHeader className="bg-blue-100/50">
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <Euro className="w-5 h-5 text-blue-600" />
-                      Stima Cedolino
-                    </span>
-                    <span className="text-sm font-normal text-slate-600">
-                      {stima.dipendente_nome}
-                    </span>
+              <Card className="border-blue-200 bg-blue-50/30 shadow-sm">
+                <CardHeader className="py-2 px-3 bg-blue-100/50">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <span>Stima - {stima.dipendente_nome}</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4 space-y-4">
+                <CardContent className="p-3 space-y-2">
                   {/* Lordo */}
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-green-600" />
-                      Retribuzione Lorda
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-slate-600">Base ({stima.ore_lavorate}h):</span>
-                      <span className="text-right font-medium">{formatEuro(stima.retribuzione_base)}</span>
-                      {stima.straordinari > 0 && (
-                        <>
-                          <span className="text-slate-600">Straordinari:</span>
-                          <span className="text-right font-medium">{formatEuro(stima.straordinari)}</span>
-                        </>
-                      )}
-                      {stima.festivita > 0 && (
-                        <>
-                          <span className="text-slate-600">Festività:</span>
-                          <span className="text-right font-medium">{formatEuro(stima.festivita)}</span>
-                        </>
-                      )}
-                      <span className="font-semibold text-slate-800 pt-2 border-t">Totale Lordo:</span>
-                      <span className="text-right font-bold text-lg text-slate-800 pt-2 border-t">
-                        {formatEuro(stima.lordo_totale)}
-                      </span>
+                  <div className="bg-white p-2 rounded border text-xs">
+                    <div className="font-semibold text-slate-700 mb-1">Lordo</div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <span className="text-slate-500">Base:</span><span className="text-right">{fmt(stima.retribuzione_base)}</span>
+                      {stima.straordinari > 0 && <><span className="text-slate-500">Straord:</span><span className="text-right">{fmt(stima.straordinari)}</span></>}
+                      <span className="font-semibold border-t pt-1">Totale:</span><span className="text-right font-bold border-t pt-1">{fmt(stima.lordo_totale)}</span>
                     </div>
                   </div>
-
                   {/* Trattenute */}
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <Wallet className="w-4 h-4 text-red-600" />
-                      Trattenute Dipendente
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-slate-600">INPS (9.19%):</span>
-                      <span className="text-right font-medium text-red-600">-{formatEuro(stima.inps_dipendente)}</span>
-                      <span className="text-slate-600">IRPEF lorda:</span>
-                      <span className="text-right text-slate-500">{formatEuro(stima.irpef_lorda)}</span>
-                      <span className="text-slate-600">Detrazioni:</span>
-                      <span className="text-right text-green-600">+{formatEuro(stima.detrazioni)}</span>
-                      <span className="text-slate-600">IRPEF netta:</span>
-                      <span className="text-right font-medium text-red-600">-{formatEuro(stima.irpef_netta)}</span>
-                      <span className="font-semibold pt-2 border-t">Totale Trattenute:</span>
-                      <span className="text-right font-bold text-red-600 pt-2 border-t">
-                        -{formatEuro(stima.totale_trattenute)}
-                      </span>
+                  <div className="bg-white p-2 rounded border text-xs">
+                    <div className="font-semibold text-slate-700 mb-1">Trattenute</div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <span className="text-slate-500">INPS:</span><span className="text-right text-red-600">-{fmt(stima.inps_dipendente)}</span>
+                      <span className="text-slate-500">IRPEF:</span><span className="text-right text-red-600">-{fmt(stima.irpef_netta)}</span>
+                      <span className="font-semibold border-t pt-1">Totale:</span><span className="text-right font-bold text-red-600 border-t pt-1">-{fmt(stima.totale_trattenute)}</span>
                     </div>
                   </div>
-
                   {/* Netto */}
-                  <div className="bg-green-100 p-4 rounded-lg border-2 border-green-300">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-green-800 text-lg">NETTO IN BUSTA</span>
-                      <span className="text-2xl font-bold text-green-700" data-testid="netto-result">
-                        {formatEuro(stima.netto_in_busta)}
-                      </span>
-                    </div>
+                  <div className="bg-green-100 p-2 rounded border-green-300 border flex justify-between items-center">
+                    <span className="font-semibold text-green-800 text-sm">NETTO</span>
+                    <span className="text-xl font-bold text-green-700" data-testid="netto-result">{fmt(stima.netto_in_busta)}</span>
                   </div>
-
                   {/* Costo Azienda */}
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-purple-600" />
-                      Costo Azienda
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-slate-600">Lordo dipendente:</span>
-                      <span className="text-right">{formatEuro(stima.lordo_totale)}</span>
-                      <span className="text-slate-600">INPS azienda (30%):</span>
-                      <span className="text-right">{formatEuro(stima.inps_azienda)}</span>
-                      <span className="text-slate-600">INAIL:</span>
-                      <span className="text-right">{formatEuro(stima.inail)}</span>
-                      <span className="text-slate-600">TFR mensile:</span>
-                      <span className="text-right">{formatEuro(stima.tfr_mese)}</span>
-                    </div>
-                    <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                      <span className="font-semibold text-purple-800 text-lg">COSTO TOTALE</span>
-                      <span className="text-xl font-bold text-purple-700" data-testid="costo-azienda-result">
-                        {formatEuro(stima.costo_totale_azienda)}
-                      </span>
+                  <div className="bg-white p-2 rounded border text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600"><Building2 className="w-3 h-3 inline mr-1" />Costo Azienda</span>
+                      <span className="font-bold text-purple-700">{fmt(stima.costo_totale_azienda)}</span>
                     </div>
                   </div>
-
-                  {/* Conferma Button */}
-                  <Button 
-                    onClick={handleConferma}
-                    disabled={confirming}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                    data-testid="conferma-btn"
-                  >
-                    {confirming ? (
-                      <>
-                        <Clock className="w-4 h-4 mr-2 animate-spin" />
-                        Conferma in corso...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Conferma e Registra in Contabilità
-                      </>
-                    )}
+                  <Button onClick={handleConferma} className="w-full h-8 text-xs bg-green-600 hover:bg-green-700">
+                    <CheckCircle className="w-3 h-3 mr-1" />Conferma
                   </Button>
                 </CardContent>
               </Card>
@@ -418,98 +179,43 @@ export default function Cedolini() {
           </div>
         </TabsContent>
 
-        {/* TAB: Storico */}
-        <TabsContent value="storico" className="space-y-6">
-          {/* Riepilogo Mensile */}
+        {/* TAB STORICO */}
+        <TabsContent value="storico" className="mt-2 space-y-3">
           {riepilogo && riepilogo.num_cedolini > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-blue-600">Cedolini Elaborati</p>
-                  <p className="text-2xl font-bold text-blue-800">{riepilogo.num_cedolini}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-green-50 border-green-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-green-600">Totale Lordo</p>
-                  <p className="text-2xl font-bold text-green-800">{formatEuro(riepilogo.totale_lordo)}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-emerald-50 border-emerald-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-emerald-600">Totale Netto</p>
-                  <p className="text-2xl font-bold text-emerald-800">{formatEuro(riepilogo.totale_netto)}</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-purple-50 border-purple-200">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-purple-600">Costo Azienda</p>
-                  <p className="text-2xl font-bold text-purple-800">{formatEuro(riepilogo.totale_costo_azienda)}</p>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="bg-blue-50 p-2 rounded text-center"><p className="text-xs text-blue-600">Cedolini</p><p className="text-lg font-bold text-blue-800">{riepilogo.num_cedolini}</p></div>
+              <div className="bg-green-50 p-2 rounded text-center"><p className="text-xs text-green-600">Lordo</p><p className="text-lg font-bold text-green-800">{fmt(riepilogo.totale_lordo)}</p></div>
+              <div className="bg-emerald-50 p-2 rounded text-center"><p className="text-xs text-emerald-600">Netto</p><p className="text-lg font-bold text-emerald-800">{fmt(riepilogo.totale_netto)}</p></div>
+              <div className="bg-purple-50 p-2 rounded text-center"><p className="text-xs text-purple-600">Costo Az.</p><p className="text-lg font-bold text-purple-800">{fmt(riepilogo.totale_costo_azienda)}</p></div>
             </div>
           )}
-
-          {/* Lista Cedolini */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Cedolini {MESI.find(m => m.value === selectedMese)?.label} {anno}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">
-                  <Clock className="w-8 h-8 mx-auto animate-spin mb-2" />
-                  Caricamento...
-                </div>
-              ) : cedolini.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  Nessun cedolino per questo periodo
-                </div>
-              ) : (
+          <Card className="shadow-sm">
+            <CardContent className="p-2">
+              {loading ? <div className="text-center py-4 text-xs text-slate-500">Caricamento...</div>
+              : cedolini.length === 0 ? <div className="text-center py-4 text-xs text-slate-500">Nessun cedolino</div>
+              : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead className="bg-slate-100">
                       <tr>
-                        <th className="px-4 py-2 text-left">Dipendente</th>
-                        <th className="px-4 py-2 text-right">Ore</th>
-                        <th className="px-4 py-2 text-right">Lordo</th>
-                        <th className="px-4 py-2 text-right">INPS Dip.</th>
-                        <th className="px-4 py-2 text-right">IRPEF</th>
-                        <th className="px-4 py-2 text-right">Netto</th>
-                        <th className="px-4 py-2 text-right">INPS Az.</th>
-                        <th className="px-4 py-2 text-right">TFR</th>
-                        <th className="px-4 py-2 text-right">Costo Tot.</th>
-                        <th className="px-4 py-2 text-center">Stato</th>
+                        <th className="px-2 py-1 text-left">Dipendente</th>
+                        <th className="px-2 py-1 text-right">Ore</th>
+                        <th className="px-2 py-1 text-right">Lordo</th>
+                        <th className="px-2 py-1 text-right">Netto</th>
+                        <th className="px-2 py-1 text-right">Costo Az.</th>
+                        <th className="px-2 py-1 text-center">Stato</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {cedolini.map((c, idx) => (
-                        <tr key={c.id || idx} className="border-b hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium">{c.dipendente_nome}</td>
-                          <td className="px-4 py-3 text-right">{c.ore_lavorate}</td>
-                          <td className="px-4 py-3 text-right">{formatEuro(c.lordo)}</td>
-                          <td className="px-4 py-3 text-right text-red-600">{formatEuro(c.inps_dipendente)}</td>
-                          <td className="px-4 py-3 text-right text-red-600">{formatEuro(c.irpef)}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-green-700">{formatEuro(c.netto)}</td>
-                          <td className="px-4 py-3 text-right">{formatEuro(c.inps_azienda)}</td>
-                          <td className="px-4 py-3 text-right">{formatEuro(c.tfr)}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-purple-700">{formatEuro(c.costo_azienda)}</td>
-                          <td className="px-4 py-3 text-center">
-                            {c.pagato ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Pagato
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
-                                <Clock className="w-3 h-3 mr-1" />
-                                Da pagare
-                              </span>
-                            )}
+                      {cedolini.map((c, i) => (
+                        <tr key={i} className="border-b hover:bg-slate-50">
+                          <td className="px-2 py-1.5 font-medium">{c.dipendente_nome}</td>
+                          <td className="px-2 py-1.5 text-right">{c.ore_lavorate}</td>
+                          <td className="px-2 py-1.5 text-right">{fmt(c.lordo)}</td>
+                          <td className="px-2 py-1.5 text-right font-semibold text-green-700">{fmt(c.netto)}</td>
+                          <td className="px-2 py-1.5 text-right text-purple-700">{fmt(c.costo_azienda)}</td>
+                          <td className="px-2 py-1.5 text-center">
+                            {c.pagato ? <span className="text-green-600 text-xs">✓</span> : <span className="text-yellow-600 text-xs">⏳</span>}
                           </td>
                         </tr>
                       ))}
