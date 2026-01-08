@@ -1,6 +1,84 @@
 # 📋 PRD - AZIENDA SEMPLICE ERP
 # Documento di riferimento centralizzato
-# AGGIORNATO: 2026-01-08
+# AGGIORNATO: 2026-01-09
+
+================================================================================
+# ✅ FUNZIONALITÀ IMPLEMENTATE - SESSIONE 2026-01-09
+================================================================================
+
+## Moduli Contabili Completati
+
+### 1. Cedolini Base (/api/cedolini)
+- Calcolo stima busta paga con ore/straordinari/festività
+- Conferma cedolino con registrazione in prima_nota_salari
+- Aggiornamento automatico TFR dipendente
+- Frontend: /cedolini con form calcolo e storico
+
+### 2. Gestione TFR (/api/tfr)
+- Situazione TFR per dipendente
+- Accantonamento annuale con rivalutazione ISTAT
+- Liquidazione TFR (parziale o totale)
+- Riepilogo aziendale e calcolo batch
+
+### 3. Gestione Cespiti (/api/cespiti)
+- 11 categorie con coefficienti DM 31/12/1988
+- Creazione cespite con piano ammortamento
+- Calcolo e registrazione ammortamenti annuali
+- Dismissione con plus/minusvalenza
+- Frontend: /cespiti con gestione completa
+
+### 4. Controllo Gestione (/api/controllo-gestione)
+- Analisi costi/ricavi per periodo
+- Trend mensile
+- Costi per categoria/fornitore
+- KPI gestionali (food cost, incidenza personale)
+
+### 5. Budget Economico (/api/controllo-gestione/budget)
+- Creazione voci budget per anno
+- Confronto budget vs consuntivo
+- Calcolo scostamenti
+
+### 6. Indici Bilancio (/api/indici-bilancio)
+- ROI, ROE, ROS
+- Current Ratio, Quick Ratio
+- Indice di indebitamento
+- Rotazione capitale
+- Confronto tra anni
+
+### 7. Scadenzario Fornitori (/api/scadenzario-fornitori)
+- Fatture urgenti e scadute
+- Aging crediti
+- Cash flow previsionale
+- Frontend integrato in /cespiti
+
+### 8. Calcolo IVA (/api/calcolo-iva)
+- Liquidazione mensile/trimestrale
+- Riepilogo annuale per dichiarazione
+- Registro acquisti/vendite
+
+### 9. Wizard Chiusura Esercizio (/api/chiusura-esercizio)
+- Verifica preliminare completezza dati
+- Bilancino di verifica
+- Esecuzione scritture chiusura
+- Storico chiusure
+
+## Nuove Collection MongoDB
+- `cedolini` - Cedolini confermati
+- `tfr_accantonamenti` - Accantonamenti TFR annuali
+- `tfr_liquidazioni` - Liquidazioni TFR
+- `cespiti` - Registro cespiti
+- `budget` - Voci budget annuali
+- `chiusure_esercizio` - Chiusure esercizio
+
+## Nuovi File Router
+- cedolini.py, tfr.py, cespiti.py
+- scadenzario_fornitori.py, calcolo_iva.py
+- controllo_gestione.py, indici_bilancio.py
+- chiusura_esercizio.py
+
+## Nuove Pagine Frontend
+- /cedolini - Cedolini.jsx
+- /cespiti - GestioneCespiti.jsx (include TFR e Scadenzario)
 
 ================================================================================
 # 📚 LEZIONE COMPLETA DI RAGIONERIA GENERALE APPLICATA
