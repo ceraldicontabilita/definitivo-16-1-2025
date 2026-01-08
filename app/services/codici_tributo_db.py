@@ -154,6 +154,44 @@ CODICI_TRIBUTO_ERARIO = {
         "periodicita": "variabile"
     },
     
+    # IRES
+    "2001": {
+        "descrizione": "IRES saldo",
+        "categoria": "IRES",
+        "tipo": "saldo",
+        "scadenza": "30 giugno",
+        "periodicita": "annuale"
+    },
+    "2002": {
+        "descrizione": "IRES acconto prima rata",
+        "categoria": "IRES",
+        "tipo": "acconto",
+        "scadenza": "30 giugno",
+        "periodicita": "annuale"
+    },
+    "2003": {
+        "descrizione": "IRES acconto seconda rata o unica soluzione",
+        "categoria": "IRES",
+        "tipo": "acconto",
+        "scadenza": "30 novembre",
+        "periodicita": "annuale"
+    },
+    # Nuovi codici 2025 Legge di Bilancio
+    "2007": {
+        "descrizione": "Maggior acconto I rata IRES - art. 1, c. 20, L. 207/2024",
+        "categoria": "IRES",
+        "tipo": "acconto",
+        "scadenza": "30 giugno",
+        "periodicita": "annuale"
+    },
+    "2008": {
+        "descrizione": "Maggior acconto II rata o unica soluzione IRES - art. 1, c. 20, L. 207/2024",
+        "categoria": "IRES",
+        "tipo": "acconto",
+        "scadenza": "30 novembre",
+        "periodicita": "annuale"
+    },
+    
     # IRAP
     "3800": {
         "descrizione": "IRAP saldo",
@@ -171,6 +209,21 @@ CODICI_TRIBUTO_ERARIO = {
     },
     "3813": {
         "descrizione": "IRAP acconto seconda rata o unica soluzione",
+        "categoria": "IRAP",
+        "tipo": "acconto",
+        "scadenza": "30 novembre",
+        "periodicita": "annuale"
+    },
+    # Nuovi codici 2025 IRAP
+    "3881": {
+        "descrizione": "Maggior acconto I rata IRAP - art. 1, c. 20, L. 207/2024",
+        "categoria": "IRAP",
+        "tipo": "acconto",
+        "scadenza": "30 giugno",
+        "periodicita": "annuale"
+    },
+    "3882": {
+        "descrizione": "Maggior acconto II rata o unica soluzione IRAP - art. 1, c. 20, L. 207/2024",
         "categoria": "IRAP",
         "tipo": "acconto",
         "scadenza": "30 novembre",
