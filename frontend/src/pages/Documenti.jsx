@@ -51,6 +51,11 @@ export default function Documenti() {
   const [nuovaParolaChiave, setNuovaParolaChiave] = useState('');
   const [customKeywords, setCustomKeywords] = useState([]);
   const [showImportSettings, setShowImportSettings] = useState(false);
+  
+  // Background download state
+  const [backgroundTask, setBackgroundTask] = useState(null);
+  const [taskStatus, setTaskStatus] = useState(null);
+  const pollingRef = useRef(null);
 
   useEffect(() => {
     loadData();
