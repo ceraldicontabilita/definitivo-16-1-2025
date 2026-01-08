@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://account-tracker-62.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://account-tracker-62.preview.emergentagent.com/prima-nota",
-    "IVA": "https://account-tracker-62.preview.emergentagent.com/iva",
-    "Dipendenti": "https://account-tracker-62.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://ceraldi-system.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://ceraldi-system.preview.emergentagent.com/prima-nota",
+    "IVA": "https://ceraldi-system.preview.emergentagent.com/iva",
+    "Dipendenti": "https://ceraldi-system.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",

@@ -1,156 +1,167 @@
 <analysis>**original_problem_statement:**
-L'utente ha richiesto l'implementazione di una serie di nuove funzionalità e correzioni per un'applicazione ERP:
-1.  **Pagina Documenti:** Modificare la pagina per ridurre il tempo di sincronizzazione delle email, aggiungere un campo di input per parole chiave e gestire il download in background.
-2.  **Nuova Funzionalità Operazioni da Confermare:** Analizzare le email di fattura di Aruba, estrarre i dati, popolare una nuova sezione per la conferma del pagamento (Cassa/Banca/Assegno) e registrare l'operazione in Prima Nota.
-3.  **Miglioramento: Riconciliazione Automatica:** Durante l'importazione delle fatture (email e XML), tentare una riconciliazione automatica con i movimenti dell'estratto conto bancario per pre-compilare il metodo di pagamento.
-4.  **Nuova Funzionalità Previsioni Acquisti:** Estrarre gli articoli dalle fatture XML per creare una pagina di statistiche di consumo e previsioni di acquisto.
-5.  **Correzioni Critiche:** Risolvere bug ricorrenti, inclusi un dropdown vuoto nella gestione dipendenti e problemi di parsing F24.
-6.  **Refactoring:** Eliminare codice e file duplicati nel backend.
-7.  **Nuove Funzionalità Contabili (Richiesta Recente):** Implementare un vasto set di moduli contabili, tra cui cedolini paga semplificati, gestione TFR, calcolo imposte, controllo di gestione, budget, indici di bilancio, bilancio civilistico, gestione cespiti, wizard di chiusura esercizio e scadenzario fornitori.
+L'utente ha fornito un elenco completo di nuove richieste, bug e modifiche di priorità che ridefiniscono gli obiettivi del progetto. Le richieste principali sono:
+
+**Requisiti Critici (P0):**
+1.  **Correzione Bug:**
+    *    non funziona come previsto.
+    *   Le temperature HACCP non si popolano automaticamente di notte.
+    *   L'esportazione Excel () non funziona.
+    *   Il link  non funziona.
+    *   La paginazione in  è bloccata sulla prima pagina.
+    *   : Rimuovere il pulsante Esporta JSON.
+2.  **Gestione TFR (Rielaborazione):**
+    *   Leggere i dati TFR direttamente dai PDF delle buste paga forniti.
+    *   Tracciare gli acconti TFR quando il totale diminuisce e registrarli nella scheda dipendente.
+    *   Aggiungere una sezione nella scheda dipendente per inserire manualmente acconti (TFR, ferie, 13ima/14ima, prestiti), con calcolo del saldo per ciascuno.
+
+**Miglioramenti UI/UX (P1):**
+1.  **UI Compatta:** Ridurre le dimensioni di testi, card e spaziature su **tutte** le pagine per minimizzare lo scorrimento.
+2.  **Logo Aziendale:** Estrarre il logo da  e inserirlo in tutte le pagine dell'app e nel PDF del carnet assegni.
+3.  **Filtro Annuale Globale:** Assicurarsi che **tutte** le pagine (es. , statistiche, fatturato) filtrino i dati in base all'anno selezionato. Solo le giacenze di magazzino devono considerare i dati pregressi.
+
+**Nuove Funzionalità e Modifiche (P1-P2):**
+1.  **Cedolini (Completamento):** Aggiungere UI per paga oraria, gestione maggiorazione domenicale, assenze giustificate e calcolo malattia (previa ricerca INPS).
+2.  **Cespiti (Rielaborazione):** Permettere la modifica/cancellazione dei dati esistenti. La fonte dei dati non devono più essere le fatture XML, ma un bilancio in PDF che l'utente fornirà.
+3.  **Previsioni Acquisti (Semplificazione):** Aggregare i prodotti per tipologia (es. uova totali) invece che per fornitore.
+4.  **Ricerca Prodotti (Miglioramento):** Affinare la logica di categorizzazione per evitare risultati errati.
+5.  **Archivio Bonifici (Rielaborazione):**
+    *   Migliorare l'associazione automatica tra bonifici e cedolini.
+    *   Aggiungere la possibilità di associazione manuale e di aggiungere note.
+    *   Creare una funzione per scaricare uno ZIP dei bonifici per anno.
+6.  **Riconciliazione Batch:** Migliorare le performance dell'endpoint (attualmente va in timeout) e aggiungere un pulsante dedicato nell'interfaccia di Operazioni da Confermare.
+7.  **Keep-Alive Server:** Impedire che l'applicazione vada in standby.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-*   L'applicazione ERP è stata significativamente migliorata e stabilizzata.
-*   **Fix Critici:** Il bug P0 (dropdown dipendenti vuoto) e il bug P2 (parsing F24) sono stati risolti. Il dropdown ora utilizza React Query per un caricamento dati affidabile e il parser F24 è stato corretto.
-*   **Funzionalità Previsioni Acquisti:** La funzionalità è completa. Il frontend mostra statistiche di consumo (medie giornaliere/settimanali), confronto con l'anno precedente e una scheda di previsione dei costi futuri. Il backend popola correttamente i dati storici dalle fatture XML esistenti.
-*   **Refactoring Backend:** È stato eseguito un importante refactoring dei router backend. 58 file duplicati sono stati rimossi dalla directory , centralizzando la logica nelle sottodirectory esistenti (, , ecc.). Il sistema è stato testato con successo dopo il refactoring.
-*   **Correzione Dati:** È stato identificato e risolto un grave problema di duplicazione dei dati causato da un database obsoleto (), che è stato eliminato. La collezione  è stata ripulita e ripopolata correttamente.
-*   **Sistema di Alert F24:** L'endpoint per gli alert delle scadenze F24 è stato corretto e ora funziona, recuperando correttamente le scadenze da più collection (, ).
-*   **Documentazione:** È stato creato un file  in  che centralizza le informazioni sull'architettura, le collection del database e i principi contabili, come richiesto dall'utente. È stato creato anche un file  con la struttura per le nuove funzionalità.
+L'agente ha completato con successo l'implementazione di una vasta suite di moduli contabili (Cedolini, TFR, Cespiti, Scadenzario, IVA, Controllo Gestione, Budget, Indici, Chiusura Esercizio), inclusi backend e frontend. Questo lavoro è stato validato tramite il testing agent, che ha superato tutti i test. In risposta a un feedback dell'utente, l'agente ha iniziato a rendere l'interfaccia utente più compatta, modificando le pagine ,  e . Sono stati creati anche nuovi endpoint per la riconciliazione batch e la gestione di casi IVA speciali.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava iniziando a implementare la nuova serie di funzionalità contabili richieste dall'utente. Ha creato i file router di base per i cedolini () e il bilancio () come primi passi per la costruzione di questi nuovi moduli.
+- **Last item agent was working**: L'agente ha iniziato ad affrontare la nuova e lunga lista di richieste dell'utente (messaggio 276). Ha eseguito i primi passi di ricognizione e risoluzione dei problemi, tra cui:
+    1. Installazione delle utility di sistema (, ).
+    2. Unzipping delle buste paga in PDF fornite dall'utente.
+    3. Analisi di un PDF per capire la struttura dei dati TFR.
+    4. Test di alcuni endpoint segnalati come non funzionanti (, ), confermando che  funziona.
+    5. Download del logo aziendale dal sito web indicato.
 - **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?**: both. Man mano che ogni modulo contabile viene sviluppato, richiederà test sia del backend (calcoli, logica contabile) che del frontend (UI per l'inserimento dati e la visualizzazione).
+- **Which testing method agent to use?**: both. Data la vastità e l'interconnessione delle modifiche richieste, sarà necessario un approccio ibrido: testare ogni fix del backend con , verificare le modifiche UI con lo  e, una volta completato un gruppo di task, lanciare il  per un'analisi completa e per la regressione.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-Nessun issue critico in sospeso. I bug P0 e P2 sono stati risolti.
+- **Issue 1:  non funziona (P0)**: La pagina non visualizza correttamente i dati. L'agente ha visto che si carica ma rimane in elaborazione.
+- **Issue 2: Temperature HACCP non si popolano (P0)**: Il task notturno per l'aggiornamento automatico delle temperature di frigoriferi e congelatori non funziona.
+- **Issue 3: Esportazione Excel fatture non funziona (P0)**: L'endpoint  è rotto.
+- **Issue 4: Paginazione dizionario articoli bloccata (P0)**: La pagina  mostra sempre e solo pagina 1.
+- **Issue 5: Accesso a  non funzionante (P0)**: L'utente non riesce ad accedere alla documentazione API. L'agente ha notato che l'URL corretto è , quindi il problema potrebbe essere un link errato nell'UI.
+- **Issue 6: Logica di categorizzazione in  errata (P1)**: La ricerca per categoria restituisce risultati incoerenti.
+- **Issue 7: Filtro per anno non applicato globalmente (P1)**: La maggior parte delle pagine mostra dati storici aggregati invece di filtrarli per l'anno selezionato, il che è contrario ai principi contabili.
+- **Issue 8: Performance riconciliazione batch (P2)**: L'endpoint per la riconciliazione massiva va in timeout dopo 120 secondi.
+- **Issue 9: Timeout dell'applicazione (P2)**: L'applicazione va in standby, necessita di un meccanismo di keep-alive.
 
 **In progress Task List**:
-- **Task 1: Implementazione dei nuovi moduli contabili (P0)**
-    - **Where to resume**: L'agente ha appena creato i file  e . Il prossimo passo è iniziare a costruire la logica e gli endpoint per il primo modulo richiesto: i **Cedolini Base**.
-    - **What will be achieved with this?**: L'obiettivo è implementare una suite completa di funzionalità contabili richieste dall'utente per trasformare l'applicazione in un ERP più completo. I moduli da implementare sono:
-        1.  **Cedolini Base:** Inserimento ore/giorni -> stima busta paga e costo azienda.
-        2.  **Gestione TFR**.
-        3.  **Calcolo IRES/IRAP** (bilancino sommario).
-        4.  **Controllo di Gestione**.
-        5.  **Budget Economico**.
-        6.  **Indici di Bilancio** (versione semplificata).
-        7.  **Bilancio Civilistico**.
-        8.  **Gestione Cespiti**.
-        9.  **Wizard Chiusura Esercizio**.
-        10. **Scadenzario Fatture Fornitori** (solo fatture da pagare).
-        11. **Calcolo IVA** (solo il calcolo, senza generazione F24).
+- **Task 1: Correzione Bug ad Alta Priorità (P0)**
+    - **Where to resume**: L'agente ha già iniziato a investigare gli endpoint  e . Deve ora procedere con la diagnosi e la risoluzione degli altri bug P0, partendo da  e dal task notturno HACCP.
+    - **What will be achieved with this?**: Ripristinare la funzionalità di base dell'applicazione e risolvere i problemi più urgenti segnalati dall'utente.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: both
-    - **Blocked on something**: No.
+
+- **Task 2: Rielaborazione della Gestione TFR (P0)**
+    - **Where to resume**: L'agente ha già decompresso i file PDF e analizzato la struttura di una busta paga. Il prossimo passo è implementare un parser PDF robusto per estrarre il TFR da tutti i documenti, modificare il backend per salvare questi dati e aggiornare l'interfaccia utente nella scheda dipendente.
+    - **What will be achieved with this?**: Automatizzare l'aggiornamento del TFR basandosi su documenti reali (PDF) invece che su calcoli interni, come richiesto dall'utente, e fornire strumenti per la gestione degli acconti.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: both
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks**:
-    *   Tutti gli elementi elencati nel **Task 1** della sezione In progress Task List costituiscono i prossimi task. La priorità è iniziare con Cedolini Base.
+    *   **(P1) Completamento modulo Cedolini**: Implementare l'inserimento della paga oraria, la gestione delle maggiorazioni, delle assenze e della malattia.
+    *   **(P1) Integrazione Logo Aziendale**: Inserire il logo scaricato in tutte le pagine e nel PDF del carnet assegni.
+    *   **(P1) Rielaborazione Cespiti**: Modificare la pagina per permettere la modifica/cancellazione e prepararla a leggere i dati da un bilancio in PDF.
+    *   **(P1) Semplificazione Previsioni Acquisti**: Raggruppare i prodotti per tipologia.
+    *   **(P1) Rielaborazione Archivio Bonifici**: Implementare l'associazione avanzata con i cedolini, la gestione delle note e lo scaricamento per anno.
+    *   **(P1) Aggiunta pulsante Riconciliazione Batch**: Inserire il pulsante nell'UI di Operazioni da Confermare.
 *   **Future Tasks**:
-    *   **(P1) Gestione assegni multipli:** Sebbene la logica esista, l'utente ha chiesto un testing molto approfondito. Potrebbe essere necessario un task dedicato per verificarne la robustezza in tutti gli scenari.
-    *   **(P2) Creare endpoint di riconciliazione batch:** Come da handoff precedente, creare un endpoint per aggiornare retroattivamente le fatture XML esistenti.
-    *   **(P2) Implementare la gestione degli sconti, resi e storni:** Basato sulla ricerca di ragioneria, l'agente deve implementare la corretta gestione contabile per questi scenari.
-    *   **(P2) Evitare duplicazione IVA (Fatture in Corrispettivi):** Implementare una logica (es. checkbox nella UI) per gestire le fatture emesse relative a scontrini già registrati nei corrispettivi, per evitare il doppio conteggio dell'IVA.
-    *   **(P3) Centralizzare tutti gli upload:** Creare una pagina di upload generica.
+    *   **(P2) Test approfondito assegni multipli**.
+    *   **(P2) Analisi email Aruba per Operazioni da Confermare**.
+    *   **(P2) Gestione resi ed evitare duplicazione IVA (fatture in corrispettivi)**.
+    *   **(P3) Centralizzazione della funzione di upload file**.
 
 **Completed work in this session**
-- **Risoluzione Bug Critico (P0 - Dropdown Dipendenti):** Risolto il bug del dropdown vuoto nei modali di Gestione Dipendenti utilizzando React Query per il fetching dei dati.
-- **Completamento Funzionalità (Previsioni Acquisti):** Finalizzata la pagina con statistiche, confronti anno su anno e previsioni.
-- **Correzione Dati e Database:** Eliminato un database duplicato () e ripuliti i dati dei prodotti acquistati, risolvendo un problema di triplicazione dei dati segnalato dall'utente.
-- **Refactoring Critico Backend:** Eliminati 58 file router duplicati dalla root del backend, migliorando la manutenibilità. Il sistema è stato testato con successo dopo il refactoring.
-- **Risoluzione Bug (P2 - Parsing F24):** Corretto un bug logico nell'endpoint di sincronizzazione F24 che impediva il corretto processamento dei file scaricati.
-- **Risoluzione Bug (Alert F24):** Corretto l'endpoint degli alert F24 per interrogare le collection corrette e usare i campi giusti, rendendolo funzionante.
-- **Creazione Documentazione:** Creato e popolato il file  con l'architettura del sistema e una sezione sui principi di ragioneria, come richiesto.
+- **Implementazione Suite Contabile**: Completati backend e frontend per 11 moduli contabili (Cedolini, TFR, Cespiti, Scadenzario Fornitori, Calcolo IVA, Controllo di Gestione, Budget, Indici di Bilancio, Calcolo IRES/IRAP, Bilancio Civilistico, Wizard Chiusura Esercizio).
+- **Validazione tramite Testing Agent**: Eseguiti con successo due cicli di test automatici che hanno validato le nuove funzionalità e corretto bug minori.
+- **Refactoring UI Compatta**: Riscritte le pagine , , e  per un layout più denso, come richiesto dall'utente.
+- **Implementazione Funzionalità Batch**: Creato un endpoint per la riconciliazione massiva retroattiva delle fatture.
+- **Correzione Dipendenze**: Identificate e installate diverse dipendenze mancanti di  nel frontend.
+- **Aggiornamento Documentazione**: Aggiornato il file  con le nuove funzionalità.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Test automatici  falliscono:** Ereditato dall'handoff precedente, non affrontato. Sebbene il componente ora funzioni, i test automatizzati potrebbero ancora fallire.
--   **Issue 2: Definire e completare la funzionalità Vincolo:** La logica esatta deve ancora essere confermata con l'utente.
--   **Issue 3: Anno 2018 importato come 2005 (P1 dall'handoff):** L'utente ha esplicitamente richiesto di non lavorare su questo issue (Msg 165).
--   **Issue 4: Re-implementare la virtualizzazione delle tabelle (P1 dall'handoff):** L'utente ha esplicitamente richiesto di non lavorare su questo issue (Msg 165).
+-   **Issue 1: Test automatici  falliscono**: Ereditato da handoff precedenti, non prioritario.
+-   **Issue 2: Definire e completare la funzionalità Vincolo**: La logica esatta deve ancora essere confermata con l'utente.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **React Query:** Utilizzato per risolvere problemi di state management e data fetching asincrono nel frontend, disaccoppiando i componenti figli dal caricamento dati del genitore.
-- **Backend Refactoring:** Pulizia strutturale dei file per migliorare la manutenibilità e risolvere debiti tecnici, eliminando duplicazioni e correggendo import circolari.
-- **Data Integrity and Verification:** Processo di debug che ha coinvolto il controllo di database multipli, la verifica della coerenza dei dati tra collection e la pulizia e ripopolamento dei dati per garantire l'accuratezza.
-- **Dynamic API Correction:** Modifica di endpoint esistenti () per aggregare dati da più collection del database e utilizzare i campi corretti, dimostrando la capacità di adattare la logica ai dati reali.
-- **Web Research for Business Logic:** Utilizzo della ricerca web per raccogliere informazioni su principi contabili complessi, che sono poi stati documentati e utilizzati per pianificare nuove funzionalità.
+- **Sviluppo Rapido di Funzionalità**: L'agente ha rapidamente creato un'intera suite di moduli contabili, dimostrando la capacità di implementare backend e frontend in modo efficiente.
+- **Refactoring UI su Feedback**: L'agente ha risposto prontamente al feedback dell'utente riscrivendo i componenti React per ottenere un layout più compatto e denso di informazioni.
+- **Elaborazione Batch e Timeout**: L'implementazione di un task di riconciliazione massiva ha evidenziato problemi di performance e timeout, indicando la necessità di ottimizzazione o di gestione asincrona.
+- **Estrazione Dati da PDF**: È stato avviato il lavoro per estrarre dati strutturati (TFR) da documenti non strutturati (PDF delle buste paga), un task complesso che richiede parsing e analisi del contenuto.
+- **Gestione delle Dipendenze**: L'agente ha diagnosticato e risolto problemi nel frontend causati dalla mancanza di pacchetti yarn install v1.22.22
+[1/4] Resolving packages...
+success Already up-to-date.
+Done in 0.08s., dimostrando capacità di debug a livello di ambiente.
 
 **key DB schema**
-- Non sono state create nuove collection in questa sessione, ma le prossime attività richiederanno la creazione di schemi per: , , , , , ecc.
-
-**changes in tech stack**
-- Nessuna.
+Non sono state create esplicitamente nuove collection, ma le nuove funzionalità implicano la necessità di strutturare dati per , , , , etc. L'agente ha esteso le collection esistenti come  e .
 
 **All files of reference**
-*   : **File CRITICO.** Contiene la documentazione centralizzata del progetto, inclusa la struttura del DB e le regole contabili. Il nuovo agente DEVE consultarlo.
-*   : Modificato per correggere l'endpoint degli alert F24.
-*   : Modificato per correggere il bug di parsing degli F24.
-*   : Modificato per rimuovere il passaggio di prop .
-*    e : Modificati per usare  per il fetch dei dipendenti.
-*   : Oggetto di un importante refactoring con l'eliminazione di 58 file.
-*    e : Nuovi file placeholder per le future funzionalità.
-
-**Areas that need refactoring**:
-*   Il parser F24 () utilizza ancora coordinate X/Y per l'estrazione dei dati, il che è fragile. Andrebbe migliorato per utilizzare pattern testuali più robusti.
-
-**key api endpoints**
--   : Popola lo storico dei prodotti dalle fatture.
--   : (Corretto) Restituisce gli F24 scaduti o in scadenza.
--   : (Corretto) Avvia la sincronizzazione degli F24 dalle email.
--   , : (Da creare) Nuovi endpoint per i moduli contabili.
+-   **/app/memory/PRD.md**: Documentazione centrale del progetto, aggiornata con le ultime funzionalità.
+-   **/app/uploads/paghe/pagheanno2025.zip**: Artefatto fornito dall'utente contenente i PDF delle buste paga, essenziale per il task di gestione del TFR.
+-   Tutti i nuovi file router creati in .
+-   Le pagine frontend nuove e modificate in .
+-   Logo scaricato in .
 
 **Critical Info for New Agent**
--   **Seguire il Piano dell'Utente:** L'utente ha fornito una lista di priorità molto specifica (Msg 325) per i nuovi moduli contabili. Il task principale è implementare questa lista, iniziando dai Cedolini Base. Non deviare da questo piano.
--   **Consultare il PRD:** Il file  è la nuova fonte di verità. Contiene informazioni vitali sull'architettura e sui principi contabili da seguire. Leggilo attentamente prima di iniziare.
--   **Logica Contabile:** L'utente si aspetta che l'agente comprenda e applichi correttamente i principi della contabilità italiana. Usa i documenti in  e fai ulteriori ricerche se necessario.
--   **Cosa NON fare:** L'utente ha anche specificato chiaramente le funzionalità da NON implementare (es. invio fatture, stampa F24, libro giornale). Rispetta queste esclusioni.
--   **Refactoring Completato:** Il grosso del refactoring dei router è stato fatto e testato. Non dovrebbero esserci più problemi di file duplicati in quell'area.
+-   **La nuova fonte di verità è il messaggio 276 dell'utente.** Questo messaggio contiene un elenco massivo di bug, nuove funzionalità e modifiche che sovrascrivono qualsiasi piano precedente. **Ignora i piani vecchi e segui questa nuova lista.**
+-   **Le priorità sono chiare**: Inizia con i bug P0 (Verifica Coerenza, HACCP, Esportazione Excel, etc.). Subito dopo, affronta la rielaborazione della Gestione TFR, che è un'altra richiesta P0.
+-   **La logica di TFR e Cespiti è cambiata radicalmente**. Il TFR deve essere letto dai PDF forniti. I Cespiti devono provenire da un bilancio PDF (da richiedere all'utente) e non più dalle fatture XML.
+-   **È richiesto un refactoring globale**: Il filtro per anno e l'interfaccia compatta devono essere applicati a **tutte** le pagine dell'applicazione, non solo ad alcune.
+-   L'agente precedente ha già iniziato a lavorare sulla nuova lista (analisi PDF, download logo, test endpoint). Riprendi da dove ha lasciato.
 
 **documents and test reports created in this job**
+-    (aggiornato)
 -   
 -   
--    (aggiornato più volte)
+-    (artefatto utente)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Msg 325:** L'utente approva il piano e fornisce una lista dettagliata e precisa delle funzionalità contabili da implementare (Cedolini, TFR, Cespiti, ecc.) e di quelle da escludere (Stampa F24, Libro Giornale, ecc.). **Stato: IN PROGRESS.**
-2.  **Msg 313:** L'utente chiede all'agente di approfondire la sua conoscenza della contabilità (bilanci, diagrammi di flusso, etc.), di proporre nuove funzionalità basate su questa ricerca e di implementare le proposte. **Stato: COMPLETATO** (l'agente ha fatto ricerca e presentato la proposta).
-3.  **Msg 255:** L'utente approva il resoconto dell'agente e chiede di procedere con le implementazioni proposte e di approfondire ulteriormente lo studio della ragioneria per applicarlo al software. **Stato: COMPLETATO.**
-4.  **Msg 206:** L'utente chiede un'analisi approfondita di tutti i parser (specialmente F24), delle relazioni tra le pagine, e una ricerca sui principi di ragioneria per evitare duplicazioni IVA e gestire correttamente sconti/resi. **Stato: COMPLETATO.**
-5.  **Msg 165:** L'utente chiede di non procedere con i task P1 (dall'handoff) e di lavorare invece sull'issue P2 (parsing F24). **Stato: COMPLETATO.**
-6.  **Msg 102:** L'utente indica che la logica degli assegni multipli esiste già e chiede di integrarla, di eseguire un refactoring per eliminare codice inutile e di testare a fondo. **Stato: COMPLETATO.**
-7.  **Msg 69:** L'utente ordina all'agente di eliminare il database . **Stato: COMPLETATO.**
-8.  **Msg 61:** L'utente segnala un grave errore di triplicazione dei dati e richiede la creazione di un file PRD per centralizzare la conoscenza del sistema. **Stato: COMPLETATO.**
-9.  **Msg 5:** L'utente approva il piano iniziale: risolvere il bug P0 e poi continuare con le Previsioni Acquisti. **Stato: COMPLETATO.**
-10. **(PENDING) Msg 324 -> 325:** L'agente ha presentato la proposta di nuove funzionalità e l'utente ha risposto con la lista definitiva di cosa implementare (Msg 325). L'agente ha iniziato questo lavoro.
+1.  **Msg 279**: L'utente conferma le priorità (iniziare con i bug fix), conferma la fonte del logo e fornisce un file ZIP con le buste paga in PDF.
+2.  **Msg 278**: L'agente chiede conferma sulle priorità e su come ottenere le risorse (logo, PDF).
+3.  **Msg 276**: **MESSAGGIO CRITICO**. L'utente fornisce un elenco dettagliato e massivo di nuovi requisiti, bug fix e modifiche all'UI che ridefinisce completamente le prossime attività.
+4.  **Msg 275**: Riepilogo dell'agente dopo aver completato le richieste precedenti.
+5.  **Msg 205**: L'utente chiede di compattare l'interfaccia utente e elenca le prossime funzionalità desiderate (poi specificate meglio nel messaggio 276).
+6.  Il resto dei messaggi sono azioni dell'agente relative all'implementazione dei moduli contabili e al refactoring della UI.
 
 **Project Health Check:**
-*   **Broken**: Nessuna funzionalità critica risulta bloccata.
+*   **Broken**: Diverse funzionalità chiave sono state segnalate dall'utente come non funzionanti o incomplete (Verifica Coerenza, temperature HACCP, esportazione Excel, paginazione). L'endpoint di riconciliazione batch va in timeout.
 *   **Mocked**: Nessuno.
 
 **3rd Party Integrations**
 *   **Google/Gmail (IMAP)**: Per scaricare email e allegati.
-*   **pdfplumber**: Per estrarre dati da file PDF.
+*   **pdfplumber**: Utilizzato per estrarre dati da file PDF.
 *   **pandas/openpyxl**: Per leggere e scrivere file Excel.
 *   **beautifulsoup4**: Per parsare il contenuto HTML delle email.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (il backend testing agent è stato usato con successo dopo il refactoring dei router).
+-   **Testing agent used after significant changes**: YES. È stato usato due volte con successo per validare la nuova suite contabile e il refactoring della UI.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: Nessuno.
--   **Known regressions**: Nessuna.
+-   **Known regressions**: L'utente ha segnalato diverse regressioni o funzionalità non funzionanti.
 
 **Credentials to test flow:**
 -   **Email User**: 
--   **Email App Password**:  (disponibile in  come ).
+-   **Email App Password**:  (disponibile in ).
 
 **What agent forgot to execute**
-*   Le issue ereditate Test automatici falliscono e Definire funzionalità Vincolo non sono state affrontate, poiché l'utente ha continuamente assegnato nuove priorità più alte.
-*   Le issue P1 dall'handoff (Anno 2018 importato come 2005 e Re-implementare virtualizzazione) sono state esplicitamente accantonate su richiesta dell'utente.</analysis>
+- Le issue ereditate (Test automatici  e funzionalità Vincolo) continuano a non essere affrontate a causa di nuove priorità più alte assegnate dall'utente.
+- L'agente ha completato il piano precedente, ma l'utente ha immediatamente fornito una nuova lista enorme che ha reso obsoleto il concetto di finito. L'agente non ha dimenticato nulla del piano attivo, ma il piano stesso è stato stravolto.</analysis>

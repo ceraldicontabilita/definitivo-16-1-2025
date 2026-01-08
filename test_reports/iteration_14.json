@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://account-tracker-62.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://account-tracker-62.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://account-tracker-62.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://ceraldi-system.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://ceraldi-system.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://ceraldi-system.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {
