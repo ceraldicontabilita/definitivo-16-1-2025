@@ -12,6 +12,29 @@ router = APIRouter()
 
 
 @router.get(
+    "/stats",
+    summary="Get database statistics"
+)
+async def get_stats() -> Dict[str, Any]:
+    """Get statistics for main collections."""
+    db = Database.get_db()
+    
+    stats = {
+        "invoices": await db["invoices"].count_documents({}),
+        "suppliers": await db["suppliers"].count_documents({}),
+        "products": await db["warehouse_inventory"].count_documents({}),
+        "employees": await db["employees"].count_documents({}),
+        "haccp": await db["haccp_temperature_frigoriferi"].count_documents({}) + 
+                 await db["haccp_temperature_congelatori"].count_documents({}),
+        "prima_nota_cassa": await db["prima_nota_cassa"].count_documents({}),
+        "prima_nota_banca": await db["prima_nota_banca"].count_documents({}),
+        "f24": await db["f24_commercialista"].count_documents({})
+    }
+    
+    return stats
+
+
+@router.get(
     "/year-opening-balances/{year}",
     summary="Get year opening balances"
 )
