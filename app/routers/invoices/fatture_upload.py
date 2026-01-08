@@ -325,6 +325,8 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             "pagamento": parsed.get("pagamento", {}),
             "causali": parsed.get("causali", []),
             "metodo_pagamento": metodo_pagamento,
+            "numeri_assegni": numeri_assegni,  # Pre-compilato se trovato nell'estratto conto
+            "riconciliazione_assegni": riconciliazione_assegni,  # Dettagli riconciliazione
             "pagato": False,
             "status": "imported",
             "source": "xml_upload",
