@@ -144,6 +144,7 @@ const router = createBrowserRouter([
       { path: "prima-nota-cassa", element: <LazyPage><PrimaNotaCassa /></LazyPage> },
       { path: "prima-nota-banca", element: <LazyPage><PrimaNotaBanca /></LazyPage> },
       { path: "prima-nota", element: <LazyPage><PrimaNota /></LazyPage> },
+      { path: "operazioni-da-confermare", element: <LazyPage><OperazioniDaConfermare /></LazyPage> },
       { path: "riconciliazione", element: <LazyPage><Riconciliazione /></LazyPage> },
       { path: "estratto-conto", element: <LazyPage><EstrattoContoImport /></LazyPage> },
       { path: "estratto-conto-movimenti", element: <LazyPage><EstrattoConto /></LazyPage> },
