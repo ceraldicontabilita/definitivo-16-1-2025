@@ -46,7 +46,7 @@ export default function Documenti() {
   const [selectedDocs, setSelectedDocs] = useState(new Set());
   
   // Impostazioni download
-  const [giorniDownload, setGiorniDownload] = useState(1460); // ~4 anni dal 2021
+  const [giorniDownload, setGiorniDownload] = useState(10); // ultimi 10 giorni
   const [paroleChiaveSelezionate, setParoleChiaveSelezionate] = useState([]);
   const [nuovaParolaChiave, setNuovaParolaChiave] = useState('');
   const [customKeywords, setCustomKeywords] = useState([]);
