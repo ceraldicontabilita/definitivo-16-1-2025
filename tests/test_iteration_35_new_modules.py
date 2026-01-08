@@ -14,7 +14,7 @@ import sys
 # Add app to path for direct imports
 sys.path.insert(0, '/app')
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-finance-tools.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://account-tracker-62.preview.emergentagent.com').rstrip('/')
 
 
 class TestCodiciTributoF24:
