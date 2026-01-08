@@ -405,7 +405,10 @@ async def fetch_aruba_invoices(
                 riconciliato_auto = False
                 numero_assegno_auto = None
                 estratto_conto_match = None
+                assegni_multipli = None
+                da_verificare = False  # Flag per casi dubbi (assegni multipli)
                 
+                # Prima cerca match singolo (importo esatto)
                 bank_match = await find_bank_match(
                     db, 
                     invoice_data["totale"], 
@@ -416,6 +419,7 @@ async def fetch_aruba_invoices(
                 if bank_match:
                     riconciliato_auto = True
                     estratto_conto_match = {
+                        "tipo": "singolo",
                         "id": bank_match.get("id"),
                         "descrizione": bank_match.get("descrizione"),
                         "data": bank_match.get("data"),
@@ -436,7 +440,37 @@ async def fetch_aruba_invoices(
                     stats["riconciliate_auto"] += 1
                     logger.info(f"Riconciliata auto: {invoice_data['fornitore'][:30]} | €{invoice_data['totale']} -> {metodo_pagamento_proposto}")
                 else:
-                    stats["non_riconciliate"] += 1
+                    # Se non trovato match singolo, cerca assegni multipli
+                    multi_match = await find_multiple_checks_match(
+                        db,
+                        invoice_data["totale"],
+                        invoice_data["data_documento"],
+                        invoice_data["fornitore"]
+                    )
+                    
+                    if multi_match:
+                        riconciliato_auto = True
+                        da_verificare = True  # Richiede conferma utente
+                        metodo_pagamento_proposto = "assegno"
+                        assegni_multipli = multi_match["assegni"]
+                        
+                        # Usa i numeri degli assegni trovati
+                        numeri_assegni = [a.get("numero_assegno") for a in assegni_multipli if a.get("numero_assegno")]
+                        if numeri_assegni:
+                            numero_assegno_auto = ", ".join(numeri_assegni)
+                        
+                        estratto_conto_match = {
+                            "tipo": "multiplo",
+                            "assegni": assegni_multipli,
+                            "somma": multi_match["somma"],
+                            "differenza": multi_match["differenza"],
+                            "num_assegni": multi_match["num_assegni"]
+                        }
+                        
+                        stats["riconciliate_auto"] += 1
+                        logger.info(f"Riconciliata MULTIPLA: {invoice_data['fornitore'][:30]} | €{invoice_data['totale']} -> {multi_match['num_assegni']} assegni")
+                    else:
+                        stats["non_riconciliate"] += 1
                 
                 # Salva in operazioni_da_confermare
                 operazione = {
