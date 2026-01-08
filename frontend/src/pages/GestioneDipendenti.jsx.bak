@@ -1016,10 +1016,886 @@ export default function GestioneDipendenti() {
         </>
       )}
 
+      {/* TAB: Prima Nota Salari */}
+      {activeTab === 'salari' && (
+        <>
+          {/* Filtri periodo */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 12, 
+            marginBottom: 20, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            background: '#f8fafc',
+            padding: 16,
+            borderRadius: 12
+          }}>
+            <span style={{ fontWeight: 'bold', color: '#475569' }}>📅 Periodo:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value ? parseInt(e.target.value) : '')}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0' }}
+            >
+              <option value="">Tutti i mesi</option>
+              {mesiNomi.map((m, i) => (
+                <option key={i} value={i + 1}>{m}</option>
+              ))}
+            </select>
+            
+            <select
+              value={selectedYearPrimaNota || ''}
+              onChange={(e) => setSelectedYearPrimaNota(e.target.value ? parseInt(e.target.value) : null)}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#e3f2fd', fontWeight: 'bold' }}
+            >
+              <option value="">Tutti gli anni</option>
+              {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+            
+            <span style={{ fontWeight: 'bold', color: '#475569', marginLeft: 12 }}>👤 Dipendente:</span>
+            <select
+              value={filtroDipendente}
+              onChange={(e) => setFiltroDipendente(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #e2e8f0', minWidth: 180 }}
+            >
+              <option value="">Tutti i dipendenti</option>
+              {dipendentiLista.map((d, i) => (
+                <option key={i} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Bottoni Escludi Anni dal Calcolo Progressivo */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 8, 
+            marginBottom: 20, 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            background: '#fef3c7',
+            padding: 12,
+            borderRadius: 8,
+            border: '1px solid #f59e0b'
+          }}>
+            <span style={{ fontWeight: 'bold', color: '#92400e', marginRight: 8 }}>🚫 Escludi anni dal calcolo:</span>
+            {[2018, 2019, 2020, 2021, 2022].map(anno => (
+              <button
+                key={anno}
+                onClick={async () => {
+                  let nuoviAnniEsclusi;
+                  if (anniEsclusi.includes(anno)) {
+                    nuoviAnniEsclusi = anniEsclusi.filter(a => a !== anno);
+                  } else {
+                    nuoviAnniEsclusi = [...anniEsclusi, anno];
+                  }
+                  setAnniEsclusi(nuoviAnniEsclusi);
+                  
+                  // Ricalcola automaticamente i progressivi
+                  try {
+                    const params = new URLSearchParams();
+                    params.append('force_reset', 'true');
+                    if (nuoviAnniEsclusi.length > 0) {
+                      params.append('anni_esclusi', nuoviAnniEsclusi.join(','));
+                    }
+                    if (filtroDipendente) {
+                      params.append('dipendente', filtroDipendente);
+                    }
+                    await api.post(`/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`);
+                    await loadPrimaNotaSalari();
+                  } catch (err) {
+                    console.error('Errore ricalcolo:', err);
+                  }
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  border: anniEsclusi.includes(anno) ? '2px solid #dc2626' : '1px solid #d1d5db',
+                  background: anniEsclusi.includes(anno) ? '#fee2e2' : 'white',
+                  color: anniEsclusi.includes(anno) ? '#dc2626' : '#374151',
+                  fontWeight: anniEsclusi.includes(anno) ? 'bold' : 'normal',
+                  cursor: 'pointer',
+                  textDecoration: anniEsclusi.includes(anno) ? 'line-through' : 'none'
+                }}
+              >
+                {anno}
+              </button>
+            ))}
+            {anniEsclusi.length > 0 && (
+              <button
+                onClick={async () => {
+                  setAnniEsclusi([]);
+                  // Ricalcola senza esclusioni
+                  try {
+                    const params = new URLSearchParams();
+                    params.append('force_reset', 'true');
+                    if (filtroDipendente) {
+                      params.append('dipendente', filtroDipendente);
+                    }
+                    await api.post(`/api/prima-nota-salari/ricalcola-progressivi?${params.toString()}`);
+                    await loadPrimaNotaSalari();
+                  } catch (err) {
+                    console.error('Errore ricalcolo:', err);
+                  }
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: '#6b7280',
+                  color: 'white',
+                  cursor: 'pointer',
+                  marginLeft: 8
+                }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+          
+          {/* Pulsanti Importazione - NUOVI */}
+          <div style={{ 
+            display: 'flex', 
+            gap: 12, 
+            marginBottom: 20, 
+            flexWrap: 'wrap'
+          }}>
+            {/* Import PAGHE (buste paga) */}
+            <label style={{
+              padding: '10px 20px',
+              background: importingSalari ? '#9ca3af' : 'linear-gradient(135deg, #4caf50, #2e7d32)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: importingSalari ? 'wait' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 'bold'
+            }}>
+              {importingSalari ? '⏳ Importando...' : '📊 Importa PAGHE (Excel)'}
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleImportPaghe}
+                disabled={importingSalari}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            {/* Import BONIFICI */}
+            <label style={{
+              padding: '10px 20px',
+              background: importingEstratto ? '#9ca3af' : 'linear-gradient(135deg, #2196f3, #1565c0)',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              cursor: importingEstratto ? 'wait' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 'bold'
+            }}>
+              {importingEstratto ? '⏳ Importando...' : '🏦 Importa BONIFICI (Excel)'}
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleImportBonifici}
+                disabled={importingEstratto}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            {/* Export Excel */}
+            <button
+              onClick={handleExportSalariExcel}
+              disabled={salariMovimenti.length === 0}
+              style={{
+                padding: '10px 20px',
+                background: salariMovimenti.length === 0 ? '#d1d5db' : 'linear-gradient(135deg, #10b981, #059669)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: salariMovimenti.length === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              📥 Esporta Excel
+            </button>
+            
+            {/* Reset Dati */}
+            <button
+              onClick={handleResetSalari}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #ef4444, #b91c1c)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🗑️ Reset Tutti i Dati
+            </button>
+            
+            <button
+              onClick={loadPrimaNotaSalari}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #6b7280, #4b5563)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🔄 Aggiorna
+            </button>
+          </div>
 
-      {/* TAB: Prima Nota Salari - Componente Ottimizzato */}
-      {activeTab === 'salari' && <PrimaNotaSalariTab />}
+          {/* Risultato import PAGHE */}
+          {importResult && (
+            <div style={{
+              padding: 16,
+              marginBottom: 20,
+              borderRadius: 12,
+              background: importResult.error ? '#ffebee' : '#e8f5e9',
+              border: `1px solid ${importResult.error ? '#ef5350' : '#4caf50'}`
+            }}>
+              {importResult.error ? (
+                <div style={{ color: '#c62828' }}>❌ {importResult.message}</div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 'bold', color: '#2e7d32', marginBottom: 8 }}>
+                    ✅ {importResult.message}
+                  </div>
+                  <div style={{ display: 'flex', gap: 20 }}>
+                    <div><strong>{importResult.created}</strong> creati</div>
+                    <div><strong>{importResult.updated}</strong> aggiornati</div>
+                  </div>
+                </>
+              )}
+              <button onClick={() => setImportResult(null)} style={{ marginTop: 8, fontSize: 12, cursor: 'pointer' }}>✕ Chiudi</button>
+            </div>
+          )}
 
+          {/* Risultato import BONIFICI */}
+          {estrattoResult && (
+            <div style={{
+              padding: 16,
+              marginBottom: 20,
+              borderRadius: 12,
+              background: estrattoResult.error ? '#ffebee' : '#e3f2fd',
+              border: `1px solid ${estrattoResult.error ? '#ef5350' : '#2196f3'}`
+            }}>
+              {estrattoResult.error ? (
+                <div style={{ color: '#c62828' }}>❌ {estrattoResult.message}</div>
+              ) : (
+                <>
+                  <div style={{ fontWeight: 'bold', color: '#1565c0', marginBottom: 8 }}>
+                    🏦 {estrattoResult.message}
+                  </div>
+                  <div style={{ display: 'flex', gap: 20 }}>
+                    <div><strong>{estrattoResult.created}</strong> creati</div>
+                    <div><strong>{estrattoResult.updated}</strong> aggiornati</div>
+                  </div>
+                </>
+              )}
+              <button onClick={() => setEstrattoResult(null)} style={{ marginTop: 8, fontSize: 12, cursor: 'pointer' }}>✕ Chiudi</button>
+            </div>
+          )}
+
+          {/* Riepilogo Prima Nota Salari */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+            padding: 20,
+            borderRadius: 12,
+            color: 'white',
+            marginBottom: 20
+          }}>
+            <h3 style={{ margin: '0 0 12px 0' }}>📒 Prima Nota Salari - {selectedMonth ? mesiNomi[selectedMonth - 1] : 'Tutti i mesi'} {selectedYearPrimaNota || 'Tutti gli anni'}{filtroDipendente && ` - ${filtroDipendente}`}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Records</div>
+                <div style={{ fontSize: 28, fontWeight: 'bold' }}>
+                  {salariMovimenti.filter(m => !anniEsclusi.includes(m.anno)).length}
+                  {anniEsclusi.length > 0 && <span style={{ fontSize: 14, opacity: 0.7 }}> / {salariMovimenti.length}</span>}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Buste</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold' }}>
+                  {formatEuro(salariMovimenti.filter(m => !anniEsclusi.includes(m.anno)).reduce((sum, m) => sum + (m.importo_busta || 0), 0))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Totale Bonifici</div>
+                <div style={{ fontSize: 24, fontWeight: 'bold' }}>
+                  {formatEuro(salariMovimenti.filter(m => !anniEsclusi.includes(m.anno)).reduce((sum, m) => sum + (m.importo_bonifico || 0), 0))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>
+                  {filtroDipendente ? 'Saldo Progressivo' : 'Differenza'}
+                  {anniEsclusi.length > 0 && <span style={{ fontSize: 10, display: 'block' }}>(esclusi: {anniEsclusi.join(', ')})</span>}
+                </div>
+                <div style={{ 
+                  fontSize: 24, 
+                  fontWeight: 'bold',
+                  color: (() => {
+                    // Filtra i record escludendo gli anni selezionati
+                    const recordsFiltrati = salariMovimenti.filter(m => !anniEsclusi.includes(m.anno));
+                    // Se c'è un filtro dipendente, mostra l'ultimo progressivo (ordine cronologico)
+                    if (filtroDipendente && recordsFiltrati.length > 0) {
+                      // Ordina per anno e mese per trovare l'ultimo record
+                      const sorted = [...recordsFiltrati].sort((a, b) => {
+                        if (a.anno !== b.anno) return b.anno - a.anno;
+                        return b.mese - a.mese;
+                      });
+                      const ultimoProgressivo = sorted[0]?.progressivo || 0;
+                      return ultimoProgressivo >= 0 ? '#22c55e' : '#ef4444';
+                    }
+                    // Altrimenti mostra la differenza totale
+                    return recordsFiltrati.reduce((sum, m) => sum + (m.importo_bonifico || 0) - (m.importo_busta || 0), 0) >= 0 ? '#22c55e' : '#ef4444';
+                  })()
+                }}>
+                  {(() => {
+                    // Filtra i record escludendo gli anni selezionati
+                    const recordsFiltrati = salariMovimenti.filter(m => !anniEsclusi.includes(m.anno));
+                    // Se c'è un filtro dipendente, mostra l'ultimo progressivo
+                    if (filtroDipendente && recordsFiltrati.length > 0) {
+                      const sorted = [...recordsFiltrati].sort((a, b) => {
+                        if (a.anno !== b.anno) return b.anno - a.anno;
+                        return b.mese - a.mese;
+                      });
+                      return formatEuro(sorted[0]?.progressivo || 0);
+                    }
+                    // Altrimenti mostra la differenza totale
+                    return formatEuro(recordsFiltrati.reduce((sum, m) => sum + (m.importo_bonifico || 0) - (m.importo_busta || 0), 0));
+                  })()}
+                </div>
+              </div>
+            </div>
+            {/* Bottoni Azioni */}
+            <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button
+                onClick={() => setShowAggiustamentoModal(true)}
+                style={{
+                  padding: '10px 20px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+                data-testid="btn-aggiustamento-saldo"
+              >
+                ➕ Aggiustamento Saldo
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Aggiustamento Saldo */}
+          {showAggiustamentoModal && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: 'white',
+                padding: 24,
+                borderRadius: 12,
+                width: '90%',
+                maxWidth: 500,
+                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+              }}>
+                <h3 style={{ margin: '0 0 20px 0' }}>➕ Aggiustamento Saldo</h3>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
+                  Inserisci una riga di aggiustamento per allineare il saldo con il commercialista.
+                </p>
+                
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>Dipendente *</label>
+                  <select
+                    value={aggiustamentoData.dipendente}
+                    onChange={(e) => setAggiustamentoData({...aggiustamentoData, dipendente: e.target.value})}
+                    style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                  >
+                    <option value="">-- Seleziona dipendente --</option>
+                    {dipendentiLista.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>Mese</label>
+                    <select
+                      value={aggiustamentoData.mese}
+                      onChange={(e) => setAggiustamentoData({...aggiustamentoData, mese: parseInt(e.target.value)})}
+                      style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                    >
+                      {mesiNomi.map((m, i) => (
+                        <option key={i+1} value={i+1}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>Anno</label>
+                    <select
+                      value={aggiustamentoData.anno}
+                      onChange={(e) => setAggiustamentoData({...aggiustamentoData, anno: parseInt(e.target.value)})}
+                      style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #e2e8f0' }}
+                    >
+                      {[2023, 2024, 2025, 2026].map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>
+                    Importo € * 
+                    <span style={{ fontWeight: 'normal', color: '#64748b', fontSize: 12 }}> (positivo = aumenta saldo, negativo = diminuisce)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={aggiustamentoData.importo}
+                    onChange={(e) => setAggiustamentoData({...aggiustamentoData, importo: e.target.value})}
+                    placeholder="Es: 150.00 o -150.00"
+                    style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', boxSizing: 'border-box' }}
+                  />
+                </div>
+                
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>Descrizione</label>
+                  <input
+                    type="text"
+                    value={aggiustamentoData.descrizione}
+                    onChange={(e) => setAggiustamentoData({...aggiustamentoData, descrizione: e.target.value})}
+                    style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', boxSizing: 'border-box' }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setShowAggiustamentoModal(false)}
+                    style={{
+                      padding: '10px 20px',
+                      background: '#f1f5f9',
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    onClick={handleAggiungiAggiustamento}
+                    disabled={!aggiustamentoData.dipendente || !aggiustamentoData.importo}
+                    style={{
+                      padding: '10px 20px',
+                      background: !aggiustamentoData.dipendente || !aggiustamentoData.importo ? '#9ca3af' : '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: !aggiustamentoData.dipendente || !aggiustamentoData.importo ? 'not-allowed' : 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    ✓ Inserisci Aggiustamento
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tabella Prima Nota Salari - NUOVA STRUTTURA */}
+          <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid #e2e8f0', overflowX: 'auto' }}>
+            <div style={{ 
+              padding: '16px 20px', 
+              background: '#f8fafc', 
+              borderBottom: '1px solid #e2e8f0',
+              fontWeight: 'bold',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span>📋 Dettaglio - {salariMovimenti.filter(mov => {
+                if (filtroAnnoDal2023 && mov.anno < 2023) return false;
+                if (filtroTabDipendente && !mov.dipendente?.toLowerCase().includes(filtroTabDipendente.toLowerCase())) return false;
+                if (filtroTabMese && mov.mese_nome !== filtroTabMese) return false;
+                if (filtroTabAnno && mov.anno !== parseInt(filtroTabAnno)) return false;
+                return true;
+              }).length} / {salariMovimenti.length} record
+              {filtroAnnoDal2023 && <span style={{ color: '#3b82f6', fontWeight: 'bold' }}> (dal 2023)</span>}
+              </span>
+              {(filtroTabDipendente || filtroTabMese || filtroTabAnno || filtroAnnoDal2023) && (
+                <button
+                  onClick={() => {
+                    setFiltroTabDipendente('');
+                    setFiltroTabMese('');
+                    setFiltroTabAnno('');
+                    setFiltroAnnoDal2023(false);
+                  }}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: 6,
+                    border: '1px solid #e2e8f0',
+                    background: 'white',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    color: '#64748b'
+                  }}
+                >
+                  ✕ Reset filtri
+                </button>
+              )}
+            </div>
+            
+            {loadingSalari ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>
+            ) : salariMovimenti.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>
+                Nessun dato. Importa i file PAGHE e BONIFICI per iniziare.
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 800 }}>
+                <thead>
+                  <tr style={{ background: '#1e3a5f', color: 'white' }}>
+                    <th style={{ padding: '8px 12px', textAlign: 'left' }}>
+                      <div>Dipendente</div>
+                      <input
+                        type="text"
+                        placeholder="Filtra..."
+                        value={filtroTabDipendente}
+                        onChange={(e) => setFiltroTabDipendente(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px 8px', 
+                          borderRadius: 4, 
+                          border: 'none',
+                          fontSize: 12,
+                          marginTop: 4,
+                          color: '#1e3a5f'
+                        }}
+                      />
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <div>Mese</div>
+                      <select
+                        value={filtroTabMese}
+                        onChange={(e) => setFiltroTabMese(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: 4, 
+                          border: 'none',
+                          fontSize: 12,
+                          marginTop: 4,
+                          color: '#1e3a5f'
+                        }}
+                      >
+                        <option value="">Tutti</option>
+                        {mesiNomi.map((m, i) => (
+                          <option key={i} value={m}>{m}</option>
+                        ))}
+                      </select>
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>
+                      <div>Anno</div>
+                      <select
+                        value={filtroTabAnno}
+                        onChange={(e) => setFiltroTabAnno(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ 
+                          width: '100%', 
+                          padding: '4px', 
+                          borderRadius: 4, 
+                          border: 'none',
+                          fontSize: 12,
+                          marginTop: 4,
+                          color: '#1e3a5f'
+                        }}
+                      >
+                        <option value="">Tutti</option>
+                        {[...new Set(salariMovimenti.map(m => m.anno))].sort((a,b) => b-a).map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Importo Busta</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Importo Bonifico</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', width: 100 }}>Vincolo</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'right' }}>Saldo Progressivo</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center' }}>Stato</th>
+                    <th style={{ padding: '8px 12px', textAlign: 'center', width: 80 }}>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salariMovimenti
+                    .filter(mov => {
+                      // Filtro dal 2023 (quando attivo)
+                      if (filtroAnnoDal2023 && mov.anno < 2023) return false;
+                      if (filtroTabDipendente && !mov.dipendente?.toLowerCase().includes(filtroTabDipendente.toLowerCase())) return false;
+                      if (filtroTabMese && mov.mese_nome !== filtroTabMese) return false;
+                      if (filtroTabAnno && mov.anno !== parseInt(filtroTabAnno)) return false;
+                      return true;
+                    })
+                    .map((mov, idx) => (
+                    <tr 
+                      key={mov.id || idx} 
+                      style={{ 
+                        borderBottom: '1px solid #f1f5f9',
+                        background: mov.progressivo > 0 ? '#f0fdf4' : mov.progressivo < 0 ? '#fef2f2' : 'white'
+                      }}
+                    >
+                      <td style={{ padding: 12, fontWeight: 500 }}>{mov.dipendente}</td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>{mov.mese_nome || mov.mese}</td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>{mov.anno}</td>
+                      <td style={{ padding: 12, textAlign: 'right', color: '#0369a1' }}>
+                        {formatEuro(mov.importo_busta || 0)}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', color: '#dc2626' }}>
+                        {formatEuro(mov.importo_bonifico || 0)}
+                      </td>
+                      <td style={{ padding: '8px 4px', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={mov.vincolo || false}
+                          onChange={async (e) => {
+                            try {
+                              await api.put(`/api/prima-nota-salari/salari/${mov.id}`, {
+                                ...mov,
+                                vincolo: e.target.checked
+                              });
+                              setSalariMovimenti(prev => prev.map(m => 
+                                m.id === mov.id ? { ...m, vincolo: e.target.checked } : m
+                              ));
+                            } catch (err) {
+                              console.error('Errore aggiornamento vincolo:', err);
+                            }
+                          }}
+                          style={{ 
+                            width: 20, 
+                            height: 20, 
+                            cursor: 'pointer',
+                            accentColor: '#10b981'
+                          }}
+                          title="Vincola questo record (esclude dal ricalcolo)"
+                        />
+                      </td>
+                      <td style={{ 
+                        padding: 12, 
+                        textAlign: 'right', 
+                        fontWeight: 'bold',
+                        color: mov.progressivo > 0 ? '#16a34a' : mov.progressivo < 0 ? '#dc2626' : '#6b7280'
+                      }}>
+                        {formatEuro(mov.progressivo || 0)}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        {mov.riconciliato ? (
+                          <span style={{ 
+                            background: '#dcfce7', 
+                            color: '#16a34a', 
+                            padding: '4px 10px', 
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                          }}>
+                            ✅ OK
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            background: '#fef3c7', 
+                            color: '#d97706', 
+                            padding: '4px 10px', 
+                            borderRadius: 20,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                          }}>
+                            ⏳ Da verificare
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        <button
+                          onClick={() => setEditingSalario({...mov})}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, opacity: 0.7, marginRight: 8 }}
+                          title="Modifica"
+                          data-testid={`edit-salario-${mov.id}`}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSalario(mov.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, opacity: 0.6 }}
+                          title="Elimina"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          
+          {/* Modal Modifica Salario */}
+          {editingSalario && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}>
+              <div style={{
+                background: 'white',
+                borderRadius: 12,
+                padding: 24,
+                width: '90%',
+                maxWidth: 500,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+              }}>
+                <h3 style={{ margin: '0 0 20px 0', color: '#1e3a5f' }}>✏️ Modifica Record</h3>
+                
+                <div style={{ display: 'grid', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Dipendente</label>
+                    <input
+                      type="text"
+                      value={editingSalario.dipendente}
+                      onChange={(e) => setEditingSalario({...editingSalario, dipendente: e.target.value})}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Anno</label>
+                      <select
+                        value={editingSalario.anno}
+                        onChange={(e) => setEditingSalario({...editingSalario, anno: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      >
+                        {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Mese</label>
+                      <select
+                        value={editingSalario.mese}
+                        onChange={(e) => setEditingSalario({...editingSalario, mese: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      >
+                        {mesiNomi.map((m, i) => (
+                          <option key={i} value={i + 1}>{m}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Importo Busta (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingSalario.importo_busta || 0}
+                        onChange={(e) => setEditingSalario({...editingSalario, importo_busta: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: 6, fontWeight: 500, color: '#475569' }}>Importo Bonifico (€)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingSalario.importo_bonifico || 0}
+                        onChange={(e) => setEditingSalario({...editingSalario, importo_bonifico: e.target.value})}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 12, marginTop: 24, justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => setEditingSalario(null)}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 8,
+                      border: '1px solid #e2e8f0',
+                      background: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    onClick={handleSaveSalario}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #2196f3, #1565c0)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontWeight: 500
+                    }}
+                  >
+                    💾 Salva Modifiche
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Legenda */}
+          <div style={{ 
+            marginTop: 16, 
+            padding: 12, 
+            background: '#f8fafc', 
+            borderRadius: 8,
+            fontSize: 13,
+            color: '#6b7280'
+          }}>
+            <strong>Legenda Saldo Progressivo:</strong> 
+            <span style={{ marginLeft: 12, color: '#16a34a' }}>🟢 Positivo = anticipo al dipendente (bonifici {">"} buste)</span>
+            <span style={{ marginLeft: 12, color: '#dc2626' }}>🔴 Negativo = arretrati da pagare (buste {">"} bonifici)</span>
+          </div>
+        </>
+      )}
 
       {/* TAB: Libro Unico */}
       {activeTab === 'libro-unico' && (
