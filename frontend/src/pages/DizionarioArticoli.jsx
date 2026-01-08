@@ -68,6 +68,7 @@ export default function DizionarioArticoli() {
   const [applying, setApplying] = useState(false);
   const [categorizingAI, setCategorizingAI] = useState(false);
   const [message, setMessage] = useState(null);
+  const [total, setTotal] = useState(0);
 
   const loadArticoli = useCallback(async () => {
     try {
@@ -81,6 +82,7 @@ export default function DizionarioArticoli() {
       
       const res = await api.get(`/api/dizionario-articoli/dizionario?${params}`);
       setArticoli(res.data.items || []);
+      setTotal(res.data.total || 0);
     } catch (err) {
       console.error('Errore caricamento articoli:', err);
     } finally {
