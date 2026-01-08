@@ -321,7 +321,7 @@ const ContrattiTab = memo(function ContrattiTab({ dipendenti = [] }) {
                   <option value="">-- Seleziona --</option>
                   {dipendenti.map(d => (
                     <option key={d.id} value={d.id}>
-                      {d.cognome ? `${d.nome} ${d.cognome}` : d.nome}
+                      {d.nome_completo || `${d.cognome || ''} ${d.nome || ''}`.trim()}
                     </option>
                   ))}
                 </select>
