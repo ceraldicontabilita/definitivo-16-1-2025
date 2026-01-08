@@ -3,6 +3,43 @@
 # AGGIORNATO: 2026-01-09
 
 ================================================================================
+# ✅ BUG FIX P0 COMPLETATI - SESSIONE 2026-01-09
+================================================================================
+
+## Bug Fix Critici Risolti
+
+### 1. Verifica Coerenza (`/verifica-coerenza`)
+- ✅ Aggiunto `stato_generale` nella risposta API (CRITICO/ATTENZIONE/OK)
+- File: `/app/app/services/verifica_coerenza.py`
+
+### 2. Esportazione Excel (`/api/exports/invoices`)
+- ✅ Corretto URL export da `/api/simple-exports/` a `/api/exports/`
+- File: `/app/frontend/src/pages/Admin.jsx`
+
+### 3. Paginazione Dizionario Articoli
+- ✅ Corretto calcolo paginazione usando `total` dalla risposta API
+- ✅ Mostra "Pagina X di Y (N articoli)"
+- File: `/app/frontend/src/pages/DizionarioArticoli.jsx`
+
+### 4. Link `/docs` (Swagger API Documentation)
+- ✅ Aggiunto proxy in vite.config.js per `/docs`, `/redoc`, `/openapi.json`
+- ✅ Corretto link nella pagina Admin
+- Files: `/app/frontend/vite.config.js`, `/app/frontend/src/pages/Admin.jsx`
+
+### 5. Pulsante "Esporta JSON" Rimosso
+- ✅ Rimosso dalla pagina Admin come richiesto
+- File: `/app/frontend/src/pages/Admin.jsx`
+
+### 6. Statistiche Admin
+- ✅ Aggiunto endpoint `/api/admin/stats` mancante
+- File: `/app/app/routers/admin.py`
+
+### 7. Scheduler HACCP Temperature
+- ✅ Verificato funzionante - Task programmato alle 01:00 CET
+- ✅ Trigger manuale disponibile da pagina Admin
+- Note: Se il server viene riavviato durante la notte, il task potrebbe saltare
+
+================================================================================
 # ✅ FUNZIONALITÀ IMPLEMENTATE - SESSIONE 2026-01-09
 ================================================================================
 
