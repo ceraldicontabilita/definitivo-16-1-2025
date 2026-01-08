@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { to: "/liquidazione-iva", label: "Liquidazione IVA", icon: "🧮", short: "Liquid." },
   { to: "/riconciliazione-f24", label: "Riconciliazione F24", icon: "📋", short: "F24" },
   { to: "/prima-nota", label: "Prima Nota", icon: "📒", short: "P.Nota" },
+  { to: "/operazioni-da-confermare", label: "Operazioni da Confermare", icon: "📋", short: "Opz.Conf." },
   { to: "/controllo-mensile", label: "Controllo Mensile", icon: "📈", short: "Contr." },
   { to: "/riconciliazione", label: "Riconciliazione", icon: "🔄", short: "Riconc." },
   // Contabilità Analitica - Sottomenu
