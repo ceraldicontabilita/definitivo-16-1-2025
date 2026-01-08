@@ -370,18 +370,25 @@ export default function OperazioniDaConfermare() {
                         )}
                       </div>
 
-                      {/* Pulsanti Azione */}
-                      <div style={{ display: 'flex', gap: 8 }}>
+                      {/* Pulsanti Azione - Responsive: wrap su mobile */}
+                      <div style={{ 
+                        display: 'flex', 
+                        gap: 8, 
+                        flexWrap: 'wrap',
+                        justifyContent: 'flex-start'
+                      }}>
                         <Button
                           onClick={() => handleConferma(op.id, 'cassa')}
                           disabled={confirmingId === op.id}
                           style={{
                             background: '#16a34a',
                             color: 'white',
-                            padding: '12px 16px'
+                            padding: '10px 14px',
+                            fontSize: 13,
+                            minWidth: 90
                           }}
                         >
-                          <Banknote className="h-4 w-4 mr-2" />
+                          <Banknote className="h-4 w-4 mr-1" />
                           CASSA
                         </Button>
                         <Button
@@ -390,10 +397,12 @@ export default function OperazioniDaConfermare() {
                           style={{
                             background: '#2563eb',
                             color: 'white',
-                            padding: '12px 16px'
+                            padding: '10px 14px',
+                            fontSize: 13,
+                            minWidth: 90
                           }}
                         >
-                          <CreditCard className="h-4 w-4 mr-2" />
+                          <CreditCard className="h-4 w-4 mr-1" />
                           BANCA
                         </Button>
                         <Button
@@ -409,11 +418,13 @@ export default function OperazioniDaConfermare() {
                           style={{
                             background: op.numero_assegno ? '#059669' : '#d97706',
                             color: 'white',
-                            padding: '12px 16px'
+                            padding: '10px 14px',
+                            fontSize: 13,
+                            minWidth: 100
                           }}
                         >
-                          <FileCheck className="h-4 w-4 mr-2" />
-                          {op.numero_assegno ? `ASSEGNO #${op.numero_assegno}` : 'ASSEGNO'}
+                          <FileCheck className="h-4 w-4 mr-1" />
+                          {op.numero_assegno ? `#${op.numero_assegno.slice(0,8)}` : 'ASSEGNO'}
                         </Button>
                         <Button
                           onClick={() => handleDelete(op.id)}
