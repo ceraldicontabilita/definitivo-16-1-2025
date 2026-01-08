@@ -2,7 +2,286 @@
 # Documento di riferimento centralizzato
 # AGGIORNATO: 2026-01-08
 
-## 🧮 PRINCIPI RAGIONERIA IMPLEMENTATI
+================================================================================
+# 📚 LEZIONE COMPLETA DI RAGIONERIA GENERALE APPLICATA
+================================================================================
+
+## 🎓 PRINCIPI CONTABILI OIC - FONDAMENTI
+
+### Postulati di Bilancio (OIC 11)
+
+1. **PRUDENZA**
+   - Utili: inclusi solo se REALIZZATI
+   - Perdite: incluse anche se PRESUNTE
+   - Mai sopravvalutare attività/ricavi
+   - Mai sottovalutare passività/costi
+
+2. **COMPETENZA ECONOMICA**
+   - Costi e ricavi nell'esercizio di MATURAZIONE
+   - Indipendentemente da incasso/pagamento
+   - Uso di ratei e risconti
+
+3. **CONTINUITÀ AZIENDALE**
+   - Bilancio presume continuazione attività
+   - Se cessazione → criteri di liquidazione
+
+4. **PREVALENZA DELLA SOSTANZA**
+   - Sostanza economica > forma giuridica
+   - Es: Leasing finanziario vs operativo
+
+5. **COSTANZA**
+   - Criteri valutazione costanti tra esercizi
+   - Cambiamenti: giustificati e documentati
+
+---
+
+## 📊 PIANO DEI CONTI - STRUTTURA
+
+### STATO PATRIMONIALE - ATTIVO
+```
+B.I    Immobilizzazioni immateriali (avviamento, software)
+B.II   Immobilizzazioni materiali (fabbricati, impianti, attrezzature)
+B.III  Immobilizzazioni finanziarie (partecipazioni)
+C.I    Rimanenze (merci, materie prime)
+C.II   Crediti (clienti, erario, altri)
+C.IV   Disponibilità liquide (cassa, banca)
+D      Ratei e risconti attivi
+```
+
+### STATO PATRIMONIALE - PASSIVO
+```
+A      Patrimonio netto (capitale, riserve, utile)
+B      Fondi rischi e oneri
+C      TFR
+D      Debiti (fornitori, banche, erario)
+E      Ratei e risconti passivi
+```
+
+### CONTO ECONOMICO
+```
+A.1    Ricavi delle vendite
+A.5    Altri ricavi
+B.6    Costi materie prime e merci
+B.7    Costi per servizi
+B.8    Costi per godimento beni di terzi
+B.9    Costi del personale
+B.10   Ammortamenti e svalutazioni
+B.11   Variazione rimanenze
+B.14   Oneri diversi di gestione
+C      Proventi e oneri finanziari
+22     Imposte sul reddito
+```
+
+---
+
+## 🔄 CICLO ACQUISTI - SCRITTURE
+
+### 1. Acquisto Merce con IVA
+```
+DARE: Acquisti merci (80.01)      €1.000,00
+DARE: IVA ns/credito (30.10)        €220,00
+AVERE: Debiti v/fornitori (60.01) €1.220,00
+```
+
+### 2. Pagamento Fornitore
+```
+DARE: Debiti v/fornitori (60.01)  €1.220,00
+AVERE: Banca c/c (40.02)          €1.220,00
+```
+
+### 3. Nota Credito da Fornitore (Reso/Sconto)
+```
+DARE: Debiti v/fornitori (60.01)    €122,00
+AVERE: Resi su acquisti (80.11)     €100,00
+AVERE: IVA ns/credito (30.10)        €22,00
+```
+
+---
+
+## 💰 CICLO VENDITE - SCRITTURE
+
+### 1. Vendita con Fattura
+```
+DARE: Crediti v/clienti (30.01)   €1.220,00
+AVERE: Ricavi vendite (70.01)     €1.000,00
+AVERE: IVA ns/debito (60.10)        €220,00
+```
+
+### 2. Corrispettivo Giornaliero (Scontrino)
+```
+DARE: Cassa (40.01)                 €500,00  (contanti)
+DARE: Banca c/c (40.02)             €300,00  (POS)
+AVERE: Ricavi corrispettivi (70.03) €727,27  (scorporo IVA 10%)
+AVERE: IVA ns/debito (60.10)         €72,73
+```
+
+### 3. ⚠️ CASO SPECIALE: Fattura su Corrispettivo
+**PROBLEMA**: Cliente chiede fattura DOPO lo scontrino
+**RISCHIO**: Duplicazione IVA!
+
+**SOLUZIONE IMPLEMENTATA**:
+- Emettere fattura con flag `inclusa_in_corrispettivo = true`
+- NON conteggiare nel calcolo IVA periodica
+- IVA già assolta con corrispettivo
+
+### 4. Nota Credito a Cliente (Reso)
+```
+DARE: Resi su vendite (70.11)       €100,00
+DARE: IVA ns/debito (60.10)          €22,00
+AVERE: Crediti v/clienti (30.01)    €122,00
+```
+
+---
+
+## 🧾 GESTIONE IVA
+
+### Liquidazione Periodica
+```
+IVA a DEBITO (vendite + corrispettivi)
+- IVA a CREDITO (acquisti)
+- Credito periodo precedente
+= SALDO (da versare o credito)
+```
+
+### Giroconto IVA Fine Periodo
+```
+DARE: IVA ns/debito (60.10)         €5.000,00
+AVERE: IVA ns/credito (30.10)       €3.000,00
+AVERE: Erario c/IVA (60.14)         €2.000,00
+```
+
+### Versamento IVA (F24)
+```
+DARE: Erario c/IVA (60.14)          €2.000,00
+AVERE: Banca c/c (40.02)            €2.000,00
+```
+
+---
+
+## 📅 RATEI E RISCONTI
+
+### Principio
+- **RATEO**: quota maturata, non ancora incassata/pagata
+- **RISCONTO**: quota pagata, di competenza futura
+
+### Risconto Attivo (es: assicurazione anticipata)
+```
+Assicurazione annua €1.200 pagata il 01/07
+Al 31/12: 6 mesi di competenza futura = €600
+
+DARE: Risconti attivi (45.02)         €600,00
+AVERE: Assicurazioni (81.08)          €600,00
+```
+
+### Rateo Passivo (es: interessi mutuo maturati)
+```
+Interessi trim. €300, scadenza 31/01, al 31/12: 2 mesi maturati
+
+DARE: Interessi passivi (90.11)       €200,00
+AVERE: Ratei passivi (65.01)          €200,00
+```
+
+---
+
+## 🏭 AMMORTAMENTI
+
+### Coefficienti Fiscali (DM 31/12/1988)
+| Categoria | Coefficiente |
+|-----------|-------------|
+| Fabbricati | 3% |
+| Impianti generici | 10% |
+| Impianti specifici | 12% |
+| Attrezzature | 15% |
+| Mobili e arredi | 12% |
+| Automezzi | 20% |
+| Macchine ufficio | 20% |
+
+### Scrittura Ammortamento
+```
+DARE: Ammortamento attrezzature (84.02)  €1.500,00
+AVERE: F.do amm.to attrezzature (10.12)  €1.500,00
+```
+
+**Nota**: Primo anno quota dimezzata (prassi fiscale)
+
+---
+
+## 👷 TFR - TRATTAMENTO FINE RAPPORTO
+
+### Calcolo (Art. 2120 c.c.)
+```
+Quota annuale = Retribuzione annua / 13,5
+Rivalutazione = Indice ISTAT + 1,5%
+```
+
+### Accantonamento Annuale
+```
+DARE: TFR (83.03)                    €2.500,00
+AVERE: Fondo TFR (55.01)             €2.500,00
+```
+
+### Liquidazione a Dipendente
+```
+DARE: Fondo TFR (55.01)             €25.000,00
+AVERE: Banca c/c (40.02)            €20.000,00
+AVERE: Erario c/ritenute (60.13)     €5.000,00
+```
+
+---
+
+## 📋 CHIUSURA ESERCIZIO - CHECKLIST
+
+1. ☐ Scritture di assestamento (ratei, risconti)
+2. ☐ Ammortamenti immobilizzazioni
+3. ☐ Rilevazione rimanenze finali
+4. ☐ Svalutazione crediti
+5. ☐ Accantonamento TFR
+6. ☐ Accantonamento rischi
+7. ☐ Calcolo imposte (IRES 24%, IRAP 3.9%)
+8. ☐ Chiusura conti economici
+9. ☐ Epilogo utile/perdita
+
+### Rimanenze Finali
+```
+DARE: Merci c/rimanenze (20.01)      €50.000,00
+AVERE: Variazione rimanenze (85.01)  €50.000,00
+```
+
+### Imposte
+```
+DARE: IRES (95.01)                   €12.000,00
+DARE: IRAP (95.02)                    €1.950,00
+AVERE: Erario c/IRES (60.11)         €12.000,00
+AVERE: Erario c/IRAP (60.12)          €1.950,00
+```
+
+---
+
+## 🛠️ OPERAZIONI PARTICOLARI
+
+### 1. Cessione Bene con Plusvalenza
+```
+Bene: valore €10.000, f.do amm.to €7.000, venduto €5.000
+Plusvalenza = €5.000 - €3.000 = €2.000
+
+DARE: Banca c/c (40.02)              €5.000,00
+DARE: F.do amm.to (10.12)            €7.000,00
+AVERE: Bene (10.03)                 €10.000,00
+AVERE: Plusvalenze (70.21)           €2.000,00
+```
+
+### 2. Perdita su Crediti
+```
+DARE: Perdite su crediti (87.09)     €1.000,00
+AVERE: Crediti v/clienti (30.01)     €1.000,00
+```
+
+### 3. Storno Totale Scrittura
+Inverte DARE/AVERE di ogni riga della scrittura originale
+
+---
+
+## 🧮 PRINCIPI RAGIONERIA IMPLEMENTATI NEL SISTEMA
 
 ### 1. Gestione Sconti
 - **Sconto incondizionato**: Già nel prezzo, IVA calcolata sul netto
@@ -25,6 +304,18 @@
 - **100+ codici** con descrizioni complete
 - Nuovi codici L. 207/2024 (2007, 2008, 3881, 3882)
 - File: `/app/app/services/f24_commercialista_parser.py`
+
+---
+
+## 📁 FILE SERVIZI CONTABILITÀ
+
+| File | Descrizione |
+|------|-------------|
+| `/app/app/services/contabilita_generale.py` | Piano conti, scritture partita doppia, cicli acquisti/vendite |
+| `/app/app/services/ragioneria_service.py` | Sconti, resi, storni, duplicazione IVA |
+| `/app/app/services/liquidazione_iva.py` | Calcolo IVA periodica |
+| `/app/app/services/f24_commercialista_parser.py` | Parser F24, codici tributo |
+| `/app/app/services/codici_tributo_db.py` | Database codici tributo |
 
 ================================================================================
 
