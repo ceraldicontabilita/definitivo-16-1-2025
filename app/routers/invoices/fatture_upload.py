@@ -388,13 +388,23 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
                 detail=f"Fattura già presente: {parsed.get('invoice_number')} del {parsed.get('invoice_date')}"
             )
         
-        # Assicura che il fornitore esista nel database (crea se nuovo)
-        supplier = await ensure_supplier_exists(db, parsed)
-        supplier_created = supplier.get("source") == "xml_auto_import" if supplier else False
+        # Assicura che il fornitore esista nel database (crea se nuovo + alert)
+        supplier_result = await ensure_supplier_exists(db, parsed)
+        supplier_id = supplier_result.get("supplier_id")
+        supplier_created = supplier_result.get("supplier_created", False)
+        alert_created = supplier_result.get("alert_created", False)
         
-        metodo_pagamento = supplier.get("metodo_pagamento", "bonifico") if supplier else "bonifico"
-        giorni_pagamento = supplier.get("giorni_pagamento", 30) if supplier else 30
-        supplier_id = supplier.get("id") if supplier else None
+        # Se il fornitore ha metodo_pagamento configurato, usalo. Altrimenti default a "bonifico"
+        metodo_pagamento = supplier_result.get("metodo_pagamento") or "bonifico"
+        
+        # Recupera giorni_pagamento dal fornitore se esiste
+        giorni_pagamento = 30
+        if supplier_id:
+            supplier_doc = await db[Collections.SUPPLIERS].find_one(
+                {"id": supplier_id}, {"giorni_pagamento": 1}
+            )
+            if supplier_doc:
+                giorni_pagamento = supplier_doc.get("giorni_pagamento", 30)
         
         # === RICONCILIAZIONE AUTOMATICA CON ESTRATTO CONTO ===
         importo_fattura = parsed.get("total_amount", 0)
