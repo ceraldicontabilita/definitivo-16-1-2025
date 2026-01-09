@@ -440,10 +440,14 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             "metodo_pagamento": metodo_pagamento,
             "numeri_assegni": numeri_assegni,  # Pre-compilato se trovato nell'estratto conto
             "riconciliazione_assegni": riconciliazione_assegni,  # Dettagli riconciliazione
-            "pagato": False,
-            "status": "imported",
+            "riconciliato": riconciliato_automaticamente,  # Se trovato automaticamente in banca
+            "riconciliazione_auto": riconciliazione if riconciliazione.get("trovato") else None,
+            "pagato": riconciliato_automaticamente,  # Se riconciliato, è pagato
+            "data_pagamento": riconciliazione.get("data_pagamento") if riconciliato_automaticamente else None,
+            "status": "paid" if riconciliato_automaticamente else "imported",
             "source": "xml_upload",
             "filename": file.filename,
+            "xml_content": xml_content,  # Salva XML per visualizzazione allegato
             "created_at": datetime.utcnow().isoformat(),
             "cedente_piva": supplier_vat,
             "cedente_denominazione": parsed.get("supplier_name", ""),
