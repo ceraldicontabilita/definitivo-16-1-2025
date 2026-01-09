@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MANSIONI } from './constants';
 import api from '../../api';
 
 /**
- * Modale dettaglio/modifica dipendente con tab: Anagrafica, Retribuzione, Agevolazioni, Contratti
+ * Modale dettaglio/modifica dipendente con tab: Anagrafica, Retribuzione, Agevolazioni, Contratti, Bonifici
  */
 export function DipendenteDetailModal({ 
   dipendente, 
@@ -20,8 +20,32 @@ export function DipendenteDetailModal({
   const [activeTab, setActiveTab] = useState('anagrafica');
   const [importingBustaPaga, setImportingBustaPaga] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [bonifici, setBonifici] = useState([]);
+  const [loadingBonifici, setLoadingBonifici] = useState(false);
   
   if (!dipendente) return null;
+
+  // Carica bonifici quando si apre il tab
+  const loadBonifici = async () => {
+    if (!dipendente.id) return;
+    setLoadingBonifici(true);
+    try {
+      const res = await api.get(`/api/archivio-bonifici/dipendente/${dipendente.id}`);
+      setBonifici(res.data.bonifici || []);
+    } catch (e) {
+      console.error('Errore caricamento bonifici:', e);
+      setBonifici([]);
+    } finally {
+      setLoadingBonifici(false);
+    }
+  };
+
+  // Carica bonifici quando cambia tab
+  useEffect(() => {
+    if (activeTab === 'bonifici' && dipendente?.id) {
+      loadBonifici();
+    }
+  }, [activeTab, dipendente?.id]);
 
   // Funzione per importare i progressivi dalla busta paga
   const handleImportBustaPaga = async () => {
