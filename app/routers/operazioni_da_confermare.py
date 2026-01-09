@@ -22,52 +22,131 @@ async def lista_operazioni(
     anno: Optional[int] = Query(None, description="Filtra per anno fiscale"),
     limit: int = Query(100, ge=1, le=500)
 ) -> Dict[str, Any]:
-    """Lista operazioni da confermare, filtrate per anno fiscale."""
+    """
+    Lista operazioni da confermare, filtrate per anno fiscale.
+    ESCLUDE automaticamente le fatture che:
+    1. Hanno fornitore con metodo_pagamento già configurato
+    2. Sono già state riconciliate con l'estratto conto bancario
+    """
     db = Database.get_db()
     
+    # Recupera tutti i fornitori con metodo_pagamento configurato
+    fornitori_configurati = await db["suppliers"].find(
+        {"metodo_pagamento": {"$exists": True, "$ne": None, "$ne": ""}},
+        {"_id": 0, "partita_iva": 1, "vat_number": 1}
+    ).to_list(10000)
+    
+    # Estrai le P.IVA dei fornitori configurati
+    piva_configurate = set()
+    for f in fornitori_configurati:
+        piva = f.get("partita_iva") or f.get("vat_number")
+        if piva:
+            piva_configurate.add(piva)
+    
+    # Query base
     query = {}
     if stato:
         query["stato"] = stato
     if anno:
         query["anno"] = anno
     
-    operazioni = await db["operazioni_da_confermare"].find(
+    # Recupera tutte le operazioni
+    all_operazioni = await db["operazioni_da_confermare"].find(
         query,
         {"_id": 0}
-    ).sort("created_at", -1).limit(limit).to_list(limit)
+    ).sort("created_at", -1).limit(limit * 3).to_list(limit * 3)
     
-    # Statistiche per l'anno selezionato
-    stats_query = {"anno": anno} if anno else {}
-    totale = await db["operazioni_da_confermare"].count_documents(stats_query)
-    da_confermare = await db["operazioni_da_confermare"].count_documents({**stats_query, "stato": "da_confermare"})
-    confermate = await db["operazioni_da_confermare"].count_documents({**stats_query, "stato": "confermato"})
+    # Filtra le operazioni escludendo quelle con fornitore già configurato
+    operazioni_filtrate = []
+    for op in all_operazioni:
+        fornitore_piva = op.get("fornitore_piva") or op.get("partita_iva_fornitore") or ""
+        
+        # Salta se il fornitore ha già metodo pagamento configurato
+        if fornitore_piva and fornitore_piva in piva_configurate:
+            continue
+        
+        # Verifica se la fattura è già riconciliata in banca
+        fattura_id = op.get("fattura_id") or op.get("invoice_id")
+        if fattura_id:
+            fattura = await db["invoices"].find_one(
+                {"id": fattura_id},
+                {"riconciliato": 1, "pagato": 1, "metodo_pagamento": 1}
+            )
+            if fattura:
+                # Salta se già riconciliata o pagata
+                if fattura.get("riconciliato") or fattura.get("pagato"):
+                    continue
+                # Salta se ha metodo pagamento diverso da "cassa_da_confermare"
+                mp = fattura.get("metodo_pagamento", "")
+                if mp and mp not in ["", "cassa_da_confermare", "da_confermare"]:
+                    continue
+        
+        operazioni_filtrate.append(op)
+        
+        if len(operazioni_filtrate) >= limit:
+            break
     
-    # Totale importi da confermare
-    pipeline = [
-        {"$match": {**stats_query, "stato": "da_confermare"}},
-        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
-    ]
-    totale_importo_result = await db["operazioni_da_confermare"].aggregate(pipeline).to_list(1)
-    totale_importo = totale_importo_result[0]["totale"] if totale_importo_result else 0
+    # Ricalcola statistiche SOLO sulle operazioni filtrate
+    # Conta totali escludendo quelle già configurate
+    query_stats = query.copy()
     
-    # Statistiche per anno (per mostrare quante fatture ci sono per ogni anno)
+    # Per le statistiche, dobbiamo contare in modo diverso
+    all_ops_for_stats = await db["operazioni_da_confermare"].find(
+        query_stats, {"_id": 0, "fornitore_piva": 1, "partita_iva_fornitore": 1, "stato": 1, "importo": 1}
+    ).to_list(10000)
+    
+    totale = 0
+    da_confermare_count = 0
+    confermate_count = 0
+    totale_importo = 0
+    
+    for op in all_ops_for_stats:
+        fornitore_piva = op.get("fornitore_piva") or op.get("partita_iva_fornitore") or ""
+        if fornitore_piva and fornitore_piva in piva_configurate:
+            continue
+        
+        totale += 1
+        if op.get("stato") == "da_confermare":
+            da_confermare_count += 1
+            totale_importo += float(op.get("importo", 0) or 0)
+        elif op.get("stato") == "confermato":
+            confermate_count += 1
+    
+    # Statistiche per anno (filtrate)
+    stats_per_anno = []
     pipeline_anni = [
-        {"$group": {"_id": "$anno", "count": {"$sum": 1}, "da_confermare": {"$sum": {"$cond": [{"$eq": ["$stato", "da_confermare"]}, 1, 0]}}}},
+        {"$group": {"_id": "$anno", "count": {"$sum": 1}}},
         {"$sort": {"_id": -1}}
     ]
-    stats_per_anno = []
+    anno_counts = {}
     async for doc in db["operazioni_da_confermare"].aggregate(pipeline_anni):
         if doc["_id"]:
-            stats_per_anno.append({"anno": doc["_id"], "totale": doc["count"], "da_confermare": doc["da_confermare"]})
+            anno_counts[doc["_id"]] = {"totale": 0, "da_confermare": 0}
+    
+    for op in all_ops_for_stats:
+        fornitore_piva = op.get("fornitore_piva") or op.get("partita_iva_fornitore") or ""
+        if fornitore_piva and fornitore_piva in piva_configurate:
+            continue
+        
+        op_anno = op.get("anno")
+        if op_anno and op_anno in anno_counts:
+            anno_counts[op_anno]["totale"] += 1
+            if op.get("stato") == "da_confermare":
+                anno_counts[op_anno]["da_confermare"] += 1
+    
+    for a, counts in sorted(anno_counts.items(), reverse=True):
+        if counts["totale"] > 0:
+            stats_per_anno.append({"anno": a, "totale": counts["totale"], "da_confermare": counts["da_confermare"]})
     
     return {
-        "operazioni": operazioni,
+        "operazioni": operazioni_filtrate,
         "stats": {
             "totale": totale,
-            "da_confermare": da_confermare,
-            "confermate": confermate,
+            "da_confermare": da_confermare_count,
+            "confermate": confermate_count,
             "totale_importo_da_confermare": totale_importo,
-            "anno_filtro": anno
+            "anno_filtro": anno,
+            "fornitori_configurati_esclusi": len(piva_configurate)
         },
         "stats_per_anno": stats_per_anno
     }
