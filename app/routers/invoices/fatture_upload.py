@@ -992,6 +992,22 @@ async def categorize_all_movements() -> Dict[str, Any]:
     }
 
 
+@router.get("/{invoice_id}")
+async def get_fattura(invoice_id: str) -> Dict[str, Any]:
+    """Recupera una singola fattura per ID."""
+    db = Database.get_db()
+    
+    invoice = await db[Collections.INVOICES].find_one(
+        {"id": invoice_id},
+        {"_id": 0}
+    )
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fattura non trovata")
+    
+    return invoice
+
+
 @router.put("/{invoice_id}/metodo-pagamento")
 async def update_metodo_pagamento(invoice_id: str, data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     """Aggiorna il metodo di pagamento di una fattura."""
