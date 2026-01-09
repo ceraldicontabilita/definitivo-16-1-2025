@@ -3,6 +3,30 @@
 # AGGIORNATO: 2026-01-09 (Fork Session 3)
 
 ================================================================================
+# ✅ FIX MOBILE + RICERCA + INSERIMENTO - 2026-01-09
+================================================================================
+
+## Problemi Risolti
+
+### 1. Selettore Anno su Mobile
+- ✅ Aggiunto selettore anno nel menu hamburger mobile
+- File: `/app/frontend/src/App.jsx`
+
+### 2. Ricerca Fornitore Migliorata
+- ✅ Matching parziale: cerca ogni parola separatamente
+- ✅ Cerca "kimbo" trova "KIMBO S.P.A."
+- ✅ Mostra totale fatture e importo (es. "93 fatture | €164.548")
+- File: `/app/app/routers/public_api.py`
+
+### 3. Form Inserimento Mobile Prima Nota
+- ✅ Pulsante "➕ Inserisci Corrispettivo / POS / Versamento"
+- ✅ Form Corrispettivo (data + importo)
+- ✅ Form POS 1/2/3 (con calcolo totale automatico)
+- ✅ Form Versamento in Banca
+- ✅ Ogni form ha pulsante salva dedicato
+- File: `/app/frontend/src/pages/PrimaNotaMobile.jsx`
+
+================================================================================
 # ✅ ASSOCIAZIONE BONIFICI-DIPENDENTI - 2026-01-09
 ================================================================================
 
