@@ -252,7 +252,9 @@ def parse_format_zucchetti_2023(text: str, lines: List[str]) -> Dict[str, Any]:
     result = {
         'format': 'zucchetti_2023',
         'paga_base_oraria': 0.0,
+        'paga_base_mensile': 0.0,
         'contingenza_oraria': 0.0,
+        'contingenza_mensile': 0.0,
         'tfr_fondo': 0.0,
         'tfr_quota_anno': 0.0,
         'ferie_maturate': 0.0,
