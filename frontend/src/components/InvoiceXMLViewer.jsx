@@ -7,8 +7,34 @@ import React, { useState } from 'react';
  * 2. Completa - Tutti i dati incluse info gestionali  
  * 3. Ministeriale - Formato ufficiale Agenzia Entrate/Sogei
  */
-export default function InvoiceXMLViewer({ invoice, onClose }) {
+export default function InvoiceXMLViewer({ invoice: rawInvoice, onClose }) {
   const [viewMode, setViewMode] = useState('completa'); // 'semplificata', 'completa', 'ministeriale'
+
+  // Normalizza i dati della fattura per supportare diversi formati
+  const normalizeInvoice = (inv) => {
+    if (!inv) return null;
+    
+    // Converti le linee dal formato DB al formato visualizzatore
+    const lineItems = (inv.linee || inv.line_items || []).map(l => ({
+      description: l.descrizione || l.description || '-',
+      quantity: parseFloat(l.quantita || l.quantity || 1),
+      unit_price: parseFloat(l.prezzo_unitario || l.unit_price || l.price || 0),
+      price: parseFloat(l.prezzo_totale || l.prezzo_unitario || l.price || 0),
+      vat_rate: parseFloat(l.aliquota_iva || l.vat_rate || 22),
+      unit: l.unita_misura || l.unit || ''
+    }));
+
+    return {
+      ...inv,
+      line_items: lineItems,
+      taxable_amount: inv.imponibile || inv.taxable_amount || 0,
+      vat_amount: inv.iva || inv.vat_amount || 0,
+      total_amount: inv.total_amount || 0,
+      supplier_cf: inv.supplier_cf || inv.supplier_vat
+    };
+  };
+
+  const invoice = normalizeInvoice(rawInvoice);
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('it-IT', {
