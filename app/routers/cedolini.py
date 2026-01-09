@@ -164,7 +164,7 @@ async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
         paga_oraria = float(dipendente.get("stipendio_orario", 10.0))
     
     paga_giornaliera = float(contratto.get("paga_giornaliera", paga_oraria * 8)) if contratto else paga_oraria * 8
-    ore_settimanali = float(contratto.get("ore_settimanali", 40)) if contratto else 40
+    # ore_settimanali disponibile per calcoli futuri se necessario
     
     # Calcolo ore/giorni
     if input_data.ore_lavorate:
@@ -203,10 +203,7 @@ async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
     giorni_mal = input_data.giorni_malattia or int(input_data.malattia_giorni)
     if giorni_mal > 0:
         ore_per_giorno = 8
-        if input_data.ore_malattia > 0:
-            ore_malattia_totali = input_data.ore_malattia
-        else:
-            ore_malattia_totali = giorni_mal * ore_per_giorno
+        # ore_malattia usate per tracciamento, calcolo usa giorni
         
         # Calcolo indennità per fasce
         giorni_100 = min(giorni_mal, 3)
