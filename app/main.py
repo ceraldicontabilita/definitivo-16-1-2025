@@ -276,6 +276,12 @@ app.include_router(indici_bilancio.router, prefix="/api/indici-bilancio", tags=[
 app.include_router(chiusura_esercizio.router, prefix="/api/chiusura-esercizio", tags=["Chiusura Esercizio"])
 app.include_router(gestione_iva_speciale.router, prefix="/api/iva-speciale", tags=["IVA Speciale"])
 
+# --- HACCP New System (Temperature Positive/Negative) ---
+app.include_router(temperature_positive.router, prefix="/api/haccp/temperature-positive", tags=["HACCP Temperature Positive"])
+app.include_router(temperature_negative.router, prefix="/api/haccp/temperature-negative", tags=["HACCP Temperature Negative"])
+app.include_router(chiusure.router, prefix="/api/haccp/chiusure", tags=["HACCP Chiusure"])
+app.include_router(sanificazione.router, prefix="/api/haccp/sanificazione", tags=["HACCP Sanificazione"])
+
 
 # =============================================================================
 # HEALTH CHECK ENDPOINTS
