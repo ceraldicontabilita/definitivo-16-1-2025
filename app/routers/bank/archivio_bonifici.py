@@ -555,21 +555,165 @@ async def export_transfers(
 # RICONCILIAZIONE BONIFICI CON ESTRATTO CONTO
 # =============================================================================
 
+# Store per task riconciliazione in background
+_riconciliazione_task: Dict[str, Any] = {}
+
+
+async def _execute_riconciliazione_batch(task_id: str):
+    """Esegue la riconciliazione in background con chunking."""
+    db = Database.get_db()
+    
+    try:
+        _riconciliazione_task[task_id]["status"] = "in_progress"
+        _riconciliazione_task[task_id]["message"] = "Caricamento dati..."
+        
+        # Recupera tutti i bonifici non ancora riconciliati
+        bonifici = await db.bonifici_transfers.find(
+            {"riconciliato": {"$ne": True}},
+            {"_id": 0}
+        ).to_list(10000)
+        
+        # Recupera movimenti estratto conto
+        movimenti = await db.estratto_conto_movimenti.find(
+            {},
+            {"_id": 0}
+        ).to_list(50000)
+        
+        if not bonifici:
+            _riconciliazione_task[task_id]["status"] = "completed"
+            _riconciliazione_task[task_id]["result"] = {"riconciliati": 0, "message": "Nessun bonifico da riconciliare"}
+            return
+        
+        if not movimenti:
+            _riconciliazione_task[task_id]["status"] = "completed"
+            _riconciliazione_task[task_id]["result"] = {"riconciliati": 0, "message": "Nessun movimento estratto conto"}
+            return
+        
+        _riconciliazione_task[task_id]["total"] = len(bonifici)
+        _riconciliazione_task[task_id]["message"] = f"Riconciliazione {len(bonifici)} bonifici..."
+        
+        riconciliati = 0
+        movimenti_usati = set()
+        processed = 0
+        
+        # Processa in chunk di 50 per evitare timeout
+        chunk_size = 50
+        
+        for bonifico in bonifici:
+            processed += 1
+            
+            bonifico_importo = abs(bonifico.get("importo", 0))
+            bonifico_data_str = bonifico.get("data", "")
+            
+            try:
+                if "T" in bonifico_data_str:
+                    bonifico_data = datetime.fromisoformat(bonifico_data_str.replace("+00:00", "").replace("Z", ""))
+                else:
+                    bonifico_data = datetime.strptime(bonifico_data_str[:10], "%Y-%m-%d")
+            except:
+                continue
+            
+            match_found = None
+            
+            for idx, mov in enumerate(movimenti):
+                if idx in movimenti_usati:
+                    continue
+                
+                mov_importo = abs(mov.get("importo", 0))
+                mov_data_str = mov.get("data", "")
+                
+                try:
+                    mov_data = datetime.strptime(mov_data_str[:10], "%Y-%m-%d")
+                except:
+                    continue
+                
+                if abs(bonifico_importo - mov_importo) > 0.01:
+                    continue
+                
+                diff_giorni = abs((bonifico_data - mov_data).days)
+                if diff_giorni > 1:
+                    continue
+                
+                match_found = mov
+                movimenti_usati.add(idx)
+                break
+            
+            if match_found:
+                await db.bonifici_transfers.update_one(
+                    {"id": bonifico.get("id")},
+                    {"$set": {
+                        "riconciliato": True,
+                        "data_riconciliazione": datetime.now(timezone.utc),
+                        "movimento_estratto_conto_id": match_found.get("id"),
+                        "movimento_data": match_found.get("data"),
+                        "movimento_descrizione": match_found.get("descrizione_originale", "")[:100]
+                    }}
+                )
+                riconciliati += 1
+            
+            # Aggiorna progress ogni chunk
+            if processed % chunk_size == 0:
+                _riconciliazione_task[task_id]["processed"] = processed
+                _riconciliazione_task[task_id]["riconciliati"] = riconciliati
+                # Yield per non bloccare l'event loop
+                await asyncio.sleep(0)
+        
+        _riconciliazione_task[task_id]["status"] = "completed"
+        _riconciliazione_task[task_id]["result"] = {
+            "riconciliati": riconciliati,
+            "totale_bonifici": len(bonifici),
+            "non_riconciliati": len(bonifici) - riconciliati
+        }
+        _riconciliazione_task[task_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
+        
+    except Exception as e:
+        logger.error(f"Errore riconciliazione task {task_id}: {e}")
+        _riconciliazione_task[task_id]["status"] = "error"
+        _riconciliazione_task[task_id]["error"] = str(e)
+
+
 @router.post("/riconcilia")
-async def riconcilia_bonifici_con_estratto():
+async def riconcilia_bonifici_con_estratto(
+    background: bool = Query(False, description="Esegui in background (consigliato)")
+):
     """
     Riconcilia i bonifici con i movimenti dell'estratto conto.
     Match basato su: importo esatto e data (±1 giorno).
+    
+    Se background=true, avvia la riconciliazione in background e restituisce task_id.
     """
+    import asyncio
+    
+    if background:
+        # Modalità background
+        task_id = str(uuid.uuid4())
+        _riconciliazione_task[task_id] = {
+            "task_id": task_id,
+            "status": "pending",
+            "message": "Avvio riconciliazione...",
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "processed": 0,
+            "total": 0,
+            "riconciliati": 0
+        }
+        
+        # Avvia in background
+        asyncio.create_task(_execute_riconciliazione_batch(task_id))
+        
+        return {
+            "background": True,
+            "task_id": task_id,
+            "message": "Riconciliazione avviata in background. Usa /riconcilia/task/{task_id} per lo stato."
+        }
+    
+    # Modalità sincrona (legacy)
     db = Database.get_db()
     
-    # Recupera tutti i bonifici non ancora riconciliati
     bonifici = await db.bonifici_transfers.find(
         {"riconciliato": {"$ne": True}},
         {"_id": 0}
     ).to_list(10000)
     
-    # Recupera movimenti estratto conto
     movimenti = await db.estratto_conto_movimenti.find(
         {},
         {"_id": 0}
@@ -587,9 +731,7 @@ async def riconcilia_bonifici_con_estratto():
     for bonifico in bonifici:
         bonifico_importo = abs(bonifico.get("importo", 0))
         bonifico_data_str = bonifico.get("data", "")
-        bonifico_cro = bonifico.get("cro_trn", "")
         
-        # Parse data bonifico
         try:
             if "T" in bonifico_data_str:
                 bonifico_data = datetime.fromisoformat(bonifico_data_str.replace("+00:00", "").replace("Z", ""))
@@ -598,7 +740,6 @@ async def riconcilia_bonifici_con_estratto():
         except:
             continue
         
-        # Cerca match nei movimenti
         match_found = None
         
         for idx, mov in enumerate(movimenti):
@@ -607,30 +748,24 @@ async def riconcilia_bonifici_con_estratto():
             
             mov_importo = abs(mov.get("importo", 0))
             mov_data_str = mov.get("data", "")
-            mov_descrizione = mov.get("descrizione_originale", "")
             
-            # Parse data movimento
             try:
                 mov_data = datetime.strptime(mov_data_str[:10], "%Y-%m-%d")
             except:
                 continue
             
-            # Match per importo ESATTO (tolleranza 0.01€)
             if abs(bonifico_importo - mov_importo) > 0.01:
                 continue
             
-            # Match per data (±1 giorno)
             diff_giorni = abs((bonifico_data - mov_data).days)
             if diff_giorni > 1:
                 continue
             
-            # Match trovato!
             match_found = mov
             movimenti_usati.add(idx)
             break
         
         if match_found:
-            # Aggiorna bonifico come riconciliato
             await db.bonifici_transfers.update_one(
                 {"id": bonifico.get("id")},
                 {"$set": {
@@ -650,6 +785,14 @@ async def riconcilia_bonifici_con_estratto():
         "totale_bonifici": len(bonifici),
         "non_riconciliati": len(bonifici) - riconciliati
     }
+
+
+@router.get("/riconcilia/task/{task_id}")
+async def get_riconciliazione_task(task_id: str):
+    """Stato di un task di riconciliazione in background."""
+    if task_id not in _riconciliazione_task:
+        raise HTTPException(status_code=404, detail="Task non trovato")
+    return _riconciliazione_task[task_id]
 
 
 @router.get("/stato-riconciliazione")
