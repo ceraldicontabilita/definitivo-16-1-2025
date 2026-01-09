@@ -103,29 +103,35 @@ async def get_lock_status():
 async def _execute_email_download(task_id: str, db, email_user: str, email_password: str, 
                                    giorni: int, folder: str, keywords: List[str]):
     """Esegue il download in background e aggiorna lo stato del task."""
+    global _current_operation
+    
     try:
-        _download_tasks[task_id]["status"] = "in_progress"
-        _download_tasks[task_id]["message"] = "Connessione al server email..."
-        
-        result = await download_documents_from_email(
-            db=db,
-            email_user=email_user,
-            email_password=email_password,
-            since_days=giorni,
-            folder=folder,
-            search_keywords=keywords if keywords else None
-        )
-        
-        _download_tasks[task_id]["status"] = "completed"
-        _download_tasks[task_id]["result"] = result
-        _download_tasks[task_id]["message"] = "Download completato!"
-        _download_tasks[task_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
+        async with _email_operation_lock:
+            _current_operation = "download_documenti_email"
+            _download_tasks[task_id]["status"] = "in_progress"
+            _download_tasks[task_id]["message"] = "Connessione al server email..."
+            
+            result = await download_documents_from_email(
+                db=db,
+                email_user=email_user,
+                email_password=email_password,
+                since_days=giorni,
+                folder=folder,
+                search_keywords=keywords if keywords else None
+            )
+            
+            _download_tasks[task_id]["status"] = "completed"
+            _download_tasks[task_id]["result"] = result
+            _download_tasks[task_id]["message"] = "Download completato!"
+            _download_tasks[task_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
+            _current_operation = None
         
     except Exception as e:
         logger.error(f"Errore download task {task_id}: {e}")
         _download_tasks[task_id]["status"] = "error"
         _download_tasks[task_id]["error"] = str(e)
         _download_tasks[task_id]["message"] = f"Errore: {str(e)}"
+        _current_operation = None
 
 
 @router.post("/scarica-da-email")
