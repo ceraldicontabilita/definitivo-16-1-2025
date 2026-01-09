@@ -155,9 +155,15 @@ async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
         {"_id": 0}
     )
     
-    # Dati retributivi (da contratto o default)
-    paga_oraria = float(contratto.get("paga_oraria", 10.0)) if contratto else 10.0
-    paga_giornaliera = float(contratto.get("paga_giornaliera", 80.0)) if contratto else 80.0
+    # Dati retributivi (da contratto o default, con possibile override)
+    if input_data.paga_oraria and input_data.paga_oraria > 0:
+        paga_oraria = input_data.paga_oraria
+    elif contratto:
+        paga_oraria = float(contratto.get("paga_oraria", dipendente.get("stipendio_orario", 10.0)))
+    else:
+        paga_oraria = float(dipendente.get("stipendio_orario", 10.0))
+    
+    paga_giornaliera = float(contratto.get("paga_giornaliera", paga_oraria * 8)) if contratto else paga_oraria * 8
     ore_settimanali = float(contratto.get("ore_settimanali", 40)) if contratto else 40
     
     # Calcolo ore/giorni
@@ -175,14 +181,46 @@ async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
         ore_lavorate = 176
         retribuzione_base = giorni_lavorati * paga_giornaliera
     
+    # Deduzione ore assenza
+    if input_data.assenze_ore > 0:
+        deduzione_assenze = input_data.assenze_ore * paga_oraria
+        retribuzione_base = max(0, retribuzione_base - deduzione_assenze)
+    
     # Straordinari (maggiorazione 25%)
     straordinari = input_data.straordinari_ore * paga_oraria * 1.25
     
     # Festività (maggiorazione 50%)
     festivita = input_data.festivita_ore * paga_oraria * 1.50
     
+    # Maggiorazione domenicale (15% extra)
+    maggiorazione_domenicale = input_data.ore_domenicali * paga_oraria * 0.15
+    
+    # Indennità malattia (calcolo semplificato)
+    # Primi 3 giorni: 100% a carico azienda
+    # Dal 4° al 20° giorno: 75%
+    # Oltre 20 giorni: 66%
+    indennita_malattia = 0
+    giorni_mal = input_data.giorni_malattia or int(input_data.malattia_giorni)
+    if giorni_mal > 0:
+        ore_per_giorno = 8
+        if input_data.ore_malattia > 0:
+            ore_malattia_totali = input_data.ore_malattia
+        else:
+            ore_malattia_totali = giorni_mal * ore_per_giorno
+        
+        # Calcolo indennità per fasce
+        giorni_100 = min(giorni_mal, 3)
+        giorni_75 = min(max(0, giorni_mal - 3), 17)  # Dal 4° al 20°
+        giorni_66 = max(0, giorni_mal - 20)  # Oltre il 20°
+        
+        indennita_malattia = (
+            giorni_100 * ore_per_giorno * paga_oraria * 1.00 +
+            giorni_75 * ore_per_giorno * paga_oraria * 0.75 +
+            giorni_66 * ore_per_giorno * paga_oraria * 0.66
+        )
+    
     # Lordo totale
-    lordo_totale = retribuzione_base + straordinari + festivita
+    lordo_totale = retribuzione_base + straordinari + festivita + maggiorazione_domenicale + indennita_malattia
     
     # --- TRATTENUTE DIPENDENTE ---
     
