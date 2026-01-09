@@ -178,6 +178,12 @@ export default function Documenti() {
 
     const keywordsParam = keywordsToSearch.length > 0 ? keywordsToSearch.join(',') : '';
     
+    // Verifica lock email
+    if (emailLocked) {
+      alert(`⚠️ Operazione non disponibile\n\nC'è già un'operazione email in corso: ${currentOperation}\n\nAttendere il completamento.`);
+      return;
+    }
+    
     const message = keywordsParam 
       ? `Vuoi scaricare i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\nParole chiave: ${keywordsToSearch.slice(0, 5).join(', ')}${keywordsToSearch.length > 5 ? '...' : ''}\n\nIl download avverrà in background.`
       : `Vuoi scaricare TUTTI i documenti dalle email degli ultimi ${giorniDownload} giorni?\n\n⚠️ Nessuna parola chiave selezionata - verranno scaricati tutti gli allegati.\n\nIl download avverrà in background.`;
@@ -215,10 +221,16 @@ export default function Documenti() {
         setDownloading(false);
       }
     } catch (error) {
-      alert(`❌ Errore download: ${error.response?.data?.detail || error.message}`);
+      const detail = error.response?.data?.detail || error.message;
+      if (error.response?.status === 423) {
+        alert(`⚠️ Operazione bloccata\n\n${detail}`);
+      } else {
+        alert(`❌ Errore download: ${detail}`);
+      }
       setDownloading(false);
       setBackgroundTask(null);
       setTaskStatus(null);
+      checkEmailLock(); // Aggiorna stato lock
     }
   };
 
