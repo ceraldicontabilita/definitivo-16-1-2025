@@ -68,6 +68,26 @@ export default function Fatture() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Gestisci anno dalla URL
+  useEffect(() => {
+    const annoParam = searchParams.get('anno');
+    if (annoParam && !isNaN(parseInt(annoParam))) {
+      const anno = parseInt(annoParam);
+      if (anno !== selectedYear && anno >= 2015 && anno <= 2030) {
+        setAnno(anno);
+      }
+    }
+  }, [searchParams, selectedYear, setAnno]);
+
+  // Aggiorna filtri quando cambiano i query params
+  useEffect(() => {
+    const fornitoreParam = searchParams.get('fornitore');
+    if (fornitoreParam && fornitoreParam !== filters.fornitore) {
+      setFilters(prev => ({ ...prev, fornitore: fornitoreParam }));
+      setShowFilters(true);
+    }
+  }, [searchParams, filters.fornitore]);
+
   useEffect(() => {
     loadInvoices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
