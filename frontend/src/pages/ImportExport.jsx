@@ -387,6 +387,16 @@ export default function ImportExport() {
       templateUrl: "/api/import-templates/corrispettivi"
     },
     { 
+      id: "estratto-conto", 
+      label: "Estratto Conto Bancario", 
+      icon: "🏦", 
+      ref: estrattoContoFileRef, 
+      handler: handleImportEstrattoConto,
+      accept: ".pdf,.xlsx,.xls,.csv",
+      desc: "Importa estratto conto bancario (PDF o Excel)",
+      templateUrl: "/api/import-templates/estratto-conto"
+    },
+    { 
       id: "f24", 
       label: "F24 Contributi", 
       icon: "📋", 
