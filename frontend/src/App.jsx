@@ -270,6 +270,25 @@ export default function App() {
                 ✕
               </button>
             </div>
+            {/* Anno Selector per Mobile */}
+            <div style={{ 
+              padding: '12px 16px', 
+              borderBottom: '1px solid #eee',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: '#f8fafc'
+            }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>📅 Anno:</span>
+              <AnnoSelector style={{ 
+                flex: 1, 
+                border: '1px solid #e2e8f0', 
+                background: 'white', 
+                fontSize: 14, 
+                padding: '8px 12px',
+                borderRadius: 6
+              }} />
+            </div>
             <div className="mobile-menu-items">
               {NAV_ITEMS.map((item) => (
                 item.isSubmenu ? (
