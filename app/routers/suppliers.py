@@ -97,7 +97,7 @@ async def search_by_piva(partita_iva: str) -> Dict[str, Any]:
         try:
             # === FONTE 1: VIES (Validazione UE) ===
             try:
-                vies_url = f"https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number"
+                vies_url = "https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number"
                 vies_resp = await client.post(vies_url, json={
                     "countryCode": "IT",
                     "vatNumber": piva
