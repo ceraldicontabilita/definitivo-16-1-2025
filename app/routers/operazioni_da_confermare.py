@@ -23,130 +23,103 @@ async def lista_operazioni(
     limit: int = Query(100, ge=1, le=500)
 ) -> Dict[str, Any]:
     """
-    Lista operazioni da confermare, filtrate per anno fiscale.
-    ESCLUDE automaticamente le fatture che:
-    1. Hanno fornitore con metodo_pagamento già configurato
-    2. Sono già state riconciliate con l'estratto conto bancario
+    Lista operazioni da confermare - LOGICA CORRETTA.
+    
+    Mostra SOLO le fatture che:
+    1. NON hanno metodo_pagamento configurato O hanno "cassa_da_confermare"
+    2. NON sono state riconciliate con l'estratto conto
+    3. Il fornitore NON ha metodo_pagamento predefinito nel dizionario fornitori
+    
+    Se la fattura ha un fornitore con metodo_pagamento nel dizionario, viene esclusa
+    perché il sistema userà automaticamente quel metodo.
     """
     db = Database.get_db()
     
     # Recupera tutti i fornitori con metodo_pagamento configurato
-    fornitori_configurati = await db["suppliers"].find(
-        {"metodo_pagamento": {"$exists": True, "$ne": None, "$ne": ""}},
-        {"_id": 0, "partita_iva": 1, "vat_number": 1}
+    fornitori_cursor = await db["suppliers"].find(
+        {"metodo_pagamento": {"$exists": True, "$nin": [None, "", "da_confermare", "cassa_da_confermare"]}},
+        {"_id": 0, "partita_iva": 1, "vat_number": 1, "metodo_pagamento": 1}
     ).to_list(10000)
     
-    # Estrai le P.IVA dei fornitori configurati
-    piva_configurate = set()
-    for f in fornitori_configurati:
+    # Mappa P.IVA -> metodo_pagamento
+    piva_metodo = {}
+    for f in fornitori_cursor:
         piva = f.get("partita_iva") or f.get("vat_number")
         if piva:
-            piva_configurate.add(piva)
+            piva_metodo[piva] = f.get("metodo_pagamento")
     
-    # Query base
-    query = {}
-    if stato:
-        query["stato"] = stato
+    # Query per fatture da confermare
+    query_fatture = {
+        "$or": [
+            {"metodo_pagamento": {"$exists": False}},
+            {"metodo_pagamento": None},
+            {"metodo_pagamento": ""},
+            {"metodo_pagamento": "da_confermare"},
+            {"metodo_pagamento": "cassa_da_confermare"}
+        ],
+        "riconciliato": {"$ne": True},
+        "pagato": {"$ne": True}
+    }
+    
     if anno:
-        query["anno"] = anno
+        query_fatture["invoice_date"] = {"$regex": f"^{anno}"}
     
-    # Recupera tutte le operazioni
-    all_operazioni = await db["operazioni_da_confermare"].find(
-        query,
+    # Recupera fatture
+    fatture = await db["invoices"].find(
+        query_fatture,
         {"_id": 0}
-    ).sort("created_at", -1).limit(limit * 3).to_list(limit * 3)
+    ).sort("invoice_date", -1).limit(limit * 2).to_list(limit * 2)
     
-    # Filtra le operazioni escludendo quelle con fornitore già configurato
-    operazioni_filtrate = []
-    for op in all_operazioni:
-        fornitore_piva = op.get("fornitore_piva") or op.get("partita_iva_fornitore") or ""
+    # Filtra escludendo quelle con fornitore configurato nel dizionario
+    operazioni = []
+    for f in fatture:
+        supplier_vat = f.get("supplier_vat") or f.get("cedente_piva") or ""
         
-        # Salta se il fornitore ha già metodo pagamento configurato
-        if fornitore_piva and fornitore_piva in piva_configurate:
+        # Se il fornitore ha metodo_pagamento nel dizionario, ESCLUDI
+        if supplier_vat and supplier_vat in piva_metodo:
             continue
         
-        # Verifica se la fattura è già riconciliata in banca
-        fattura_id = op.get("fattura_id") or op.get("invoice_id")
-        if fattura_id:
-            fattura = await db["invoices"].find_one(
-                {"id": fattura_id},
-                {"riconciliato": 1, "pagato": 1, "metodo_pagamento": 1}
-            )
-            if fattura:
-                # Salta se già riconciliata o pagata
-                if fattura.get("riconciliato") or fattura.get("pagato"):
-                    continue
-                # Salta se ha metodo pagamento diverso da "cassa_da_confermare"
-                mp = fattura.get("metodo_pagamento", "")
-                if mp and mp not in ["", "cassa_da_confermare", "da_confermare"]:
-                    continue
+        # Trasforma in formato operazione
+        operazioni.append({
+            "id": f.get("id"),
+            "fattura_id": f.get("id"),
+            "fornitore": f.get("supplier_name") or f.get("cedente_denominazione") or "N/A",
+            "fornitore_piva": supplier_vat,
+            "numero_fattura": f.get("invoice_number") or f.get("numero_fattura") or "N/A",
+            "data": f.get("invoice_date") or f.get("data_fattura"),
+            "importo": float(f.get("total_amount", 0) or f.get("importo_totale", 0) or 0),
+            "stato": "da_confermare",
+            "metodo_suggerito": None,
+            "anno": int((f.get("invoice_date") or "2000")[:4])
+        })
         
-        operazioni_filtrate.append(op)
-        
-        if len(operazioni_filtrate) >= limit:
+        if len(operazioni) >= limit:
             break
     
-    # Ricalcola statistiche SOLO sulle operazioni filtrate
-    # Conta totali escludendo quelle già configurate
-    query_stats = query.copy()
+    # Statistiche
+    totale = len(operazioni)
+    da_confermare_count = totale  # Tutte sono da confermare
+    totale_importo = sum(op["importo"] for op in operazioni)
     
-    # Per le statistiche, dobbiamo contare in modo diverso
-    all_ops_for_stats = await db["operazioni_da_confermare"].find(
-        query_stats, {"_id": 0, "fornitore_piva": 1, "partita_iva_fornitore": 1, "stato": 1, "importo": 1}
-    ).to_list(10000)
+    # Stats per anno (solo per fatture filtrate)
+    anni_count = {}
+    for op in operazioni:
+        a = op.get("anno")
+        if a:
+            anni_count[a] = anni_count.get(a, 0) + 1
     
-    totale = 0
-    da_confermare_count = 0
-    confermate_count = 0
-    totale_importo = 0
-    
-    for op in all_ops_for_stats:
-        fornitore_piva = op.get("fornitore_piva") or op.get("partita_iva_fornitore") or ""
-        if fornitore_piva and fornitore_piva in piva_configurate:
-            continue
-        
-        totale += 1
-        if op.get("stato") == "da_confermare":
-            da_confermare_count += 1
-            totale_importo += float(op.get("importo", 0) or 0)
-        elif op.get("stato") == "confermato":
-            confermate_count += 1
-    
-    # Statistiche per anno (filtrate)
-    stats_per_anno = []
-    pipeline_anni = [
-        {"$group": {"_id": "$anno", "count": {"$sum": 1}}},
-        {"$sort": {"_id": -1}}
-    ]
-    anno_counts = {}
-    async for doc in db["operazioni_da_confermare"].aggregate(pipeline_anni):
-        if doc["_id"]:
-            anno_counts[doc["_id"]] = {"totale": 0, "da_confermare": 0}
-    
-    for op in all_ops_for_stats:
-        fornitore_piva = op.get("fornitore_piva") or op.get("partita_iva_fornitore") or ""
-        if fornitore_piva and fornitore_piva in piva_configurate:
-            continue
-        
-        op_anno = op.get("anno")
-        if op_anno and op_anno in anno_counts:
-            anno_counts[op_anno]["totale"] += 1
-            if op.get("stato") == "da_confermare":
-                anno_counts[op_anno]["da_confermare"] += 1
-    
-    for a, counts in sorted(anno_counts.items(), reverse=True):
-        if counts["totale"] > 0:
-            stats_per_anno.append({"anno": a, "totale": counts["totale"], "da_confermare": counts["da_confermare"]})
+    stats_per_anno = [{"anno": a, "totale": c, "da_confermare": c} for a, c in sorted(anni_count.items(), reverse=True)]
     
     return {
-        "operazioni": operazioni_filtrate,
+        "operazioni": operazioni,
         "stats": {
             "totale": totale,
             "da_confermare": da_confermare_count,
-            "confermate": confermate_count,
+            "confermate": 0,  # Le confermate non appaiono più in questa lista
             "totale_importo_da_confermare": totale_importo,
             "anno_filtro": anno,
-            "fornitori_configurati_esclusi": len(piva_configurate)
+            "fornitori_nel_dizionario": len(piva_metodo),
+            "nota": "Mostra solo fatture senza metodo pagamento e senza fornitore nel dizionario"
         },
         "stats_per_anno": stats_per_anno
     }
