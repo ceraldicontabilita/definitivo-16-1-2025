@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Calculator, Users, FileText, CheckCircle, Clock, Building2 } from 'lucide-react';
+import { Calculator, Users, FileText, CheckCircle, Clock, Building2, Sun, HeartPulse, Calendar } from 'lucide-react';
 
 const Label = ({ children }) => <label className="text-xs font-medium text-slate-600">{children}</label>;
 const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
@@ -19,9 +19,16 @@ export default function Cedolini() {
   const [calculating, setCalculating] = useState(false);
   const [selectedDipendente, setSelectedDipendente] = useState('');
   const [selectedMese, setSelectedMese] = useState(new Date().getMonth() + 1);
+  // Ore e voci avanzate
   const [oreLavorate, setOreLavorate] = useState('160');
+  const [pagaOraria, setPagaOraria] = useState('');
   const [straordinari, setStraordinari] = useState('0');
   const [festivita, setFestivita] = useState('0');
+  const [oreDomenicali, setOreDomenicali] = useState('0');
+  const [oreMalattia, setOreMalattia] = useState('0');
+  const [giorniMalattia, setGiorniMalattia] = useState('0');
+  const [assenze, setAssenze] = useState('0');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [stima, setStima] = useState(null);
   const [cedolini, setCedolini] = useState([]);
   const [riepilogo, setRiepilogo] = useState(null);
