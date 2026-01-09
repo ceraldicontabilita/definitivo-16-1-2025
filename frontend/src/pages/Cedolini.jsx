@@ -145,11 +145,68 @@ export default function Cedolini() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* Paga Oraria */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label>Paga Oraria €</Label>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      value={pagaOraria} 
+                      onChange={(e) => setPagaOraria(e.target.value)} 
+                      className="h-8 text-xs" 
+                      placeholder="Es: 9.50"
+                    />
+                  </div>
+                  <div>
+                    <Label>Ore Lavorate</Label>
+                    <Input type="number" value={oreLavorate} onChange={(e) => setOreLavorate(e.target.value)} className="h-8 text-xs" />
+                  </div>
+                </div>
+                
+                {/* Ore Base */}
                 <div className="grid grid-cols-3 gap-2">
-                  <div><Label>Ore</Label><Input type="number" value={oreLavorate} onChange={(e) => setOreLavorate(e.target.value)} className="h-8 text-xs" /></div>
                   <div><Label>Straord.</Label><Input type="number" value={straordinari} onChange={(e) => setStraordinari(e.target.value)} className="h-8 text-xs" /></div>
                   <div><Label>Festività</Label><Input type="number" value={festivita} onChange={(e) => setFestivita(e.target.value)} className="h-8 text-xs" /></div>
+                  <div>
+                    <Label className="flex items-center gap-1"><Sun className="w-3 h-3 text-amber-500" />Domenicali</Label>
+                    <Input type="number" value={oreDomenicali} onChange={(e) => setOreDomenicali(e.target.value)} className="h-8 text-xs" />
+                  </div>
                 </div>
+                
+                {/* Toggle Avanzate */}
+                <button 
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                >
+                  {showAdvanced ? '▼' : '▶'} Opzioni Avanzate (Malattia, Assenze)
+                </button>
+                
+                {/* Sezione Avanzata */}
+                {showAdvanced && (
+                  <div className="bg-slate-50 p-2 rounded border space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="flex items-center gap-1"><HeartPulse className="w-3 h-3 text-red-500" />Ore Malattia</Label>
+                        <Input type="number" value={oreMalattia} onChange={(e) => setOreMalattia(e.target.value)} className="h-8 text-xs" />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-1"><Calendar className="w-3 h-3 text-red-500" />GG Malattia</Label>
+                        <Input type="number" value={giorniMalattia} onChange={(e) => setGiorniMalattia(e.target.value)} className="h-8 text-xs" />
+                      </div>
+                      <div>
+                        <Label>Assenze (ore)</Label>
+                        <Input type="number" value={assenze} onChange={(e) => setAssenze(e.target.value)} className="h-8 text-xs" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Malattia: 100% primi 3gg, 75% 4-20gg, 66% oltre.
+                    </p>
+                  </div>
+                )}
+                
                 <Button onClick={handleCalcola} disabled={calculating || !selectedDipendente} className="w-full h-8 text-xs">
                   {calculating ? <Clock className="w-3 h-3 mr-1 animate-spin" /> : <Calculator className="w-3 h-3 mr-1" />}
                   {calculating ? 'Calcolo...' : 'Calcola'}
