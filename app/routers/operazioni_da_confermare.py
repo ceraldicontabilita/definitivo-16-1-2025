@@ -79,7 +79,20 @@ async def sync_email_aruba(
 ) -> Dict[str, Any]:
     """
     Sincronizza le notifiche fatture da email Aruba.
+    NOTA: Blocca altre operazioni email durante l'esecuzione.
     """
+    # Importa il lock dal modulo documenti
+    from app.routers.documenti import is_email_operation_running, get_current_operation, _email_operation_lock
+    
+    global _current_operation
+    
+    # Verifica se c'è già un'operazione in corso
+    if is_email_operation_running():
+        raise HTTPException(
+            status_code=423,
+            detail=f"Operazione email in corso: {get_current_operation()}. Attendere il completamento."
+        )
+    
     db = Database.get_db()
     
     email_user = os.environ.get("EMAIL_USER") or os.environ.get("EMAIL_ADDRESS")
@@ -92,12 +105,19 @@ async def sync_email_aruba(
         )
     
     try:
-        result = await fetch_aruba_invoices(
-            db=db,
-            email_user=email_user,
-            email_password=email_password,
-            since_days=giorni
-        )
+        async with _email_operation_lock:
+            from app.routers.documenti import _current_operation as doc_op
+            import app.routers.documenti as doc_module
+            doc_module._current_operation = "sync_email_aruba"
+            
+            result = await fetch_aruba_invoices(
+                db=db,
+                email_user=email_user,
+                email_password=email_password,
+                since_days=giorni
+            )
+            
+            doc_module._current_operation = None
         return result
     except Exception as e:
         logger.error(f"Errore sync email Aruba: {e}")
