@@ -81,6 +81,7 @@ export function DipendenteDetailModal({
     { id: 'anagrafica', label: '📋 Anagrafica', color: '#2196f3' },
     { id: 'retribuzione', label: '💰 Retribuzione', color: '#4caf50' },
     { id: 'progressivi', label: '📊 Progressivi', color: '#ff9800' },
+    { id: 'bonifici', label: '🏦 Bonifici', color: '#3f51b5' },
     { id: 'agevolazioni', label: '🎁 Agevolazioni', color: '#9c27b0' },
     { id: 'contratti', label: '📄 Contratti', color: '#607d8b' }
   ];
