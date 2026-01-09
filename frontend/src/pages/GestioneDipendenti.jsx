@@ -156,6 +156,19 @@ export default function GestioneDipendenti() {
     setEditMode(false);
   };
 
+  const handleUpdateDipendente = async () => {
+    if (!selectedDipendente?.id) return;
+    try {
+      await api.put(`/api/dipendenti/${selectedDipendente.id}`, editData);
+      loadDipendenti();
+      setEditMode(false);
+      setSelectedDipendente({ ...selectedDipendente, ...editData });
+      alert('Dipendente aggiornato con successo!');
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   // Helpers
   const uniqueMansioni = [...new Set(dipendenti.map(d => d.mansione).filter(Boolean))];
   const completeCount = dipendenti.filter(d => d.codice_fiscale && d.email && d.telefono).length;
