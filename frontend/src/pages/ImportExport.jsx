@@ -588,6 +588,32 @@ export default function ImportExport() {
                   </div>
                 </div>
                 
+                {/* Template Download Button */}
+                {imp.templateUrl && (
+                  <a
+                    href={`${process.env.REACT_APP_BACKEND_URL}${imp.templateUrl}`}
+                    download
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      padding: "8px 12px",
+                      background: "#f0f9ff",
+                      color: "#0369a1",
+                      border: "1px solid #bae6fd",
+                      borderRadius: 6,
+                      marginBottom: 10,
+                      fontSize: 13,
+                      textDecoration: "none",
+                      fontWeight: 500
+                    }}
+                    data-testid={`download-template-${imp.id}`}
+                  >
+                    📥 Scarica Template Vuoto
+                  </a>
+                )}
+                
                 <input
                   type="file"
                   ref={imp.ref}
