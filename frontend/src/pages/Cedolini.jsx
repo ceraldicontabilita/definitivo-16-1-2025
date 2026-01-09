@@ -43,6 +43,18 @@ export default function Cedolini() {
     } catch (e) { console.error(e); }
   };
 
+  // Quando si seleziona un dipendente, carica la paga oraria
+  useEffect(() => {
+    if (selectedDipendente) {
+      const dip = dipendenti.find(d => d.id === selectedDipendente);
+      if (dip?.stipendio_orario) {
+        setPagaOraria(dip.stipendio_orario.toString());
+      } else {
+        setPagaOraria('');
+      }
+    }
+  }, [selectedDipendente, dipendenti]);
+
   const loadCedolini = async () => {
     try {
       setLoading(true);
