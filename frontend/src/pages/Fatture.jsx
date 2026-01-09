@@ -53,6 +53,7 @@ export default function Fatture() {
     { value: "bonifico", label: "🔄 Bonifico", color: "#9c27b0" },
     { value: "assegno", label: "📝 Assegno", color: "#ff9800" },
     { value: "misto", label: "🔀 Misto", color: "#607d8b" },
+    { value: "cassa_da_confermare", label: "⚠️ Cassa (da confermare)", color: "#ef4444" },
   ];
   
   const [newInvoice, setNewInvoice] = useState({
