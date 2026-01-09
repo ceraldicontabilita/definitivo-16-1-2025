@@ -31,12 +31,30 @@ export default function OperazioniDaConfermare() {
   };
 
   const handleSyncEmail = async () => {
+    // Verifica lock email prima
+    try {
+      const lockRes = await api.get('/api/system/lock-status');
+      if (lockRes.data.email_locked) {
+        alert(`⚠️ Operazione non disponibile\n\nC'è già un'operazione email in corso: ${lockRes.data.operation}\n\nAttendere il completamento.`);
+        return;
+      }
+    } catch (e) {
+      console.error('Errore check lock:', e);
+    }
+    
     setSyncing(true);
     try {
       const res = await api.post('/api/operazioni-da-confermare/sync-email?giorni=30');
       alert(`✅ Sincronizzazione: ${res.data.stats.new_invoices} nuove fatture`);
       loadData();
-    } catch (e) { alert(`❌ ${e.response?.data?.detail || e.message}`); } finally { setSyncing(false); }
+    } catch (e) { 
+      const detail = e.response?.data?.detail || e.message;
+      if (e.response?.status === 423) {
+        alert(`⚠️ Operazione bloccata\n\n${detail}`);
+      } else {
+        alert(`❌ ${detail}`);
+      }
+    } finally { setSyncing(false); }
   };
 
   const handleConferma = async (id, metodo, numAss = null) => {
