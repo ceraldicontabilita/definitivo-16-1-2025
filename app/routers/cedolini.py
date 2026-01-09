@@ -268,6 +268,8 @@ async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
         retribuzione_base=round(retribuzione_base, 2),
         straordinari=round(straordinari, 2),
         festivita=round(festivita, 2),
+        maggiorazione_domenicale=round(maggiorazione_domenicale, 2),
+        indennita_malattia=round(indennita_malattia, 2),
         lordo_totale=round(lordo_totale, 2),
         inps_dipendente=round(inps_dipendente, 2),
         irpef_lorda=irpef_lorda,
@@ -278,6 +280,11 @@ async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
         inps_azienda=round(inps_azienda, 2),
         inail=round(inail, 2),
         tfr_mese=round(tfr_mese, 2),
+        costo_totale_azienda=round(costo_totale_azienda, 2),
+        ore_lavorate=round(ore_lavorate, 1),
+        giorni_lavorati=round(giorni_lavorati, 1),
+        paga_oraria_usata=round(paga_oraria, 2)
+    )
         costo_totale_azienda=round(costo_totale_azienda, 2),
         ore_lavorate=ore_lavorate,
         giorni_lavorati=giorni_lavorati
