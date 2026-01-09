@@ -419,7 +419,7 @@ async def elimina_documenti_processati() -> Dict[str, Any]:
         if filepath and os.path.exists(filepath):
             try:
                 os.remove(filepath)
-            except:
+            except OSError:
                 pass
         deleted_count += 1
     
@@ -667,7 +667,7 @@ async def sync_f24_automatico(
                     }}
                 )
                 quietanze_caricate += 1
-            except:
+            except Exception:
                 pass
         
         return {
