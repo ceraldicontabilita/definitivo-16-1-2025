@@ -166,17 +166,77 @@ export default function GestioneCespiti() {
                       <th className="px-2 py-1 text-right">Valore</th>
                       <th className="px-2 py-1 text-right">Fondo</th>
                       <th className="px-2 py-1 text-right">Residuo</th>
+                      <th className="px-2 py-1 text-center w-20">Azioni</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cespiti.map((c, i) => (
                       <tr key={i} className="border-b hover:bg-slate-50">
-                        <td className="px-2 py-1 font-medium">{c.descrizione}</td>
-                        <td className="px-2 py-1 text-slate-600">{c.categoria}</td>
-                        <td className="px-2 py-1 text-center">{c.coefficiente_ammortamento}%</td>
-                        <td className="px-2 py-1 text-right">{fmt(c.valore_acquisto)}</td>
-                        <td className="px-2 py-1 text-right text-amber-600">{fmt(c.fondo_ammortamento)}</td>
-                        <td className="px-2 py-1 text-right font-semibold">{fmt(c.valore_residuo)}</td>
+                        {editingCespite === c.id ? (
+                          <>
+                            <td className="px-2 py-1">
+                              <Input 
+                                value={editData.descrizione} 
+                                onChange={(e) => setEditData({...editData, descrizione: e.target.value})}
+                                className="h-6 text-xs"
+                              />
+                            </td>
+                            <td className="px-2 py-1 text-slate-600">{c.categoria}</td>
+                            <td className="px-2 py-1 text-center">{c.coefficiente_ammortamento}%</td>
+                            <td className="px-2 py-1 text-right">
+                              <Input 
+                                type="number"
+                                value={editData.valore_acquisto} 
+                                onChange={(e) => setEditData({...editData, valore_acquisto: parseFloat(e.target.value)})}
+                                className="h-6 text-xs w-20 text-right"
+                              />
+                            </td>
+                            <td className="px-2 py-1 text-right text-amber-600">{fmt(c.fondo_ammortamento)}</td>
+                            <td className="px-2 py-1 text-right font-semibold">{fmt(c.valore_residuo)}</td>
+                            <td className="px-2 py-1 text-center">
+                              <div className="flex gap-1 justify-center">
+                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleSaveEdit}>
+                                  <Check className="w-3 h-3 text-green-600" />
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={handleCancelEdit}>
+                                  <X className="w-3 h-3 text-slate-500" />
+                                </Button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-2 py-1 font-medium">{c.descrizione}</td>
+                            <td className="px-2 py-1 text-slate-600">{c.categoria}</td>
+                            <td className="px-2 py-1 text-center">{c.coefficiente_ammortamento}%</td>
+                            <td className="px-2 py-1 text-right">{fmt(c.valore_acquisto)}</td>
+                            <td className="px-2 py-1 text-right text-amber-600">{fmt(c.fondo_ammortamento)}</td>
+                            <td className="px-2 py-1 text-right font-semibold">{fmt(c.valore_residuo)}</td>
+                            <td className="px-2 py-1 text-center">
+                              <div className="flex gap-1 justify-center">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 w-6 p-0" 
+                                  onClick={() => handleEditCespite(c)}
+                                  title="Modifica"
+                                >
+                                  <Pencil className="w-3 h-3 text-blue-600" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-6 w-6 p-0" 
+                                  onClick={() => handleDeleteCespite(c)}
+                                  title="Elimina"
+                                  disabled={c.piano_ammortamento?.length > 0}
+                                >
+                                  <Trash2 className="w-3 h-3 text-red-600" />
+                                </Button>
+                              </div>
+                            </td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
