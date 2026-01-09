@@ -267,13 +267,15 @@ def parse_format_zucchetti_2023(text: str, lines: List[str]) -> Dict[str, Any]:
         
         # TFR
         if 'T.F.R.' in line and 'F.do' in line:
-            numbers = re.findall(r'[\d]+[,.][\d]+', line)
-            if not numbers and i + 1 < len(lines):
-                numbers = re.findall(r'[\d]+[,.][\d]+', lines[i + 1])
-            if numbers:
-                result['tfr_fondo'] = parse_italian_number(numbers[0])
-                if len(numbers) >= 4:
-                    result['tfr_quota_anno'] = parse_italian_number(numbers[3])
+            # La riga successiva contiene i valori
+            if i + 1 < len(lines):
+                next_line = lines[i + 1]
+                numbers = re.findall(r'[\d]+[.,][\d]+', next_line)
+                if numbers:
+                    # Il primo numero è il TFR Fondo
+                    result['tfr_fondo'] = parse_italian_number(numbers[0])
+                    if len(numbers) >= 4:
+                        result['tfr_quota_anno'] = parse_italian_number(numbers[3])
         
         # Ferie
         if line.startswith('Ferie') or ('FERIE' in line[:15] and 'A.P.' not in line):
