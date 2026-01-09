@@ -153,11 +153,12 @@ export default function Dashboard() {
             padding: '4px 10px',
             background: '#f44336',
             color: 'white',
-            borderRadius: 6,
+            borderRadius: 4,
             textDecoration: 'none',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: 11
           }}>
-            Visualizza Alert
+            Vedi Alert
           </Link>
         </div>
       )}
@@ -170,31 +171,32 @@ export default function Dashboard() {
       {/* Toggle Volume Affari Reale */}
       <div style={{ 
         background: showVolumeReale ? 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)' : '#f7fafc',
-        borderRadius: 12,
-        padding: 20,
-        marginBottom: 20,
-        border: showVolumeReale ? 'none' : '2px dashed #e2e8f0',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 12,
+        border: showVolumeReale ? 'none' : '1px dashed #e2e8f0',
         transition: 'all 0.3s ease'
       }}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          marginBottom: showVolumeReale && volumeRealeData ? 20 : 0
+          marginBottom: showVolumeReale && volumeRealeData ? 12 : 0
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Lock size={20} color={showVolumeReale ? 'white' : '#718096'} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Lock size={16} color={showVolumeReale ? 'white' : '#718096'} />
             <span style={{ 
               fontWeight: 600, 
-              color: showVolumeReale ? 'white' : '#4a5568'
+              color: showVolumeReale ? 'white' : '#4a5568',
+              fontSize: 12
             }}>
               Volume Affari Reale
             </span>
             <span style={{ 
-              fontSize: 11, 
+              fontSize: 9, 
               background: showVolumeReale ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
               color: showVolumeReale ? 'white' : '#718096',
-              padding: '2px 8px',
+              padding: '2px 6px',
               borderRadius: 4
             }}>
               RISERVATO
@@ -206,17 +208,18 @@ export default function Dashboard() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-              padding: '8px 16px',
+              gap: 4,
+              padding: '4px 10px',
               background: showVolumeReale ? 'rgba(255,255,255,0.2)' : '#667eea',
               color: 'white',
               border: 'none',
-              borderRadius: 8,
+              borderRadius: 4,
               cursor: 'pointer',
-              fontWeight: 500
+              fontWeight: 500,
+              fontSize: 11
             }}
           >
-            {showVolumeReale ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showVolumeReale ? <EyeOff size={12} /> : <Eye size={12} />}
             {showVolumeReale ? 'Nascondi' : 'Mostra'}
           </button>
         </div>
