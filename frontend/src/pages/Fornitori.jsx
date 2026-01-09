@@ -83,7 +83,8 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
 
   if (!isOpen) return null;
 
-  return ReactDOM.createPortal(
+  return (
+    <Portal>
     <div style={{
       position: 'fixed',
       top: 0,
