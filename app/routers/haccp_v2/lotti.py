@@ -1,20 +1,17 @@
 """
-Router per la gestione dei Lotti.
+Router per la gestione dei Lotti di Produzione.
+Popola automaticamente i lotti dalle fatture XML dei fornitori.
 """
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Dict
-from datetime import datetime, timezone
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone, timedelta
 import uuid
+import random
+
+from app.database import Database
 
 router = APIRouter(prefix="/lotti", tags=["Lotti"])
-
-# MongoDB connection
-db = None
-
-def set_database(database):
-    global db
-    db = database
 
 # ==================== MODELLI ====================
 
@@ -39,43 +36,266 @@ class Lotto(LottoCreate):
     allergeni_dettaglio: Dict = {}
     allergeni_testo: str = ""
     progressivo: int = 0
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    fornitore: str = ""
+    fattura_riferimento: str = ""
+    created_at: str = ""
+
+# ==================== COSTANTI ====================
+
+ALLERGENI_MAP = {
+    "latte": ["latte", "latticini", "formaggio", "mozzarella", "parmigiano", "burro", "panna", "yogurt"],
+    "glutine": ["farina", "pane", "pasta", "grano", "frumento", "orzo", "segale", "avena"],
+    "uova": ["uova", "uovo", "albume", "tuorlo", "maionese"],
+    "pesce": ["pesce", "merluzzo", "tonno", "salmone", "acciughe", "alici"],
+    "crostacei": ["gamberi", "gamberetti", "aragosta", "granchio", "scampi"],
+    "molluschi": ["cozze", "vongole", "calamari", "polpo", "seppie", "ostriche"],
+    "arachidi": ["arachidi", "noccioline"],
+    "frutta_a_guscio": ["noci", "mandorle", "nocciole", "pistacchi", "anacardi", "pinoli"],
+    "sedano": ["sedano"],
+    "senape": ["senape", "mostarda"],
+    "sesamo": ["sesamo"],
+    "soia": ["soia", "tofu", "edamame"],
+    "lupini": ["lupini"],
+    "solfiti": ["solfiti", "vino", "aceto"]
+}
+
+CATEGORIE_HACCP = {
+    "latticini": ["latte", "formaggio", "mozzarella", "parmigiano", "burro", "panna", "yogurt", "ricotta"],
+    "carni": ["carne", "manzo", "maiale", "pollo", "tacchino", "vitello", "agnello", "prosciutto", "salame"],
+    "pesce": ["pesce", "tonno", "salmone", "merluzzo", "gamberi", "cozze", "vongole"],
+    "verdure": ["pomodoro", "insalata", "zucchine", "melanzane", "peperoni", "carote", "spinaci"],
+    "frutta": ["mela", "pera", "arancia", "limone", "banana", "fragola"],
+    "cereali": ["farina", "pasta", "pane", "riso", "orzo"],
+    "uova": ["uova", "uovo"]
+}
+
+# ==================== HELPER ====================
+
+def detect_allergeni(prodotto: str) -> List[str]:
+    """Rileva allergeni dal nome prodotto"""
+    allergeni = []
+    prodotto_lower = prodotto.lower()
+    
+    for allergene, keywords in ALLERGENI_MAP.items():
+        for keyword in keywords:
+            if keyword in prodotto_lower:
+                allergeni.append(allergene)
+                break
+    
+    return list(set(allergeni))
+
+def detect_categoria(prodotto: str) -> str:
+    """Rileva categoria HACCP dal nome prodotto"""
+    prodotto_lower = prodotto.lower()
+    
+    for categoria, keywords in CATEGORIE_HACCP.items():
+        for keyword in keywords:
+            if keyword in prodotto_lower:
+                return categoria
+    
+    return "altro"
+
+def genera_numero_lotto(data: datetime, progressivo: int) -> str:
+    """Genera numero lotto in formato YYYYMMDD-XXX"""
+    return f"{data.strftime('%Y%m%d')}-{progressivo:03d}"
 
 # ==================== ENDPOINTS ====================
 
 @router.get("")
-async def get_lotti(search: Optional[str] = Query(None)):
+async def get_lotti(
+    search: Optional[str] = Query(None),
+    categoria: Optional[str] = Query(None),
+    limit: int = Query(default=100, le=500)
+):
     """Lista lotti con ricerca opzionale"""
+    db = Database.get_db()
     query = {}
+    
     if search:
         query["$or"] = [
             {"prodotto": {"$regex": search, "$options": "i"}},
-            {"numero_lotto": {"$regex": search, "$options": "i"}}
+            {"numero_lotto": {"$regex": search, "$options": "i"}},
+            {"fornitore": {"$regex": search, "$options": "i"}}
         ]
-    items = await Database.get_db()["lotti"].find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    return items
+    
+    if categoria:
+        query["categoria"] = categoria
+    
+    items = await db["haccp_lotti"].find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
+    return {"items": items, "total": len(items)}
+
+@router.get("/statistiche")
+async def get_statistiche_lotti():
+    """Statistiche sui lotti"""
+    db = Database.get_db()
+    
+    total = await db["haccp_lotti"].count_documents({})
+    
+    # Conta per categoria
+    pipeline = [
+        {"$group": {"_id": "$categoria", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    categorie = await db["haccp_lotti"].aggregate(pipeline).to_list(20)
+    
+    # Conta allergeni
+    pipeline_allergeni = [
+        {"$unwind": "$allergeni"},
+        {"$group": {"_id": "$allergeni", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    allergeni = await db["haccp_lotti"].aggregate(pipeline_allergeni).to_list(20)
+    
+    return {
+        "totale_lotti": total,
+        "per_categoria": {c["_id"]: c["count"] for c in categorie if c["_id"]},
+        "allergeni_presenti": {a["_id"]: a["count"] for a in allergeni if a["_id"]}
+    }
 
 @router.get("/{lotto_id}")
 async def get_lotto(lotto_id: str):
     """Ottiene un lotto per ID"""
-    item = await Database.get_db()["lotti"].find_one({"id": lotto_id}, {"_id": 0})
+    db = Database.get_db()
+    item = await db["haccp_lotti"].find_one({"id": lotto_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Lotto non trovato")
     return item
 
-@router.post("", response_model=Lotto)
+@router.post("")
 async def create_lotto(item: LottoCreate):
     """Crea un nuovo lotto"""
+    db = Database.get_db()
+    
+    # Conta progressivo del giorno
+    oggi = datetime.now().strftime("%Y-%m-%d")
+    count_oggi = await db["haccp_lotti"].count_documents({"data_produzione": oggi})
+    
     data = item.model_dump()
     data["id"] = str(uuid.uuid4())
+    data["progressivo"] = count_oggi + 1
+    data["numero_lotto"] = genera_numero_lotto(datetime.now(), count_oggi + 1)
+    data["allergeni"] = detect_allergeni(item.prodotto)
+    data["categoria"] = detect_categoria(item.prodotto)
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-    await Database.get_db()["lotti"].insert_one(data)
+    
+    await db["haccp_lotti"].insert_one(data)
+    
+    # Rimuovi _id prima di restituire
+    if "_id" in data:
+        del data["_id"]
+    
     return data
 
 @router.delete("/{lotto_id}")
 async def delete_lotto(lotto_id: str):
     """Elimina un lotto"""
-    result = await Database.get_db()["lotti"].delete_one({"id": lotto_id})
+    db = Database.get_db()
+    result = await db["haccp_lotti"].delete_one({"id": lotto_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Lotto non trovato")
     return {"success": True}
+
+@router.post("/popola-da-fatture")
+async def popola_lotti_da_fatture(anno: int = Query(default=2026)):
+    """
+    Popola automaticamente i lotti dalle fatture XML dei fornitori.
+    Estrae i prodotti dalle linee fattura e crea i lotti corrispondenti.
+    """
+    db = Database.get_db()
+    
+    # Recupera fatture passive (acquisti) dell'anno
+    fatture = await db["invoices"].find({
+        "tipo": "passiva",
+        "$or": [
+            {"data": {"$regex": f"^{anno}"}},
+            {"data_documento": {"$regex": f"^{anno}"}}
+        ]
+    }, {"_id": 0}).to_list(5000)
+    
+    lotti_creati = 0
+    prodotti_processati = set()
+    
+    for fattura in fatture:
+        fornitore = fattura.get("fornitore", {})
+        fornitore_nome = fornitore.get("denominazione", "") if isinstance(fornitore, dict) else str(fornitore)
+        
+        linee = fattura.get("linee", [])
+        data_fattura = fattura.get("data", fattura.get("data_documento", ""))
+        
+        for linea in linee:
+            descrizione = linea.get("descrizione", "")
+            if not descrizione or len(descrizione) < 3:
+                continue
+            
+            # Salta se già processato
+            key = f"{descrizione}_{data_fattura}"
+            if key in prodotti_processati:
+                continue
+            prodotti_processati.add(key)
+            
+            # Rileva categoria HACCP
+            categoria = detect_categoria(descrizione)
+            
+            # Salta prodotti non alimentari
+            if categoria == "altro" and not any(kw in descrizione.lower() for kw in ["alimentare", "food", "cibo"]):
+                # Controlla se è un prodotto alimentare generico
+                food_keywords = ["kg", "gr", "lt", "pz", "conf", "scatola", "bottiglia", "confezione"]
+                if not any(kw in descrizione.lower() for kw in food_keywords):
+                    continue
+            
+            # Calcola data scadenza (basata sulla categoria)
+            try:
+                data_prod = datetime.strptime(data_fattura[:10], "%Y-%m-%d")
+            except:
+                data_prod = datetime.now()
+            
+            giorni_scadenza = {
+                "latticini": 7,
+                "carni": 5,
+                "pesce": 3,
+                "verdure": 10,
+                "frutta": 14,
+                "cereali": 365,
+                "uova": 28,
+                "altro": 30
+            }
+            
+            data_scad = data_prod + timedelta(days=giorni_scadenza.get(categoria, 30))
+            
+            # Conta progressivo
+            count = await db["haccp_lotti"].count_documents({"data_produzione": data_fattura[:10]})
+            
+            lotto = {
+                "id": str(uuid.uuid4()),
+                "prodotto": descrizione[:100],
+                "categoria": categoria,
+                "fornitore": fornitore_nome[:100],
+                "fattura_riferimento": fattura.get("numero", ""),
+                "data_produzione": data_fattura[:10],
+                "data_scadenza": data_scad.strftime("%Y-%m-%d"),
+                "numero_lotto": genera_numero_lotto(data_prod, count + lotti_creati + 1),
+                "quantita": linea.get("quantita", 1),
+                "unita_misura": linea.get("unita_misura", "pz"),
+                "allergeni": detect_allergeni(descrizione),
+                "progressivo": count + lotti_creati + 1,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "source": "fattura_xml"
+            }
+            
+            await db["haccp_lotti"].insert_one(lotto)
+            lotti_creati += 1
+    
+    return {
+        "success": True,
+        "anno": anno,
+        "fatture_analizzate": len(fatture),
+        "lotti_creati": lotti_creati,
+        "prodotti_unici": len(prodotti_processati)
+    }
+
+@router.delete("/reset")
+async def reset_lotti():
+    """Elimina tutti i lotti (per test)"""
+    db = Database.get_db()
+    result = await db["haccp_lotti"].delete_many({})
+    return {"success": True, "deleted": result.deleted_count}
