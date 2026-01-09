@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
 import { formatDateIT, formatEuro } from "../lib/utils";
+import InvoiceXMLViewer from "../components/InvoiceXMLViewer";
 
 export default function PrimaNotaCassa() {
   const [movements, setMovements] = useState([]);
@@ -8,6 +9,8 @@ export default function PrimaNotaCassa() {
   const [showForm, setShowForm] = useState(false);
   const [err, setErr] = useState("");
   const [balance, setBalance] = useState(0);
+  const [viewingInvoice, setViewingInvoice] = useState(null);
+  const [loadingInvoice, setLoadingInvoice] = useState(null);
   const [newMov, setNewMov] = useState({
     type: "entrata",
     amount: "",
@@ -34,6 +37,23 @@ export default function PrimaNotaCassa() {
       console.error("Error loading cash movements:", e);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadInvoiceForMovement(movimentoId) {
+    try {
+      setLoadingInvoice(movimentoId);
+      const r = await api.get(`/api/prima-nota/cassa/${movimentoId}/fattura`);
+      if (r.data && r.data.fattura) {
+        setViewingInvoice(r.data.fattura);
+      } else {
+        alert("Nessuna fattura trovata per questo movimento");
+      }
+    } catch (e) {
+      const msg = e.response?.data?.detail || e.message;
+      alert("Errore: " + msg);
+    } finally {
+      setLoadingInvoice(null);
     }
   }
 
