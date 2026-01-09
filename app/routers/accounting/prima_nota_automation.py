@@ -922,6 +922,18 @@ async def import_versamenti(
                 
                 descrizione = str(row.get('descrizione', row.get('description', 'Versamento'))) if pd.notna(row.get('descrizione', row.get('description'))) else f"Versamento del {data}"
                 
+                # CONTROLLO DUPLICATI - verifica se esiste già un versamento con stessa data e importo
+                existing_banca = await db[COLLECTION_PRIMA_NOTA_BANCA].find_one({
+                    "data": data,
+                    "importo": importo,
+                    "categoria": "Versamento"
+                })
+                
+                if existing_banca:
+                    results["skipped"] += 1
+                    results["errors"].append({"row": idx + 2, "error": f"Duplicato: versamento del {data} di €{importo} già esistente"})
+                    continue
+                
                 # Crea movimento in banca (entrata) e cassa (uscita)
                 movimento_banca = {
                     "id": str(uuid.uuid4()),
