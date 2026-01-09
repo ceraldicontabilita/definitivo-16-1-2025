@@ -3,56 +3,64 @@
 # AGGIORNATO: 2026-01-09
 
 ================================================================================
-# ✅ NUOVO SISTEMA HACCP IMPLEMENTATO - 2026-01-09
+# ✅ SISTEMA HACCP V2 COMPLETO - IMPLEMENTATO 2026-01-09
 ================================================================================
 
-## Nuova Architettura HACCP (12 Frigoriferi / 12 Congelatori)
+## Architettura Backend (12 Router in /api/haccp-v2/)
 
-### Backend - Nuovi Router
-- `/api/haccp/temperature-positive/*` - 12 schede frigoriferi annuali (0-4°C)
-- `/api/haccp/temperature-negative/*` - 12 schede congelatori annuali (-22/-18°C)
-- `/api/haccp/chiusure/*` - Calcolo automatico: Capodanno, Pasqua, Ferie 12-24 Agosto
-- `/api/haccp/sanificazione/*` - Attrezzature (giornaliera) + Apparecchi (ogni 7-10gg)
+### Temperature
+- `/api/haccp-v2/temperature-positive/*` - 12 schede frigoriferi annuali (0-4°C)
+- `/api/haccp-v2/temperature-negative/*` - 12 schede congelatori annuali (-22/-18°C)
 
-### Struttura Dati (per scheda)
-```json
-{
-  "anno": 2026,
-  "frigorifero_numero": 1,  // 1-12
-  "temperature": {
-    "1": {  // Mese
-      "1": {"temp": 2.5, "operatore": "...", "timestamp": "..."},
-      "2": {...}
-    }
-  },
-  "temp_min": 0.0,
-  "temp_max": 4.0
-}
-```
+### Sanificazione
+- `/api/haccp-v2/sanificazione/*` - Attrezzature giornaliere + Apparecchi (7-10gg)
 
-### Frontend - Nuove Pagine
-- `/haccp/temperature-positive` - Griglia 31x12 (giorni x frigoriferi)
-- `/haccp/temperature-negative` - Griglia 31x12 (giorni x congelatori)
+### Chiusure e Festività
+- `/api/haccp-v2/chiusure/*` - Calcolo automatico: Capodanno, Pasqua, Ferie 12-24 Agosto
 
-### Funzionalità
-- ✅ Auto-popolazione temperature per tutti i giorni passati
-- ✅ Calcolo automatico Pasqua (algoritmo Meeus/Jones/Butcher)
-- ✅ Chiusure automatiche: Capodanno, Pasqua/Pasquetta, Ferie 12-24 Agosto
-- ✅ Range termico: Frigo 0-4°C, Congel -22/-18°C
-- ✅ Operatori: Pocci Salvatore, Vincenzo Ceraldi
-- ✅ Stampa scheda PDF per ispezioni ASL
-- ✅ Riferimenti normativi: Reg. CE 852/2004, D.Lgs. 193/2007
+### Documentazione
+- `/api/haccp-v2/manuale-haccp/*` - Manuale HACCP completo con 7 principi
 
-### File Creati
-- `/app/app/routers/haccp_new/temperature_positive.py`
-- `/app/app/routers/haccp_new/temperature_negative.py`
-- `/app/app/routers/haccp_new/chiusure.py`
-- `/app/app/routers/haccp_new/sanificazione.py`
-- `/app/frontend/src/pages/HACCPTemperaturePositive.jsx`
-- `/app/frontend/src/pages/HACCPTemperatureNegative.jsx`
+### Registri
+- `/api/haccp-v2/disinfestazione/*` - Registro interventi
+- `/api/haccp-v2/anomalie/*` - Non conformità
+- `/api/haccp-v2/lotti/*` - Lotti produzione (da fatture XML)
+- `/api/haccp-v2/materie-prime/*` - Ingredienti
+- `/api/haccp-v2/ricette/*` - Preparazioni
+- `/api/haccp-v2/non-conformi/*` - Non conformità
+- `/api/haccp-v2/fornitori/*` - Fornitori HACCP
 
-================================================================================
-# ✅ HACCP SISTEMA AUTOMATICO - CORRETTO 2026-01-09
+## Frontend (Pagine in /haccp-v2/)
+
+- `/haccp-v2` - Dashboard con 9 moduli, KPI, Azioni Rapide
+- `/haccp-v2/frigoriferi` - Griglia 31x12 (giorni × frigoriferi)
+- `/haccp-v2/congelatori` - Griglia 31x12 (giorni × congelatori)
+- `/haccp-v2/sanificazioni` - Registro giornaliero attrezzature
+- `/haccp-v2/manuale` - Documento HACCP completo stampabile
+
+## File Creati
+
+### Backend
+- `/app/app/routers/haccp_v2/` - Tutti i 12 router
+
+### Frontend
+- `/app/frontend/src/pages/HACCPDashboardV2.jsx`
+- `/app/frontend/src/pages/HACCPFrigoriferiV2.jsx`
+- `/app/frontend/src/pages/HACCPCongelatoriV2.jsx`
+- `/app/frontend/src/pages/HACCPSanificazioniV2.jsx`
+- `/app/frontend/src/pages/HACCPManualeV2.jsx`
+
+## Riferimenti Normativi Inclusi
+- Reg. CE 852/2004 - Igiene prodotti alimentari
+- Reg. CE 853/2004 - Norme specifiche alimenti origine animale
+- D.Lgs. 193/2007 - Attuazione direttive CE
+- Reg. UE 2017/625 - Controlli ufficiali
+- Codex Alimentarius CAC/RCP 1-1969
+
+## Operatori Designati
+- Temperature: Pocci Salvatore, Vincenzo Ceraldi
+- Sanificazione: SANKAPALA ARACHCHILAGE JANANIE AYACHANA DISSANAYAKA
+
 ================================================================================
 
 ## Problemi Risolti
