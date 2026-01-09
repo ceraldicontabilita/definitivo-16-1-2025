@@ -97,6 +97,8 @@ async def get_email_accounts() -> List[Dict[str, Any]]:
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             await db[COLLECTION_EMAIL_ACCOUNTS].insert_one(default_account)
+            # Rimuovi _id per la risposta
+            default_account.pop("_id", None)
             accounts = [default_account]
     
     return accounts
