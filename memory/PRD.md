@@ -1,6 +1,44 @@
 # 📋 PRD - AZIENDA SEMPLICE ERP
 # Documento di riferimento centralizzato
-# AGGIORNATO: 2026-01-09 (Fork Session 3)
+# AGGIORNATO: 2026-01-09 (Fork Session 4)
+
+================================================================================
+# ✅ FIX CRITICO LOGICA CONTABILE PRIMA NOTA - 2026-01-09
+================================================================================
+
+## Problema Risolto
+La logica contabile in Prima Nota registrava TUTTE le fatture come "uscite" indipendentemente
+dal tipo di documento. Questo causava:
+- Saldo Banca negativo errato (€-273.135,16)
+- TUTTE le fatture mostrate come "Pagamento fornitore" (uscite)
+- Calcoli finanziari completamente sbagliati
+
+## Soluzione Implementata
+
+### Nuova Logica (`prima_nota.py`)
+- Introdotta funzione `determina_tipo_movimento_fattura()` che analizza il tipo_documento:
+  - **TD01** (da fornitore) = USCITA (pagamento fornitore)
+  - **TD04, TD08** (note credito) = ENTRATA (rimborso fornitore)
+  - **TD24, TD25, TD26, TD27** (fatture attive/vendite) = ENTRATA (incasso cliente)
+
+### Endpoint di Fix
+- `POST /api/prima-nota/fix-tipo-movimento` - Corregge movimenti esistenti
+- `POST /api/prima-nota/recalculate-balances` - Ricalcola saldi
+
+### Risultati Fix
+- **638 movimenti cassa** corretti
+- **383 movimenti banca** corretti
+- Saldo Cassa 2026: €8.126,85 (positivo ✅)
+- Saldo Banca 2026: €-197.243,54 (negativo ma corretto - più pagamenti fornitori che incassi)
+- Saldo Totale: €1.579.495,39 ✅
+
+### File Modificati
+- `/app/app/routers/accounting/prima_nota.py` - Nuova logica tipo movimento + endpoint fix
+
+## Note Importanti
+- I RICAVI sulla Dashboard (€0) sono corretti: l'azienda ha caricato solo fatture PASSIVE (acquisti)
+- Per avere RICAVI occorre caricare: corrispettivi giornalieri OPPURE fatture emesse (vendite)
+- Il sistema ora distingue correttamente tra fatture attive (vendite) e passive (acquisti)
 
 ================================================================================
 # ✅ FIX MOBILE + RICERCA + INSERIMENTO - 2026-01-09
