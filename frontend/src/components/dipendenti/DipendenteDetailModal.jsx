@@ -627,4 +627,120 @@ function ContractsSection({ dipendente, contractTypes, generatingContract, onGen
   );
 }
 
+// Tab Bonifici associati al dipendente
+function DipendenteBonificiTab({ bonifici, loading, onReload }) {
+  const totale = bonifici.reduce((acc, b) => acc + (b.importo || 0), 0);
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('it-IT');
+  };
+  
+  const formatEuro = (val) => {
+    return (val || 0).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
+  };
+
+  return (
+    <div>
+      {/* Header con totale */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        background: '#e3f2fd',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16
+      }}>
+        <div>
+          <div style={{ fontSize: 11, color: '#1565c0' }}>Totale Bonifici Associati</div>
+          <div style={{ fontSize: 20, fontWeight: 'bold', color: '#0d47a1' }}>
+            {formatEuro(totale)}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 11, color: '#1565c0' }}>Numero Operazioni</div>
+          <div style={{ fontSize: 20, fontWeight: 'bold', color: '#0d47a1' }}>
+            {bonifici.length}
+          </div>
+        </div>
+        <button 
+          onClick={onReload} 
+          disabled={loading}
+          style={{ 
+            padding: '8px 16px', 
+            background: '#1976d2', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: 4, 
+            cursor: loading ? 'wait' : 'pointer',
+            fontSize: 12
+          }}
+        >
+          {loading ? '⏳' : '🔄'} Aggiorna
+        </button>
+      </div>
+
+      {/* Lista bonifici */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
+          Caricamento bonifici...
+        </div>
+      ) : bonifici.length === 0 ? (
+        <div style={{ 
+          textAlign: 'center', 
+          padding: 40, 
+          background: '#f5f5f5', 
+          borderRadius: 8, 
+          color: '#999' 
+        }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>🏦</div>
+          <div>Nessun bonifico associato a questo dipendente</div>
+          <div style={{ fontSize: 11, marginTop: 8 }}>
+            I bonifici vengono associati automaticamente in base alla causale
+          </div>
+        </div>
+      ) : (
+        <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#f5f5f5' }}>
+                <th style={{ padding: 8, textAlign: 'left', borderBottom: '2px solid #ddd' }}>Data</th>
+                <th style={{ padding: 8, textAlign: 'right', borderBottom: '2px solid #ddd' }}>Importo</th>
+                <th style={{ padding: 8, textAlign: 'left', borderBottom: '2px solid #ddd' }}>Causale</th>
+                <th style={{ padding: 8, textAlign: 'center', borderBottom: '2px solid #ddd' }}>Stato</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bonifici.map((bon, idx) => (
+                <tr key={bon.id || idx} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: 8 }}>{formatDate(bon.data)}</td>
+                  <td style={{ padding: 8, textAlign: 'right', fontWeight: 'bold', color: '#1565c0' }}>
+                    {formatEuro(bon.importo)}
+                  </td>
+                  <td style={{ padding: 8, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {bon.causale || '-'}
+                  </td>
+                  <td style={{ padding: 8, textAlign: 'center' }}>
+                    {bon.riconciliato ? (
+                      <span style={{ background: '#c8e6c9', color: '#2e7d32', padding: '2px 8px', borderRadius: 4, fontSize: 10 }}>
+                        ✓ Riconciliato
+                      </span>
+                    ) : (
+                      <span style={{ background: '#fff3e0', color: '#e65100', padding: '2px 8px', borderRadius: 4, fontSize: 10 }}>
+                        In attesa
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default DipendenteDetailModal;
