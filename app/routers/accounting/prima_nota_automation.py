@@ -894,17 +894,21 @@ async def import_versamenti(
     
     try:
         if file.filename.lower().endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(content))
+            # Rileva automaticamente il separatore (italiano usa ; europeo usa ,)
+            content_str = content.decode('utf-8', errors='ignore')
+            separator = ';' if ';' in content_str[:500] else ','
+            df = pd.read_csv(io.BytesIO(content), sep=separator)
         else:
             df = pd.read_excel(io.BytesIO(content))
         
+        # Normalizza nomi colonne
         df.columns = df.columns.str.lower().str.strip()
         
         for idx, row in df.iterrows():
             try:
-                # Trova colonna data
+                # Trova colonna data (supporta vari formati)
                 data = None
-                for col in ['data', 'date', 'giorno']:
+                for col in ['data', 'date', 'giorno', 'data contabile', 'data valuta']:
                     if col in df.columns and pd.notna(row.get(col)):
                         data = parse_italian_date(str(row[col]))
                         break
@@ -913,7 +917,12 @@ async def import_versamenti(
                 importo = 0
                 for col in ['importo', 'amount', 'valore', 'versamento']:
                     if col in df.columns and pd.notna(row.get(col)):
-                        importo = parse_italian_amount(str(row[col]))
+                        val = row[col]
+                        # Se è già un numero, usalo direttamente
+                        if isinstance(val, (int, float)):
+                            importo = float(val)
+                        else:
+                            importo = parse_italian_amount(str(val))
                         break
                 
                 if not data or importo <= 0:
