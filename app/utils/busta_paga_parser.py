@@ -238,10 +238,10 @@ def parse_format_teamsystem_2022(text: str, lines: List[str]) -> Dict[str, Any]:
                 if amount_match:
                     result['netto_mese'] = parse_italian_number(amount_match.group(1))
     
-    # Calcola paga mensile
-    if result['paga_base_oraria'] > 0:
+    # Calcola paga mensile solo se non già calcolata
+    if result.get('paga_base_oraria', 0) > 0 and result.get('paga_base_mensile', 0) == 0:
         result['paga_base_mensile'] = round(result['paga_base_oraria'] * 173.33, 2)
-    if result['contingenza_oraria'] > 0:
+    if result.get('contingenza_oraria', 0) > 0 and result.get('contingenza_mensile', 0) == 0:
         result['contingenza_mensile'] = round(result['contingenza_oraria'] * 173.33, 2)
     
     return result
