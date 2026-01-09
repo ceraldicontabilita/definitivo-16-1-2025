@@ -272,16 +272,29 @@ def parse_format_zucchetti_2023(text: str, lines: List[str]) -> Dict[str, Any]:
         if 'PAGA BASE' in line and ('SCATTI' in line or 'CONTING' in line):
             if i + 1 < len(lines):
                 next_line = lines[i + 1]
+                # Pattern per catturare numeri come 937,80000 o 5,72826
                 numbers = re.findall(r'[\d]+[,.][\d]+', next_line)
                 if len(numbers) >= 1:
-                    result['paga_base_oraria'] = parse_italian_number(numbers[0])
+                    val = parse_italian_number(numbers[0])
+                    # Se il valore è > 100, è già mensile
+                    # Se ha molti decimali (es. 937,80000) è mensile
+                    raw_num = numbers[0]
+                    decimal_part = raw_num.split(',')[-1] if ',' in raw_num else raw_num.split('.')[-1]
+                    if val > 100 or (len(decimal_part) >= 4 and val > 50):
+                        result['paga_base_mensile'] = val
+                    else:
+                        result['paga_base_oraria'] = val
+                
                 # Se c'è SCATTI, contingenza è il terzo numero, altrimenti è il secondo
-                if 'SCATTI' in line:
-                    if len(numbers) >= 3:
-                        result['contingenza_oraria'] = parse_italian_number(numbers[2])
-                else:
-                    if len(numbers) >= 2:
-                        result['contingenza_oraria'] = parse_italian_number(numbers[1])
+                cont_idx = 2 if 'SCATTI' in line else 1
+                if len(numbers) > cont_idx:
+                    val = parse_italian_number(numbers[cont_idx])
+                    raw_num = numbers[cont_idx]
+                    decimal_part = raw_num.split(',')[-1] if ',' in raw_num else raw_num.split('.')[-1]
+                    if val > 100 or (len(decimal_part) >= 4 and val > 50):
+                        result['contingenza_mensile'] = val
+                    else:
+                        result['contingenza_oraria'] = val
         
         # TFR
         if 'T.F.R.' in line and 'F.do' in line:
