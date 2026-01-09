@@ -354,6 +354,8 @@ async def riconciliazione_batch(
     """
     Riconciliazione batch retroattiva.
     Tenta di associare automaticamente le fatture XML agli estratti conto.
+    - Se trova match in banca → metodo_pagamento = bonifico/assegno, pagato = True
+    - Se NON trova match → metodo_pagamento = cassa_da_confermare
     """
     from app.services.aruba_invoice_parser import find_bank_match, find_multiple_checks_match, determine_payment_method
     
@@ -372,6 +374,7 @@ async def riconciliazione_batch(
         "totale_fatture": len(fatture),
         "riconciliate": 0,
         "non_trovate": 0,
+        "cassa_da_confermare": 0,
         "gia_pagate": 0,
         "dettaglio": []
     }
@@ -392,6 +395,7 @@ async def riconciliazione_batch(
             match = await find_multiple_checks_match(db, importo, data, fornitore)
         
         if match:
+            # TROVATO IN BANCA - Riconciliazione automatica
             metodo, num_assegno = determine_payment_method(match.get("descrizione", ""))
             
             dettaglio = {
@@ -400,37 +404,60 @@ async def riconciliazione_batch(
                 "importo": importo,
                 "data_fattura": data,
                 "match_trovato": True,
-                "metodo_suggerito": metodo,
+                "metodo_pagamento": metodo,
                 "numero_assegno": num_assegno,
                 "data_pagamento": match.get("data"),
                 "descrizione_banca": match.get("descrizione", "")[:50]
             }
             
             if not dry_run:
-                # Aggiorna fattura con info riconciliazione
+                # Aggiorna fattura con metodo pagamento EFFETTIVO e stato pagato
+                update_data = {
+                    "riconciliato": True,
+                    "metodo_pagamento": metodo,  # Imposta metodo pagamento effettivo
+                    "pagato": True,  # Segna come pagata
+                    "status": "paid",
+                    "data_pagamento": match.get("data"),
+                    "riconciliato_il": datetime.now(timezone.utc).isoformat(),
+                    "riferimento_bancario": match.get("descrizione", "")[:100]
+                }
+                if num_assegno:
+                    update_data["numero_assegno"] = num_assegno
+                
                 await db["invoices"].update_one(
                     {"id": fatt.get("id")},
-                    {"$set": {
-                        "riconciliato": True,
-                        "metodo_pagamento_suggerito": metodo,
-                        "numero_assegno_suggerito": num_assegno,
-                        "data_pagamento_suggerita": match.get("data"),
-                        "riconciliato_il": datetime.now(timezone.utc).isoformat()
-                    }}
+                    {"$set": update_data}
                 )
             
             risultati["riconciliate"] += 1
             risultati["dettaglio"].append(dettaglio)
         else:
+            # NON TROVATO IN BANCA - Imposta come "cassa da confermare"
+            dettaglio = {
+                "fattura_id": fatt.get("id"),
+                "fornitore": fornitore,
+                "importo": importo,
+                "data_fattura": data,
+                "match_trovato": False,
+                "metodo_pagamento": "cassa_da_confermare"
+            }
+            
+            if not dry_run:
+                # Imposta metodo pagamento come "cassa da confermare"
+                await db["invoices"].update_one(
+                    {"id": fatt.get("id")},
+                    {"$set": {
+                        "metodo_pagamento": "cassa_da_confermare",
+                        "riconciliato": False,
+                        "pagato": False,
+                        "note_riconciliazione": "Non trovato in estratto conto - verificare pagamento in cassa"
+                    }}
+                )
+            
             risultati["non_trovate"] += 1
-            if len(risultati["dettaglio"]) < 50:  # Limita output
-                risultati["dettaglio"].append({
-                    "fattura_id": fatt.get("id"),
-                    "fornitore": fornitore,
-                    "importo": importo,
-                    "data_fattura": data,
-                    "match_trovato": False
-                })
+            risultati["cassa_da_confermare"] += 1
+            if len(risultati["dettaglio"]) < 100:  # Limita output
+                risultati["dettaglio"].append(dettaglio)
     
     risultati["percentuale_riconciliate"] = round(
         risultati["riconciliate"] / risultati["totale_fatture"] * 100, 1
