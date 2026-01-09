@@ -304,6 +304,30 @@ export default function ImportExport() {
     }
   };
 
+  const handleImportEstrattoConto = async () => {
+    const file = estrattoContoFileRef.current?.files[0];
+    if (!file) {
+      showMessage("error", "Seleziona un file PDF dell'estratto conto bancario");
+      return;
+    }
+    
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    try {
+      // Prima importa direttamente
+      const res = await api.post("/api/estratto-conto/import?auto_riconcilia=false", formData);
+      setImportResults(res.data);
+      showMessage("success", `Importati ${res.data.movimenti_importati || 0} movimenti dall'estratto conto`);
+      estrattoContoFileRef.current.value = "";
+    } catch (e) {
+      showMessage("error", e.response?.data?.detail || "Errore import estratto conto");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ========== EXPORT FUNCTIONS (Solo Excel) ==========
   
   const handleExport = async (dataType) => {
