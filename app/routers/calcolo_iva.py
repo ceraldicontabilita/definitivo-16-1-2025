@@ -63,24 +63,32 @@ async def calcola_iva_periodo(
         tipo_periodo = "annuale"
     
     # === IVA ACQUISTI (a credito) ===
-    # Da fatture XML ricevute
-    iva_acquisti = await db["invoices"].aggregate([
-        {"$match": {
-            "invoice_date": {"$gte": data_inizio, "$lt": data_fine},
-            "tipo_documento": {"$nin": ["TD01", "TD04", "TD24", "TD26"]}  # Escludi fatture emesse
-        }},
-        {"$group": {
-            "_id": None,
-            "imponibile": {"$sum": "$taxable_amount"},
-            "iva": {"$sum": "$vat_amount"},
-            "totale": {"$sum": "$total_amount"},
-            "num_fatture": {"$sum": 1}
-        }}
-    ]).to_list(1)
+    # Da fatture XML ricevute - usa riepilogo_iva o campi alternativi
+    fatture_acquisto = await db["invoices"].find({
+        "invoice_date": {"$gte": data_inizio, "$lt": data_fine},
+        "tipo_documento": {"$nin": ["TD01", "TD04", "TD24", "TD26"]}  # Escludi fatture emesse e NC
+    }, {"_id": 0, "riepilogo_iva": 1, "vat_amount": 1, "taxable_amount": 1, "total_amount": 1, "iva": 1, "imponibile": 1}).to_list(10000)
     
-    iva_credito = iva_acquisti[0]["iva"] if iva_acquisti else 0
-    imponibile_acquisti = iva_acquisti[0]["imponibile"] if iva_acquisti else 0
-    num_fatture_acquisti = iva_acquisti[0]["num_fatture"] if iva_acquisti else 0
+    iva_credito = 0
+    imponibile_acquisti = 0
+    num_fatture_acquisti = len(fatture_acquisto)
+    
+    for f in fatture_acquisto:
+        # Prima prova riepilogo_iva (più affidabile)
+        riepilogo = f.get("riepilogo_iva", [])
+        if riepilogo:
+            for r in riepilogo:
+                # Escludi nature N1-N7 (escluse da liquidazione)
+                if r.get("natura"):
+                    continue
+                iva_credito += float(r.get("imposta", 0) or 0)
+                imponibile_acquisti += float(r.get("imponibile", 0) or 0)
+        else:
+            # Fallback: prova vat_amount o iva
+            iva_val = f.get("vat_amount") or f.get("iva") or 0
+            imp_val = f.get("taxable_amount") or f.get("imponibile") or 0
+            iva_credito += float(iva_val)
+            imponibile_acquisti += float(imp_val)
     
     # === IVA VENDITE (a debito) ===
     # Da fatture emesse
