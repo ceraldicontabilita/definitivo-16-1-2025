@@ -92,6 +92,36 @@
 - `/app/frontend/src/pages/Admin.jsx` - Pulsante trigger manuale
 
 ================================================================================
+# ✅ TASK P2 COMPLETATE - SESSIONE 2026-01-09
+================================================================================
+
+## 1. Ottimizzazione Riconciliazione Batch
+- ✅ Modalità background con `?background=true`
+- ✅ Chunking da 50 record per evitare timeout
+- ✅ Polling stato via `/api/archivio-bonifici/riconcilia/task/{id}`
+- ✅ Progress tracking in tempo reale
+- File: `/app/app/routers/bank/archivio_bonifici.py`
+
+## 2. Keep-Alive Server
+- ✅ Endpoint `/api/ping` leggero per health check
+- ✅ Endpoint `/api/health` con timestamp
+- ✅ Endpoint `/api/system/lock-status` per monitoraggio operazioni
+- File: `/app/app/main.py`
+
+## 3. Lock Operazioni Email/DB
+- ✅ Lock globale `asyncio.Lock()` per operazioni email
+- ✅ Verifica lock prima di ogni operazione email
+- ✅ HTTP 423 (Locked) se operazione già in corso
+- ✅ UI mostra stato lock e blocca pulsanti
+- Files: `/app/app/routers/documenti.py`, `/app/app/routers/operazioni_da_confermare.py`
+
+## 4. Download Email Manuale (non automatico)
+- ✅ Nessun download automatico all'apertura pagine
+- ✅ Pulsante "Scarica da Email" manuale in Documenti
+- ✅ Pulsante "Email" manuale in Operazioni da Confermare
+- ✅ Verifica lock prima del download
+
+================================================================================
 # ✅ TASK P1 COMPLETATE - SESSIONE 2026-01-09
 ================================================================================
 
