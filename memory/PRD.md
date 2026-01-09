@@ -1,6 +1,37 @@
 # 📋 PRD - AZIENDA SEMPLICE ERP
 # Documento di riferimento centralizzato
-# AGGIORNATO: 2026-01-09
+# AGGIORNATO: 2026-01-09 (Fork Session 2)
+
+================================================================================
+# ✅ MODULO DIPENDENTI P0 COMPLETATO - 2026-01-09
+================================================================================
+
+## Funzionalità Implementate
+
+### Modale Dettaglio Dipendente (DipendenteDetailModal.jsx)
+- ✅ 5 Tab completamente funzionanti:
+  - **Anagrafica**: Nome, Cognome, CF, Data Nascita, Indirizzo, Email, IBAN, Qualifica, Mansione, Livello CCNL
+  - **Retribuzione**: Paga Base €, Contingenza €, Stipendio Lordo/Orario, Ore Settimanali, Tipo Contratto + Riepilogo calcolato automaticamente
+  - **Progressivi**: TFR Accantonato, Ferie (maturate/godute/residue), Permessi, ROL
+  - **Agevolazioni**: Lista agevolazioni attive + aggiunta/rimozione
+  - **Contratti**: Generazione contratti PDF
+
+### Backend Endpoints
+- ✅ `PUT /api/dipendenti/{id}` - Salvataggio nuovi campi (paga_base, contingenza, progressivi)
+- ✅ `GET /api/dipendenti/{id}` - Recupero dati con nuovi campi
+
+### Bug Fix
+- ✅ Corretto `loadDipendenti()` → `loadData()` in GestioneDipendenti.jsx (linee 163, 428)
+
+## Test Results
+- Backend: 12/12 test passati (100%)
+- Frontend: 100% funzionalità verificate
+- File test: `/app/tests/test_dipendenti_detail_modal.py`
+- Report: `/app/test_reports/iteration_41.json`
+
+## Logica Non Implementata (da fare in futuro)
+- ⏳ Associazione bonifici-acconti (richiede definizione logica di matching)
+- ⏳ Parser buste paga PDF per popolare automaticamente i progressivi (richiede PDF esempio)
 
 ================================================================================
 # ✅ SISTEMA HACCP V2 COMPLETO - IMPLEMENTATO 2026-01-09
