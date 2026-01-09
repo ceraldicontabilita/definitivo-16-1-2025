@@ -489,7 +489,7 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
         # O se il metodo non è misto
         if metodo_pagamento != "misto":
             try:
-                from app.routers.prima_nota import registra_pagamento_fattura
+                from app.routers.accounting.prima_nota import registra_pagamento_fattura
                 prima_nota_result = await registra_pagamento_fattura(
                     fattura=invoice,
                     metodo_pagamento=metodo_pagamento
