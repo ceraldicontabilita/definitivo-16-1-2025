@@ -102,7 +102,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="card">
+      <div className="card card-compact">
         <div className="h1">Dashboard</div>
         <div className="small">Caricamento in corso...</div>
       </div>
@@ -111,15 +111,17 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="card">
-        <div className="h1">Dashboard {anno}</div>
-        {err ? (
-          <div className="small" style={{ color: "#c00" }}>{err}</div>
-        ) : (
-          <div className="small" style={{ color: "#0a0" }}>
-            ✓ Backend connesso - Database: {h?.database || "connesso"}
-          </div>
-        )}
+      <div className="card card-compact" style={{ marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="h1" style={{ marginBottom: 0 }}>Dashboard {anno}</div>
+          {err ? (
+            <div className="small" style={{ color: "#c00" }}>{err}</div>
+          ) : (
+            <div className="small badge badge-success">
+              ✓ Backend connesso
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Widget Verifica Coerenza Dati */}
@@ -129,25 +131,26 @@ export default function Dashboard() {
       {(notificheHaccp > 0) && (
         <div style={{ 
           background: '#ffebee', 
-          border: '2px solid #f44336', 
-          borderRadius: 8, 
-          padding: 16, 
-          marginBottom: 20,
+          border: '1px solid #f44336', 
+          borderRadius: 6, 
+          padding: 10, 
+          marginBottom: 12,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: 15
+          gap: 10,
+          fontSize: 12
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 24 }}>🚨</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>🚨</span>
             <div>
-              <div style={{ fontWeight: 'bold', color: '#c62828' }}>Attenzione!</div>
-              <div style={{ fontSize: 14 }}>{notificheHaccp} anomalie HACCP non lette</div>
+              <div style={{ fontWeight: 'bold', color: '#c62828', fontSize: 12 }}>Attenzione!</div>
+              <div style={{ fontSize: 11 }}>{notificheHaccp} anomalie HACCP</div>
             </div>
           </div>
           <Link to="/haccp/notifiche" style={{
-            padding: '8px 16px',
+            padding: '4px 10px',
             background: '#f44336',
             color: 'white',
             borderRadius: 6,
