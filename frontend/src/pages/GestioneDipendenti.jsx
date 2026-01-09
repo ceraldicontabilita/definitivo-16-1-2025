@@ -388,6 +388,38 @@ export default function GestioneDipendenti() {
           )}
         </div>
       )}
+
+      {/* Modal Dettaglio Dipendente */}
+      {selectedDipendente && (
+        <DipendenteDetailModal
+          dipendente={selectedDipendente}
+          editData={editData}
+          setEditData={setEditData}
+          editMode={editMode}
+          setEditMode={setEditMode}
+          contractTypes={contractTypes}
+          generatingContract={generatingContract}
+          onClose={closeDetail}
+          onUpdate={handleUpdateDipendente}
+          onGenerateContract={handleGenerateContract}
+        />
+      )}
+
+      {/* Modal Nuovo Dipendente */}
+      {showForm && (
+        <DipendenteNewModal
+          onClose={() => setShowForm(false)}
+          onSave={async (data) => {
+            try {
+              await api.post('/api/dipendenti', data);
+              loadDipendenti();
+              setShowForm(false);
+            } catch (e) {
+              alert('Errore: ' + (e.response?.data?.detail || e.message));
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
