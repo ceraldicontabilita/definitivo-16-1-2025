@@ -318,6 +318,11 @@ function PrimaNotaDesktop() {
     }
   };
 
+  const handleEditMovimento = async (tipo, updated) => {
+    // Ricarica i dati dopo la modifica
+    loadAllData();
+  };
+
   // Format helpers
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('it-IT');
   
