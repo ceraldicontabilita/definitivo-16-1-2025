@@ -16,16 +16,13 @@ from fastapi import APIRouter, HTTPException, Query, Body
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 from datetime import datetime, timezone
-from motor.motor_asyncio import AsyncIOMotorClient
+from app.database import Database
 import os
 import uuid
 
 router = APIRouter(prefix="/temperature-positive", tags=["Temperature Positive"])
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'tracciabilita_lotti')]
 
 # ==================== COSTANTI NORMATIVE ====================
 

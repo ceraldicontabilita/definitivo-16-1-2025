@@ -11,15 +11,12 @@ BASATO SU:
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from datetime import datetime, timezone
-from motor.motor_asyncio import AsyncIOMotorClient
+from app.database import Database
 import os
 
 router = APIRouter(prefix="/manuale-haccp", tags=["Manuale HACCP"])
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'tracciabilita_lotti')]
 
 # ==================== DATI AZIENDA ====================
 
