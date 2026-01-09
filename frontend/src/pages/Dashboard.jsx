@@ -285,40 +285,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid">
-        <div className="card">
-          <div className="small">Fatture</div>
-          <div className="kpi">{sum?.invoices_total ?? 0}</div>
-          <div className="small">Totale registrate</div>
-        </div>
-        <div className="card">
-          <div className="small">Fornitori</div>
-          <div className="kpi">{sum?.suppliers ?? 0}</div>
-          <div className="small">Registrati</div>
-        </div>
-        <div className="card">
-          <div className="small">Magazzino</div>
-          <div className="kpi">{sum?.products ?? 0}</div>
-          <div className="small">Prodotti a stock</div>
-        </div>
-        <div className="card">
-          <div className="small">HACCP</div>
-          <div className="kpi">{sum?.haccp_items ?? 0}</div>
-          <div className="small">Registrazioni</div>
-        </div>
-        <div className="card">
-          <div className="small">Dipendenti</div>
-          <div className="kpi">{sum?.employees ?? 0}</div>
-          <div className="small">In organico</div>
-        </div>
-        <div className="card">
-          <div className="small">Riconciliazione</div>
-          <div className="kpi">{sum?.reconciled ?? 0}</div>
-          <div className="small">Movimenti</div>
-        </div>
-      </div>
-
       {/* Widget Bilancio Istantaneo */}
       {bilancioIstantaneo && (
         <div style={{
