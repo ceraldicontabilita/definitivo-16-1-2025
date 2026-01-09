@@ -285,6 +285,7 @@ app.include_router(controllo_gestione.router, prefix="/api/controllo-gestione", 
 app.include_router(indici_bilancio.router, prefix="/api/indici-bilancio", tags=["Indici di Bilancio"])
 app.include_router(chiusura_esercizio.router, prefix="/api/chiusura-esercizio", tags=["Chiusura Esercizio"])
 app.include_router(gestione_iva_speciale.router, prefix="/api/iva-speciale", tags=["IVA Speciale"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["Alert Sistema"])
 
 # --- HACCP V2 System (Nuovo sistema completo) ---
 app.include_router(haccp_temp_positive, prefix="/api/haccp-v2", tags=["HACCP V2 Temperature Positive"])
