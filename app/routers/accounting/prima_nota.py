@@ -604,6 +604,58 @@ async def update_prima_nota_banca(
 
 # ============== REGISTRAZIONE AUTOMATICA DA FATTURA ==============
 
+# Tipi documento che rappresentano FATTURE ATTIVE (vendite - ENTRATE)
+# TD01: Fattura, TD24: Fattura differita, TD25: Fattura semplificata 
+# TD26: Cessione beni ammortizzabili, TD27: Fattura autoconsumo
+TIPI_FATTURA_ATTIVA = ["TD24", "TD25", "TD26", "TD27"]
+
+# Tipi documento che rappresentano NOTE CREDITO (inversione del segno)
+# TD04: Nota di credito, TD08: Nota di credito semplificata
+TIPI_NOTA_CREDITO = ["TD04", "TD08"]
+
+
+def determina_tipo_movimento_fattura(fattura: Dict[str, Any]) -> tuple:
+    """
+    Determina il tipo di movimento (entrata/uscita) e la categoria 
+    basandosi sul tipo documento della fattura.
+    
+    Logica:
+    - Fatture PASSIVE (acquisti da fornitori): tipo_documento TD01 con cedente != noi = USCITA
+    - Fatture ATTIVE (vendite a clienti): tipo_documento TD24, TD25, etc. = ENTRATA
+    - Note di Credito: invertono il segno (NC da fornitore = ENTRATA, NC a cliente = USCITA)
+    
+    Returns:
+        tuple: (tipo_movimento, categoria, descrizione_prefisso)
+    """
+    tipo_doc = fattura.get("tipo_documento", "TD01").upper()
+    
+    # Verifica se è una fattura attiva (vendita) controllando il destinatario
+    # Se il "cessionario" (cliente) ha P.IVA diversa dalla nostra azienda, è una vendita
+    cliente = fattura.get("cliente", {}) or fattura.get("cessionario", {})
+    fornitore = fattura.get("fornitore", {}) or {}
+    
+    # Check se è una fattura ATTIVA basandosi sul tipo documento
+    is_fattura_attiva = tipo_doc in TIPI_FATTURA_ATTIVA
+    
+    # Le fatture normali (TD01) sono PASSIVE (acquisti) se hanno un fornitore esterno
+    # Per semplificare: se supplier_vat è valorizzato, è un acquisto (USCITA)
+    supplier_vat = fattura.get("supplier_vat") or fattura.get("cedente_piva") or ""
+    
+    # Note di credito
+    is_nota_credito = tipo_doc in TIPI_NOTA_CREDITO
+    
+    if is_nota_credito:
+        # Nota credito DA fornitore = soldi che rientrano = ENTRATA
+        # (il fornitore ci deve dei soldi)
+        return ("entrata", "Nota credito fornitore", "Nota credito")
+    elif is_fattura_attiva:
+        # Fattura attiva = vendita = ENTRATA
+        return ("entrata", "Incasso cliente", "Incasso fattura")
+    else:
+        # Fattura passiva (acquisto) = USCITA
+        return ("uscita", "Pagamento fornitore", "Pagamento fattura")
+
+
 async def registra_pagamento_fattura(
     fattura: Dict[str, Any],
     metodo_pagamento: str,
@@ -612,6 +664,12 @@ async def registra_pagamento_fattura(
 ) -> Dict[str, Any]:
     """
     Registra automaticamente il pagamento di una fattura nella prima nota appropriata.
+    
+    LOGICA CONTABILE:
+    - Fatture PASSIVE (acquisti): creano USCITE (soldi che escono)
+    - Fatture ATTIVE (vendite): creano ENTRATE (soldi che entrano)
+    - Note di Credito DA fornitore: creano ENTRATE (rimborso)
+    - Note di Credito A cliente: creano USCITE (rimborso)
     
     Args:
         fattura: Documento fattura
@@ -631,25 +689,33 @@ async def registra_pagamento_fattura(
     fornitore = fattura.get("supplier_name") or fattura.get("cedente_denominazione") or "Fornitore"
     fornitore_piva = fattura.get("supplier_vat") or fattura.get("cedente_piva") or ""
     
+    # DETERMINA TIPO MOVIMENTO basandosi sul tipo documento
+    tipo_movimento, categoria, desc_prefisso = determina_tipo_movimento_fattura(fattura)
+    
     risultato = {
         "cassa": None,
-        "banca": None
+        "banca": None,
+        "tipo_movimento": tipo_movimento  # Per debug/tracciabilità
     }
     
-    descrizione_base = f"Pagamento fattura {numero_fattura} - {fornitore[:40]}"
+    descrizione_base = f"{desc_prefisso} {numero_fattura} - {fornitore[:40]}"
+    
+    logger.info(f"Registrazione fattura {numero_fattura}: tipo_doc={fattura.get('tipo_documento')}, "
+                f"movimento={tipo_movimento}, categoria={categoria}")
     
     if metodo_pagamento == "cassa" or metodo_pagamento == "contanti":
         # Tutto in cassa
         movimento_cassa = {
             "id": str(uuid.uuid4()),
             "data": data_fattura,
-            "tipo": "uscita",
+            "tipo": tipo_movimento,  # entrata o uscita basato sul tipo fattura
             "importo": importo_totale,
             "descrizione": descrizione_base,
-            "categoria": "Pagamento fornitore",
+            "categoria": categoria,
             "riferimento": numero_fattura,
             "fornitore_piva": fornitore_piva,
             "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+            "tipo_documento": fattura.get("tipo_documento"),
             "source": "fattura_pagata",
             "created_at": now
         }
@@ -661,13 +727,14 @@ async def registra_pagamento_fattura(
         movimento_banca = {
             "id": str(uuid.uuid4()),
             "data": data_fattura,
-            "tipo": "uscita",
+            "tipo": tipo_movimento,  # entrata o uscita basato sul tipo fattura
             "importo": importo_totale,
             "descrizione": descrizione_base,
-            "categoria": "Pagamento fornitore",
+            "categoria": categoria,
             "riferimento": numero_fattura,
             "fornitore_piva": fornitore_piva,
             "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+            "tipo_documento": fattura.get("tipo_documento"),
             "source": "fattura_pagata",
             "created_at": now
         }
@@ -680,13 +747,14 @@ async def registra_pagamento_fattura(
             movimento_cassa = {
                 "id": str(uuid.uuid4()),
                 "data": data_fattura,
-                "tipo": "uscita",
+                "tipo": tipo_movimento,
                 "importo": importo_cassa,
                 "descrizione": f"{descrizione_base} (parte contanti)",
-                "categoria": "Pagamento fornitore",
+                "categoria": categoria,
                 "riferimento": numero_fattura,
                 "fornitore_piva": fornitore_piva,
                 "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+                "tipo_documento": fattura.get("tipo_documento"),
                 "source": "fattura_pagata",
                 "created_at": now
             }
@@ -697,13 +765,14 @@ async def registra_pagamento_fattura(
             movimento_banca = {
                 "id": str(uuid.uuid4()),
                 "data": data_fattura,
-                "tipo": "uscita",
+                "tipo": tipo_movimento,
                 "importo": importo_banca,
                 "descrizione": f"{descrizione_base} (parte bonifico)",
-                "categoria": "Pagamento fornitore",
+                "categoria": categoria,
                 "riferimento": numero_fattura,
                 "fornitore_piva": fornitore_piva,
                 "fattura_id": fattura.get("id") or fattura.get("invoice_key"),
+                "tipo_documento": fattura.get("tipo_documento"),
                 "source": "fattura_pagata",
                 "created_at": now
             }
