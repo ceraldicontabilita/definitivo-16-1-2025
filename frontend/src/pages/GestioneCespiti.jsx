@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Building2, Users, Calendar, Calculator, AlertTriangle, Plus } from 'lucide-react';
+import { Building2, Users, Calendar, Calculator, AlertTriangle, Plus, Pencil, Trash2, X, Check } from 'lucide-react';
 
 const Label = ({ children }) => <label className="text-xs font-medium text-slate-600">{children}</label>;
 
@@ -22,6 +22,8 @@ export default function GestioneCespiti() {
   const [riepilogoTFR, setRiepilogoTFR] = useState(null);
   const [scadenzario, setScadenzario] = useState(null);
   const [urgenti, setUrgenti] = useState(null);
+  const [editingCespite, setEditingCespite] = useState(null);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => {
     if (activeTab === 'cespiti') { loadCespiti(); loadCategorie(); }
@@ -58,6 +60,43 @@ export default function GestioneCespiti() {
   const handleCalcolaAmm = async () => {
     if (!window.confirm(`Calcolare ammortamenti ${anno}?`)) return;
     try { const r = await api.post(`/api/cespiti/registra/${anno}`); alert(r.data.messaggio); loadCespiti(); } catch (e) { alert('Errore'); }
+  };
+
+  const handleEditCespite = (cespite) => {
+    setEditingCespite(cespite.id);
+    setEditData({
+      descrizione: cespite.descrizione,
+      fornitore: cespite.fornitore || '',
+      note: cespite.note || '',
+      valore_acquisto: cespite.valore_acquisto,
+      data_acquisto: cespite.data_acquisto
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await api.put(`/api/cespiti/${editingCespite}`, editData);
+      setEditingCespite(null);
+      setEditData({});
+      loadCespiti();
+    } catch (e) {
+      alert('Errore: ' + (e.response?.data?.detail || e.message));
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCespite(null);
+    setEditData({});
+  };
+
+  const handleDeleteCespite = async (cespite) => {
+    if (!window.confirm(`Eliminare il cespite "${cespite.descrizione}"?\n\nQuesta operazione è irreversibile.`)) return;
+    try {
+      await api.delete(`/api/cespiti/${cespite.id}`);
+      loadCespiti();
+    } catch (e) {
+      alert('Errore: ' + (e.response?.data?.detail || e.message));
+    }
   };
 
   const fmt = (v) => v != null ? new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v) : '-';
