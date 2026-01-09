@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="it-IT">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />		<title>Pagina non trovata | Ceraldi Caffè</title>
+<meta name='robots' content='max-image-preview:large' />
+<link rel="alternate" type="application/rss+xml" title="Ceraldi Caffè &raquo; Feed" href="https://ceraldicaffe.it/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Ceraldi Caffè &raquo; Feed dei commenti" href="https://ceraldicaffe.it/comments/feed/" />
+<!-- This site uses the Google Analytics by MonsterInsights plugin v7.10.0 - Using Analytics tracking - https://www.monsterinsights.com/ -->
+<script type="text/javascript" data-cfasync="false">
+	var mi_version         = '7.10.0';
+	var mi_track_user      = true;
+	var mi_no_track_reason = '';
+	
+	var disableStr = 'ga-disable-UA-136956525-1';
+
+	/* Function to detect opted out users */
+	function __gaTrackerIsOptedOut() {
+		return document.cookie.indexOf(disableStr + '=true') > -1;
+	}
+
+	/* Disable tracking if the opt-out cookie exists. */
+	if ( __gaTrackerIsOptedOut() ) {
+		window[disableStr] = true;
+	}
+
+	/* Opt-out function */
+	function __gaTrackerOptout() {
+	  document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+	  window[disableStr] = true;
+	}
+	
+	if ( mi_track_user ) {
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','__gaTracker');
+
+		__gaTracker('create', 'UA-136956525-1', 'auto');
+		__gaTracker('set', 'forceSSL', true);
+		__gaTracker('require', 'displayfeatures');
+		__gaTracker('send','pageview','/404.html?page=' + document.location.pathname + document.location.search + '&from=' + document.referrer);
+	} else {
+		console.log( "" );
+		(function() {
+			/* https://developers.google.com/analytics/devguides/collection/analyticsjs/ */
+			var noopfn = function() {
+				return null;
+			};
+			var noopnullfn = function() {
+				return null;
+			};
+			var Tracker = function() {
+				return null;
+			};
+			var p = Tracker.prototype;
+			p.get = noopfn;
+			p.set = noopfn;
+			p.send = noopfn;
+			var __gaTracker = function() {
+				var len = arguments.length;
+				if ( len === 0 ) {
+					return;
+				}
+				var f = arguments[len-1];
+				if ( typeof f !== 'object' || f === null || typeof f.hitCallback !== 'function' ) {
+					console.log( 'Not running function __gaTracker(' + arguments[0] + " ....) because you are not being tracked. " + mi_no_track_reason );
+					return;
+				}
+				try {
+					f.hitCallback();
+				} catch (ex) {
+
+				}
+			};
+			__gaTracker.create = function() {
+				return new Tracker();
+			};
+			__gaTracker.getByName = noopnullfn;
+			__gaTracker.getAll = function() {
+				return [];
+			};
+			__gaTracker.remove = noopfn;
+			window['__gaTracker'] = __gaTracker;
+					})();
+		}
+</script>
+<!-- / Google Analytics by MonsterInsights -->
+<script type="text/javascript">
+window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/ceraldicaffe.it\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.2.8"}};
+/*! This file is auto-generated */
+!function(e,a,t){var n,r,o,i=a.createElement("canvas"),p=i.getContext&&i.getContext("2d");function s(e,t){p.clearRect(0,0,i.width,i.height),p.fillText(e,0,0);e=i.toDataURL();return p.clearRect(0,0,i.width,i.height),p.fillText(t,0,0),e===i.toDataURL()}function c(e){var t=a.createElement("script");t.src=e,t.defer=t.type="text/javascript",a.getElementsByTagName("head")[0].appendChild(t)}for(o=Array("flag","emoji"),t.supports={everything:!0,everythingExceptFlag:!0},r=0;r<o.length;r++)t.supports[o[r]]=function(e){if(p&&p.fillText)switch(p.textBaseline="top",p.font="600 32px Arial",e){case"flag":return s("\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!s("\ud83c\uddfa\ud83c\uddf3","\ud83c\uddfa\u200b\ud83c\uddf3")&&!s("\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!s("\ud83e\udef1\ud83c\udffb\u200d\ud83e\udef2\ud83c\udfff","\ud83e\udef1\ud83c\udffb\u200b\ud83e\udef2\ud83c\udfff")}return!1}(o[r]),t.supports.everything=t.supports.everything&&t.supports[o[r]],"flag"!==o[r]&&(t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&t.supports[o[r]]);t.supports.everythingExceptFlag=t.supports.everythingExceptFlag&&!t.supports.flag,t.DOMReady=!1,t.readyCallback=function(){t.DOMReady=!0},t.supports.everything||(n=function(){t.readyCallback()},a.addEventListener?(a.addEventListener("DOMContentLoaded",n,!1),e.addEventListener("load",n,!1)):(e.attachEvent("onload",n),a.attachEvent("onreadystatechange",function(){"complete"===a.readyState&&t.readyCallback()})),(e=t.source||{}).concatemoji?c(e.concatemoji):e.wpemoji&&e.twemoji&&(c(e.twemoji),c(e.wpemoji)))}(window,document,window._wpemojiSettings);
+</script>
+<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 0.07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+	<link rel='stylesheet' id='wp-block-library-css' href='https://ceraldicaffe.it/wp-includes/css/dist/block-library/style.min.css?ver=6.2.8' type='text/css' media='all' />
+<style id='wp-block-library-theme-inline-css' type='text/css'>
+.wp-block-audio figcaption{color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-audio figcaption{color:hsla(0,0%,100%,.65)}.wp-block-audio{margin:0 0 1em}.wp-block-code{border:1px solid #ccc;border-radius:4px;font-family:Menlo,Consolas,monaco,monospace;padding:.8em 1em}.wp-block-embed figcaption{color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-embed figcaption{color:hsla(0,0%,100%,.65)}.wp-block-embed{margin:0 0 1em}.blocks-gallery-caption{color:#555;font-size:13px;text-align:center}.is-dark-theme .blocks-gallery-caption{color:hsla(0,0%,100%,.65)}.wp-block-image figcaption{color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-image figcaption{color:hsla(0,0%,100%,.65)}.wp-block-image{margin:0 0 1em}.wp-block-pullquote{border-bottom:4px solid;border-top:4px solid;color:currentColor;margin-bottom:1.75em}.wp-block-pullquote cite,.wp-block-pullquote footer,.wp-block-pullquote__citation{color:currentColor;font-size:.8125em;font-style:normal;text-transform:uppercase}.wp-block-quote{border-left:.25em solid;margin:0 0 1.75em;padding-left:1em}.wp-block-quote cite,.wp-block-quote footer{color:currentColor;font-size:.8125em;font-style:normal;position:relative}.wp-block-quote.has-text-align-right{border-left:none;border-right:.25em solid;padding-left:0;padding-right:1em}.wp-block-quote.has-text-align-center{border:none;padding-left:0}.wp-block-quote.is-large,.wp-block-quote.is-style-large,.wp-block-quote.is-style-plain{border:none}.wp-block-search .wp-block-search__label{font-weight:700}.wp-block-search__button{border:1px solid #ccc;padding:.375em .625em}:where(.wp-block-group.has-background){padding:1.25em 2.375em}.wp-block-separator.has-css-opacity{opacity:.4}.wp-block-separator{border:none;border-bottom:2px solid;margin-left:auto;margin-right:auto}.wp-block-separator.has-alpha-channel-opacity{opacity:1}.wp-block-separator:not(.is-style-wide):not(.is-style-dots){width:100px}.wp-block-separator.has-background:not(.is-style-dots){border-bottom:none;height:1px}.wp-block-separator.has-background:not(.is-style-wide):not(.is-style-dots){height:2px}.wp-block-table{margin:0 0 1em}.wp-block-table td,.wp-block-table th{word-break:normal}.wp-block-table figcaption{color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-table figcaption{color:hsla(0,0%,100%,.65)}.wp-block-video figcaption{color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-video figcaption{color:hsla(0,0%,100%,.65)}.wp-block-video{margin:0 0 1em}.wp-block-template-part.has-background{margin-bottom:0;margin-top:0;padding:1.25em 2.375em}
+</style>
+<link rel='stylesheet' id='classic-theme-styles-css' href='https://ceraldicaffe.it/wp-includes/css/classic-themes.min.css?ver=6.2.8' type='text/css' media='all' />
+<style id='global-styles-inline-css' type='text/css'>
+body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--duotone--dark-grayscale: url('#wp-duotone-dark-grayscale');--wp--preset--duotone--grayscale: url('#wp-duotone-grayscale');--wp--preset--duotone--purple-yellow: url('#wp-duotone-purple-yellow');--wp--preset--duotone--blue-red: url('#wp-duotone-blue-red');--wp--preset--duotone--midnight: url('#wp-duotone-midnight');--wp--preset--duotone--magenta-yellow: url('#wp-duotone-magenta-yellow');--wp--preset--duotone--purple-green: url('#wp-duotone-purple-green');--wp--preset--duotone--blue-orange: url('#wp-duotone-blue-orange');--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgba(255, 255, 255, 1), 6px 6px rgba(0, 0, 0, 1);--wp--preset--shadow--crisp: 6px 6px 0px rgba(0, 0, 0, 1);}:where(.is-layout-flex){gap: 0.5em;}body .is-layout-flow > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}body .is-layout-flow > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}body .is-layout-flow > .aligncenter{margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}body .is-layout-constrained > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}body .is-layout-constrained > .aligncenter{margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)){max-width: var(--wp--style--global--content-size);margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > .alignwide{max-width: var(--wp--style--global--wide-size);}body .is-layout-flex{display: flex;}body .is-layout-flex{flex-wrap: wrap;align-items: center;}body .is-layout-flex > *{margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+.wp-block-navigation a:where(:not(.wp-element-button)){color: inherit;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}
+.wp-block-pullquote{font-size: 1.5em;line-height: 1.6;}
+</style>
+<link rel='stylesheet' id='orbisius_ct_bootstrap_basic4_child_theme_parent_style-css' href='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4/style.css?ver=1.2.3' type='text/css' media='all' />
+<link rel='stylesheet' id='orbisius_ct_bootstrap_basic4_child_theme_parent_style_child_style-css' href='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4-child-theme/style.css?ver=1.2.2' type='text/css' media='all' />
+<link rel='stylesheet' id='bootstrap-basic4-wp-main-css' href='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4-child-theme/style.css?ver=1.2.3' type='text/css' media='all' />
+<link rel='stylesheet' id='bootstrap4-css' href='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4/assets/css/bootstrap.min.css?ver=4.3.1' type='text/css' media='all' />
+<link rel='stylesheet' id='bootstrap-basic4-font-awesome5-css' href='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4/assets/fontawesome/css/all.min.css?ver=5.8.1' type='text/css' media='all' />
+<link rel='stylesheet' id='bootstrap-basic4-main-css' href='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4/assets/css/main.css?ver=1.2.3' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-icons-css' href='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/lib/eicons/css/elementor-icons.min.css?ver=4.3.0' type='text/css' media='all' />
+<link rel='stylesheet' id='font-awesome-css' href='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/lib/font-awesome/css/font-awesome.min.css?ver=4.7.0' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-animations-css' href='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/lib/animations/animations.min.css?ver=2.5.15' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-frontend-css' href='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/css/frontend.min.css?ver=2.5.15' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-pro-css' href='https://ceraldicaffe.it/wp-content/plugins/elementor-pro/assets/css/frontend.min.css?ver=2.5.8' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-global-css' href='https://ceraldicaffe.it/wp-content/uploads/elementor/css/global.css?ver=1559050165' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-post-13-css' href='https://ceraldicaffe.it/wp-content/uploads/elementor/css/post-13.css?ver=1559050165' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-post-27-css' href='https://ceraldicaffe.it/wp-content/uploads/elementor/css/post-27.css?ver=1559052006' type='text/css' media='all' />
+<link rel='stylesheet' id='elementor-post-190-css' href='https://ceraldicaffe.it/wp-content/uploads/elementor/css/post-190.css?ver=1559050165' type='text/css' media='all' />
+<link rel='stylesheet' id='google-fonts-1-css' href='https://fonts.googleapis.com/css?family=Roboto%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CRoboto+Slab%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CAndada%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic&#038;ver=6.2.8' type='text/css' media='all' />
+<script type='text/javascript' id='monsterinsights-frontend-script-js-extra'>
+/* <![CDATA[ */
+var monsterinsights_frontend = {"js_events_tracking":"true","download_extensions":"doc,pdf,ppt,zip,xls,docx,pptx,xlsx","inbound_paths":"[{\"path\":\"\\\/go\\\/\",\"label\":\"affiliate\"},{\"path\":\"\\\/recommend\\\/\",\"label\":\"affiliate\"}]","home_url":"https:\/\/ceraldicaffe.it","hash_tracking":"false"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/google-analytics-for-wordpress/assets/js/frontend.min.js?ver=7.10.0' id='monsterinsights-frontend-script-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-includes/js/jquery/jquery.min.js?ver=3.6.4' id='jquery-core-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.0' id='jquery-migrate-js'></script>
+<link rel="https://api.w.org/" href="https://ceraldicaffe.it/wp-json/" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://ceraldicaffe.it/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://ceraldicaffe.it/wp-includes/wlwmanifest.xml" />
+<meta name="generator" content="WordPress 6.2.8" />
+<!-- start Simple Custom CSS and JS -->
+<style type="text/css">
+.gallery_caption h2 {
+    font-family: "Andada", Sans-serif;
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 40px;
+    color: #c29955;
+}
+.gallery_caption img {
+    width: 85px;
+    margin-bottom: 5px!important;
+}
+.gallery_caption p {
+    font-family: "Andada", Sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 24px;
+    color: #645345;
+}
+
+.elementor-image-gallery .gallery-item a img{
+    height: 520px;
+    width: 520px;
+    object-fit: cover;
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+	.elementor-image-gallery .gallery-item a img{
+		height: 350px;
+		width: 350px;
+		object-fit: cover;
+	}  
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+	.elementor-image-gallery .gallery-item a img{
+		height: 350px;
+		width: 350px;
+		object-fit: cover;
+	}
+}
+
+
+@media (min-width: 481px) and (max-width: 767px) {
+	.elementor-image-gallery .gallery-item a img{
+		height: 300px;
+		width: 300px;
+		object-fit: cover;
+	} 
+}
+
+@media (min-width: 320px) and (max-width: 480px) {
+	.elementor-image-gallery .gallery-item a img{
+		height: 300px;
+		width: 300px;
+		object-fit: cover;
+	}  
+}
+</style>
+<!-- end Simple Custom CSS and JS -->
+<style type="text/css">.recentcomments a{display:inline !important;padding:0 !important;margin:0 !important;}</style></head>
+<body class="error404 wp-embed-responsive elementor-default">
+
+		<div data-elementor-type="header" data-elementor-id="13" class="elementor elementor-13 elementor-bc-flex-widget elementor-location-header" data-elementor-settings="[]">
+			<div class="elementor-inner">
+				<div class="elementor-section-wrap">
+							<section class="elementor-element elementor-element-6136a3f elementor-section-boxed elementor-section-height-default elementor-section-height-default elementor-section elementor-top-section" data-id="6136a3f" data-element_type="section" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;sticky&quot;:&quot;top&quot;,&quot;sticky_on&quot;:[&quot;desktop&quot;,&quot;tablet&quot;,&quot;mobile&quot;],&quot;sticky_offset&quot;:0,&quot;sticky_effects_offset&quot;:0}">
+						<div class="elementor-container elementor-column-gap-default">
+				<div class="elementor-row">
+				<div class="elementor-element elementor-element-efcc747 elementor-column elementor-col-100 elementor-top-column" data-id="efcc747" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<section class="elementor-element elementor-element-214100f elementor-section-boxed elementor-section-height-default elementor-section-height-default elementor-section elementor-inner-section" data-id="214100f" data-element_type="section">
+						<div class="elementor-container elementor-column-gap-default">
+				<div class="elementor-row">
+				<div class="elementor-element elementor-element-edd0b38 elementor-column elementor-col-50 elementor-inner-column" data-id="edd0b38" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-012d618 elementor-widget elementor-widget-image" data-id="012d618" data-element_type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-image">
+											<a href="https://ceraldicaffe.it" data-elementor-open-lightbox="">
+							<img width="825" height="282" src="https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi-1024x350.png" class="attachment-large size-large" alt="" decoding="async" loading="lazy" srcset="https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi-1024x350.png 1024w, https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi-300x103.png 300w, https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi-768x263.png 768w, https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi.png 1225w" sizes="(max-width: 825px) 100vw, 825px" />								</a>
+											</div>
+				</div>
+				</div>
+						</div>
+			</div>
+		</div>
+				<div class="elementor-element elementor-element-d78b623 elementor-column elementor-col-50 elementor-inner-column" data-id="d78b623" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-36901a9 elementor-widget elementor-widget-spacer" data-id="36901a9" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-18ea086 elementor-nav-menu--indicator-none elementor-nav-menu__align-right elementor-nav-menu--dropdown-tablet elementor-nav-menu__text-align-aside elementor-nav-menu--toggle elementor-nav-menu--burger elementor-widget elementor-widget-nav-menu" data-id="18ea086" data-element_type="widget" data-settings="{&quot;layout&quot;:&quot;horizontal&quot;,&quot;toggle&quot;:&quot;burger&quot;}" data-widget_type="nav-menu.default">
+				<div class="elementor-widget-container">
+						<nav class="elementor-nav-menu--main elementor-nav-menu__container elementor-nav-menu--layout-horizontal e--pointer-underline e--animation-fade"><ul id="menu-1-18ea086" class="elementor-nav-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-20"><a href="https://ceraldicaffe.it/" class="elementor-item">Home</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-128"><a href="https://ceraldicaffe.it/1973-2/" class="elementor-item">Dal 1973</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-113"><a href="#" class="elementor-item elementor-item-anchor">Menu</a>
+<ul class="sub-menu elementor-nav-menu--dropdown">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-117"><a href="https://ceraldicaffe.it/bar/" class="elementor-sub-item">Il bar</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-115"><a href="https://ceraldicaffe.it/pasticceria/" class="elementor-sub-item">La nostra pasticceria</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-116"><a href="https://ceraldicaffe.it/gastronomia/" class="elementor-sub-item">La nostra gastronomia</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-114"><a href="https://ceraldicaffe.it/aspritz/" class="elementor-sub-item">L&#8217;Aspritz e gli altri aperitivi</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-215"><a href="https://ceraldicaffe.it/category/blog/" class="elementor-item">Blog</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-137"><a href="https://ceraldicaffe.it/contatti/" class="elementor-item">Contatti</a></li>
+</ul></nav>
+					<div class="elementor-menu-toggle">
+			<i class="eicon" aria-hidden="true"></i>
+			<span class="elementor-screen-only">Menu</span>
+		</div>
+		<nav class="elementor-nav-menu--dropdown elementor-nav-menu__container"><ul id="menu-2-18ea086" class="elementor-nav-menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-20"><a href="https://ceraldicaffe.it/" class="elementor-item">Home</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-128"><a href="https://ceraldicaffe.it/1973-2/" class="elementor-item">Dal 1973</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-113"><a href="#" class="elementor-item elementor-item-anchor">Menu</a>
+<ul class="sub-menu elementor-nav-menu--dropdown">
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-117"><a href="https://ceraldicaffe.it/bar/" class="elementor-sub-item">Il bar</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-115"><a href="https://ceraldicaffe.it/pasticceria/" class="elementor-sub-item">La nostra pasticceria</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-116"><a href="https://ceraldicaffe.it/gastronomia/" class="elementor-sub-item">La nostra gastronomia</a></li>
+	<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-114"><a href="https://ceraldicaffe.it/aspritz/" class="elementor-sub-item">L&#8217;Aspritz e gli altri aperitivi</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-215"><a href="https://ceraldicaffe.it/category/blog/" class="elementor-item">Blog</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-137"><a href="https://ceraldicaffe.it/contatti/" class="elementor-item">Contatti</a></li>
+</ul></nav>
+				</div>
+				</div>
+						</div>
+			</div>
+		</div>
+						</div>
+			</div>
+		</section>
+						</div>
+			</div>
+		</div>
+						</div>
+			</div>
+		</section>
+						</div>
+			</div>
+		</div>
+		 
+                <main id="main" class="col-12 site-main" role="main">
+                    <section class="error-404 not-found">
+                        <header class="page-header">
+                            <h1 class="page-title">Oops! That page can&rsquo;t be found.</h1>
+                        </header><!-- .page-header -->
+                        <div class="page-content">
+                            <p>It looks like nothing was found at this location. Maybe try one of the links below or a search?</p>
+
+                            <!--search form-->
+                            <div class="row-with-vspace">
+                                                            <form method="get" action="https://ceraldicaffe.it/">
+                                <div class="input-group">
+                                    <input class="form-control" type="search" name="s" value="" placeholder="Search &hellip;" title="Search &hellip;">
+                                    <span class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                                    </span>
+                                </div>
+                            </form><!--to override this search form, it is in /home/im37crm0/public_html/wp-content/themes/bootstrap-basic4/template-parts/partial-search-form.php --> 
+                            </div>
+
+                            <div class="row">
+                                <div class=" col-sm-6 col-md-3">
+                                    
+		<div class="widget widget_recent_entries">
+		<h2 class="widgettitle">Articoli recenti</h2>
+		<ul>
+											<li>
+					<a href="https://ceraldicaffe.it/2026/01/02/pinco-casino-ofitsial-noe-zerkalo-vkhod-na-zerkalo-kazakhstan/">Pinco Casino — официальное зеркало вход на зеркало Казахстан</a>
+									</li>
+											<li>
+					<a href="https://ceraldicaffe.it/2025/12/26/the-very-best-online-therapists-searching-for-assistance-and-assistance-from-the-convenience-of-your-home/">The Very Best Online Therapists: Searching For Assistance and Assistance From the Convenience of Your Home</a>
+									</li>
+											<li>
+					<a href="https://ceraldicaffe.it/2025/12/26/wie-man-nachrichten-uberarbeitet-ohne-zu-plagiieren/">Wie man Nachrichten überarbeitet, ohne zu plagiieren</a>
+									</li>
+											<li>
+					<a href="https://ceraldicaffe.it/2025/12/26/chicken-road-slot-uk-guide-bonus-features/">Chicken Road Slot UK — guide + bonus features</a>
+									</li>
+											<li>
+					<a href="https://ceraldicaffe.it/2025/12/25/basaribet-casinoya-giris-casino/">BasariBet Casinoya giriş : casino</a>
+									</li>
+					</ul>
+
+		</div> 
+                                </div>
+                                <div class=" col-sm-6 col-md-3">
+                                     
+                                    <div class="widget widget_categories">
+                                        <h2 class="widgettitle">Most Used Categories</h2>
+                                        <ul>
+                                            	<li class="cat-item cat-item-41"><a href="https://ceraldicaffe.it/category/news/">News</a> (3.144)
+</li>
+	<li class="cat-item cat-item-1"><a href="https://ceraldicaffe.it/category/senza-categoria/">Senza categoria</a> (1.465)
+</li>
+	<li class="cat-item cat-item-102"><a href="https://ceraldicaffe.it/category/uncategorized-2/">Uncategorized</a> (894)
+</li>
+	<li class="cat-item cat-item-40"><a href="https://ceraldicaffe.it/category/1/">1</a> (116)
+</li>
+	<li class="cat-item cat-item-186"><a href="https://ceraldicaffe.it/category/bet10/">bet10</a> (57)
+</li>
+	<li class="cat-item cat-item-34"><a href="https://ceraldicaffe.it/category/casino/">Casino</a> (51)
+</li>
+	<li class="cat-item cat-item-195"><a href="https://ceraldicaffe.it/category/bet10-casino-2/">bet10-casino</a> (31)
+</li>
+	<li class="cat-item cat-item-252"><a href="https://ceraldicaffe.it/category/seo-links/">seo-links</a> (28)
+</li>
+	<li class="cat-item cat-item-55"><a href="https://ceraldicaffe.it/category/bookkeeping/">Bookkeeping</a> (19)
+</li>
+	<li class="cat-item cat-item-8"><a href="https://ceraldicaffe.it/category/blog/">Blog</a> (18)
+</li>
+ 
+                                        </ul>
+                                    </div><!-- .widget -->
+                                     
+                                </div>
+                                <div class=" col-sm-6 col-md-3">
+                                    <div class="widget widget_archive"><h2 class="widgettitle">Archivi</h2><p>Try looking in the monthly archives. 🙂</p>		<label class="screen-reader-text" for="archives-dropdown--1">Archivi</label>
+		<select id="archives-dropdown--1" name="archive-dropdown">
+			
+			<option value="">Seleziona il mese</option>
+				<option value='https://ceraldicaffe.it/2026/01/'> Gennaio 2026 </option>
+	<option value='https://ceraldicaffe.it/2025/12/'> Dicembre 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/11/'> Novembre 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/10/'> Ottobre 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/09/'> Settembre 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/08/'> Agosto 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/07/'> Luglio 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/06/'> Giugno 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/05/'> Maggio 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/04/'> Aprile 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/03/'> Marzo 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/02/'> Febbraio 2025 </option>
+	<option value='https://ceraldicaffe.it/2025/01/'> Gennaio 2025 </option>
+	<option value='https://ceraldicaffe.it/2024/12/'> Dicembre 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/11/'> Novembre 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/10/'> Ottobre 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/09/'> Settembre 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/08/'> Agosto 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/07/'> Luglio 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/06/'> Giugno 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/05/'> Maggio 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/04/'> Aprile 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/03/'> Marzo 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/02/'> Febbraio 2024 </option>
+	<option value='https://ceraldicaffe.it/2024/01/'> Gennaio 2024 </option>
+	<option value='https://ceraldicaffe.it/2023/12/'> Dicembre 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/11/'> Novembre 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/10/'> Ottobre 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/09/'> Settembre 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/08/'> Agosto 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/07/'> Luglio 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/06/'> Giugno 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/05/'> Maggio 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/04/'> Aprile 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/03/'> Marzo 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/02/'> Febbraio 2023 </option>
+	<option value='https://ceraldicaffe.it/2023/01/'> Gennaio 2023 </option>
+	<option value='https://ceraldicaffe.it/2022/12/'> Dicembre 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/11/'> Novembre 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/10/'> Ottobre 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/09/'> Settembre 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/08/'> Agosto 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/07/'> Luglio 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/06/'> Giugno 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/05/'> Maggio 2022 </option>
+	<option value='https://ceraldicaffe.it/2022/03/'> Marzo 2022 </option>
+	<option value='https://ceraldicaffe.it/2021/12/'> Dicembre 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/10/'> Ottobre 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/09/'> Settembre 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/08/'> Agosto 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/05/'> Maggio 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/04/'> Aprile 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/03/'> Marzo 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/02/'> Febbraio 2021 </option>
+	<option value='https://ceraldicaffe.it/2021/01/'> Gennaio 2021 </option>
+	<option value='https://ceraldicaffe.it/2020/10/'> Ottobre 2020 </option>
+	<option value='https://ceraldicaffe.it/2020/08/'> Agosto 2020 </option>
+	<option value='https://ceraldicaffe.it/2020/07/'> Luglio 2020 </option>
+	<option value='https://ceraldicaffe.it/2019/05/'> Maggio 2019 </option>
+	<option value='https://ceraldicaffe.it/2019/04/'> Aprile 2019 </option>
+	<option value='https://ceraldicaffe.it/2019/02/'> Febbraio 2019 </option>
+
+		</select>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+(function() {
+	var dropdown = document.getElementById( "archives-dropdown--1" );
+	function onSelectChange() {
+		if ( dropdown.options[ dropdown.selectedIndex ].value !== '' ) {
+			document.location.href = this.options[ this.selectedIndex ].value;
+		}
+	}
+	dropdown.onchange = onSelectChange;
+})();
+/* ]]> */
+</script>
+			</div> 
+                                </div>
+                                <div class=" col-sm-6 col-md-3">
+                                    <div class="widget widget_tag_cloud"><h2 class="widgettitle">Tag</h2><div class="tagcloud"><a href="https://ceraldicaffe.it/tag/12-maggio/" class="tag-cloud-link tag-link-28 tag-link-position-1" style="font-size: 8pt;" aria-label="12 maggio (1 elemento)">12 maggio</a>
+<a href="https://ceraldicaffe.it/tag/aperitivo/" class="tag-cloud-link tag-link-26 tag-link-position-2" style="font-size: 8pt;" aria-label="aperitivo (1 elemento)">aperitivo</a>
+<a href="https://ceraldicaffe.it/tag/aspritz/" class="tag-cloud-link tag-link-24 tag-link-position-3" style="font-size: 8pt;" aria-label="Aspritz (1 elemento)">Aspritz</a>
+<a href="https://ceraldicaffe.it/tag/aspritz-caffe-ceraldi/" class="tag-cloud-link tag-link-23 tag-link-position-4" style="font-size: 8pt;" aria-label="Aspritz Caffè Ceraldi (1 elemento)">Aspritz Caffè Ceraldi</a>
+<a href="https://ceraldicaffe.it/tag/aspritziamoci/" class="tag-cloud-link tag-link-25 tag-link-position-5" style="font-size: 8pt;" aria-label="Aspritziamoci (1 elemento)">Aspritziamoci</a>
+<a href="https://ceraldicaffe.it/tag/auguri-mamma/" class="tag-cloud-link tag-link-30 tag-link-position-6" style="font-size: 8pt;" aria-label="auguri mamma (1 elemento)">auguri mamma</a>
+<a href="https://ceraldicaffe.it/tag/betsson-casino/" class="tag-cloud-link tag-link-296 tag-link-position-7" style="font-size: 8pt;" aria-label="Betsson Casino (1 elemento)">Betsson Casino</a>
+<a href="https://ceraldicaffe.it/tag/caffe-ceraldi/" class="tag-cloud-link tag-link-17 tag-link-position-8" style="font-size: 16.4pt;" aria-label="Caffè Ceraldi (2 elementi)">Caffè Ceraldi</a>
+<a href="https://ceraldicaffe.it/tag/casino-gizbo/" class="tag-cloud-link tag-link-198 tag-link-position-9" style="font-size: 8pt;" aria-label="Casino Gizbo (1 elemento)">Casino Gizbo</a>
+<a href="https://ceraldicaffe.it/tag/ceraldi-caffe/" class="tag-cloud-link tag-link-29 tag-link-position-10" style="font-size: 8pt;" aria-label="ceraldi caffè (1 elemento)">ceraldi caffè</a>
+<a href="https://ceraldicaffe.it/tag/dessert/" class="tag-cloud-link tag-link-5 tag-link-position-11" style="font-size: 16.4pt;" aria-label="Dessert (2 elementi)">Dessert</a>
+<a href="https://ceraldicaffe.it/tag/dolci-di-pasqua/" class="tag-cloud-link tag-link-21 tag-link-position-12" style="font-size: 8pt;" aria-label="dolci di Pasqua (1 elemento)">dolci di Pasqua</a>
+<a href="https://ceraldicaffe.it/tag/dolci-napoletani/" class="tag-cloud-link tag-link-20 tag-link-position-13" style="font-size: 8pt;" aria-label="dolci napoletani (1 elemento)">dolci napoletani</a>
+<a href="https://ceraldicaffe.it/tag/drinks/" class="tag-cloud-link tag-link-6 tag-link-position-14" style="font-size: 16.4pt;" aria-label="Drinks (2 elementi)">Drinks</a>
+<a href="https://ceraldicaffe.it/tag/festa-della-mamma/" class="tag-cloud-link tag-link-27 tag-link-position-15" style="font-size: 8pt;" aria-label="festa della mamma (1 elemento)">festa della mamma</a>
+<a href="https://ceraldicaffe.it/tag/gizbo-casino/" class="tag-cloud-link tag-link-197 tag-link-position-16" style="font-size: 8pt;" aria-label="Gizbo Casino (1 elemento)">Gizbo Casino</a>
+<a href="https://ceraldicaffe.it/tag/lilibet-casino/" class="tag-cloud-link tag-link-295 tag-link-position-17" style="font-size: 8pt;" aria-label="LiliBet Casino (1 elemento)">LiliBet Casino</a>
+<a href="https://ceraldicaffe.it/tag/napoli/" class="tag-cloud-link tag-link-16 tag-link-position-18" style="font-size: 8pt;" aria-label="Napoli (1 elemento)">Napoli</a>
+<a href="https://ceraldicaffe.it/tag/ozwincasino/" class="tag-cloud-link tag-link-269 tag-link-position-19" style="font-size: 22pt;" aria-label="ozwincasino (3 elementi)">ozwincasino</a>
+<a href="https://ceraldicaffe.it/tag/ozwincasino-au/" class="tag-cloud-link tag-link-270 tag-link-position-20" style="font-size: 22pt;" aria-label="ozwincasino AU (3 elementi)">ozwincasino AU</a>
+<a href="https://ceraldicaffe.it/tag/pasqua/" class="tag-cloud-link tag-link-18 tag-link-position-21" style="font-size: 8pt;" aria-label="Pasqua (1 elemento)">Pasqua</a>
+<a href="https://ceraldicaffe.it/tag/pastiera/" class="tag-cloud-link tag-link-19 tag-link-position-22" style="font-size: 8pt;" aria-label="Pastiera (1 elemento)">Pastiera</a>
+<a href="https://ceraldicaffe.it/tag/pastiera-napoletana/" class="tag-cloud-link tag-link-22 tag-link-position-23" style="font-size: 8pt;" aria-label="Pastiera napoletana (1 elemento)">Pastiera napoletana</a>
+<a href="https://ceraldicaffe.it/tag/primavera/" class="tag-cloud-link tag-link-15 tag-link-position-24" style="font-size: 8pt;" aria-label="Primavera (1 elemento)">Primavera</a>
+<a href="https://ceraldicaffe.it/tag/restaurant/" class="tag-cloud-link tag-link-7 tag-link-position-25" style="font-size: 16.4pt;" aria-label="Restaurant (2 elementi)">Restaurant</a>
+<a href="https://ceraldicaffe.it/tag/%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-gizbo/" class="tag-cloud-link tag-link-200 tag-link-position-26" style="font-size: 8pt;" aria-label="Казино Gizbo (1 elemento)">Казино Gizbo</a>
+<a href="https://ceraldicaffe.it/tag/%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d0%b3%d0%b8%d0%b7%d0%b1%d0%be/" class="tag-cloud-link tag-link-199 tag-link-position-27" style="font-size: 8pt;" aria-label="Казино Гизбо (1 elemento)">Казино Гизбо</a>
+<a href="https://ceraldicaffe.it/tag/%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d1%84%d0%bb%d0%b0%d0%b3%d0%bc%d0%b0%d0%bd/" class="tag-cloud-link tag-link-291 tag-link-position-28" style="font-size: 8pt;" aria-label="Казино Флагман (1 elemento)">Казино Флагман</a>
+<a href="https://ceraldicaffe.it/tag/%d1%84%d0%bb%d0%b0%d0%b3%d0%bc%d0%b0%d0%bd-%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d0%b1%d0%be%d0%bd%d1%83%d1%81/" class="tag-cloud-link tag-link-292 tag-link-position-29" style="font-size: 8pt;" aria-label="Флагман Казино Бонус (1 elemento)">Флагман Казино Бонус</a>
+<a href="https://ceraldicaffe.it/tag/%d1%84%d0%bb%d0%b0%d0%b3%d0%bc%d0%b0%d0%bd-%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d0%b7%d0%b5%d1%80%d0%ba%d0%b0%d0%bb%d0%be/" class="tag-cloud-link tag-link-293 tag-link-position-30" style="font-size: 8pt;" aria-label="Флагман Казино Зеркало (1 elemento)">Флагман Казино Зеркало</a>
+<a href="https://ceraldicaffe.it/tag/%d1%84%d0%bb%d0%b0%d0%b3%d0%bc%d0%b0%d0%bd-%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d1%80%d0%b5%d0%b3%d0%b8%d1%81%d1%82%d1%80%d0%b0%d1%86%d0%b8%d1%8f/" class="tag-cloud-link tag-link-294 tag-link-position-31" style="font-size: 8pt;" aria-label="Флагман Казино Регистрация (1 elemento)">Флагман Казино Регистрация</a>
+<a href="https://ceraldicaffe.it/tag/%d0%b8%d0%b3%d1%80%d0%b0%d1%82%d1%8c-%d0%b2-%d0%bb%d1%83%d1%87%d1%88%d0%b5%d0%bc-%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d0%bd%d0%b0-%d0%b4%d0%b5%d0%bd%d1%8c%d0%b3%d0%b8/" class="tag-cloud-link tag-link-288 tag-link-position-32" style="font-size: 8pt;" aria-label="играть в лучшем казино на деньги (1 elemento)">играть в лучшем казино на деньги</a>
+<a href="https://ceraldicaffe.it/tag/%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d0%be%d0%bd%d0%bb%d0%b0%d0%b9%d0%bd/" class="tag-cloud-link tag-link-290 tag-link-position-33" style="font-size: 8pt;" aria-label="казино онлайн (1 elemento)">казино онлайн</a>
+<a href="https://ceraldicaffe.it/tag/%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be-%d0%be%d0%bd%d0%bb%d0%b0%d0%b9%d0%bd-%d1%80%d0%b5%d0%b9%d1%82%d0%b8%d0%bd%d0%b3/" class="tag-cloud-link tag-link-289 tag-link-position-34" style="font-size: 8pt;" aria-label="казино онлайн рейтинг (1 elemento)">казино онлайн рейтинг</a>
+<a href="https://ceraldicaffe.it/tag/%d0%bb%d1%83%d1%87%d1%88%d0%b8%d0%b5-%d0%be%d0%bd%d0%bb%d0%b0%d0%b9%d0%bd-%d0%ba%d0%b0%d0%b7%d0%b8%d0%bd%d0%be/" class="tag-cloud-link tag-link-287 tag-link-position-35" style="font-size: 8pt;" aria-label="лучшие онлайн казино (1 elemento)">лучшие онлайн казино</a></div>
+</div> 
+                                </div>
+                            </div>
+                        </div><!-- .page-content -->
+                    </section><!-- .error-404 -->
+                </main>
+		<div data-elementor-type="footer" data-elementor-id="27" class="elementor elementor-27 elementor-location-footer" data-elementor-settings="[]">
+			<div class="elementor-inner">
+				<div class="elementor-section-wrap">
+							<section class="elementor-element elementor-element-1ee19b4 elementor-section-boxed elementor-section-height-default elementor-section-height-default elementor-section elementor-top-section" data-id="1ee19b4" data-element_type="section" data-settings="{&quot;background_background&quot;:&quot;classic&quot;}">
+						<div class="elementor-container elementor-column-gap-default">
+				<div class="elementor-row">
+				<div class="elementor-element elementor-element-a824292 elementor-column elementor-col-100 elementor-top-column" data-id="a824292" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-a235f88 elementor-widget elementor-widget-spacer" data-id="a235f88" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-1f742c6 elementor-widget elementor-widget-heading" data-id="1f742c6" data-element_type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+			<h2 class="elementor-heading-title elementor-size-default">Iscriviti alla nostra newsletter</h2>		</div>
+				</div>
+				<div class="elementor-element elementor-element-c16bc53 elementor-button-align-center elementor-widget elementor-widget-form" data-id="c16bc53" data-element_type="widget" data-widget_type="form.default">
+				<div class="elementor-widget-container">
+					<form class="elementor-form" method="post" name="Nuovo modulo">
+			<input type="hidden" name="post_id" value="27"/>
+			<input type="hidden" name="form_id" value="c16bc53"/>
+
+			<div class="elementor-form-fields-wrapper elementor-labels-">
+								<div class="elementor-field-type-text elementor-field-group elementor-column elementor-field-group-name elementor-col-50">
+					<label for="form-field-name" class="elementor-field-label elementor-screen-only">Nome</label><input size="1" type="text" name="form_fields[name]" id="form-field-name" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Nome">				</div>
+								<div class="elementor-field-type-text elementor-field-group elementor-column elementor-field-group-field_1 elementor-col-50">
+					<label for="form-field-field_1" class="elementor-field-label elementor-screen-only">Cognome</label><input size="1" type="text" name="form_fields[field_1]" id="form-field-field_1" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Cognome">				</div>
+								<div class="elementor-field-type-email elementor-field-group elementor-column elementor-field-group-email elementor-col-100 elementor-field-required">
+					<label for="form-field-email" class="elementor-field-label elementor-screen-only">Email</label><input size="1" type="email" name="form_fields[email]" id="form-field-email" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Email" required="required" aria-required="true">				</div>
+								<div class="elementor-field-group elementor-column elementor-field-type-submit elementor-col-100">
+					<button type="submit" class="elementor-button elementor-size-sm">
+						<span >
+																						<span class="elementor-button-text">Iscriviti</span>
+													</span>
+					</button>
+				</div>
+			</div>
+		</form>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-e261748 elementor-widget elementor-widget-spacer" data-id="e261748" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+						</div>
+			</div>
+		</div>
+						</div>
+			</div>
+		</section>
+				<section class="elementor-element elementor-element-0c388d0 elementor-section-boxed elementor-section-height-default elementor-section-height-default elementor-section elementor-top-section" data-id="0c388d0" data-element_type="section" data-settings="{&quot;background_background&quot;:&quot;classic&quot;}">
+						<div class="elementor-container elementor-column-gap-default">
+				<div class="elementor-row">
+				<div class="elementor-element elementor-element-920d21c elementor-column elementor-col-33 elementor-top-column" data-id="920d21c" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-185e773 elementor-widget elementor-widget-spacer" data-id="185e773" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-14bf7bc elementor-widget elementor-widget-image" data-id="14bf7bc" data-element_type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-image">
+										<img width="825" height="282" src="https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi_oro-1024x350.png" class="attachment-large size-large" alt="" decoding="async" loading="lazy" srcset="https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi_oro-1024x350.png 1024w, https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi_oro-300x103.png 300w, https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi_oro-768x263.png 768w, https://ceraldicaffe.it/wp-content/uploads/2019/02/logo_ceraldi_oro.png 1225w" sizes="(max-width: 825px) 100vw, 825px" />											</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-b1fb3ff elementor-widget elementor-widget-spacer" data-id="b1fb3ff" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-a8c5b1a elementor-widget elementor-widget-spacer" data-id="a8c5b1a" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-1c441e0 elementor-widget elementor-widget-heading" data-id="1c441e0" data-element_type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+			<h2 class="elementor-heading-title elementor-size-default">Ceraldi Group Srl<br/><br/>
+Piazza Carità, 14 - 80134 Napoli NA <a href="tel:+390815523488">+39 0815523488</a><br/><a href="mailto:info@ceraldicaffe.it">info@ceraldicaffe.it</a>
+<br/><br/>
+P. Iva 045238331214<br/>
+</h2>		</div>
+				</div>
+				<div class="elementor-element elementor-element-49d9fc2 elementor-widget elementor-widget-spacer" data-id="49d9fc2" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-653f426 elementor-hidden-desktop elementor-hidden-tablet elementor-widget elementor-widget-heading" data-id="653f426" data-element_type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+			<div class="elementor-heading-title elementor-size-default"><a href="tel:+390815523488"><i class="fa fa-phone" aria-hidden="true" style="font-size:35px"></i><br/>Chiama</a></div>		</div>
+				</div>
+				<div class="elementor-element elementor-element-c195cd5 elementor-shape-square elementor-widget elementor-widget-social-icons" data-id="c195cd5" data-element_type="widget" data-widget_type="social-icons.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-social-icons-wrapper">
+							<a class="elementor-icon elementor-social-icon elementor-social-icon-facebook" href="https://www.facebook.com/ceraldicaffe/" target="_blank">
+					<span class="elementor-screen-only">Facebook</span>
+					<i class="fa fa-facebook"></i>
+				</a>
+							<a class="elementor-icon elementor-social-icon elementor-social-icon-instagram" href="https://www.instagram.com/ceraldicaffe/" target="_blank">
+					<span class="elementor-screen-only">Instagram</span>
+					<i class="fa fa-instagram"></i>
+				</a>
+							<a class="elementor-icon elementor-social-icon elementor-social-icon-linkedin" href="https://www.linkedin.com/company/13060048/admin/" target="_blank">
+					<span class="elementor-screen-only">Linkedin</span>
+					<i class="fa fa-linkedin"></i>
+				</a>
+					</div>
+				</div>
+				</div>
+						</div>
+			</div>
+		</div>
+				<div class="elementor-element elementor-element-6e59b86 elementor-column elementor-col-33 elementor-top-column" data-id="6e59b86" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-abe919e elementor-widget elementor-widget-spacer" data-id="abe919e" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-8345764 elementor-widget elementor-widget-spacer" data-id="8345764" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<section class="elementor-element elementor-element-af228ba elementor-section-boxed elementor-section-height-default elementor-section-height-default elementor-section elementor-inner-section" data-id="af228ba" data-element_type="section">
+						<div class="elementor-container elementor-column-gap-default">
+				<div class="elementor-row">
+				<div class="elementor-element elementor-element-6427e5b elementor-column elementor-col-50 elementor-inner-column" data-id="6427e5b" data-element_type="column">
+			<div class="elementor-column-wrap">
+					<div class="elementor-widget-wrap">
+						</div>
+			</div>
+		</div>
+				<div class="elementor-element elementor-element-f819666 elementor-column elementor-col-50 elementor-inner-column" data-id="f819666" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-a381536 elementor-widget elementor-widget-image" data-id="a381536" data-element_type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-image">
+										<img width="499" height="491" src="https://ceraldicaffe.it/wp-content/uploads/2019/02/footer_eccellenze.png" class="attachment-large size-large" alt="" decoding="async" loading="lazy" srcset="https://ceraldicaffe.it/wp-content/uploads/2019/02/footer_eccellenze.png 499w, https://ceraldicaffe.it/wp-content/uploads/2019/02/footer_eccellenze-300x295.png 300w" sizes="(max-width: 499px) 100vw, 499px" />											</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-7f3b459 elementor-widget elementor-widget-spacer" data-id="7f3b459" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-72f14f5 elementor-widget elementor-widget-image" data-id="72f14f5" data-element_type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-image">
+										<img width="499" height="152" src="https://ceraldicaffe.it/wp-content/uploads/2019/02/footer_gambero.png" class="attachment-large size-large" alt="" decoding="async" loading="lazy" srcset="https://ceraldicaffe.it/wp-content/uploads/2019/02/footer_gambero.png 499w, https://ceraldicaffe.it/wp-content/uploads/2019/02/footer_gambero-300x91.png 300w" sizes="(max-width: 499px) 100vw, 499px" />											</div>
+				</div>
+				</div>
+						</div>
+			</div>
+		</div>
+						</div>
+			</div>
+		</section>
+				<div class="elementor-element elementor-element-c9d9613 elementor-widget elementor-widget-spacer" data-id="c9d9613" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-afe322d elementor-widget elementor-widget-html" data-id="afe322d" data-element_type="widget" data-widget_type="html.default">
+				<div class="elementor-widget-container">
+			<div id="TA_certificateOfExcellence187" class="TA_certificateOfExcellence"><ul id="wYiCoZsU" class="TA_links ZtluHTR"><li id="gDHhb6y" class="fzCdoKcORP"><a target="_blank" href="https://www.tripadvisor.it/Restaurant_Review-g187785-d2695184-Reviews-Ceraldi_Caffe-Naples_Province_of_Naples_Campania.html"><img src="https://www.tripadvisor.it/img/cdsi/img2/awards/CoE2017_WidgetAsset-14348-2.png" alt="TripAdvisor" class="widCOEImg" id="CDSWIDCOELOGO"/></a></li></ul></div><script async src="https://www.jscache.com/wejs?wtype=certificateOfExcellence&amp;uniq=187&amp;locationId=2695184&amp;lang=it&amp;year=2018&amp;display_version=2" data-loadtrk onload="this.loadtrk=true"></script>		</div>
+				</div>
+						</div>
+			</div>
+		</div>
+				<div class="elementor-element elementor-element-8eac0c3 elementor-column elementor-col-33 elementor-top-column" data-id="8eac0c3" data-element_type="column">
+			<div class="elementor-column-wrap  elementor-element-populated">
+					<div class="elementor-widget-wrap">
+				<div class="elementor-element elementor-element-4d2a015 elementor-widget elementor-widget-spacer" data-id="4d2a015" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-3a2b671 elementor-widget elementor-widget-facebook-page" data-id="3a2b671" data-element_type="widget" data-widget_type="facebook-page.default">
+				<div class="elementor-widget-container">
+			<div class="elementor-facebook-widget fb-page" data-href="https://www.facebook.com/ceraldicaffe/" data-tabs="timeline,messages" data-height="400px" data-small-header="false" data-hide-cover="false" data-show-facepile="true" data-hide-cta="false" data-adapt-container-width="true" style="min-height: 1px;height:400px"></div>		</div>
+				</div>
+				<div class="elementor-element elementor-element-ca7a903 elementor-widget elementor-widget-spacer" data-id="ca7a903" data-element_type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+				</div>
+				</div>
+						</div>
+			</div>
+		</div>
+						</div>
+			</div>
+		</section>
+				<section class="elementor-element elementor-element-4b1f21d elementor-section-boxed elementor-section-height-default elementor-section-height-default elementor-section elementor-top-section" data-id="4b1f21d" data-element_type="section" data-settings="{&quot;background_background&quot;:&quot;classic&quot;}">
+						<div class="elementor-container elementor-column-gap-default">
+				<div class="elementor-row">
+				<div class="elementor-element elementor-element-f27c710 elementor-column elementor-col-100 elementor-top-column" data-id="f27c710" data-element_type="column">
+			<div class="elementor-column-wrap">
+					<div class="elementor-widget-wrap">
+						</div>
+			</div>
+		</div>
+						</div>
+			</div>
+		</section>
+						</div>
+			</div>
+		</div>
+		
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4/assets/js/bootstrap.bundle.min.js?ver=4.3.1' id='bootstrap4-bundle-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/themes/bootstrap-basic4/assets/js/main.js?ver=1.2.3' id='bootstrap-basic4-main-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor-pro/assets/lib/smartmenus/jquery.smartmenus.min.js?ver=1.0.1' id='smartmenus-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=2.5.15' id='elementor-frontend-modules-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor-pro/assets/lib/sticky/jquery.sticky.min.js?ver=2.5.8' id='elementor-sticky-js'></script>
+<script type='text/javascript' id='elementor-pro-frontend-js-before'>
+var ElementorProFrontendConfig = {"ajaxurl":"https:\/\/ceraldicaffe.it\/wp-admin\/admin-ajax.php","nonce":"bcf85dbc71","shareButtonsNetworks":{"facebook":{"title":"Facebook","has_counter":true},"twitter":{"title":"Twitter"},"google":{"title":"Google+","has_counter":true},"linkedin":{"title":"LinkedIn","has_counter":true},"pinterest":{"title":"Pinterest","has_counter":true},"reddit":{"title":"Reddit","has_counter":true},"vk":{"title":"VK","has_counter":true},"odnoklassniki":{"title":"OK","has_counter":true},"tumblr":{"title":"Tumblr"},"delicious":{"title":"Delicious"},"digg":{"title":"Digg"},"skype":{"title":"Skype"},"stumbleupon":{"title":"StumbleUpon","has_counter":true},"telegram":{"title":"Telegram"},"pocket":{"title":"Pocket","has_counter":true},"xing":{"title":"XING","has_counter":true},"whatsapp":{"title":"WhatsApp"},"email":{"title":"Email"},"print":{"title":"Print"}},"facebook_sdk":{"lang":"it_IT","app_id":""}};
+</script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor-pro/assets/js/frontend.min.js?ver=2.5.8' id='elementor-pro-frontend-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-includes/js/jquery/ui/core.min.js?ver=1.13.2' id='jquery-ui-core-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/lib/dialog/dialog.min.js?ver=4.7.1' id='elementor-dialog-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/lib/waypoints/waypoints.min.js?ver=4.0.2' id='elementor-waypoints-js'></script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/lib/swiper/swiper.min.js?ver=4.4.6' id='swiper-js'></script>
+<script type='text/javascript' id='elementor-frontend-js-before'>
+var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false},"is_rtl":false,"breakpoints":{"xs":0,"sm":480,"md":768,"lg":1025,"xl":1440,"xxl":1600},"version":"2.5.15","urls":{"assets":"https:\/\/ceraldicaffe.it\/wp-content\/plugins\/elementor\/assets\/"},"settings":{"general":{"elementor_global_image_lightbox":"yes","elementor_enable_lightbox_in_editor":"yes"}},"post":{"id":0,"title":"Pagina non trovata | Ceraldi Caff\u00e8","excerpt":""}};
+</script>
+<script type='text/javascript' src='https://ceraldicaffe.it/wp-content/plugins/elementor/assets/js/frontend.min.js?ver=2.5.15' id='elementor-frontend-js'></script>
+
+</body>
+</html>
