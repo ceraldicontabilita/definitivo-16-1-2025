@@ -139,6 +139,12 @@ from app.routers import (
     gestione_iva_speciale
 )
 
+# --- HACCP New System ---
+from app.routers.haccp_new import (
+    temperature_positive, temperature_negative,
+    chiusure, sanificazione
+)
+
 
 # =============================================================================
 # ROUTER REGISTRATION
