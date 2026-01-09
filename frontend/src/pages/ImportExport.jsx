@@ -591,7 +591,7 @@ export default function ImportExport() {
                 {/* Template Download Button */}
                 {imp.templateUrl && (
                   <a
-                    href={`${process.env.REACT_APP_BACKEND_URL}${imp.templateUrl}`}
+                    href={`${api.defaults.baseURL}${imp.templateUrl}`}
                     download
                     style={{
                       display: "flex",
