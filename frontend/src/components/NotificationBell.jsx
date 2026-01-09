@@ -11,7 +11,6 @@ export default function NotificationBell() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Fetch alerts
   const fetchAlerts = async () => {
     try {
       setLoading(true);
@@ -28,12 +27,10 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchAlerts();
-    // Refresh ogni 60 secondi
     const interval = setInterval(fetchAlerts, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -53,7 +50,8 @@ export default function NotificationBell() {
     }
   };
 
-  const resolveAlert = async (alertId) => {
+  const resolveAlert = async (alertId, e) => {
+    e.stopPropagation();
     try {
       await api.post(`/api/alerts/${alertId}/risolvi`);
       fetchAlerts();
@@ -65,22 +63,19 @@ export default function NotificationBell() {
   const getAlertIcon = (tipo) => {
     switch (tipo) {
       case "fornitore_senza_metodo_pagamento":
-        return <AlertTriangle size={16} className="text-amber-500" />;
+        return <AlertTriangle size={16} style={{ color: '#f59e0b' }} />;
       case "scadenza":
-        return <Bell size={16} className="text-red-500" />;
+        return <Bell size={16} style={{ color: '#ef4444' }} />;
       default:
-        return <Info size={16} className="text-blue-500" />;
+        return <Info size={16} style={{ color: '#3b82f6' }} />;
     }
   };
 
-  const getPriorityColor = (priorita) => {
+  const getPriorityBorder = (priorita) => {
     switch (priorita) {
-      case "alta":
-        return "border-l-red-500";
-      case "media":
-        return "border-l-amber-500";
-      default:
-        return "border-l-blue-500";
+      case "alta": return '#ef4444';
+      case "media": return '#f59e0b';
+      default: return '#3b82f6';
     }
   };
 
@@ -96,19 +91,19 @@ export default function NotificationBell() {
 
   return (
     <div style={{ position: 'relative' }} ref={dropdownRef}>
-      {/* Bell Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'relative',
           padding: '8px',
           borderRadius: '8px',
-          background: 'rgba(255,255,255,0.1)',
+          background: isOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          transition: 'background 0.2s'
         }}
         data-testid="notification-bell"
       >
@@ -128,14 +123,14 @@ export default function NotificationBell() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 4px'
+            padding: '0 4px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
           }}>
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div style={{
           position: 'absolute',
@@ -144,7 +139,7 @@ export default function NotificationBell() {
           width: '340px',
           backgroundColor: 'white',
           borderRadius: '12px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
           border: '1px solid #e5e7eb',
           zIndex: 99999,
           maxHeight: '70vh',
@@ -154,7 +149,7 @@ export default function NotificationBell() {
         }}>
           {/* Header */}
           <div style={{
-            padding: '12px 16px',
+            padding: '14px 16px',
             borderBottom: '1px solid #e5e7eb',
             display: 'flex',
             alignItems: 'center',
@@ -173,58 +168,108 @@ export default function NotificationBell() {
               <Bell size={16} />
               Notifiche
               {unreadCount > 0 && (
-                <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
+                <span style={{
+                  background: '#fee2e2',
+                  color: '#dc2626',
+                  fontSize: '11px',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontWeight: 600
+                }}>
                   {unreadCount} nuove
                 </span>
               )}
             </h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+              style={{
+                padding: '4px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: '6px',
+                display: 'flex'
+              }}
             >
-              <X size={18} className="text-gray-500" />
+              <X size={18} style={{ color: '#6b7280' }} />
             </button>
           </div>
 
           {/* Alerts List */}
-          <div className="overflow-y-auto flex-1">
+          <div style={{ overflowY: 'auto', flex: 1 }}>
             {loading ? (
-              <div className="p-4 text-center text-gray-500">
+              <div style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
                 Caricamento...
               </div>
             ) : alerts.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Bell size={32} className="mx-auto mb-2 opacity-30" />
-                <p>Nessuna notifica</p>
+              <div style={{ padding: '40px 24px', textAlign: 'center', color: '#9ca3af' }}>
+                <Bell size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
+                <p style={{ margin: 0 }}>Nessuna notifica</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div>
                 {alerts.map((alert) => (
                   <div
                     key={alert.id}
                     onClick={() => handleAlertClick(alert)}
-                    className={`p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors border-l-4 ${getPriorityColor(alert.priorita)} ${!alert.letto ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid #f1f5f9',
+                      cursor: 'pointer',
+                      borderLeft: `4px solid ${getPriorityBorder(alert.priorita)}`,
+                      background: !alert.letto ? '#eff6ff' : 'white',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = !alert.letto ? '#eff6ff' : 'white'}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <div style={{ marginTop: '2px' }}>
                         {getAlertIcon(alert.tipo)}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${!alert.letto ? "font-semibold" : ""} text-gray-900 dark:text-white truncate`}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ 
+                          margin: 0, 
+                          fontSize: '13px', 
+                          fontWeight: !alert.letto ? 600 : 400,
+                          color: '#1f2937',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
                           {alert.titolo}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                        <p style={{ 
+                          margin: '4px 0 0', 
+                          fontSize: '12px', 
+                          color: '#6b7280',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
                           {alert.messaggio}
                         </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-gray-400">
+                        <div style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '8px', 
+                          marginTop: '6px' 
+                        }}>
+                          <span style={{ fontSize: '11px', color: '#9ca3af' }}>
                             {new Date(alert.created_at).toLocaleDateString("it-IT")}
                           </span>
                           {alert.link && (
-                            <ExternalLink size={12} className="text-gray-400" />
+                            <ExternalLink size={12} style={{ color: '#9ca3af' }} />
                           )}
                           {alert.risolto && (
-                            <span className="text-xs text-green-600 flex items-center gap-1">
+                            <span style={{ 
+                              fontSize: '11px', 
+                              color: '#16a34a',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}>
                               <CheckCircle size={12} /> Risolto
                             </span>
                           )}
@@ -232,11 +277,15 @@ export default function NotificationBell() {
                       </div>
                       {!alert.risolto && (
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            resolveAlert(alert.id);
+                          onClick={(e) => resolveAlert(alert.id, e)}
+                          style={{
+                            padding: '6px',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderRadius: '6px',
+                            color: '#16a34a'
                           }}
-                          className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600"
                           title="Segna come risolto"
                         >
                           <CheckCircle size={16} />
@@ -251,13 +300,25 @@ export default function NotificationBell() {
 
           {/* Footer */}
           {alerts.length > 0 && (
-            <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <div style={{
+              padding: '10px 16px',
+              borderTop: '1px solid #e5e7eb',
+              background: '#f8fafc'
+            }}>
               <button
                 onClick={() => {
                   navigate("/admin?tab=alerts");
                   setIsOpen(false);
                 }}
-                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#2563eb',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  padding: 0
+                }}
               >
                 Vedi tutte le notifiche →
               </button>
