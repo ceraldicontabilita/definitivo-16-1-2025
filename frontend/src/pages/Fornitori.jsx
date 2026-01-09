@@ -344,8 +344,8 @@ function SupplierModal({ isOpen, onClose, supplier, onSave, saving }) {
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
+    </Portal>
   );
 }
 
