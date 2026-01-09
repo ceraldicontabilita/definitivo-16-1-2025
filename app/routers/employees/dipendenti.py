@@ -1393,3 +1393,220 @@ async def import_contratti_excel(file: UploadFile = File(...)) -> Dict[str, Any]
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Errore lettura file: {str(e)}")
+
+
+
+# ============== IMPORT BUSTE PAGA ==============
+
+@router.get("/buste-paga/scan")
+async def scan_buste_paga_folders() -> Dict[str, Any]:
+    """
+    Scansiona le cartelle delle buste paga e restituisce i progressivi trovati.
+    """
+    import os
+    from app.utils.busta_paga_parser import scan_all_dipendenti
+    
+    base_path = "/app/documents/buste_paga"
+    
+    if not os.path.exists(base_path):
+        return {
+            "success": False,
+            "error": "Cartella buste paga non trovata",
+            "path": base_path
+        }
+    
+    # Scansiona tutte le cartelle
+    progressivi = scan_all_dipendenti(base_path)
+    
+    # Lista cartelle disponibili
+    cartelle = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d))]
+    
+    return {
+        "success": True,
+        "cartelle_trovate": len(cartelle),
+        "dipendenti_con_progressivi": len(progressivi),
+        "cartelle": cartelle,
+        "progressivi": progressivi
+    }
+
+
+@router.post("/buste-paga/import")
+async def import_buste_paga_to_dipendenti(
+    match_mode: str = Query("cf", description="Modalità matching: cf (codice fiscale), nome (nome completo)"),
+    dry_run: bool = Query(True, description="Se true, mostra solo le corrispondenze senza aggiornare")
+) -> Dict[str, Any]:
+    """
+    Importa i progressivi dalle buste paga nei record dei dipendenti.
+    
+    - match_mode: "cf" per codice fiscale, "nome" per nome completo
+    - dry_run: se True, mostra solo le corrispondenze trovate senza aggiornare
+    """
+    import os
+    from app.utils.busta_paga_parser import scan_all_dipendenti, get_latest_progressivi
+    
+    db = Database.get_db()
+    base_path = "/app/documents/buste_paga"
+    
+    # Carica tutti i dipendenti dal DB
+    dipendenti_db = await db[Collections.EMPLOYEES].find({}, {"_id": 0}).to_list(1000)
+    
+    # Scansiona le buste paga
+    progressivi_bp = scan_all_dipendenti(base_path)
+    
+    matches = []
+    no_matches = []
+    updates = []
+    errors = []
+    
+    for folder_name, progressivi in progressivi_bp.items():
+        nome_normalizzato = folder_name.lower().replace('_', ' ')
+        matched = False
+        
+        for dip in dipendenti_db:
+            dip_nome = (dip.get('nome_completo') or f"{dip.get('nome', '')} {dip.get('cognome', '')}").lower().strip()
+            dip_cf = (dip.get('codice_fiscale') or '').upper()
+            
+            # Match per nome
+            nome_match = False
+            if match_mode == "nome":
+                # Prova match esatto o parziale
+                nome_match = (nome_normalizzato == dip_nome or 
+                             nome_normalizzato in dip_nome or 
+                             dip_nome in nome_normalizzato)
+                
+                # Prova anche invertendo nome/cognome
+                if not nome_match:
+                    parts = nome_normalizzato.split()
+                    if len(parts) >= 2:
+                        inverted = f"{parts[-1]} {' '.join(parts[:-1])}"
+                        nome_match = inverted == dip_nome or inverted in dip_nome
+            
+            # Match per CF se disponibile
+            cf_match = False
+            if match_mode == "cf" and progressivi.get('codice_fiscale'):
+                cf_match = progressivi.get('codice_fiscale', '').upper() == dip_cf
+            
+            if nome_match or cf_match:
+                matched = True
+                match_info = {
+                    "cartella": folder_name,
+                    "dipendente_db": dip.get('nome_completo') or f"{dip.get('nome', '')} {dip.get('cognome', '')}",
+                    "dipendente_id": dip.get('id'),
+                    "match_type": "cf" if cf_match else "nome",
+                    "progressivi": progressivi
+                }
+                matches.append(match_info)
+                
+                if not dry_run:
+                    # Aggiorna il dipendente con i progressivi
+                    try:
+                        update_data = {
+                            "paga_base": progressivi.get('paga_base', 0),
+                            "contingenza": progressivi.get('contingenza', 0),
+                            "progressivi": {
+                                "tfr_accantonato": progressivi.get('tfr_accantonato', 0),
+                                "tfr_quota_anno": progressivi.get('tfr_quota_anno', 0),
+                                "ferie_maturate": progressivi.get('ferie_maturate', 0),
+                                "ferie_godute": progressivi.get('ferie_godute', 0),
+                                "ferie_residue": progressivi.get('ferie_residue', 0),
+                                "permessi_maturati": progressivi.get('permessi_maturati', 0),
+                                "permessi_goduti": progressivi.get('permessi_goduti', 0),
+                                "permessi_residui": progressivi.get('permessi_residui', 0),
+                                "rol_maturati": progressivi.get('rol_maturati', 0),
+                                "rol_goduti": progressivi.get('rol_goduti', 0),
+                                "rol_residui": progressivi.get('rol_residui', 0),
+                                "anno_riferimento": progressivi.get('anno_riferimento'),
+                                "mese_riferimento": progressivi.get('mese_riferimento'),
+                                "fonte_busta_paga": progressivi.get('fonte')
+                            },
+                            "updated_at": datetime.utcnow().isoformat(),
+                            "progressivi_importati_at": datetime.utcnow().isoformat()
+                        }
+                        
+                        await db[Collections.EMPLOYEES].update_one(
+                            {"id": dip.get('id')},
+                            {"$set": update_data}
+                        )
+                        updates.append(dip.get('id'))
+                    except Exception as e:
+                        errors.append({"id": dip.get('id'), "error": str(e)})
+                
+                break
+        
+        if not matched:
+            no_matches.append(folder_name)
+    
+    return {
+        "success": True,
+        "dry_run": dry_run,
+        "match_mode": match_mode,
+        "totale_cartelle": len(progressivi_bp),
+        "matches_trovati": len(matches),
+        "non_trovati": len(no_matches),
+        "aggiornati": len(updates) if not dry_run else 0,
+        "errori": len(errors),
+        "matches": matches,
+        "no_matches": no_matches,
+        "errors": errors if errors else None
+    }
+
+
+@router.get("/buste-paga/dipendente/{dipendente_id}")
+async def get_buste_paga_dipendente(dipendente_id: str) -> Dict[str, Any]:
+    """
+    Restituisce tutte le buste paga trovate per un dipendente specifico.
+    Cerca per nome o CF nelle cartelle delle buste paga.
+    """
+    import os
+    from app.utils.busta_paga_parser import scan_dipendente_folder
+    
+    db = Database.get_db()
+    
+    # Trova il dipendente nel DB
+    dipendente = await db[Collections.EMPLOYEES].find_one(
+        {"$or": [{"id": dipendente_id}, {"codice_fiscale": dipendente_id}]},
+        {"_id": 0}
+    )
+    
+    if not dipendente:
+        raise HTTPException(status_code=404, detail="Dipendente non trovato")
+    
+    nome_completo = dipendente.get('nome_completo') or f"{dipendente.get('nome', '')} {dipendente.get('cognome', '')}"
+    
+    # Cerca la cartella corrispondente
+    base_path = "/app/documents/buste_paga"
+    cartelle = os.listdir(base_path) if os.path.exists(base_path) else []
+    
+    cartella_trovata = None
+    for cartella in cartelle:
+        nome_cartella = cartella.lower().replace('_', ' ')
+        if nome_completo.lower() in nome_cartella or nome_cartella in nome_completo.lower():
+            cartella_trovata = cartella
+            break
+        # Prova anche invertendo
+        parts = nome_completo.lower().split()
+        if len(parts) >= 2:
+            inverted = f"{parts[-1]} {' '.join(parts[:-1])}"
+            if inverted in nome_cartella or nome_cartella in inverted:
+                cartella_trovata = cartella
+                break
+    
+    if not cartella_trovata:
+        return {
+            "success": False,
+            "dipendente": nome_completo,
+            "message": "Cartella buste paga non trovata per questo dipendente",
+            "cartelle_disponibili": cartelle[:20]
+        }
+    
+    # Scansiona la cartella
+    folder_path = os.path.join(base_path, cartella_trovata)
+    buste = scan_dipendente_folder(folder_path)
+    
+    return {
+        "success": True,
+        "dipendente": nome_completo,
+        "cartella": cartella_trovata,
+        "totale_buste": len(buste),
+        "buste": buste
+    }
