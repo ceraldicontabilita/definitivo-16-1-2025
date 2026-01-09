@@ -700,3 +700,142 @@ async def reset_riconciliazione():
     
     return {"success": True, "reset": result.modified_count}
 
+
+@router.patch("/transfers/{transfer_id}")
+async def update_transfer(transfer_id: str, data: Dict[str, Any]):
+    """Aggiorna campi di un bonifico (note, associazione cedolino, etc.)."""
+    db = Database.get_db()
+    
+    # Campi permessi per l'aggiornamento
+    allowed_fields = ["note", "cedolino_id", "dipendente_id", "categoria"]
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nessun campo valido da aggiornare")
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.bonifici_transfers.update_one(
+        {"id": transfer_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bonifico non trovato")
+    
+    return {"success": True, "updated": True}
+
+
+@router.get("/download-zip/{year}")
+async def download_bonifici_zip(year: str):
+    """
+    Esporta tutti i bonifici di un anno in formato ZIP (XLSX + CSV).
+    """
+    db = Database.get_db()
+    
+    # Recupera bonifici dell'anno
+    transfers = await db.bonifici_transfers.find(
+        {"data": {"$regex": f"^{year}-"}},
+        {"_id": 0}
+    ).sort("data", 1).to_list(50000)
+    
+    if not transfers:
+        raise HTTPException(status_code=404, detail=f"Nessun bonifico trovato per l'anno {year}")
+    
+    # Crea ZIP in memoria
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # 1. XLSX
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Bonifici {year}"
+        
+        # Header
+        headers = ['Data', 'Importo €', 'Beneficiario', 'IBAN Beneficiario', 'Causale', 'CRO/TRN', 'Riconciliato', 'Note']
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
+            cell.font = Font(bold=True, color="FFFFFF")
+        
+        # Dati
+        totale = 0
+        for row, t in enumerate(transfers, 2):
+            importo = t.get('importo', 0)
+            totale += importo
+            ws.cell(row=row, column=1, value=t.get('data', '')[:10])
+            ws.cell(row=row, column=2, value=round(importo, 2))
+            ws.cell(row=row, column=3, value=(t.get('beneficiario') or {}).get('nome', ''))
+            ws.cell(row=row, column=4, value=(t.get('beneficiario') or {}).get('iban', ''))
+            ws.cell(row=row, column=5, value=t.get('causale', ''))
+            ws.cell(row=row, column=6, value=t.get('cro_trn', ''))
+            ws.cell(row=row, column=7, value='SI' if t.get('riconciliato') else 'NO')
+            ws.cell(row=row, column=8, value=t.get('note', ''))
+        
+        # Totale
+        ws.cell(row=len(transfers)+2, column=1, value='TOTALE')
+        ws.cell(row=len(transfers)+2, column=2, value=round(totale, 2))
+        ws.cell(row=len(transfers)+2, column=1).font = Font(bold=True)
+        ws.cell(row=len(transfers)+2, column=2).font = Font(bold=True)
+        
+        # Adatta larghezza colonne
+        ws.column_dimensions['A'].width = 12
+        ws.column_dimensions['B'].width = 12
+        ws.column_dimensions['C'].width = 30
+        ws.column_dimensions['D'].width = 30
+        ws.column_dimensions['E'].width = 40
+        ws.column_dimensions['F'].width = 20
+        ws.column_dimensions['G'].width = 12
+        ws.column_dimensions['H'].width = 30
+        
+        xlsx_buffer = io.BytesIO()
+        wb.save(xlsx_buffer)
+        xlsx_buffer.seek(0)
+        zf.writestr(f"bonifici_{year}.xlsx", xlsx_buffer.read())
+        
+        # 2. CSV
+        import csv
+        csv_buffer = io.StringIO()
+        writer = csv.writer(csv_buffer, delimiter=';')
+        writer.writerow(headers)
+        for t in transfers:
+            writer.writerow([
+                t.get('data', '')[:10],
+                t.get('importo', 0),
+                (t.get('beneficiario') or {}).get('nome', ''),
+                (t.get('beneficiario') or {}).get('iban', ''),
+                t.get('causale', ''),
+                t.get('cro_trn', ''),
+                'SI' if t.get('riconciliato') else 'NO',
+                t.get('note', '')
+            ])
+        zf.writestr(f"bonifici_{year}.csv", csv_buffer.getvalue().encode('utf-8'))
+        
+        # 3. Riepilogo TXT
+        riconciliati = sum(1 for t in transfers if t.get('riconciliato'))
+        riepilogo = f"""
+RIEPILOGO BONIFICI {year}
+========================
+
+Totale bonifici: {len(transfers)}
+Totale importo: € {totale:,.2f}
+
+Riconciliati: {riconciliati}
+Non riconciliati: {len(transfers) - riconciliati}
+
+Generato il: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+"""
+        zf.writestr(f"riepilogo_{year}.txt", riepilogo.encode('utf-8'))
+    
+    zip_buffer.seek(0)
+    
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename=bonifici_{year}.zip"}
+    )
+
