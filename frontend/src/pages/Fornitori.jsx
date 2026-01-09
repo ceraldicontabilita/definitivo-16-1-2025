@@ -692,8 +692,8 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
       </div>
 
       {/* Menu dropdown con Portal - fuori dalla card */}
-      {showMetodoMenu && ReactDOM.createPortal(
-        <>
+      {showMetodoMenu && (
+        <Portal>
           {/* Overlay per chiudere */}
           <div 
             style={{ 
@@ -755,8 +755,7 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
               </button>
             ))}
           </div>
-        </>,
-        document.body
+        </Portal>
       )}
     </div>
   );
