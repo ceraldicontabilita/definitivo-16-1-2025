@@ -52,13 +52,13 @@ async def get_lotti(search: Optional[str] = Query(None)):
             {"prodotto": {"$regex": search, "$options": "i"}},
             {"numero_lotto": {"$regex": search, "$options": "i"}}
         ]
-    items = await db.lotti.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    items = await Database.get_db()["lotti"].find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return items
 
 @router.get("/{lotto_id}")
 async def get_lotto(lotto_id: str):
     """Ottiene un lotto per ID"""
-    item = await db.lotti.find_one({"id": lotto_id}, {"_id": 0})
+    item = await Database.get_db()["lotti"].find_one({"id": lotto_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Lotto non trovato")
     return item
@@ -69,13 +69,13 @@ async def create_lotto(item: LottoCreate):
     data = item.model_dump()
     data["id"] = str(uuid.uuid4())
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-    await db.lotti.insert_one(data)
+    await Database.get_db()["lotti"].insert_one(data)
     return data
 
 @router.delete("/{lotto_id}")
 async def delete_lotto(lotto_id: str):
     """Elimina un lotto"""
-    result = await db.lotti.delete_one({"id": lotto_id})
+    result = await Database.get_db()["lotti"].delete_one({"id": lotto_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Lotto non trovato")
     return {"success": True}

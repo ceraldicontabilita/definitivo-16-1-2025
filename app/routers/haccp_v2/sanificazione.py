@@ -201,7 +201,7 @@ def genera_calendario_sanificazione_anno(anno: int) -> dict:
 
 async def get_or_create_scheda_apparecchi(anno: int) -> dict:
     """Ottiene o crea la scheda annuale di sanificazione apparecchi"""
-    scheda = await db.sanificazione_apparecchi.find_one(
+    scheda = await Database.get_db()["sanificazione_apparecchi"].find_one(
         {"anno": anno},
         {"_id": 0}
     )
@@ -221,7 +221,7 @@ async def get_or_create_scheda_apparecchi(anno: int) -> dict:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.sanificazione_apparecchi.insert_one(nuova_scheda)
+        await Database.get_db()["sanificazione_apparecchi"].insert_one(nuova_scheda)
         scheda = nuova_scheda
     
     if "_id" in scheda:
@@ -232,7 +232,7 @@ async def get_or_create_scheda_apparecchi(anno: int) -> dict:
 
 async def get_or_create_scheda(mese: int, anno: int) -> dict:
     """Ottiene o crea la scheda mensile di sanificazione attrezzature"""
-    scheda = await db.sanificazione_schede.find_one(
+    scheda = await Database.get_db()["sanificazione_schede"].find_one(
         {"mese": mese, "anno": anno},
         {"_id": 0}
     )
@@ -250,7 +250,7 @@ async def get_or_create_scheda(mese: int, anno: int) -> dict:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.sanificazione_schede.insert_one(nuova_scheda)
+        await Database.get_db()["sanificazione_schede"].insert_one(nuova_scheda)
         scheda = nuova_scheda
     
     if "_id" in scheda:
@@ -288,7 +288,7 @@ async def registra_sanificazione(
     if operatore:
         scheda["operatore_responsabile"] = operatore
     
-    await db.sanificazione_schede.update_one(
+    await Database.get_db()["sanificazione_schede"].update_one(
         {"mese": mese, "anno": anno},
         {"$set": scheda}
     )
@@ -310,7 +310,7 @@ async def aggiorna_scheda_completa(
     if data.operatore:
         scheda["operatore_responsabile"] = data.operatore
     
-    await db.sanificazione_schede.update_one(
+    await Database.get_db()["sanificazione_schede"].update_one(
         {"mese": mese, "anno": anno},
         {"$set": scheda}
     )
@@ -335,7 +335,7 @@ async def registra_giorno_completo(
     if operatore:
         scheda["operatore_responsabile"] = operatore
     
-    await db.sanificazione_schede.update_one(
+    await Database.get_db()["sanificazione_schede"].update_one(
         {"mese": mese, "anno": anno},
         {"$set": scheda}
     )
@@ -364,7 +364,7 @@ async def get_storico(anno: int = None):
     if anno:
         query["anno"] = anno
     
-    schede = await db.sanificazione_schede.find(query, {"_id": 0}).sort([("anno", -1), ("mese", -1)]).to_list(100)
+    schede = await Database.get_db()["sanificazione_schede"].find(query, {"_id": 0}).sort([("anno", -1), ("mese", -1)]).to_list(100)
     return schede
 
 
@@ -440,7 +440,7 @@ async def popola_attrezzature(start_anno: int = 2022, end_anno: int = 2025):
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             
-            await db.sanificazione_schede.update_one(
+            await Database.get_db()["sanificazione_schede"].update_one(
                 {"mese": mese, "anno": anno},
                 {"$set": scheda},
                 upsert=True
@@ -574,7 +574,7 @@ async def registra_sanificazione_apparecchio(
     
     scheda["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.sanificazione_apparecchi.update_one(
+    await Database.get_db()["sanificazione_apparecchi"].update_one(
         {"anno": anno},
         {"$set": scheda}
     )
@@ -591,7 +591,7 @@ async def rigenera_calendario_apparecchi(anno: int):
     """Rigenera il calendario sanificazioni apparecchi per l'anno"""
     
     # Elimina scheda esistente
-    await db.sanificazione_apparecchi.delete_one({"anno": anno})
+    await Database.get_db()["sanificazione_apparecchi"].delete_one({"anno": anno})
     
     # Ricrea
     scheda = await get_or_create_scheda_apparecchi(anno)
@@ -678,7 +678,7 @@ async def export_pdf_sanificazione(anno: int, mese: int):
     Genera report PDF della sanificazione attrezzature per il mese.
     Conforme a Reg. CE 852/2004.
     """
-    scheda = await db.sanificazione_schede.find_one(
+    scheda = await Database.get_db()["sanificazione_schede"].find_one(
         {"mese": mese, "anno": anno},
         {"_id": 0}
     )

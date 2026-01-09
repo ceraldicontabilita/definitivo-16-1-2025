@@ -82,11 +82,11 @@ async def get_materie_prime(
         query["azienda"] = {"$regex": fornitore, "$options": "i"}
     
     # Escludi fornitori esclusi
-    fornitori_esclusi = await db.fornitori.distinct("nome", {"escluso": True})
+    fornitori_esclusi = await Database.get_db()["fornitori"].distinct("nome", {"escluso": True})
     if fornitori_esclusi:
         query["azienda"] = {"$nin": fornitori_esclusi}
     
-    items = await db.materie_prime.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    items = await Database.get_db()["materie_prime"].find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return items
 
 @router.get("/storico")
@@ -102,7 +102,7 @@ async def get_storico_materie_prime(
     if fornitore:
         query["azienda"] = {"$regex": fornitore, "$options": "i"}
     
-    items = await db.materie_prime.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
+    items = await Database.get_db()["materie_prime"].find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
     return items
 
 @router.post("", response_model=MateriaPrima)
@@ -116,7 +116,7 @@ async def create_materia_prima(item: MateriaPrimaCreate):
     if data["allergeni"] == "non contiene allergeni":
         allergeni = rileva_allergeni_materia(data["materia_prima"])
         # Verifica dizionario personalizzato
-        custom = await db.allergeni_personalizzati.find_one(
+        custom = await Database.get_db()["allergeni_personalizzati"].find_one(
             {"materia_prima": {"$regex": f"^{data['materia_prima'][:20]}", "$options": "i"}},
             {"_id": 0}
         )
@@ -124,24 +124,24 @@ async def create_materia_prima(item: MateriaPrimaCreate):
             allergeni = custom.get("allergeni", allergeni)
         data["allergeni"] = allergeni
     
-    await db.materie_prime.insert_one(data)
+    await Database.get_db()["materie_prime"].insert_one(data)
     return data
 
 @router.put("/{item_id}/allergeni")
 async def update_allergeni_materia_prima(item_id: str, allergeni: str = Query(...)):
     """Aggiorna allergeni di una materia prima e salva nel dizionario"""
-    item = await db.materie_prime.find_one({"id": item_id}, {"_id": 0})
+    item = await Database.get_db()["materie_prime"].find_one({"id": item_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Materia prima non trovata")
     
     # Aggiorna la materia prima
-    await db.materie_prime.update_one(
+    await Database.get_db()["materie_prime"].update_one(
         {"id": item_id},
         {"$set": {"allergeni": allergeni}}
     )
     
     # Salva nel dizionario personalizzato
-    await db.allergeni_personalizzati.update_one(
+    await Database.get_db()["allergeni_personalizzati"].update_one(
         {"materia_prima": item["materia_prima"]},
         {
             "$set": {
@@ -158,7 +158,7 @@ async def update_allergeni_materia_prima(item_id: str, allergeni: str = Query(..
 @router.delete("/{item_id}")
 async def delete_materia_prima(item_id: str):
     """Elimina una materia prima"""
-    result = await db.materie_prime.delete_one({"id": item_id})
+    result = await Database.get_db()["materie_prime"].delete_one({"id": item_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Materia prima non trovata")
     return {"success": True}

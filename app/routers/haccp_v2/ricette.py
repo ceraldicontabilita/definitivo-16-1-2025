@@ -43,13 +43,13 @@ async def get_ricette(search: Optional[str] = Query(None)):
     query = {}
     if search:
         query["nome"] = {"$regex": search, "$options": "i"}
-    items = await db.ricette.find(query, {"_id": 0}).to_list(1000)
+    items = await Database.get_db()["ricette"].find(query, {"_id": 0}).to_list(1000)
     return items
 
 @router.get("/{ricetta_id}", response_model=Ricetta)
 async def get_ricetta(ricetta_id: str):
     """Ottiene una ricetta per ID"""
-    item = await db.ricette.find_one({"id": ricetta_id}, {"_id": 0})
+    item = await Database.get_db()["ricette"].find_one({"id": ricetta_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Ricetta non trovata")
     return item
@@ -60,14 +60,14 @@ async def create_ricetta(item: RicettaCreate):
     data = item.model_dump()
     data["id"] = str(uuid.uuid4())
     data["created_at"] = datetime.now(timezone.utc).isoformat()
-    await db.ricette.insert_one(data)
+    await Database.get_db()["ricette"].insert_one(data)
     return data
 
 @router.put("/{ricetta_id}", response_model=Ricetta)
 async def update_ricetta(ricetta_id: str, item: RicettaCreate):
     """Aggiorna una ricetta esistente"""
     data = item.model_dump()
-    result = await db.ricette.update_one(
+    result = await Database.get_db()["ricette"].update_one(
         {"id": ricetta_id},
         {"$set": data}
     )
@@ -78,7 +78,7 @@ async def update_ricetta(ricetta_id: str, item: RicettaCreate):
 @router.delete("/{ricetta_id}")
 async def delete_ricetta(ricetta_id: str):
     """Elimina una ricetta"""
-    result = await db.ricette.delete_one({"id": ricetta_id})
+    result = await Database.get_db()["ricette"].delete_one({"id": ricetta_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Ricetta non trovata")
     return {"success": True}
@@ -89,7 +89,7 @@ async def pulisci_ingredienti_ricette():
     if not pulisci_nome_ingrediente:
         return {"success": False, "message": "Funzione di pulizia non configurata"}
     
-    ricette = await db.ricette.find({}, {"_id": 0}).to_list(1000)
+    ricette = await Database.get_db()["ricette"].find({}, {"_id": 0}).to_list(1000)
     aggiornate = 0
     
     for ricetta in ricette:
@@ -103,7 +103,7 @@ async def pulisci_ingredienti_ricette():
             ingredienti_puliti.append(ing_pulito)
         
         if modificata:
-            await db.ricette.update_one(
+            await Database.get_db()["ricette"].update_one(
                 {"id": ricetta["id"]},
                 {"$set": {"ingredienti": ingredienti_puliti}}
             )

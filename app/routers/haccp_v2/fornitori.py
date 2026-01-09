@@ -19,10 +19,10 @@ def set_database(database):
 async def get_fornitori():
     """Lista fornitori con statistiche"""
     # Ottieni tutti i fornitori unici dalle materie prime
-    fornitori_mp = await db.materie_prime.distinct("azienda")
+    fornitori_mp = await Database.get_db()["materie_prime"].distinct("azienda")
     
     # Ottieni info sui fornitori esclusi
-    fornitori_db = await db.fornitori.find({}, {"_id": 0}).to_list(1000)
+    fornitori_db = await Database.get_db()["fornitori"].find({}, {"_id": 0}).to_list(1000)
     fornitori_map = {f["nome"]: f for f in fornitori_db}
     
     result = []
@@ -30,7 +30,7 @@ async def get_fornitori():
         if nome:
             info = fornitori_map.get(nome, {})
             # Conta fatture
-            count = await db.materie_prime.count_documents({"azienda": nome})
+            count = await Database.get_db()["materie_prime"].count_documents({"azienda": nome})
             result.append({
                 "nome": nome,
                 "escluso": info.get("escluso", False),
@@ -45,7 +45,7 @@ async def get_fornitori():
 @router.post("/escludi")
 async def toggle_esclusione_fornitore(nome: str = Query(...), escludi: bool = Query(...)):
     """Attiva/disattiva esclusione fornitore"""
-    await db.fornitori.update_one(
+    await Database.get_db()["fornitori"].update_one(
         {"nome": nome},
         {
             "$set": {
@@ -61,13 +61,13 @@ async def toggle_esclusione_fornitore(nome: str = Query(...), escludi: bool = Qu
 @router.get("/esclusi")
 async def get_fornitori_esclusi():
     """Lista fornitori esclusi"""
-    fornitori = await db.fornitori.find({"escluso": True}, {"_id": 0}).to_list(100)
+    fornitori = await Database.get_db()["fornitori"].find({"escluso": True}, {"_id": 0}).to_list(100)
     return [f["nome"] for f in fornitori]
 
 @router.post("/note")
 async def aggiorna_note_fornitore(nome: str = Query(...), note: str = Query("")):
     """Aggiorna note di un fornitore"""
-    await db.fornitori.update_one(
+    await Database.get_db()["fornitori"].update_one(
         {"nome": nome},
         {
             "$set": {

@@ -223,7 +223,7 @@ async def get_tutte_chiusure(anno: int):
     stati_speciali = genera_stati_speciali_random(anno)
     
     # Chiusure custom dal DB
-    chiusure_custom = await db.chiusure_custom.find({"anno": anno}, {"_id": 0}).to_list(100)
+    chiusure_custom = await Database.get_db()["chiusure_custom"].find({"anno": anno}, {"_id": 0}).to_list(100)
     
     # Prepara dizionario per lookup veloce
     chiusure_dict = {}
@@ -343,7 +343,7 @@ async def aggiungi_chiusura_custom(chiusura: ChiusuraCustom, anno: int = Query(.
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.chiusure_custom.insert_one(doc)
+    await Database.get_db()["chiusure_custom"].insert_one(doc)
     del doc["_id"]
     
     return {"success": True, "chiusura": doc}
@@ -351,7 +351,7 @@ async def aggiungi_chiusura_custom(chiusura: ChiusuraCustom, anno: int = Query(.
 @router.delete("/custom/{data}")
 async def rimuovi_chiusura_custom(data: str, anno: int = Query(...)):
     """Rimuove una chiusura custom"""
-    result = await db.chiusure_custom.delete_one({"anno": anno, "data": data})
+    result = await Database.get_db()["chiusure_custom"].delete_one({"anno": anno, "data": data})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Chiusura non trovata")

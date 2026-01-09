@@ -108,14 +108,14 @@ async def get_anomalie(
     if categoria:
         query["categoria"] = categoria
     
-    anomalie = await db.anomalie.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    anomalie = await Database.get_db()["anomalie"].find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
     return anomalie
 
 
 @router.get("/{anomalia_id}")
 async def get_anomalia(anomalia_id: str):
     """Ottiene una singola anomalia"""
-    anomalia = await db.anomalie.find_one({"id": anomalia_id}, {"_id": 0})
+    anomalia = await Database.get_db()["anomalie"].find_one({"id": anomalia_id}, {"_id": 0})
     if not anomalia:
         raise HTTPException(status_code=404, detail="Anomalia non trovata")
     return anomalia
@@ -144,7 +144,7 @@ async def registra_anomalia(data: NuovaAnomaliaRequest):
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.anomalie.insert_one(nuova_anomalia)
+    await Database.get_db()["anomalie"].insert_one(nuova_anomalia)
     
     # Rimuovi _id per la risposta
     if "_id" in nuova_anomalia:
@@ -156,7 +156,7 @@ async def registra_anomalia(data: NuovaAnomaliaRequest):
 @router.put("/{anomalia_id}")
 async def aggiorna_anomalia(anomalia_id: str, data: AggiornaAnomaliaRequest):
     """Aggiorna un'anomalia esistente"""
-    anomalia = await db.anomalie.find_one({"id": anomalia_id})
+    anomalia = await Database.get_db()["anomalie"].find_one({"id": anomalia_id})
     if not anomalia:
         raise HTTPException(status_code=404, detail="Anomalia non trovata")
     
@@ -176,7 +176,7 @@ async def aggiorna_anomalia(anomalia_id: str, data: AggiornaAnomaliaRequest):
     if data.note is not None:
         aggiornamenti["note"] = data.note
     
-    await db.anomalie.update_one(
+    await Database.get_db()["anomalie"].update_one(
         {"id": anomalia_id},
         {"$set": aggiornamenti}
     )
@@ -187,7 +187,7 @@ async def aggiorna_anomalia(anomalia_id: str, data: AggiornaAnomaliaRequest):
 @router.delete("/{anomalia_id}")
 async def elimina_anomalia(anomalia_id: str):
     """Elimina un'anomalia"""
-    result = await db.anomalie.delete_one({"id": anomalia_id})
+    result = await Database.get_db()["anomalie"].delete_one({"id": anomalia_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Anomalia non trovata")
     return {"success": True, "message": "Anomalia eliminata"}
@@ -218,7 +218,7 @@ async def get_statistiche(anno: int = None):
     if anno:
         query["data_segnalazione"] = {"$regex": f"/{anno}$"}
     
-    anomalie = await db.anomalie.find(query, {"_id": 0}).to_list(1000)
+    anomalie = await Database.get_db()["anomalie"].find(query, {"_id": 0}).to_list(1000)
     
     # Conta per stato
     per_stato = {}
@@ -254,7 +254,7 @@ async def genera_storico(start_anno: int = 2022, end_anno: int = 2025):
     import random
     
     # Prima elimina anomalie esistenti nel range
-    await db.anomalie.delete_many({
+    await Database.get_db()["anomalie"].delete_many({
         "data_segnalazione": {"$regex": f"/({start_anno}|{start_anno+1}|{start_anno+2}|{start_anno+3})$"}
     })
     
@@ -396,7 +396,7 @@ async def genera_storico(start_anno: int = 2022, end_anno: int = 2025):
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             
-            await db.anomalie.insert_one(nuova_anomalia)
+            await Database.get_db()["anomalie"].insert_one(nuova_anomalia)
             anomalie_generate += 1
     
     return {
@@ -419,7 +419,7 @@ async def genera_report_pdf_anomalie(anno: int):
     """
     
     # Recupera tutte le anomalie dell'anno
-    anomalie = await db.anomalie.find(
+    anomalie = await Database.get_db()["anomalie"].find(
         {"data_segnalazione": {"$regex": f"/{anno}$"}},
         {"_id": 0}
     ).to_list(1000)
@@ -581,7 +581,7 @@ async def genera_report_pdf_range(start_anno: int, end_anno: int):
     # Costruisci regex per gli anni nel range
     anni_pattern = "|".join([str(a) for a in range(start_anno, end_anno + 1)])
     
-    anomalie = await db.anomalie.find(
+    anomalie = await Database.get_db()["anomalie"].find(
         {"data_segnalazione": {"$regex": f"/({anni_pattern})$"}},
         {"_id": 0}
     ).to_list(5000)

@@ -133,7 +133,7 @@ def genera_monitoraggio_apparecchi_anno(anno: int) -> Dict[str, Dict[str, dict]]
 
 async def get_or_create_scheda_annuale(anno: int) -> dict:
     """Ottiene o crea la scheda annuale di disinfestazione"""
-    scheda = await db.disinfestazione_annuale.find_one(
+    scheda = await Database.get_db()["disinfestazione_annuale"].find_one(
         {"anno": anno},
         {"_id": 0}
     )
@@ -152,7 +152,7 @@ async def get_or_create_scheda_annuale(anno: int) -> dict:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.disinfestazione_annuale.insert_one(nuova_scheda)
+        await Database.get_db()["disinfestazione_annuale"].insert_one(nuova_scheda)
         scheda = nuova_scheda
     
     if "_id" in scheda:
@@ -167,7 +167,7 @@ async def get_or_create_scheda_annuale(anno: int) -> dict:
 async def rigenera_scheda_annuale(anno: int):
     """Rigenera la scheda annuale con i dati aggiornati della ditta e giorno fisso 15"""
     # Elimina la scheda esistente
-    await db.disinfestazione_annuale.delete_one({"anno": anno})
+    await Database.get_db()["disinfestazione_annuale"].delete_one({"anno": anno})
     
     # Rigenera
     interventi = genera_giorni_intervento_anno(anno)
@@ -182,7 +182,7 @@ async def rigenera_scheda_annuale(anno: int):
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.disinfestazione_annuale.insert_one(nuova_scheda)
+    await Database.get_db()["disinfestazione_annuale"].insert_one(nuova_scheda)
     
     return {
         "success": True,
@@ -269,7 +269,7 @@ async def registra_intervento(
     
     scheda["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.disinfestazione_annuale.update_one(
+    await Database.get_db()["disinfestazione_annuale"].update_one(
         {"anno": anno},
         {"$set": scheda}
     )
@@ -302,7 +302,7 @@ async def registra_monitoraggio(
     
     scheda["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.disinfestazione_annuale.update_one(
+    await Database.get_db()["disinfestazione_annuale"].update_one(
         {"anno": anno},
         {"$set": scheda}
     )
@@ -354,7 +354,7 @@ async def get_statistiche(anno: int):
 @router.post("/rigenera/{anno}")
 async def rigenera_scheda(anno: int):
     """Rigenera la scheda disinfestazione per l'anno"""
-    await db.disinfestazione_annuale.delete_one({"anno": anno})
+    await Database.get_db()["disinfestazione_annuale"].delete_one({"anno": anno})
     scheda = await get_or_create_scheda_annuale(anno)
     
     return {

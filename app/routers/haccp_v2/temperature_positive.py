@@ -76,7 +76,7 @@ MESI_IT = ["GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO",
 
 async def get_or_create_scheda(anno: int, frigorifero: int) -> dict:
     """Ottiene o crea la scheda annuale per un frigorifero"""
-    scheda = await db.temperature_positive.find_one(
+    scheda = await Database.get_db()["temperature_positive"].find_one(
         {"anno": anno, "frigorifero_numero": frigorifero},
         {"_id": 0}
     )
@@ -101,7 +101,7 @@ async def get_or_create_scheda(anno: int, frigorifero: int) -> dict:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.temperature_positive.insert_one(nuova_scheda)
+        await Database.get_db()["temperature_positive"].insert_one(nuova_scheda)
         scheda = nuova_scheda
     else:
         # Aggiorna schede esistenti con i nuovi campi
@@ -119,7 +119,7 @@ async def get_or_create_scheda(anno: int, frigorifero: int) -> dict:
             scheda["indirizzo"] = "Piazza Carità 14, 80134 Napoli (NA)"
             needs_update = True
         if needs_update:
-            await db.temperature_positive.update_one(
+            await Database.get_db()["temperature_positive"].update_one(
                 {"anno": anno, "frigorifero_numero": frigorifero},
                 {"$set": scheda}
             )
@@ -187,7 +187,7 @@ async def registra_temperatura(
     if temperatura is not None:
         allarme = temperatura > scheda["temp_max"] or temperatura < scheda["temp_min"]
     
-    await db.temperature_positive.update_one(
+    await Database.get_db()["temperature_positive"].update_one(
         {"anno": anno, "frigorifero_numero": frigorifero},
         {"$set": scheda}
     )
@@ -212,7 +212,7 @@ async def aggiorna_scheda_completa(
     if data.nome:
         scheda["frigorifero_nome"] = data.nome
     
-    await db.temperature_positive.update_one(
+    await Database.get_db()["temperature_positive"].update_one(
         {"anno": anno, "frigorifero_numero": frigorifero},
         {"$set": scheda}
     )
@@ -239,7 +239,7 @@ async def configura_frigorifero(
     
     scheda["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.temperature_positive.update_one(
+    await Database.get_db()["temperature_positive"].update_one(
         {"anno": anno, "frigorifero_numero": frigorifero},
         {"$set": scheda}
     )
@@ -254,7 +254,7 @@ async def get_mesi():
 @router.get("/allarmi/{anno}")
 async def get_allarmi(anno: int):
     """Ottiene tutti gli allarmi (temperature fuori range)"""
-    schede = await db.temperature_positive.find({"anno": anno}, {"_id": 0}).to_list(100)
+    schede = await Database.get_db()["temperature_positive"].find({"anno": anno}, {"_id": 0}).to_list(100)
     allarmi = []
     
     for scheda in schede:
@@ -413,7 +413,7 @@ async def popola_con_chiusure(anno: int, frigorifero: int = Query(default=None))
         
         scheda["updated_at"] = datetime.now(timezone.utc).isoformat()
         
-        await db.temperature_positive.update_one(
+        await Database.get_db()["temperature_positive"].update_one(
             {"anno": anno, "frigorifero_numero": frig},
             {"$set": scheda}
         )
