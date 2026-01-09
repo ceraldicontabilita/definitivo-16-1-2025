@@ -65,8 +65,8 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://haccptracker.preview.emergentagent.com/controllo-mensile",
-    "IVA": "https://haccptracker.preview.emergentagent.com/iva"
+    "Controllo Mensile": "https://complianceplus-2.preview.emergentagent.com/controllo-mensile",
+    "IVA": "https://complianceplus-2.preview.emergentagent.com/iva"
   },
   "quarterly_iva_data_2025": {
     "Q1_Gen_Feb_Mar": {

@@ -67,10 +67,10 @@
     }
   },
   "urls_tested": {
-    "Finanziaria": "https://haccptracker.preview.emergentagent.com/finanziaria",
-    "Prima_Nota": "https://haccptracker.preview.emergentagent.com/prima-nota",
-    "IVA": "https://haccptracker.preview.emergentagent.com/iva",
-    "Dipendenti": "https://haccptracker.preview.emergentagent.com/dipendenti"
+    "Finanziaria": "https://complianceplus-2.preview.emergentagent.com/finanziaria",
+    "Prima_Nota": "https://complianceplus-2.preview.emergentagent.com/prima-nota",
+    "IVA": "https://complianceplus-2.preview.emergentagent.com/iva",
+    "Dipendenti": "https://complianceplus-2.preview.emergentagent.com/dipendenti"
   },
   "bug_fixed": {
     "file": "/app/app/routers/dipendenti.py",
