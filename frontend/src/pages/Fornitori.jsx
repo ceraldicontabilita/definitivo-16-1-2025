@@ -380,7 +380,7 @@ function StatCard({ icon: Icon, label, value, color, bgColor }) {
 }
 
 // Supplier Card con cambio rapido metodo
-function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMetodo, onSearchPiva }) {
+function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMetodo, onSearchPiva, onShowFatturato, selectedYear }) {
   const nome = supplier.ragione_sociale || supplier.denominazione || 'Senza nome';
   const hasIncomplete = !supplier.partita_iva || !supplier.email;
   const hasPiva = !!supplier.partita_iva;
@@ -389,8 +389,19 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
   const [showMetodoMenu, setShowMetodoMenu] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [loadingFatturato, setLoadingFatturato] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const buttonRef = React.useRef(null);
+  
+  const handleShowFatturato = async () => {
+    if (!supplier.partita_iva) {
+      alert('Questo fornitore non ha una Partita IVA');
+      return;
+    }
+    setLoadingFatturato(true);
+    await onShowFatturato(supplier, selectedYear);
+    setLoadingFatturato(false);
+  };
 
   const handleMetodoChange = async (newMetodo) => {
     if (newMetodo === metodoKey) {
