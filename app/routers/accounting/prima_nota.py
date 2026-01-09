@@ -1773,3 +1773,180 @@ async def get_fattura_allegata_banca(movimento_id: str) -> Dict[str, Any]:
         "has_xml": bool(fattura.get("xml_content")),
         "filename": fattura.get("filename")
     }
+
+
+# ============== FIX MOVIMENTI ESISTENTI ==============
+
+@router.post("/fix-tipo-movimento")
+async def fix_tipo_movimento_fatture() -> Dict[str, Any]:
+    """
+    Corregge il tipo movimento (entrata/uscita) per tutti i movimenti 
+    collegati a fatture nella Prima Nota Cassa e Banca.
+    
+    Questa funzione ricalcola il tipo basandosi sul tipo_documento della fattura:
+    - Fatture acquisto (TD01 da fornitore): USCITA
+    - Note credito (TD04, TD08): ENTRATA (rimborso)
+    - Fatture vendita (TD24, TD25, TD26): ENTRATA
+    """
+    db = Database.get_db()
+    
+    fixed_cassa = 0
+    fixed_banca = 0
+    errors = []
+    
+    # Fix Prima Nota Cassa
+    movimenti_cassa = await db[COLLECTION_PRIMA_NOTA_CASSA].find(
+        {"fattura_id": {"$exists": True, "$ne": None}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    for mov in movimenti_cassa:
+        try:
+            fattura_id = mov.get("fattura_id")
+            if not fattura_id:
+                continue
+            
+            # Recupera fattura
+            fattura = await db["invoices"].find_one(
+                {"$or": [{"id": fattura_id}, {"invoice_key": fattura_id}]},
+                {"_id": 0}
+            )
+            
+            if not fattura:
+                continue
+            
+            # Determina tipo corretto
+            tipo_corretto, categoria_corretta, _ = determina_tipo_movimento_fattura(fattura)
+            
+            # Aggiorna se diverso
+            if mov.get("tipo") != tipo_corretto or mov.get("categoria") != categoria_corretta:
+                await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
+                    {"id": mov["id"]},
+                    {"$set": {
+                        "tipo": tipo_corretto,
+                        "categoria": categoria_corretta,
+                        "tipo_documento": fattura.get("tipo_documento"),
+                        "fixed_at": datetime.utcnow().isoformat()
+                    }}
+                )
+                fixed_cassa += 1
+                logger.info(f"Fixed cassa {mov['id']}: {mov.get('tipo')} -> {tipo_corretto}")
+                
+        except Exception as e:
+            errors.append(f"Cassa {mov.get('id')}: {str(e)}")
+    
+    # Fix Prima Nota Banca
+    movimenti_banca = await db[COLLECTION_PRIMA_NOTA_BANCA].find(
+        {"fattura_id": {"$exists": True, "$ne": None}},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    for mov in movimenti_banca:
+        try:
+            fattura_id = mov.get("fattura_id")
+            if not fattura_id:
+                continue
+            
+            # Recupera fattura
+            fattura = await db["invoices"].find_one(
+                {"$or": [{"id": fattura_id}, {"invoice_key": fattura_id}]},
+                {"_id": 0}
+            )
+            
+            if not fattura:
+                continue
+            
+            # Determina tipo corretto
+            tipo_corretto, categoria_corretta, _ = determina_tipo_movimento_fattura(fattura)
+            
+            # Aggiorna se diverso
+            if mov.get("tipo") != tipo_corretto or mov.get("categoria") != categoria_corretta:
+                await db[COLLECTION_PRIMA_NOTA_BANCA].update_one(
+                    {"id": mov["id"]},
+                    {"$set": {
+                        "tipo": tipo_corretto,
+                        "categoria": categoria_corretta,
+                        "tipo_documento": fattura.get("tipo_documento"),
+                        "fixed_at": datetime.utcnow().isoformat()
+                    }}
+                )
+                fixed_banca += 1
+                logger.info(f"Fixed banca {mov['id']}: {mov.get('tipo')} -> {tipo_corretto}")
+                
+        except Exception as e:
+            errors.append(f"Banca {mov.get('id')}: {str(e)}")
+    
+    return {
+        "success": True,
+        "message": f"Corretti {fixed_cassa} movimenti cassa e {fixed_banca} movimenti banca",
+        "fixed_cassa": fixed_cassa,
+        "fixed_banca": fixed_banca,
+        "movimenti_cassa_analizzati": len(movimenti_cassa),
+        "movimenti_banca_analizzati": len(movimenti_banca),
+        "errors": errors[:20] if errors else []
+    }
+
+
+@router.post("/recalculate-balances")
+async def recalculate_all_balances(anno: int = Query(None, description="Anno specifico (opzionale)")) -> Dict[str, Any]:
+    """
+    Ricalcola i saldi di Prima Nota Cassa e Banca.
+    Utile dopo fix o import massivi.
+    """
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["data"] = {"$regex": f"^{anno}"}
+    
+    # Calcola saldi Cassa
+    pipeline_cassa = [
+        {"$match": {**query, "status": {"$nin": ["deleted", "archived"]}}},
+        {"$group": {
+            "_id": None,
+            "entrate": {"$sum": {"$cond": [{"$eq": ["$tipo", "entrata"]}, "$importo", 0]}},
+            "uscite": {"$sum": {"$cond": [{"$eq": ["$tipo", "uscita"]}, "$importo", 0]}},
+            "count": {"$sum": 1}
+        }}
+    ]
+    cassa_result = await db[COLLECTION_PRIMA_NOTA_CASSA].aggregate(pipeline_cassa).to_list(1)
+    
+    # Calcola saldi Banca
+    pipeline_banca = [
+        {"$match": {**query, "status": {"$nin": ["deleted", "archived"]}}},
+        {"$group": {
+            "_id": None,
+            "entrate": {"$sum": {"$cond": [{"$eq": ["$tipo", "entrata"]}, "$importo", 0]}},
+            "uscite": {"$sum": {"$cond": [{"$eq": ["$tipo", "uscita"]}, "$importo", 0]}},
+            "count": {"$sum": 1}
+        }}
+    ]
+    banca_result = await db[COLLECTION_PRIMA_NOTA_BANCA].aggregate(pipeline_banca).to_list(1)
+    
+    cassa = cassa_result[0] if cassa_result else {"entrate": 0, "uscite": 0, "count": 0}
+    banca = banca_result[0] if banca_result else {"entrate": 0, "uscite": 0, "count": 0}
+    
+    saldo_cassa = cassa.get("entrate", 0) - cassa.get("uscite", 0)
+    saldo_banca = banca.get("entrate", 0) - banca.get("uscite", 0)
+    
+    return {
+        "anno": anno or "tutti",
+        "cassa": {
+            "entrate": round(cassa.get("entrate", 0), 2),
+            "uscite": round(cassa.get("uscite", 0), 2),
+            "saldo": round(saldo_cassa, 2),
+            "movimenti": cassa.get("count", 0)
+        },
+        "banca": {
+            "entrate": round(banca.get("entrate", 0), 2),
+            "uscite": round(banca.get("uscite", 0), 2),
+            "saldo": round(saldo_banca, 2),
+            "movimenti": banca.get("count", 0)
+        },
+        "totale": {
+            "saldo": round(saldo_cassa + saldo_banca, 2),
+            "entrate": round(cassa.get("entrate", 0) + banca.get("entrate", 0), 2),
+            "uscite": round(cassa.get("uscite", 0) + banca.get("uscite", 0), 2)
+        }
+    }
+
