@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
+import { useAnnoGlobale } from '../contexts/AnnoContext';
 
 const formatEuro = (value) => {
   if (value === null || value === undefined) return '€ 0,00';
@@ -17,6 +18,7 @@ const formatDate = (dateStr) => {
 };
 
 export default function ArchivioBonifici() {
+  const { anno } = useAnnoGlobale();
   const [transfers, setTransfers] = useState([]);
   const [summary, setSummary] = useState({});
   const [count, setCount] = useState(0);
@@ -30,6 +32,9 @@ export default function ArchivioBonifici() {
   const [files, setFiles] = useState([]);
   const [riconciliazioneStats, setRiconciliazioneStats] = useState(null);
   const [riconciliando, setRiconciliando] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteText, setNoteText] = useState('');
+  const [downloadingZip, setDownloadingZip] = useState(false);
   const initialized = useRef(false);
 
   // Carica dati iniziali
@@ -202,6 +207,31 @@ export default function ArchivioBonifici() {
   const handleExport = (format) => {
     const baseUrl = window.location.origin;
     window.open(`${baseUrl}/api/archivio-bonifici/export?format=${format}`, '_blank');
+  };
+
+  // Download ZIP per anno
+  const handleDownloadZip = async (year) => {
+    setDownloadingZip(true);
+    try {
+      const baseUrl = window.location.origin;
+      window.open(`${baseUrl}/api/archivio-bonifici/download-zip/${year}`, '_blank');
+    } catch (error) {
+      alert('Errore download: ' + error.message);
+    } finally {
+      setTimeout(() => setDownloadingZip(false), 2000);
+    }
+  };
+
+  // Salva nota bonifico
+  const handleSaveNote = async (id) => {
+    try {
+      await api.patch(`/api/archivio-bonifici/transfers/${id}`, { note: noteText });
+      setEditingNote(null);
+      setNoteText('');
+      loadTransfers();
+    } catch (error) {
+      alert('Errore: ' + (error.response?.data?.detail || error.message));
+    }
   };
 
   // Calcola totali
