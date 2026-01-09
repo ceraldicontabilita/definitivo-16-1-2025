@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../api";
 import { formatDateIT, formatEuro } from "../lib/utils";
 import { UploadProgressBar } from "../components/UploadProgressBar";
@@ -6,7 +7,8 @@ import { useAnnoGlobale } from "../contexts/AnnoContext";
 import InvoiceXMLViewer from "../components/InvoiceXMLViewer";
 
 export default function Fatture() {
-  const { anno: selectedYear } = useAnnoGlobale();
+  const { anno: selectedYear, setAnno } = useAnnoGlobale();
+  const [searchParams, setSearchParams] = useSearchParams();
   const currentYear = new Date().getFullYear();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
