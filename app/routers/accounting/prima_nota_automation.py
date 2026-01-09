@@ -1002,7 +1002,9 @@ async def import_pos(
     """
     Importa incassi POS giornalieri da file Excel.
     
-    Colonne attese: data, pos1, pos2, pos3 (opzionali), totale (opzionale)
+    Formati supportati:
+    1. Colonne: data, pos1, pos2, pos3, totale
+    2. Colonne: DATA, CONTO, IMPORTO (formato banca)
     """
     import pandas as pd
     
@@ -1022,7 +1024,10 @@ async def import_pos(
     
     try:
         if file.filename.lower().endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(content))
+            # Rileva separatore
+            content_str = content.decode('utf-8', errors='ignore')
+            separator = ';' if ';' in content_str[:500] else ','
+            df = pd.read_csv(io.BytesIO(content), sep=separator)
         else:
             df = pd.read_excel(io.BytesIO(content))
         
@@ -1034,23 +1039,62 @@ async def import_pos(
                 data = None
                 for col in ['data', 'date', 'giorno']:
                     if col in df.columns and pd.notna(row.get(col)):
-                        data = parse_italian_date(str(row[col]))
+                        val = row[col]
+                        # Se è già datetime, formattalo
+                        if hasattr(val, 'strftime'):
+                            data = val.strftime('%Y-%m-%d')
+                        else:
+                            data = parse_italian_date(str(val))
                         break
                 
                 if not data:
                     results["skipped"] += 1
                     continue
                 
-                # Extract POS values
-                pos1 = parse_italian_amount(str(row.get('pos1', row.get('pos 1', 0)))) if pd.notna(row.get('pos1', row.get('pos 1'))) else 0
-                pos2 = parse_italian_amount(str(row.get('pos2', row.get('pos 2', 0)))) if pd.notna(row.get('pos2', row.get('pos 2'))) else 0
-                pos3 = parse_italian_amount(str(row.get('pos3', row.get('pos 3', 0)))) if pd.notna(row.get('pos3', row.get('pos 3'))) else 0
+                # Cerca importo in vari formati
+                totale = 0
                 
-                # Try to get total or calculate
-                totale = parse_italian_amount(str(row.get('totale', row.get('total', 0)))) if pd.notna(row.get('totale', row.get('total'))) else 0
+                # Formato 1: colonna singola "importo"
+                if 'importo' in df.columns and pd.notna(row.get('importo')):
+                    val = row['importo']
+                    if isinstance(val, (int, float)):
+                        totale = float(val)
+                    else:
+                        totale = parse_italian_amount(str(val))
                 
-                if totale == 0:
-                    totale = pos1 + pos2 + pos3
+                # Formato 2: colonne pos1, pos2, pos3, totale
+                elif any(col in df.columns for col in ['pos1', 'pos 1', 'totale', 'total']):
+                    pos1 = 0
+                    pos2 = 0
+                    pos3 = 0
+                    
+                    for col in ['pos1', 'pos 1']:
+                        if col in df.columns and pd.notna(row.get(col)):
+                            val = row[col]
+                            pos1 = float(val) if isinstance(val, (int, float)) else parse_italian_amount(str(val))
+                            break
+                    
+                    for col in ['pos2', 'pos 2']:
+                        if col in df.columns and pd.notna(row.get(col)):
+                            val = row[col]
+                            pos2 = float(val) if isinstance(val, (int, float)) else parse_italian_amount(str(val))
+                            break
+                    
+                    for col in ['pos3', 'pos 3']:
+                        if col in df.columns and pd.notna(row.get(col)):
+                            val = row[col]
+                            pos3 = float(val) if isinstance(val, (int, float)) else parse_italian_amount(str(val))
+                            break
+                    
+                    # Cerca totale o calcola
+                    for col in ['totale', 'total']:
+                        if col in df.columns and pd.notna(row.get(col)):
+                            val = row[col]
+                            totale = float(val) if isinstance(val, (int, float)) else parse_italian_amount(str(val))
+                            break
+                    
+                    if totale == 0:
+                        totale = pos1 + pos2 + pos3
                 
                 if totale <= 0:
                     results["skipped"] += 1
