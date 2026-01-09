@@ -18,18 +18,32 @@ const HACCP_MODULI = [
     description: 'Alert automatici temperature anomale'
   },
   {
-    id: 'temperature-frigoriferi',
-    title: 'Temperature Frigoriferi',
+    id: 'temperature-positive',
+    title: '🌡️ Frigoriferi (1-12)',
     icon: '🌡️',
+    color: '#ff9800',
+    description: 'NUOVO: 12 schede frigoriferi per anno (0/+4°C)'
+  },
+  {
+    id: 'temperature-negative',
+    title: '❄️ Congelatori (1-12)',
+    icon: '❄️',
     color: '#2196f3',
-    description: 'Registro giornaliero temperature frigoriferi'
+    description: 'NUOVO: 12 schede congelatori per anno (-22/-18°C)'
+  },
+  {
+    id: 'temperature-frigoriferi',
+    title: 'Temperature Frigoriferi (OLD)',
+    icon: '🌡️',
+    color: '#90a4ae',
+    description: 'Sistema vecchio - migra a Positive'
   },
   {
     id: 'temperature-congelatori',
-    title: 'Temperature Congelatori',
+    title: 'Temperature Congelatori (OLD)',
     icon: '❄️',
-    color: '#00bcd4',
-    description: 'Registro giornaliero temperature congelatori'
+    color: '#90a4ae',
+    description: 'Sistema vecchio - migra a Negative'
   },
   {
     id: 'sanificazioni',
