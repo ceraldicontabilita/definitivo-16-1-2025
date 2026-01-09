@@ -127,6 +127,105 @@ async def find_check_numbers_for_invoice(db, importo: float, data_fattura: str, 
         return None
 
 
+async def riconcilia_con_estratto_conto(db, importo: float, data_fattura: str, fornitore: str) -> Dict[str, Any]:
+    """
+    Cerca riconciliazione nell'estratto conto (bonifici, assegni, qualsiasi movimento).
+    
+    Returns:
+        Dict con info riconciliazione o {"trovato": False}
+    """
+    result = {
+        "trovato": False,
+        "metodo_suggerito": None,
+        "movimento_banca_id": None,
+        "data_pagamento": None,
+        "descrizione_banca": None
+    }
+    
+    try:
+        if not importo or importo <= 0:
+            return result
+        
+        # Tolleranza importo
+        importo_min = importo - 1.0
+        importo_max = importo + 1.0
+        
+        # Range date (180 giorni prima della data fattura, 60 dopo)
+        data_min = None
+        data_max = None
+        if data_fattura:
+            try:
+                data_doc = datetime.strptime(data_fattura, "%Y-%m-%d")
+                data_min = (data_doc - timedelta(days=180)).strftime("%Y-%m-%d")
+                data_max = (data_doc + timedelta(days=60)).strftime("%Y-%m-%d")
+            except:
+                pass
+        
+        # Normalizza nome fornitore per ricerca
+        fornitore_words = []
+        if fornitore:
+            # Estrai parole significative dal nome fornitore
+            fornitore_clean = re.sub(r'(S\.?R\.?L\.?|S\.?P\.?A\.?|S\.?N\.?C\.?|S\.?A\.?S\.?|DI|DEL|DELLA|IL|LA|\d+)', '', fornitore, flags=re.IGNORECASE)
+            fornitore_words = [w for w in fornitore_clean.split() if len(w) > 2]
+        
+        # Cerca movimento uscita con importo corrispondente
+        query = {
+            "tipo": "uscita",
+            "$or": [
+                {"importo": {"$gte": importo_min, "$lte": importo_max}},
+                {"importo": {"$gte": -importo_max, "$lte": -importo_min}}
+            ]
+        }
+        if data_min and data_max:
+            query["data"] = {"$gte": data_min, "$lte": data_max}
+        
+        # Cerca nell'estratto conto
+        movimenti = await db["estratto_conto"].find(query, {"_id": 0}).limit(20).to_list(20)
+        
+        for mov in movimenti:
+            descrizione = mov.get("descrizione", "").upper()
+            
+            # Verifica se il fornitore è menzionato nella descrizione
+            fornitore_match = False
+            if fornitore_words:
+                for word in fornitore_words[:3]:  # Max 3 parole
+                    if word.upper() in descrizione:
+                        fornitore_match = True
+                        break
+            
+            # Se fornitore match o importo esatto (tolleranza 0.50)
+            importo_mov = abs(mov.get("importo", 0))
+            importo_esatto = abs(importo_mov - importo) < 0.50
+            
+            if fornitore_match or importo_esatto:
+                # Determina metodo pagamento dalla descrizione
+                if "BONIFICO" in descrizione or "BON" in descrizione:
+                    metodo = "bonifico"
+                elif "ASSEGNO" in descrizione or "ASS" in descrizione:
+                    metodo = "assegno"
+                elif "PRELIEVO" in descrizione or "BANCOMAT" in descrizione:
+                    metodo = "cassa"
+                else:
+                    metodo = "bonifico"  # Default
+                
+                result = {
+                    "trovato": True,
+                    "metodo_suggerito": metodo,
+                    "movimento_banca_id": mov.get("id"),
+                    "data_pagamento": mov.get("data"),
+                    "descrizione_banca": descrizione[:100],
+                    "importo_banca": importo_mov,
+                    "match_tipo": "fornitore" if fornitore_match else "importo"
+                }
+                break
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Errore riconciliazione estratto conto: {e}")
+        return result
+
+
 async def ensure_supplier_exists(db, parsed_invoice: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifica se il fornitore esiste nel database, altrimenti lo crea.
