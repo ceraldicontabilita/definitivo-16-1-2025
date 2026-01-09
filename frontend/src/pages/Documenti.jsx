@@ -56,6 +56,21 @@ export default function Documenti() {
   const [backgroundTask, setBackgroundTask] = useState(null);
   const [taskStatus, setTaskStatus] = useState(null);
   const pollingRef = useRef(null);
+  
+  // Lock status per operazioni email
+  const [emailLocked, setEmailLocked] = useState(false);
+  const [currentOperation, setCurrentOperation] = useState(null);
+
+  // Controlla lo stato del lock email
+  const checkEmailLock = async () => {
+    try {
+      const res = await api.get('/api/system/lock-status');
+      setEmailLocked(res.data.email_locked);
+      setCurrentOperation(res.data.operation);
+    } catch (e) {
+      console.error('Errore check lock:', e);
+    }
+  };
 
   useEffect(() => {
     loadData();
