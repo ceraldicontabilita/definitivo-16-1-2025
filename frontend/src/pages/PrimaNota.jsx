@@ -921,6 +921,19 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
         />
       )}
       
+      {/* Modal Modifica Movimento */}
+      {editingMovimento && (
+        <EditMovimentoModal
+          movimento={editingMovimento}
+          tipo={tipo}
+          onClose={() => setEditingMovimento(null)}
+          onSave={(updated) => {
+            onEdit(updated);
+            setEditingMovimento(null);
+          }}
+        />
+      )}
+      
       {/* Pagination Header */}
       {totalPages > 1 && (
         <div style={{ 
