@@ -73,15 +73,26 @@ def parse_format_csc_2017(text: str, lines: List[str]) -> Dict[str, Any]:
     
     for i, line in enumerate(lines):
         # Paga base e contingenza
+        # Formato: "1) PAGA BASE X" con X che può essere orario (4-10) o mensile (700-1500)
         if 'PAGA BASE' in line:
             match = re.search(r'PAGA BASE\s+([\d,]+)', line)
             if match:
-                result['paga_base_oraria'] = parse_italian_number(match.group(1))
+                val = parse_italian_number(match.group(1))
+                # Se il valore è > 100, è già mensile
+                if val > 100:
+                    result['paga_base_mensile'] = val
+                else:
+                    result['paga_base_oraria'] = val
         
         if 'CONTINGENZA' in line:
             match = re.search(r'CONTINGENZA\s+([\d,]+)', line)
             if match:
-                result['contingenza_oraria'] = parse_italian_number(match.group(1))
+                val = parse_italian_number(match.group(1))
+                # Se il valore è > 100, è già mensile
+                if val > 100:
+                    result['contingenza_mensile'] = val
+                else:
+                    result['contingenza_oraria'] = val
         
         # Progressivi - formato su righe separate:
         # Mat. X+Mat. Y+Mat. Z+ (Maturato)
