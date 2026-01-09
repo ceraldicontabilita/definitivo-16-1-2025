@@ -74,6 +74,9 @@ const HACCPAnalytics = lazy(() => import("./pages/HACCPAnalytics.jsx"));
 const HACCPNotifiche = lazy(() => import("./pages/HACCPNotifiche.jsx"));
 const HACCPTracciabilita = lazy(() => import("./pages/HACCPTracciabilita.jsx"));
 const HACCPPortal = lazy(() => import("./pages/HACCPPortal.jsx"));
+// HACCP New System (12 Frigoriferi / 12 Congelatori)
+const HACCPTemperaturePositive = lazy(() => import("./pages/HACCPTemperaturePositive.jsx"));
+const HACCPTemperatureNegative = lazy(() => import("./pages/HACCPTemperatureNegative.jsx"));
 
 // F24 & Tributi
 const F24 = lazy(() => import("./pages/F24.jsx"));
