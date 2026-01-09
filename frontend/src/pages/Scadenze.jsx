@@ -697,6 +697,62 @@ export default function Scadenze() {
           </div>
         </div>
       )}
+      
+      {/* Modal Visualizzazione Fattura AssoInvoice */}
+      {viewingInvoice && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000,
+          padding: 20
+        }} onClick={() => setViewingInvoice(null)}>
+          <div style={{
+            background: 'white',
+            borderRadius: 16,
+            width: '95%',
+            maxWidth: 1200,
+            maxHeight: '95vh',
+            overflow: 'auto',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              padding: '16px 24px',
+              borderBottom: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: '#f8fafc',
+              borderRadius: '16px 16px 0 0'
+            }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>📄 Visualizzazione Fattura</h2>
+              <button
+                onClick={() => setViewingInvoice(null)}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 16px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                ✕ Chiudi
+              </button>
+            </div>
+            <div style={{ padding: 24 }}>
+              <InvoiceXMLViewer invoiceId={viewingInvoice} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
