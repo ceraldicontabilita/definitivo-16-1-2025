@@ -156,6 +156,7 @@ export default function PrimaNotaCassa() {
                 <th style={{ padding: 8 }}>Importo</th>
                 <th style={{ padding: 8 }}>Descrizione</th>
                 <th style={{ padding: 8 }}>Categoria</th>
+                <th style={{ padding: 8 }}>Allegato</th>
               </tr>
             </thead>
             <tbody>
@@ -176,12 +177,42 @@ export default function PrimaNotaCassa() {
                   </td>
                   <td style={{ padding: 8 }}>{m.description}</td>
                   <td style={{ padding: 8 }}>{m.category || "-"}</td>
+                  <td style={{ padding: 8 }}>
+                    {m.fattura_id ? (
+                      <button
+                        onClick={() => loadInvoiceForMovement(m.id)}
+                        disabled={loadingInvoice === m.id}
+                        style={{
+                          background: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          padding: '4px 10px',
+                          cursor: loadingInvoice === m.id ? 'wait' : 'pointer',
+                          fontSize: 12
+                        }}
+                        data-testid={`view-invoice-${m.id}`}
+                      >
+                        {loadingInvoice === m.id ? '...' : '📄 Vedi Fattura'}
+                      </button>
+                    ) : (
+                      <span style={{ color: '#9ca3af', fontSize: 12 }}>-</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* Visualizzatore Fattura */}
+      {viewingInvoice && (
+        <InvoiceXMLViewer
+          invoice={viewingInvoice}
+          onClose={() => setViewingInvoice(null)}
+        />
+      )}
     </>
   );
 }
