@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
 /**
- * Visualizzatore Fattura XML 
- * Tre modalità di visualizzazione (come AssoInvoice):
- * 1. Semplificata - Solo dati fiscalmente rilevanti
- * 2. Completa - Tutti i dati incluse info gestionali
+ * Visualizzatore Fattura XML - Stile AssoInvoice
+ * Tre modalità di visualizzazione:
+ * 1. Semplificata - Solo dati fiscalmente rilevanti (compatta)
+ * 2. Completa - Tutti i dati incluse info gestionali  
  * 3. Ministeriale - Formato ufficiale Agenzia Entrate/Sogei
  */
 export default function InvoiceXMLViewer({ invoice, onClose }) {
@@ -12,8 +12,8 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
 
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'EUR'
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(val || 0);
   };
 
@@ -21,519 +21,6 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
     return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
-
-  // Genera PDF/Stampa della fattura
-  const generatePDFFromHTML = () => {
-    if (!invoice) return;
-    
-    const printWindow = window.open('', '_blank');
-    const isMinisteriale = viewMode === 'ministeriale';
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Fattura ${invoice.invoice_number}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: ${isMinisteriale ? "'Times New Roman', serif" : "'Arial', sans-serif"}; 
-            padding: 30px; 
-            max-width: 800px; 
-            margin: 0 auto;
-            color: #333;
-            line-height: 1.4;
-            font-size: ${isMinisteriale ? '11px' : '12px'};
-          }
-          ${isMinisteriale ? `
-          /* Stile Ministeriale (Agenzia Entrate/Sogei) */
-          .ade-header {
-            text-align: center;
-            border: 2px solid #000;
-            padding: 15px;
-            margin-bottom: 20px;
-            background: #f5f5f5;
-          }
-          .ade-header h1 {
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-          }
-          .ade-header .tipo-doc {
-            font-size: 14px;
-            margin-top: 5px;
-          }
-          .ade-section {
-            border: 1px solid #000;
-            margin-bottom: 15px;
-          }
-          .ade-section-header {
-            background: #e0e0e0;
-            padding: 5px 10px;
-            font-weight: bold;
-            font-size: 11px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #000;
-          }
-          .ade-section-content {
-            padding: 10px;
-          }
-          .ade-row {
-            display: flex;
-            border-bottom: 1px solid #ddd;
-            padding: 4px 0;
-          }
-          .ade-row:last-child { border-bottom: none; }
-          .ade-label {
-            width: 180px;
-            font-weight: bold;
-            font-size: 10px;
-            color: #555;
-          }
-          .ade-value {
-            flex: 1;
-            font-size: 11px;
-          }
-          .ade-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-          }
-          .ade-table th {
-            background: #e0e0e0;
-            border: 1px solid #000;
-            padding: 6px;
-            text-align: left;
-            font-size: 9px;
-            text-transform: uppercase;
-          }
-          .ade-table td {
-            border: 1px solid #000;
-            padding: 6px;
-          }
-          .ade-totals {
-            margin-top: 15px;
-            border: 2px solid #000;
-          }
-          .ade-totals .row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 10px;
-            border-bottom: 1px solid #000;
-          }
-          .ade-totals .row:last-child { border-bottom: none; }
-          .ade-totals .row.total {
-            background: #f5f5f5;
-            font-weight: bold;
-            font-size: 14px;
-          }
-          .ade-footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 9px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-          }
-          ` : `
-          /* Stile AssoSoftware */
-          .header { 
-            border-bottom: 3px solid #1e3a5f; 
-            padding-bottom: 20px; 
-            margin-bottom: 25px; 
-          }
-          .header h1 { 
-            color: #1e3a5f; 
-            font-size: 28px;
-            margin-bottom: 5px;
-          }
-          .header .tipo-doc {
-            font-size: 14px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          }
-          .parties { 
-            display: flex; 
-            gap: 40px; 
-            margin-bottom: 25px; 
-          }
-          .party { 
-            flex: 1; 
-            padding: 15px;
-            border-radius: 8px;
-          }
-          .party.fornitore { background: #e8f4fc; }
-          .party.cliente { background: #f0f7f0; }
-          .party h3 { 
-            color: #1e3a5f; 
-            font-size: 12px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            padding-bottom: 5px;
-          }
-          .party .name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
-          .party .detail { font-size: 13px; color: #555; }
-          .doc-info {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-          }
-          .doc-info .item label { 
-            font-size: 11px; 
-            color: #666; 
-            text-transform: uppercase;
-            display: block;
-          }
-          .doc-info .item span { 
-            font-size: 15px; 
-            font-weight: 600;
-            color: #1e3a5f;
-          }
-          table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 20px 0; 
-          }
-          th { 
-            background: #1e3a5f; 
-            color: white; 
-            padding: 12px 10px; 
-            text-align: left;
-            font-size: 12px;
-            text-transform: uppercase;
-          }
-          td { 
-            padding: 10px; 
-            border-bottom: 1px solid #eee; 
-            font-size: 13px;
-          }
-          tr:nth-child(even) { background: #f9f9f9; }
-          .totals { 
-            text-align: right; 
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-          }
-          .totals .row { 
-            display: flex; 
-            justify-content: flex-end; 
-            gap: 30px;
-            padding: 5px 0;
-          }
-          .totals .row.total { 
-            font-size: 18px; 
-            font-weight: bold; 
-            color: #1e3a5f;
-            border-top: 2px solid #1e3a5f;
-            padding-top: 10px;
-            margin-top: 10px;
-          }
-          .payment-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #fff3e0;
-            border-radius: 8px;
-            border-left: 4px solid #ff9800;
-          }
-          .payment-info h4 { color: #e65100; margin-bottom: 10px; }
-          .footer { 
-            margin-top: 30px; 
-            text-align: center; 
-            font-size: 11px; 
-            color: #999;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-          }
-          `}
-          @media print {
-            body { padding: 0; }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        ${isADE ? `
-        <!-- Formato Agenzia delle Entrate -->
-        <div class="ade-header">
-          <h1>FATTURA ELETTRONICA</h1>
-          <div class="tipo-doc">${getTipoDocumento(invoice.tipo_documento)}</div>
-        </div>
-        
-        <div class="ade-section">
-          <div class="ade-section-header">1. Dati Trasmissione</div>
-          <div class="ade-section-content">
-            <div class="ade-row">
-              <span class="ade-label">Identificativo SdI:</span>
-              <span class="ade-value">${invoice.sdi_id || invoice.id || '-'}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Data Ricezione:</span>
-              <span class="ade-value">${formatDate(invoice.received_date)}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="ade-section">
-          <div class="ade-section-header">1.2 Cedente/Prestatore</div>
-          <div class="ade-section-content">
-            <div class="ade-row">
-              <span class="ade-label">Denominazione:</span>
-              <span class="ade-value">${invoice.supplier_name || '-'}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Partita IVA:</span>
-              <span class="ade-value">${invoice.supplier_vat || '-'}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Codice Fiscale:</span>
-              <span class="ade-value">${invoice.supplier_cf || invoice.supplier_vat || '-'}</span>
-            </div>
-            ${invoice.supplier_address ? `
-            <div class="ade-row">
-              <span class="ade-label">Sede:</span>
-              <span class="ade-value">${invoice.supplier_address}</span>
-            </div>
-            ` : ''}
-          </div>
-        </div>
-        
-        <div class="ade-section">
-          <div class="ade-section-header">1.4 Cessionario/Committente</div>
-          <div class="ade-section-content">
-            <div class="ade-row">
-              <span class="ade-label">Denominazione:</span>
-              <span class="ade-value">CERALDI GROUP S.R.L.</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Partita IVA:</span>
-              <span class="ade-value">12345678901</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="ade-section">
-          <div class="ade-section-header">2. Dati Generali Documento</div>
-          <div class="ade-section-content">
-            <div class="ade-row">
-              <span class="ade-label">Tipo Documento:</span>
-              <span class="ade-value">${invoice.tipo_documento || 'TD01'} - ${getTipoDocumento(invoice.tipo_documento)}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Data:</span>
-              <span class="ade-value">${formatDate(invoice.invoice_date)}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Numero:</span>
-              <span class="ade-value">${invoice.invoice_number || '-'}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Importo Totale:</span>
-              <span class="ade-value">${formatCurrency(invoice.total_amount)}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="ade-section">
-          <div class="ade-section-header">2.2 Dati Beni/Servizi</div>
-          <div class="ade-section-content">
-            <table class="ade-table">
-              <thead>
-                <tr>
-                  <th>Nr.</th>
-                  <th>Descrizione</th>
-                  <th>Quantità</th>
-                  <th>Prezzo Unit.</th>
-                  <th>Aliq. IVA</th>
-                  <th>Prezzo Totale</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(invoice.line_items || []).map((item, idx) => `
-                  <tr>
-                    <td>${idx + 1}</td>
-                    <td>${item.description || '-'}</td>
-                    <td style="text-align: right;">${item.quantity || 1}</td>
-                    <td style="text-align: right;">${formatCurrency(item.unit_price || item.price)}</td>
-                    <td style="text-align: center;">${item.vat_rate || 22}%</td>
-                    <td style="text-align: right;">${formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        <div class="ade-section">
-          <div class="ade-section-header">2.2.2 Dati Riepilogo</div>
-          <div class="ade-section-content">
-            <table class="ade-table">
-              <thead>
-                <tr>
-                  <th>Aliquota IVA</th>
-                  <th>Imponibile</th>
-                  <th>Imposta</th>
-                  <th>Esigibilità IVA</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>22%</td>
-                  <td style="text-align: right;">${formatCurrency(invoice.taxable_amount)}</td>
-                  <td style="text-align: right;">${formatCurrency(invoice.vat_amount)}</td>
-                  <td>I - Immediata</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        <div class="ade-totals">
-          <div class="row">
-            <span>Totale Imponibile:</span>
-            <span>${formatCurrency(invoice.taxable_amount)}</span>
-          </div>
-          <div class="row">
-            <span>Totale Imposta:</span>
-            <span>${formatCurrency(invoice.vat_amount)}</span>
-          </div>
-          <div class="row total">
-            <span>IMPORTO TOTALE DOCUMENTO:</span>
-            <span>${formatCurrency(invoice.total_amount)}</span>
-          </div>
-        </div>
-        
-        ${invoice.payment_terms || invoice.metodo_pagamento ? `
-        <div class="ade-section" style="margin-top: 15px;">
-          <div class="ade-section-header">2.4 Dati Pagamento</div>
-          <div class="ade-section-content">
-            <div class="ade-row">
-              <span class="ade-label">Condizioni Pagamento:</span>
-              <span class="ade-value">${invoice.payment_terms || '-'}</span>
-            </div>
-            <div class="ade-row">
-              <span class="ade-label">Modalità Pagamento:</span>
-              <span class="ade-value">${getModalitaPagamento(invoice.metodo_pagamento)}</span>
-            </div>
-            ${invoice.payment_due_date ? `
-            <div class="ade-row">
-              <span class="ade-label">Data Scadenza:</span>
-              <span class="ade-value">${formatDate(invoice.payment_due_date)}</span>
-            </div>
-            ` : ''}
-          </div>
-        </div>
-        ` : ''}
-        
-        <div class="ade-footer">
-          Documento informatico conforme alle specifiche tecniche dell'Agenzia delle Entrate<br>
-          Visualizzazione generata il ${new Date().toLocaleDateString('it-IT')} - Sistema ERP Azienda Semplice
-        </div>
-        ` : `
-        <!-- Formato AssoSoftware -->
-        <div class="header">
-          <h1>FATTURA</h1>
-          <div class="tipo-doc">Documento Commerciale Elettronico</div>
-        </div>
-        
-        <div class="parties">
-          <div class="party fornitore">
-            <h3>Cedente / Prestatore</h3>
-            <div class="name">${invoice.supplier_name || '-'}</div>
-            <div class="detail">P.IVA: ${invoice.supplier_vat || '-'}</div>
-            ${invoice.supplier_address ? `<div class="detail">${invoice.supplier_address}</div>` : ''}
-          </div>
-          <div class="party cliente">
-            <h3>Cessionario / Committente</h3>
-            <div class="name">CERALDI GROUP S.R.L.</div>
-            <div class="detail">P.IVA: 12345678901</div>
-          </div>
-        </div>
-        
-        <div class="doc-info">
-          <div class="item">
-            <label>Numero</label>
-            <span>${invoice.invoice_number || '-'}</span>
-          </div>
-          <div class="item">
-            <label>Data Documento</label>
-            <span>${formatDate(invoice.invoice_date)}</span>
-          </div>
-          <div class="item">
-            <label>Data Ricezione</label>
-            <span>${formatDate(invoice.received_date)}</span>
-          </div>
-        </div>
-        
-        <h3 style="color: #1e3a5f; margin-bottom: 10px;">Dettaglio Beni/Servizi</h3>
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 50%">Descrizione</th>
-              <th style="width: 15%; text-align: center;">Quantità</th>
-              <th style="width: 15%; text-align: right;">Prezzo Unit.</th>
-              <th style="width: 10%; text-align: center;">IVA</th>
-              <th style="width: 15%; text-align: right;">Totale</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(invoice.line_items || []).map(item => `
-              <tr>
-                <td>${item.description || '-'}</td>
-                <td style="text-align: center;">${item.quantity || 1}</td>
-                <td style="text-align: right;">${formatCurrency(item.unit_price || item.price)}</td>
-                <td style="text-align: center;">${item.vat_rate || 22}%</td>
-                <td style="text-align: right;">${formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        
-        <div class="totals">
-          <div class="row">
-            <span>Imponibile:</span>
-            <span>${formatCurrency(invoice.taxable_amount)}</span>
-          </div>
-          <div class="row">
-            <span>IVA:</span>
-            <span>${formatCurrency(invoice.vat_amount)}</span>
-          </div>
-          <div class="row total">
-            <span>TOTALE DOCUMENTO:</span>
-            <span>${formatCurrency(invoice.total_amount)}</span>
-          </div>
-        </div>
-        
-        ${invoice.payment_terms || invoice.metodo_pagamento ? `
-        <div class="payment-info">
-          <h4>Modalità di Pagamento</h4>
-          <p>${invoice.payment_terms || invoice.metodo_pagamento || '-'}</p>
-          ${invoice.payment_due_date ? `<p>Scadenza: ${formatDate(invoice.payment_due_date)}</p>` : ''}
-        </div>
-        ` : ''}
-        
-        <div class="footer">
-          <p>Documento generato da Sistema ERP Azienda Semplice</p>
-          <p>Ceraldi Group S.R.L. - ${new Date().toLocaleDateString('it-IT')}</p>
-        </div>
-        `}
-        
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
   };
 
   // Helper per tipo documento
@@ -545,23 +32,20 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
       'TD04': 'Nota di Credito',
       'TD05': 'Nota di Debito',
       'TD06': 'Parcella',
-      'TD16': 'Integrazione fattura reverse charge interno',
-      'TD17': 'Integrazione/autofattura per acquisto servizi da estero',
-      'TD18': 'Integrazione per acquisto di beni intracomunitari',
-      'TD19': 'Integrazione/autofattura per acquisto di beni ex art.17 c.2',
-      'TD20': 'Autofattura per regolarizzazione e integrazione delle fatture',
-      'TD21': 'Autofattura per splafonamento',
-      'TD22': 'Estrazione beni da Deposito IVA',
-      'TD23': 'Estrazione beni da Deposito IVA con versamento dell\'IVA',
-      'TD24': 'Fattura differita di cui all\'art.21, comma 4, lett. a',
-      'TD25': 'Fattura differita di cui all\'art.21, comma 4, terzo periodo',
-      'TD26': 'Cessione di beni ammortizzabili e per passaggi interni',
-      'TD27': 'Fattura per autoconsumo o per cessioni gratuite senza rivalsa'
+      'TD16': 'Integrazione fattura reverse charge',
+      'TD17': 'Integrazione per acquisto servizi estero',
+      'TD18': 'Integrazione acquisto beni intracomunitari',
+      'TD19': 'Integrazione per acquisto beni art.17',
+      'TD20': 'Autofattura per regolarizzazione',
+      'TD24': 'Fattura differita art.21',
+      'TD25': 'Fattura differita terzo periodo',
+      'TD26': 'Cessione beni ammortizzabili',
+      'TD27': 'Autoconsumo/cessioni gratuite'
     };
     return tipi[tipo] || 'Fattura';
   };
 
-  // Helper per modalità pagamento
+  // Helper per modalità pagamento (codici SdI)
   const getModalitaPagamento = (metodo) => {
     const modalita = {
       'bonifico': 'MP05 - Bonifico',
@@ -569,9 +53,276 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
       'assegno': 'MP02 - Assegno',
       'cassa': 'MP01 - Contanti',
       'carta': 'MP08 - Carta di pagamento',
-      'misto': 'Misto'
+      'misto': 'Pagamento misto',
+      'cassa_da_confermare': 'Da verificare'
     };
     return modalita[metodo] || metodo || '-';
+  };
+
+  // Genera PDF/Stampa
+  const generatePDFFromHTML = () => {
+    if (!invoice) return;
+    const printWindow = window.open('', '_blank');
+    const isMinisteriale = viewMode === 'ministeriale';
+    
+    // Costruisce HTML per stampa in base al viewMode
+    let bodyContent = '';
+    
+    if (isMinisteriale) {
+      bodyContent = buildMinisterialeHTML();
+    } else {
+      bodyContent = buildAssoSoftwareHTML();
+    }
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Fattura ${invoice.invoice_number}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: ${isMinisteriale ? "'Times New Roman', serif" : "'Arial', sans-serif"}; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto;
+            color: #333;
+            line-height: 1.4;
+            font-size: 11px;
+          }
+          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          th, td { padding: 6px 8px; text-align: left; border: 1px solid #ccc; }
+          th { background: #f0f0f0; font-weight: bold; font-size: 10px; }
+          .header-box { border: 2px solid #333; padding: 15px; margin-bottom: 15px; }
+          .section { margin-bottom: 15px; }
+          .section-title { font-weight: bold; font-size: 12px; margin-bottom: 8px; padding: 5px; background: #e8e8e8; }
+          .row { display: flex; margin-bottom: 4px; }
+          .label { width: 150px; font-weight: bold; color: #555; }
+          .value { flex: 1; }
+          .total-box { border: 2px solid #333; padding: 10px; margin-top: 15px; }
+          .total-row { display: flex; justify-content: space-between; padding: 4px 0; }
+          .total-row.main { font-weight: bold; font-size: 14px; border-top: 2px solid #333; padding-top: 8px; margin-top: 8px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        ${bodyContent}
+        <script>window.onload = function() { window.print(); }</script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  // Costruisce HTML formato AssoSoftware (semplificata/completa)
+  const buildAssoSoftwareHTML = () => {
+    const isSemplificata = viewMode === 'semplificata';
+    return `
+      <div class="header-box" style="text-align: center;">
+        <h1 style="font-size: 18px; margin-bottom: 5px;">FATTURA</h1>
+        <div style="font-size: 12px;">N. ${invoice.invoice_number} del ${formatDate(invoice.invoice_date)}</div>
+      </div>
+      
+      <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+        <div style="flex: 1; border: 1px solid #ccc; padding: 10px;">
+          <div style="font-weight: bold; font-size: 11px; margin-bottom: 8px; color: #666;">CEDENTE / PRESTATORE</div>
+          <div style="font-weight: bold; font-size: 13px;">${invoice.supplier_name || '-'}</div>
+          <div>P.IVA: ${invoice.supplier_vat || '-'}</div>
+          ${!isSemplificata && invoice.supplier_address ? `<div>${invoice.supplier_address}</div>` : ''}
+        </div>
+        <div style="flex: 1; border: 1px solid #ccc; padding: 10px;">
+          <div style="font-weight: bold; font-size: 11px; margin-bottom: 8px; color: #666;">CESSIONARIO / COMMITTENTE</div>
+          <div style="font-weight: bold; font-size: 13px;">CERALDI GROUP S.R.L.</div>
+          <div>P.IVA: 12345678901</div>
+        </div>
+      </div>
+      
+      ${!isSemplificata ? `
+      <div class="section">
+        <div class="section-title">DATI DOCUMENTO</div>
+        <div class="row"><span class="label">Tipo Documento:</span><span class="value">${invoice.tipo_documento || 'TD01'} - ${getTipoDocumento(invoice.tipo_documento)}</span></div>
+        <div class="row"><span class="label">Data Ricezione:</span><span class="value">${formatDate(invoice.received_date)}</span></div>
+      </div>
+      ` : ''}
+      
+      <div class="section">
+        <div class="section-title">DETTAGLIO BENI E SERVIZI</div>
+        <table>
+          <thead>
+            <tr>
+              ${!isSemplificata ? '<th>Nr.</th>' : ''}
+              <th style="width: 45%;">Descrizione</th>
+              <th style="text-align: center;">Qtà</th>
+              <th style="text-align: right;">Prezzo Unit.</th>
+              <th style="text-align: center;">Aliq. IVA</th>
+              <th style="text-align: right;">Importo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(invoice.line_items || []).map((item, idx) => `
+              <tr>
+                ${!isSemplificata ? `<td>${idx + 1}</td>` : ''}
+                <td>${item.description || '-'}</td>
+                <td style="text-align: center;">${item.quantity || 1}</td>
+                <td style="text-align: right;">€ ${formatCurrency(item.unit_price || item.price)}</td>
+                <td style="text-align: center;">${item.vat_rate || 22}%</td>
+                <td style="text-align: right;">€ ${formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      
+      ${!isSemplificata ? `
+      <div class="section">
+        <div class="section-title">RIEPILOGO IVA</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Aliquota</th>
+              <th style="text-align: right;">Imponibile</th>
+              <th style="text-align: right;">Imposta</th>
+              <th>Esigibilità</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>22%</td>
+              <td style="text-align: right;">€ ${formatCurrency(invoice.taxable_amount)}</td>
+              <td style="text-align: right;">€ ${formatCurrency(invoice.vat_amount)}</td>
+              <td>Immediata</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      ` : ''}
+      
+      <div class="total-box">
+        <div class="total-row"><span>Totale Imponibile:</span><span>€ ${formatCurrency(invoice.taxable_amount)}</span></div>
+        <div class="total-row"><span>Totale IVA:</span><span>€ ${formatCurrency(invoice.vat_amount)}</span></div>
+        <div class="total-row main"><span>TOTALE DOCUMENTO:</span><span>€ ${formatCurrency(invoice.total_amount)}</span></div>
+      </div>
+      
+      ${!isSemplificata && (invoice.metodo_pagamento || invoice.payment_terms) ? `
+      <div class="section" style="margin-top: 15px;">
+        <div class="section-title">DATI PAGAMENTO</div>
+        <div class="row"><span class="label">Modalità:</span><span class="value">${getModalitaPagamento(invoice.metodo_pagamento)}</span></div>
+        ${invoice.payment_due_date ? `<div class="row"><span class="label">Scadenza:</span><span class="value">${formatDate(invoice.payment_due_date)}</span></div>` : ''}
+      </div>
+      ` : ''}
+      
+      <div style="margin-top: 20px; text-align: center; font-size: 9px; color: #999; border-top: 1px solid #ccc; padding-top: 10px;">
+        Documento generato il ${new Date().toLocaleDateString('it-IT')} - Sistema ERP Azienda Semplice
+      </div>
+    `;
+  };
+
+  // Costruisce HTML formato Ministeriale (Agenzia Entrate)
+  const buildMinisterialeHTML = () => {
+    return `
+      <div class="header-box" style="text-align: center; background: #f5f5f5;">
+        <h1 style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">FATTURA ELETTRONICA</h1>
+        <div style="font-size: 11px; margin-top: 5px;">${getTipoDocumento(invoice.tipo_documento)}</div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">1. DATI TRASMISSIONE</div>
+        <div class="row"><span class="label">Identificativo SdI:</span><span class="value">${invoice.sdi_id || invoice.id || '-'}</span></div>
+        <div class="row"><span class="label">Data Ricezione:</span><span class="value">${formatDate(invoice.received_date)}</span></div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">1.2 CEDENTE / PRESTATORE</div>
+        <div class="row"><span class="label">Denominazione:</span><span class="value">${invoice.supplier_name || '-'}</span></div>
+        <div class="row"><span class="label">Partita IVA:</span><span class="value">${invoice.supplier_vat || '-'}</span></div>
+        <div class="row"><span class="label">Codice Fiscale:</span><span class="value">${invoice.supplier_cf || invoice.supplier_vat || '-'}</span></div>
+        ${invoice.supplier_address ? `<div class="row"><span class="label">Sede:</span><span class="value">${invoice.supplier_address}</span></div>` : ''}
+      </div>
+      
+      <div class="section">
+        <div class="section-title">1.4 CESSIONARIO / COMMITTENTE</div>
+        <div class="row"><span class="label">Denominazione:</span><span class="value">CERALDI GROUP S.R.L.</span></div>
+        <div class="row"><span class="label">Partita IVA:</span><span class="value">12345678901</span></div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">2. DATI GENERALI DOCUMENTO</div>
+        <div class="row"><span class="label">Tipo Documento:</span><span class="value">${invoice.tipo_documento || 'TD01'} - ${getTipoDocumento(invoice.tipo_documento)}</span></div>
+        <div class="row"><span class="label">Data:</span><span class="value">${formatDate(invoice.invoice_date)}</span></div>
+        <div class="row"><span class="label">Numero:</span><span class="value">${invoice.invoice_number || '-'}</span></div>
+        <div class="row"><span class="label">Importo Totale:</span><span class="value">€ ${formatCurrency(invoice.total_amount)}</span></div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">2.2 DATI BENI / SERVIZI</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nr.</th>
+              <th style="width: 40%;">Descrizione</th>
+              <th style="text-align: right;">Quantità</th>
+              <th style="text-align: right;">Prezzo Unit.</th>
+              <th style="text-align: center;">Aliq. IVA</th>
+              <th style="text-align: right;">Prezzo Tot.</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(invoice.line_items || []).map((item, idx) => `
+              <tr>
+                <td>${idx + 1}</td>
+                <td>${item.description || '-'}</td>
+                <td style="text-align: right;">${item.quantity || 1}</td>
+                <td style="text-align: right;">€ ${formatCurrency(item.unit_price || item.price)}</td>
+                <td style="text-align: center;">${item.vat_rate || 22}%</td>
+                <td style="text-align: right;">€ ${formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">2.2.2 DATI RIEPILOGO</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Aliquota IVA</th>
+              <th style="text-align: right;">Imponibile</th>
+              <th style="text-align: right;">Imposta</th>
+              <th>Esigibilità IVA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>22%</td>
+              <td style="text-align: right;">€ ${formatCurrency(invoice.taxable_amount)}</td>
+              <td style="text-align: right;">€ ${formatCurrency(invoice.vat_amount)}</td>
+              <td>I - Immediata</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="total-box">
+        <div class="total-row"><span>Totale Imponibile:</span><span>€ ${formatCurrency(invoice.taxable_amount)}</span></div>
+        <div class="total-row"><span>Totale Imposta:</span><span>€ ${formatCurrency(invoice.vat_amount)}</span></div>
+        <div class="total-row main"><span>IMPORTO TOTALE DOCUMENTO:</span><span>€ ${formatCurrency(invoice.total_amount)}</span></div>
+      </div>
+      
+      ${invoice.metodo_pagamento || invoice.payment_terms ? `
+      <div class="section" style="margin-top: 15px;">
+        <div class="section-title">2.4 DATI PAGAMENTO</div>
+        <div class="row"><span class="label">Condizioni Pagamento:</span><span class="value">${invoice.payment_terms || 'Pagamento completo'}</span></div>
+        <div class="row"><span class="label">Modalità Pagamento:</span><span class="value">${getModalitaPagamento(invoice.metodo_pagamento)}</span></div>
+        ${invoice.payment_due_date ? `<div class="row"><span class="label">Data Scadenza:</span><span class="value">${formatDate(invoice.payment_due_date)}</span></div>` : ''}
+      </div>
+      ` : ''}
+      
+      <div style="margin-top: 20px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ccc; padding-top: 10px;">
+        Documento informatico conforme alle specifiche tecniche dell'Agenzia delle Entrate<br>
+        Visualizzazione generata il ${new Date().toLocaleDateString('it-IT')} - Sistema ERP Azienda Semplice
+      </div>
+    `;
   };
 
   if (!invoice) {
@@ -594,11 +345,348 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
   }
 
   // ============================================
-  // RENDER FORMATO AGENZIA ENTRATE
+  // RENDER FORMATO SEMPLIFICATA
   // ============================================
-  const renderADEView = () => (
-    <div style={{ fontFamily: "'Times New Roman', serif", fontSize: 12 }}>
-      {/* Header ADE */}
+  const renderSemplificataView = () => (
+    <div style={{ fontFamily: 'Arial, sans-serif' }}>
+      {/* Header compatto */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        padding: '15px 20px',
+        background: '#f8f9fa',
+        borderRadius: 8,
+        marginBottom: 20
+      }}>
+        <div>
+          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Fattura N.</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#1e3a5f' }}>{invoice.invoice_number}</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Data</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>{formatDate(invoice.invoice_date)}</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Totale</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#1e3a5f' }}>€ {formatCurrency(invoice.total_amount)}</div>
+        </div>
+      </div>
+
+      {/* Parti - compatto */}
+      <div style={{ display: 'flex', gap: 15, marginBottom: 20 }}>
+        <div style={{ flex: 1, padding: 12, background: '#e3f2fd', borderRadius: 6, borderLeft: '3px solid #1976d2' }}>
+          <div style={{ fontSize: 10, color: '#1565c0', textTransform: 'uppercase', marginBottom: 4 }}>Fornitore</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{invoice.supplier_name}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>P.IVA: {invoice.supplier_vat}</div>
+        </div>
+        <div style={{ flex: 1, padding: 12, background: '#e8f5e9', borderRadius: 6, borderLeft: '3px solid #388e3c' }}>
+          <div style={{ fontSize: 10, color: '#2e7d32', textTransform: 'uppercase', marginBottom: 4 }}>Cliente</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>CERALDI GROUP S.R.L.</div>
+          <div style={{ fontSize: 12, color: '#666' }}>P.IVA: 12345678901</div>
+        </div>
+      </div>
+
+      {/* Righe - compatto */}
+      <div style={{ background: 'white', borderRadius: 8, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <thead>
+            <tr style={{ background: '#f5f5f5' }}>
+              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600 }}>Descrizione</th>
+              <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, width: 60 }}>Qtà</th>
+              <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, width: 90 }}>Prezzo</th>
+              <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, width: 50 }}>IVA</th>
+              <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, width: 90 }}>Totale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(invoice.line_items || []).map((item, idx) => (
+              <tr key={idx} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <td style={{ padding: '8px 12px' }}>{item.description}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center' }}>{item.quantity || 1}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'right' }}>€ {formatCurrency(item.unit_price || item.price)}</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center' }}>{item.vat_rate || 22}%</td>
+                <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 500 }}>
+                  € {formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Totali compatti */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
+        <div style={{ background: '#f8f9fa', padding: 15, borderRadius: 8, minWidth: 220, border: '1px solid #e0e0e0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+            <span style={{ color: '#666' }}>Imponibile:</span>
+            <span>€ {formatCurrency(invoice.taxable_amount)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 10 }}>
+            <span style={{ color: '#666' }}>IVA:</span>
+            <span>€ {formatCurrency(invoice.vat_amount)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, borderTop: '2px solid #1e3a5f' }}>
+            <span style={{ fontWeight: 700, color: '#1e3a5f' }}>TOTALE:</span>
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#1e3a5f' }}>€ {formatCurrency(invoice.total_amount)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ============================================
+  // RENDER FORMATO COMPLETA (AssoSoftware standard)
+  // ============================================
+  const renderCompletaView = () => (
+    <div style={{ fontFamily: 'Arial, sans-serif' }}>
+      {/* Header tipo fattura cartacea */}
+      <div style={{ 
+        textAlign: 'center', 
+        padding: 20, 
+        border: '2px solid #1e3a5f',
+        borderRadius: 8,
+        marginBottom: 20,
+        background: 'linear-gradient(to bottom, #f8fafc, #fff)'
+      }}>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#1e3a5f', letterSpacing: 1 }}>FATTURA</h2>
+        <div style={{ fontSize: 13, color: '#666', marginTop: 5 }}>
+          N. <strong>{invoice.invoice_number}</strong> del <strong>{formatDate(invoice.invoice_date)}</strong>
+        </div>
+        <div style={{ fontSize: 11, color: '#888', marginTop: 3 }}>
+          {invoice.tipo_documento || 'TD01'} - {getTipoDocumento(invoice.tipo_documento)}
+        </div>
+      </div>
+
+      {/* Cedente / Cessionario - layout tradizionale */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        <div style={{ 
+          border: '1px solid #ccc', 
+          borderRadius: 6,
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            background: '#e3f2fd', 
+            padding: '8px 12px', 
+            fontSize: 11, 
+            fontWeight: 600, 
+            color: '#1565c0',
+            textTransform: 'uppercase',
+            borderBottom: '1px solid #bbdefb'
+          }}>
+            Cedente / Prestatore
+          </div>
+          <div style={{ padding: 12 }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>{invoice.supplier_name}</div>
+            <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>
+              <div>P.IVA: {invoice.supplier_vat}</div>
+              {invoice.supplier_cf && <div>C.F.: {invoice.supplier_cf}</div>}
+              {invoice.supplier_address && <div>{invoice.supplier_address}</div>}
+            </div>
+          </div>
+        </div>
+        <div style={{ 
+          border: '1px solid #ccc', 
+          borderRadius: 6,
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            background: '#e8f5e9', 
+            padding: '8px 12px', 
+            fontSize: 11, 
+            fontWeight: 600, 
+            color: '#2e7d32',
+            textTransform: 'uppercase',
+            borderBottom: '1px solid #c8e6c9'
+          }}>
+            Cessionario / Committente
+          </div>
+          <div style={{ padding: 12 }}>
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>CERALDI GROUP S.R.L.</div>
+            <div style={{ fontSize: 12, color: '#555', lineHeight: 1.6 }}>
+              <div>P.IVA: 12345678901</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Info documento */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(4, 1fr)', 
+        gap: 12, 
+        marginBottom: 20,
+        padding: 12,
+        background: '#fafafa',
+        borderRadius: 6,
+        border: '1px solid #e0e0e0'
+      }}>
+        <div>
+          <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase' }}>Data Ricezione</div>
+          <div style={{ fontSize: 14, fontWeight: 500 }}>{formatDate(invoice.received_date)}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase' }}>ID SdI</div>
+          <div style={{ fontSize: 14, fontWeight: 500 }}>{invoice.sdi_id || '-'}</div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase' }}>Stato</div>
+          <div style={{ 
+            fontSize: 14, 
+            fontWeight: 500, 
+            color: invoice.pagato ? '#2e7d32' : '#e65100'
+          }}>
+            {invoice.pagato ? '✓ Pagata' : '⏳ Da Pagare'}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase' }}>Metodo Pag.</div>
+          <div style={{ fontSize: 14, fontWeight: 500 }}>{invoice.metodo_pagamento || '-'}</div>
+        </div>
+      </div>
+
+      {/* Dettaglio Linee */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ 
+          background: '#1e3a5f', 
+          color: 'white', 
+          padding: '10px 15px', 
+          fontWeight: 600,
+          fontSize: 12,
+          textTransform: 'uppercase',
+          borderRadius: '6px 6px 0 0'
+        }}>
+          Dettaglio Beni e Servizi
+        </div>
+        <div style={{ border: '1px solid #1e3a5f', borderTop: 'none', borderRadius: '0 0 6px 6px', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#f0f4f8' }}>
+                <th style={{ padding: '10px', textAlign: 'center', fontWeight: 600, width: 40, borderRight: '1px solid #e0e0e0' }}>Nr.</th>
+                <th style={{ padding: '10px', textAlign: 'left', fontWeight: 600, borderRight: '1px solid #e0e0e0' }}>Descrizione</th>
+                <th style={{ padding: '10px', textAlign: 'center', fontWeight: 600, width: 60, borderRight: '1px solid #e0e0e0' }}>Qtà</th>
+                <th style={{ padding: '10px', textAlign: 'right', fontWeight: 600, width: 90, borderRight: '1px solid #e0e0e0' }}>Prezzo Unit.</th>
+                <th style={{ padding: '10px', textAlign: 'center', fontWeight: 600, width: 60, borderRight: '1px solid #e0e0e0' }}>Aliq.</th>
+                <th style={{ padding: '10px', textAlign: 'right', fontWeight: 600, width: 100 }}>Importo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(invoice.line_items || []).map((item, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #e8e8e8' }}>
+                  <td style={{ padding: '8px 10px', textAlign: 'center', borderRight: '1px solid #f0f0f0' }}>{idx + 1}</td>
+                  <td style={{ padding: '8px 10px', borderRight: '1px solid #f0f0f0' }}>{item.description}</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'center', borderRight: '1px solid #f0f0f0' }}>{item.quantity || 1}</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'right', borderRight: '1px solid #f0f0f0' }}>€ {formatCurrency(item.unit_price || item.price)}</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'center', borderRight: '1px solid #f0f0f0' }}>{item.vat_rate || 22}%</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 500 }}>
+                    € {formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Riepilogo IVA */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ 
+          background: '#455a64', 
+          color: 'white', 
+          padding: '8px 15px', 
+          fontWeight: 600,
+          fontSize: 11,
+          textTransform: 'uppercase',
+          borderRadius: '6px 6px 0 0'
+        }}>
+          Riepilogo IVA
+        </div>
+        <div style={{ border: '1px solid #455a64', borderTop: 'none', borderRadius: '0 0 6px 6px', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#f5f5f5' }}>
+                <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600 }}>Aliquota</th>
+                <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 600 }}>Imponibile</th>
+                <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 600 }}>Imposta</th>
+                <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600 }}>Esigibilità</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '8px 10px' }}>22%</td>
+                <td style={{ padding: '8px 10px', textAlign: 'right' }}>€ {formatCurrency(invoice.taxable_amount)}</td>
+                <td style={{ padding: '8px 10px', textAlign: 'right' }}>€ {formatCurrency(invoice.vat_amount)}</td>
+                <td style={{ padding: '8px 10px' }}>Immediata (I)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Totali */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ 
+          border: '2px solid #1e3a5f', 
+          borderRadius: 8, 
+          overflow: 'hidden',
+          minWidth: 280
+        }}>
+          <div style={{ padding: '10px 15px', background: '#f8fafc' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+              <span>Totale Imponibile:</span>
+              <span>€ {formatCurrency(invoice.taxable_amount)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <span>Totale IVA:</span>
+              <span>€ {formatCurrency(invoice.vat_amount)}</span>
+            </div>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            padding: '12px 15px',
+            background: '#1e3a5f',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: 15
+          }}>
+            <span>TOTALE DOCUMENTO:</span>
+            <span>€ {formatCurrency(invoice.total_amount)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dati Pagamento */}
+      {(invoice.metodo_pagamento || invoice.payment_terms) && (
+        <div style={{ 
+          marginTop: 20, 
+          padding: 15, 
+          background: '#fff8e1', 
+          borderRadius: 8,
+          borderLeft: '4px solid #ffc107'
+        }}>
+          <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8, color: '#f57c00' }}>DATI PAGAMENTO</div>
+          <div style={{ fontSize: 13 }}>
+            <span style={{ color: '#666' }}>Modalità: </span>
+            <span style={{ fontWeight: 500 }}>{getModalitaPagamento(invoice.metodo_pagamento)}</span>
+          </div>
+          {invoice.payment_due_date && (
+            <div style={{ fontSize: 13, marginTop: 4 }}>
+              <span style={{ color: '#666' }}>Scadenza: </span>
+              <span style={{ fontWeight: 500 }}>{formatDate(invoice.payment_due_date)}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  // ============================================
+  // RENDER FORMATO MINISTERIALE (Agenzia Entrate)
+  // ============================================
+  const renderMinisterialeView = () => (
+    <div style={{ fontFamily: "'Times New Roman', Georgia, serif", fontSize: 12 }}>
+      {/* Header Ministeriale */}
       <div style={{ 
         textAlign: 'center', 
         border: '2px solid #000', 
@@ -606,14 +694,14 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         marginBottom: 20,
         background: '#f5f5f5'
       }}>
-        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 2 }}>
+        <h2 style={{ margin: 0, fontSize: 15, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 2 }}>
           FATTURA ELETTRONICA
         </h2>
-        <div style={{ fontSize: 13, marginTop: 5 }}>{getTipoDocumento(invoice.tipo_documento)}</div>
+        <div style={{ fontSize: 12, marginTop: 5 }}>{getTipoDocumento(invoice.tipo_documento)}</div>
       </div>
 
-      {/* Sezione Trasmissione */}
-      <div style={{ border: '1px solid #000', marginBottom: 15 }}>
+      {/* Sezione 1 - Dati Trasmissione */}
+      <div style={{ border: '1px solid #000', marginBottom: 12 }}>
         <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
           1. Dati Trasmissione
         </div>
@@ -629,10 +717,10 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         </div>
       </div>
 
-      {/* Cedente/Prestatore */}
-      <div style={{ border: '1px solid #000', marginBottom: 15 }}>
+      {/* Sezione 1.2 - Cedente/Prestatore */}
+      <div style={{ border: '1px solid #000', marginBottom: 12 }}>
         <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
-          1.2 Cedente/Prestatore
+          1.2 Cedente / Prestatore
         </div>
         <div style={{ padding: 10 }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #ddd', padding: '4px 0' }}>
@@ -650,10 +738,10 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         </div>
       </div>
 
-      {/* Cessionario/Committente */}
-      <div style={{ border: '1px solid #000', marginBottom: 15 }}>
+      {/* Sezione 1.4 - Cessionario/Committente */}
+      <div style={{ border: '1px solid #000', marginBottom: 12 }}>
         <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
-          1.4 Cessionario/Committente
+          1.4 Cessionario / Committente
         </div>
         <div style={{ padding: 10 }}>
           <div style={{ display: 'flex', borderBottom: '1px solid #ddd', padding: '4px 0' }}>
@@ -667,8 +755,8 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         </div>
       </div>
 
-      {/* Dati Documento */}
-      <div style={{ border: '1px solid #000', marginBottom: 15 }}>
+      {/* Sezione 2 - Dati Generali Documento */}
+      <div style={{ border: '1px solid #000', marginBottom: 12 }}>
         <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
           2. Dati Generali Documento
         </div>
@@ -687,217 +775,126 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
           </div>
           <div style={{ display: 'flex', padding: '4px 0' }}>
             <span style={{ width: 180, fontWeight: 'bold', fontSize: 10, color: '#555' }}>Importo Totale:</span>
-            <span style={{ flex: 1, fontSize: 11, fontWeight: 'bold' }}>{formatCurrency(invoice.total_amount)}</span>
+            <span style={{ flex: 1, fontSize: 11, fontWeight: 'bold' }}>€ {formatCurrency(invoice.total_amount)}</span>
           </div>
         </div>
       </div>
 
-      {/* Dettaglio Linee */}
-      <div style={{ border: '1px solid #000', marginBottom: 15 }}>
+      {/* Sezione 2.2 - Dati Beni/Servizi */}
+      <div style={{ border: '1px solid #000', marginBottom: 12 }}>
         <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
-          2.2 Dati Beni/Servizi
+          2.2 Dati Beni / Servizi
         </div>
         <div style={{ padding: 10 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
             <thead>
               <tr>
-                <th style={{ background: '#e0e0e0', border: '1px solid #000', padding: 6, textAlign: 'left', fontSize: 9, textTransform: 'uppercase' }}>Nr.</th>
-                <th style={{ background: '#e0e0e0', border: '1px solid #000', padding: 6, textAlign: 'left', fontSize: 9, textTransform: 'uppercase' }}>Descrizione</th>
-                <th style={{ background: '#e0e0e0', border: '1px solid #000', padding: 6, textAlign: 'right', fontSize: 9, textTransform: 'uppercase' }}>Qtà</th>
-                <th style={{ background: '#e0e0e0', border: '1px solid #000', padding: 6, textAlign: 'right', fontSize: 9, textTransform: 'uppercase' }}>Prezzo</th>
-                <th style={{ background: '#e0e0e0', border: '1px solid #000', padding: 6, textAlign: 'center', fontSize: 9, textTransform: 'uppercase' }}>IVA</th>
-                <th style={{ background: '#e0e0e0', border: '1px solid #000', padding: 6, textAlign: 'right', fontSize: 9, textTransform: 'uppercase' }}>Totale</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'left', fontSize: 9, textTransform: 'uppercase' }}>Nr.</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'left', fontSize: 9, textTransform: 'uppercase' }}>Descrizione</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'right', fontSize: 9, textTransform: 'uppercase' }}>Qtà</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'right', fontSize: 9, textTransform: 'uppercase' }}>Prezzo</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'center', fontSize: 9, textTransform: 'uppercase' }}>IVA</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'right', fontSize: 9, textTransform: 'uppercase' }}>Totale</th>
               </tr>
             </thead>
             <tbody>
               {(invoice.line_items || []).map((item, idx) => (
                 <tr key={idx}>
-                  <td style={{ border: '1px solid #000', padding: 6 }}>{idx + 1}</td>
-                  <td style={{ border: '1px solid #000', padding: 6 }}>{item.description}</td>
-                  <td style={{ border: '1px solid #000', padding: 6, textAlign: 'right' }}>{item.quantity || 1}</td>
-                  <td style={{ border: '1px solid #000', padding: 6, textAlign: 'right' }}>{formatCurrency(item.unit_price || item.price)}</td>
-                  <td style={{ border: '1px solid #000', padding: 6, textAlign: 'center' }}>{item.vat_rate || 22}%</td>
-                  <td style={{ border: '1px solid #000', padding: 6, textAlign: 'right' }}>{formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}</td>
+                  <td style={{ border: '1px solid #ccc', padding: 5 }}>{idx + 1}</td>
+                  <td style={{ border: '1px solid #ccc', padding: 5 }}>{item.description}</td>
+                  <td style={{ border: '1px solid #ccc', padding: 5, textAlign: 'right' }}>{item.quantity || 1}</td>
+                  <td style={{ border: '1px solid #ccc', padding: 5, textAlign: 'right' }}>€ {formatCurrency(item.unit_price || item.price)}</td>
+                  <td style={{ border: '1px solid #ccc', padding: 5, textAlign: 'center' }}>{item.vat_rate || 22}%</td>
+                  <td style={{ border: '1px solid #ccc', padding: 5, textAlign: 'right' }}>€ {formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}</td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Sezione 2.2.2 - Dati Riepilogo */}
+      <div style={{ border: '1px solid #000', marginBottom: 12 }}>
+        <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
+          2.2.2 Dati Riepilogo
+        </div>
+        <div style={{ padding: 10 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+            <thead>
+              <tr>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, fontSize: 9 }}>Aliquota IVA</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'right', fontSize: 9 }}>Imponibile</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, textAlign: 'right', fontSize: 9 }}>Imposta</th>
+                <th style={{ background: '#e8e8e8', border: '1px solid #999', padding: 5, fontSize: 9 }}>Esigibilità IVA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ border: '1px solid #ccc', padding: 5 }}>22%</td>
+                <td style={{ border: '1px solid #ccc', padding: 5, textAlign: 'right' }}>€ {formatCurrency(invoice.taxable_amount)}</td>
+                <td style={{ border: '1px solid #ccc', padding: 5, textAlign: 'right' }}>€ {formatCurrency(invoice.vat_amount)}</td>
+                <td style={{ border: '1px solid #ccc', padding: 5 }}>I - Immediata</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Totali */}
-      <div style={{ border: '2px solid #000', marginBottom: 15 }}>
+      <div style={{ border: '2px solid #000', marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid #000' }}>
           <span>Totale Imponibile:</span>
-          <span>{formatCurrency(invoice.taxable_amount)}</span>
+          <span>€ {formatCurrency(invoice.taxable_amount)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', borderBottom: '1px solid #000' }}>
           <span>Totale Imposta:</span>
-          <span>{formatCurrency(invoice.vat_amount)}</span>
+          <span>€ {formatCurrency(invoice.vat_amount)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: '#f5f5f5', fontWeight: 'bold', fontSize: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: '#f0f0f0', fontWeight: 'bold', fontSize: 13 }}>
           <span>IMPORTO TOTALE DOCUMENTO:</span>
-          <span>{formatCurrency(invoice.total_amount)}</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ============================================
-  // RENDER FORMATO ASSOSOFTWARE
-  // ============================================
-  const renderAssoView = () => (
-    <div>
-      {/* Parties */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-        <div style={{ padding: 16, background: '#e8f4fc', borderRadius: 8 }}>
-          <h4 style={{ margin: '0 0 10px', color: '#1565c0', fontSize: 12, textTransform: 'uppercase' }}>
-            Cedente / Prestatore
-          </h4>
-          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-            {invoice.supplier_name}
-          </div>
-          <div style={{ color: '#666', fontSize: 13 }}>
-            P.IVA: {invoice.supplier_vat}
-          </div>
-        </div>
-        <div style={{ padding: 16, background: '#e8f5e9', borderRadius: 8 }}>
-          <h4 style={{ margin: '0 0 10px', color: '#2e7d32', fontSize: 12, textTransform: 'uppercase' }}>
-            Cessionario / Committente
-          </h4>
-          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>
-            CERALDI GROUP S.R.L.
-          </div>
-          <div style={{ color: '#666', fontSize: 13 }}>
-            P.IVA: 12345678901
-          </div>
+          <span>€ {formatCurrency(invoice.total_amount)}</span>
         </div>
       </div>
 
-      {/* Document Info */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: 16, 
-        marginBottom: 24,
-        padding: 16,
-        background: 'white',
-        borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-      }}>
-        <div>
-          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Numero</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#1e3a5f' }}>{invoice.invoice_number}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Data Documento</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#1e3a5f' }}>{formatDate(invoice.invoice_date)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Data Ricezione</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#1e3a5f' }}>{formatDate(invoice.received_date)}</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase' }}>Stato</div>
-          <div style={{ 
-            fontSize: 14, 
-            fontWeight: 600, 
-            color: invoice.pagato ? '#2e7d32' : '#e65100',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4
-          }}>
-            {invoice.pagato ? '✓ Pagata' : '⏳ Da Pagare'}
-          </div>
-        </div>
-      </div>
-
-      {/* Line Items */}
-      <div style={{ marginBottom: 24 }}>
-        <h3 style={{ margin: '0 0 12px', color: '#1e3a5f', fontSize: 14 }}>
-          Dettaglio Beni/Servizi
-        </h3>
-        <div style={{ background: 'white', borderRadius: 8, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#1e3a5f', color: 'white' }}>
-                <th style={{ padding: 12, textAlign: 'left', fontSize: 12 }}>Descrizione</th>
-                <th style={{ padding: 12, textAlign: 'center', fontSize: 12, width: 80 }}>Qtà</th>
-                <th style={{ padding: 12, textAlign: 'right', fontSize: 12, width: 100 }}>Prezzo</th>
-                <th style={{ padding: 12, textAlign: 'center', fontSize: 12, width: 60 }}>IVA</th>
-                <th style={{ padding: 12, textAlign: 'right', fontSize: 12, width: 100 }}>Totale</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(invoice.line_items || []).map((item, idx) => (
-                <tr key={idx} style={{ background: idx % 2 ? '#f8fafc' : 'white' }}>
-                  <td style={{ padding: 12, fontSize: 13 }}>{item.description}</td>
-                  <td style={{ padding: 12, textAlign: 'center', fontSize: 13 }}>{item.quantity || 1}</td>
-                  <td style={{ padding: 12, textAlign: 'right', fontSize: 13 }}>{formatCurrency(item.unit_price || item.price)}</td>
-                  <td style={{ padding: 12, textAlign: 'center', fontSize: 13 }}>{item.vat_rate || 22}%</td>
-                  <td style={{ padding: 12, textAlign: 'right', fontSize: 13, fontWeight: 500 }}>
-                    {formatCurrency((item.quantity || 1) * (item.unit_price || item.price || 0))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Totals */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        marginBottom: 24 
-      }}>
-        <div style={{ 
-          background: 'white', 
-          padding: 20, 
-          borderRadius: 8, 
-          minWidth: 280,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ color: '#666' }}>Imponibile:</span>
-            <span style={{ fontWeight: 500 }}>{formatCurrency(invoice.taxable_amount)}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ color: '#666' }}>IVA:</span>
-            <span style={{ fontWeight: 500 }}>{formatCurrency(invoice.vat_amount)}</span>
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            paddingTop: 12,
-            borderTop: '2px solid #1e3a5f'
-          }}>
-            <span style={{ fontWeight: 700, color: '#1e3a5f' }}>TOTALE:</span>
-            <span style={{ fontWeight: 700, fontSize: 18, color: '#1e3a5f' }}>
-              {formatCurrency(invoice.total_amount)}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Payment Info */}
+      {/* Sezione 2.4 - Dati Pagamento */}
       {(invoice.metodo_pagamento || invoice.payment_terms) && (
-        <div style={{ 
-          padding: 16, 
-          background: '#fff3e0', 
-          borderRadius: 8,
-          borderLeft: '4px solid #ff9800'
-        }}>
-          <h4 style={{ margin: '0 0 8px', color: '#e65100', fontSize: 13 }}>
-            💳 Modalità di Pagamento
-          </h4>
-          <p style={{ margin: 0, color: '#333' }}>
-            {invoice.metodo_pagamento || invoice.payment_terms}
-          </p>
+        <div style={{ border: '1px solid #000' }}>
+          <div style={{ background: '#e0e0e0', padding: '5px 10px', fontWeight: 'bold', fontSize: 11, textTransform: 'uppercase', borderBottom: '1px solid #000' }}>
+            2.4 Dati Pagamento
+          </div>
+          <div style={{ padding: 10 }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid #ddd', padding: '4px 0' }}>
+              <span style={{ width: 180, fontWeight: 'bold', fontSize: 10, color: '#555' }}>Condizioni Pagamento:</span>
+              <span style={{ flex: 1, fontSize: 11 }}>{invoice.payment_terms || 'TP02 - Pagamento completo'}</span>
+            </div>
+            <div style={{ display: 'flex', padding: '4px 0' }}>
+              <span style={{ width: 180, fontWeight: 'bold', fontSize: 10, color: '#555' }}>Modalità Pagamento:</span>
+              <span style={{ flex: 1, fontSize: 11 }}>{getModalitaPagamento(invoice.metodo_pagamento)}</span>
+            </div>
+            {invoice.payment_due_date && (
+              <div style={{ display: 'flex', padding: '4px 0' }}>
+                <span style={{ width: 180, fontWeight: 'bold', fontSize: 10, color: '#555' }}>Data Scadenza:</span>
+                <span style={{ flex: 1, fontSize: 11 }}>{formatDate(invoice.payment_due_date)}</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
   );
+
+  // Determina quale view renderizzare
+  const renderCurrentView = () => {
+    switch (viewMode) {
+      case 'semplificata':
+        return renderSemplificataView();
+      case 'ministeriale':
+        return renderMinisterialeView();
+      case 'completa':
+      default:
+        return renderCompletaView();
+    }
+  };
 
   return (
     <div style={{ 
@@ -922,21 +919,23 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
       }}>
         {/* Header */}
         <div style={{ 
-          padding: '16px 24px', 
-          background: viewMode === 'ade' ? '#1a365d' : '#1e3a5f',
+          padding: '12px 20px', 
+          background: viewMode === 'ministeriale' ? '#37474f' : '#1e3a5f',
           color: 'white',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 10
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18 }}>📄 Fattura {invoice.invoice_number}</h2>
-            <p style={{ margin: '4px 0 0', opacity: 0.8, fontSize: 13 }}>
+            <h2 style={{ margin: 0, fontSize: 16 }}>📄 Fattura {invoice.invoice_number}</h2>
+            <p style={{ margin: '2px 0 0', opacity: 0.8, fontSize: 12 }}>
               {invoice.supplier_name}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            {/* Toggle View Mode */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            {/* Toggle View Mode - 3 opzioni come AssoInvoice */}
             <div style={{ 
               display: 'flex', 
               background: 'rgba(255,255,255,0.15)', 
@@ -944,60 +943,80 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
               overflow: 'hidden'
             }}>
               <button
-                onClick={() => setViewMode('asso')}
+                onClick={() => setViewMode('semplificata')}
                 style={{
-                  padding: '6px 12px',
-                  background: viewMode === 'asso' ? 'rgba(255,255,255,0.3)' : 'transparent',
+                  padding: '5px 10px',
+                  background: viewMode === 'semplificata' ? 'rgba(255,255,255,0.3)' : 'transparent',
                   color: 'white',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: viewMode === 'asso' ? 600 : 400
+                  fontSize: 11,
+                  fontWeight: viewMode === 'semplificata' ? 600 : 400
                 }}
-                data-testid="view-mode-asso"
+                title="Visualizzazione Semplificata - Solo dati fiscali essenziali"
+                data-testid="view-mode-semplificata"
               >
-                🏢 AssoSoftware
+                Semplificata
               </button>
               <button
-                onClick={() => setViewMode('ade')}
+                onClick={() => setViewMode('completa')}
                 style={{
-                  padding: '6px 12px',
-                  background: viewMode === 'ade' ? 'rgba(255,255,255,0.3)' : 'transparent',
+                  padding: '5px 10px',
+                  background: viewMode === 'completa' ? 'rgba(255,255,255,0.3)' : 'transparent',
                   color: 'white',
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: viewMode === 'ade' ? 600 : 400
+                  fontSize: 11,
+                  fontWeight: viewMode === 'completa' ? 600 : 400
                 }}
-                data-testid="view-mode-ade"
+                title="Visualizzazione Completa - Tutti i dati incluse info gestionali"
+                data-testid="view-mode-completa"
               >
-                🏛️ Agenzia Entrate
+                Completa
+              </button>
+              <button
+                onClick={() => setViewMode('ministeriale')}
+                style={{
+                  padding: '5px 10px',
+                  background: viewMode === 'ministeriale' ? 'rgba(255,255,255,0.3)' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 11,
+                  fontWeight: viewMode === 'ministeriale' ? 600 : 400
+                }}
+                title="Visualizzazione Ministeriale - Formato ufficiale Agenzia Entrate"
+                data-testid="view-mode-ministeriale"
+              >
+                Ministeriale
               </button>
             </div>
             <button
               onClick={generatePDFFromHTML}
               style={{
-                padding: '8px 16px',
+                padding: '6px 14px',
                 background: '#4caf50',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
-                fontWeight: 600
+                fontWeight: 600,
+                fontSize: 12
               }}
               data-testid="print-invoice-btn"
             >
-              🖨️ Stampa/PDF
+              🖨️ Stampa
             </button>
             <button
               onClick={onClose}
               style={{
-                padding: '8px 16px',
+                padding: '6px 14px',
                 background: 'rgba(255,255,255,0.2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontSize: 12
               }}
               data-testid="close-invoice-viewer"
             >
@@ -1010,10 +1029,10 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         <div style={{ 
           flex: 1, 
           overflow: 'auto', 
-          padding: 24,
-          background: viewMode === 'ade' ? '#fafafa' : '#f8fafc'
+          padding: 20,
+          background: viewMode === 'ministeriale' ? '#fafafa' : '#f8fafc'
         }}>
-          {viewMode === 'ade' ? renderADEView() : renderAssoView()}
+          {renderCurrentView()}
         </div>
       </div>
     </div>
