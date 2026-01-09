@@ -200,16 +200,29 @@ async def get_iva_monthly(year: int, month: int) -> Dict[str, Any]:
                 tipo_doc = f.get('tipo_documento', '')
                 is_nota_credito = tipo_doc in NOTE_CREDITO_TYPES
                 
-                # Usa IVA e imponibile dal database (già calcolati correttamente)
-                f_iva = float(f.get('iva', 0) or 0)
-                total = float(f.get('total_amount', 0) or f.get('importo_totale', 0) or 0)
-                f_imponibile = float(f.get('imponibile', 0) or 0)
+                # Usa riepilogo_iva se disponibile (più accurato)
+                riepilogo = f.get('riepilogo_iva', [])
+                f_iva = 0
+                f_imponibile = 0
                 
-                # Fallback: stima IVA al 22% solo se mancante
-                if f_iva == 0 and total > 0:
-                    f_iva = total - (total / 1.22)
-                if f_imponibile == 0 and total > 0:
-                    f_imponibile = total / 1.22
+                if riepilogo:
+                    for r in riepilogo:
+                        # Escludi operazioni con natura (esenti, non imponibili, etc.)
+                        if r.get('natura'):
+                            continue
+                        f_iva += float(r.get('imposta', 0) or 0)
+                        f_imponibile += float(r.get('imponibile', 0) or 0)
+                else:
+                    # Fallback: usa campi diretti
+                    f_iva = float(f.get('iva', 0) or f.get('vat_amount', 0) or 0)
+                    f_imponibile = float(f.get('imponibile', 0) or f.get('taxable_amount', 0) or 0)
+                    total = float(f.get('total_amount', 0) or f.get('importo_totale', 0) or 0)
+                    
+                    # Fallback estremo: stima IVA al 22% solo se mancante
+                    if f_iva == 0 and total > 0:
+                        f_iva = total - (total / 1.22)
+                    if f_imponibile == 0 and total > 0:
+                        f_imponibile = total / 1.22
                 
                 if is_nota_credito:
                     iva_nc += f_iva
