@@ -461,3 +461,279 @@ async def calcola_tfr_batch(anno: int) -> Dict[str, Any]:
         "num_già_esistenti": len([r for r in risultati if r["stato"] == "già_calcolato"]),
         "num_senza_retribuzione": len([r for r in risultati if r["stato"] == "nessuna_retribuzione"])
     }
+
+
+# ============================================
+# GESTIONE ACCONTI (TFR, Ferie, 13ima, 14ima, Prestiti)
+# ============================================
+
+class AccontoInput(BaseModel):
+    dipendente_id: str
+    tipo: str  # "tfr", "ferie", "tredicesima", "quattordicesima", "prestito"
+    importo: float
+    data: str  # YYYY-MM-DD
+    note: Optional[str] = ""
+
+
+@router.get("/acconti/{dipendente_id}")
+async def get_acconti_dipendente(dipendente_id: str) -> Dict[str, Any]:
+    """
+    Restituisce tutti gli acconti di un dipendente raggruppati per tipo.
+    Include: TFR, Ferie, 13ima, 14ima, Prestiti.
+    """
+    db = Database.get_db()
+    
+    # Verifica dipendente
+    dipendente = await db["employees"].find_one(
+        {"id": dipendente_id},
+        {"_id": 0, "id": 1, "nome_completo": 1, "tfr_accantonato": 1}
+    )
+    
+    if not dipendente:
+        raise HTTPException(status_code=404, detail="Dipendente non trovato")
+    
+    # Recupera tutti gli acconti
+    acconti = await db["acconti_dipendenti"].find(
+        {"dipendente_id": dipendente_id},
+        {"_id": 0}
+    ).sort("data", -1).to_list(500)
+    
+    # Raggruppa per tipo
+    acconti_per_tipo = {
+        "tfr": [],
+        "ferie": [],
+        "tredicesima": [],
+        "quattordicesima": [],
+        "prestito": []
+    }
+    
+    totali = {
+        "tfr": 0,
+        "ferie": 0,
+        "tredicesima": 0,
+        "quattordicesima": 0,
+        "prestito": 0
+    }
+    
+    for acc in acconti:
+        tipo = acc.get("tipo", "altro")
+        if tipo in acconti_per_tipo:
+            acconti_per_tipo[tipo].append(acc)
+            totali[tipo] += acc.get("importo", 0)
+    
+    # Calcola saldi
+    tfr_totale = float(dipendente.get("tfr_accantonato", 0))
+    
+    return {
+        "dipendente_id": dipendente_id,
+        "dipendente_nome": dipendente.get("nome_completo", ""),
+        "tfr_accantonato": round(tfr_totale, 2),
+        "tfr_acconti": round(totali["tfr"], 2),
+        "tfr_saldo": round(tfr_totale - totali["tfr"], 2),
+        "ferie_acconti": round(totali["ferie"], 2),
+        "tredicesima_acconti": round(totali["tredicesima"], 2),
+        "quattordicesima_acconti": round(totali["quattordicesima"], 2),
+        "prestiti_totale": round(totali["prestito"], 2),
+        "acconti": acconti_per_tipo,
+        "totale_acconti": round(sum(totali.values()), 2)
+    }
+
+
+@router.post("/acconti")
+async def registra_acconto(input_data: AccontoInput) -> Dict[str, Any]:
+    """
+    Registra un acconto per un dipendente.
+    Tipi supportati: tfr, ferie, tredicesima, quattordicesima, prestito.
+    """
+    db = Database.get_db()
+    
+    # Verifica dipendente
+    dipendente = await db["employees"].find_one(
+        {"id": input_data.dipendente_id},
+        {"_id": 0}
+    )
+    
+    if not dipendente:
+        raise HTTPException(status_code=404, detail="Dipendente non trovato")
+    
+    # Valida tipo
+    tipi_validi = ["tfr", "ferie", "tredicesima", "quattordicesima", "prestito"]
+    if input_data.tipo not in tipi_validi:
+        raise HTTPException(status_code=400, detail=f"Tipo non valido. Usa: {', '.join(tipi_validi)}")
+    
+    if input_data.importo <= 0:
+        raise HTTPException(status_code=400, detail="L'importo deve essere positivo")
+    
+    # Crea record acconto
+    acconto = {
+        "id": str(uuid4()),
+        "dipendente_id": input_data.dipendente_id,
+        "dipendente_nome": dipendente.get("nome_completo", ""),
+        "tipo": input_data.tipo,
+        "importo": round(input_data.importo, 2),
+        "data": input_data.data,
+        "note": input_data.note,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db["acconti_dipendenti"].insert_one(acconto)
+    
+    # Se è un acconto TFR, aggiorna anche il TFR del dipendente
+    if input_data.tipo == "tfr":
+        tfr_attuale = float(dipendente.get("tfr_accantonato", 0))
+        nuovo_tfr = max(0, tfr_attuale - input_data.importo)
+        await db["employees"].update_one(
+            {"id": input_data.dipendente_id},
+            {"$set": {"tfr_accantonato": round(nuovo_tfr, 2)}}
+        )
+        
+        # Registra movimento
+        movimento = {
+            "id": str(uuid4()),
+            "data": input_data.data,
+            "descrizione": f"Acconto TFR - {dipendente.get('nome_completo', '')}",
+            "tipo": "acconto_tfr",
+            "importo": round(input_data.importo, 2),
+            "dipendente_id": input_data.dipendente_id,
+            "note": input_data.note,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db["movimenti_contabili"].insert_one(movimento)
+    
+    return {
+        "success": True,
+        "acconto_id": acconto["id"],
+        "messaggio": f"Acconto {input_data.tipo} registrato per {dipendente.get('nome_completo', '')}",
+        "importo": round(input_data.importo, 2)
+    }
+
+
+@router.delete("/acconti/{acconto_id}")
+async def elimina_acconto(acconto_id: str) -> Dict[str, Any]:
+    """Elimina un acconto."""
+    db = Database.get_db()
+    
+    # Trova acconto
+    acconto = await db["acconti_dipendenti"].find_one({"id": acconto_id})
+    if not acconto:
+        raise HTTPException(status_code=404, detail="Acconto non trovato")
+    
+    # Se era un acconto TFR, ripristina il valore
+    if acconto.get("tipo") == "tfr":
+        dipendente = await db["employees"].find_one({"id": acconto["dipendente_id"]})
+        if dipendente:
+            tfr_attuale = float(dipendente.get("tfr_accantonato", 0))
+            nuovo_tfr = tfr_attuale + acconto.get("importo", 0)
+            await db["employees"].update_one(
+                {"id": acconto["dipendente_id"]},
+                {"$set": {"tfr_accantonato": round(nuovo_tfr, 2)}}
+            )
+    
+    # Elimina acconto
+    await db["acconti_dipendenti"].delete_one({"id": acconto_id})
+    
+    return {
+        "success": True,
+        "messaggio": f"Acconto {acconto.get('tipo', '')} eliminato"
+    }
+
+
+@router.get("/parse-payslips")
+async def parse_payslips_for_tfr() -> Dict[str, Any]:
+    """
+    Analizza i PDF delle buste paga per estrarre i dati TFR.
+    Legge dalla cartella /app/uploads/paghe.
+    """
+    try:
+        from app.services.payslip_pdf_parser import parse_all_payslips
+        
+        if not os.path.exists(PAYSLIPS_FOLDER):
+            return {
+                "success": False,
+                "error": f"Cartella {PAYSLIPS_FOLDER} non trovata",
+                "data": []
+            }
+        
+        # Conta PDF disponibili
+        pdf_files = list(Path(PAYSLIPS_FOLDER).glob("Libro*.pdf"))
+        
+        if not pdf_files:
+            return {
+                "success": False,
+                "error": "Nessun file 'Libro Unico' trovato nella cartella",
+                "data": []
+            }
+        
+        # Parse tutti i PDF
+        data = parse_all_payslips(PAYSLIPS_FOLDER)
+        
+        return {
+            "success": True,
+            "num_pdf_analizzati": len(pdf_files),
+            "num_dipendenti_trovati": len(data),
+            "dipendenti": data
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore parsing buste paga: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "data": []
+        }
+
+
+@router.get("/storico-tfr/{dipendente_id}")
+async def get_storico_tfr(dipendente_id: str) -> Dict[str, Any]:
+    """
+    Restituisce lo storico completo del TFR di un dipendente.
+    Include: accantonamenti, acconti, variazioni.
+    """
+    db = Database.get_db()
+    
+    # Verifica dipendente
+    dipendente = await db["employees"].find_one(
+        {"id": dipendente_id},
+        {"_id": 0}
+    )
+    
+    if not dipendente:
+        raise HTTPException(status_code=404, detail="Dipendente non trovato")
+    
+    # Accantonamenti
+    accantonamenti = await db["tfr_accantonamenti"].find(
+        {"dipendente_id": dipendente_id},
+        {"_id": 0}
+    ).sort("anno", -1).to_list(100)
+    
+    # Liquidazioni
+    liquidazioni = await db["tfr_liquidazioni"].find(
+        {"dipendente_id": dipendente_id},
+        {"_id": 0}
+    ).sort("data", -1).to_list(100)
+    
+    # Acconti TFR
+    acconti_tfr = await db["acconti_dipendenti"].find(
+        {"dipendente_id": dipendente_id, "tipo": "tfr"},
+        {"_id": 0}
+    ).sort("data", -1).to_list(100)
+    
+    # Calcola totali
+    totale_accantonato = sum(a.get("totale_accantonamento", 0) for a in accantonamenti)
+    totale_liquidato = sum(l.get("importo_lordo", 0) for l in liquidazioni)
+    totale_acconti = sum(acc.get("importo", 0) for acc in acconti_tfr)
+    
+    tfr_attuale = float(dipendente.get("tfr_accantonato", 0))
+    
+    return {
+        "dipendente_id": dipendente_id,
+        "dipendente_nome": dipendente.get("nome_completo", ""),
+        "tfr_attuale": round(tfr_attuale, 2),
+        "totale_accantonato": round(totale_accantonato, 2),
+        "totale_liquidato": round(totale_liquidato, 2),
+        "totale_acconti": round(totale_acconti, 2),
+        "accantonamenti": accantonamenti,
+        "liquidazioni": liquidazioni,
+        "acconti": acconti_tfr
+    }
+
