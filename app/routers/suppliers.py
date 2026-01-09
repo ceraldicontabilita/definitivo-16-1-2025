@@ -468,13 +468,16 @@ async def get_supplier_fatturato(
     data_fine = f"{anno}-12-31"
     
     # Pipeline per calcolo totale e per mese
+    # Usa $and per combinare correttamente le condizioni di P.IVA e data
     pipeline = [
         {
             "$match": {
-                "$or": [{"cedente_piva": piva}, {"supplier_vat": piva}],
-                "$or": [
-                    {"data_fattura": {"$gte": data_inizio, "$lte": data_fine}},
-                    {"data": {"$gte": data_inizio, "$lte": data_fine}}
+                "$and": [
+                    {"$or": [{"cedente_piva": piva}, {"supplier_vat": piva}]},
+                    {"$or": [
+                        {"data_fattura": {"$gte": data_inizio, "$lte": data_fine}},
+                        {"data": {"$gte": data_inizio, "$lte": data_fine}}
+                    ]}
                 ]
             }
         },
@@ -489,11 +492,6 @@ async def get_supplier_fatturato(
                         }
                     }
                 }
-            }
-        },
-        {
-            "$match": {
-                "data_effettiva": {"$gte": data_inizio, "$lte": data_fine}
             }
         },
         {
