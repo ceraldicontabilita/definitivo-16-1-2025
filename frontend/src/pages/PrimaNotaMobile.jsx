@@ -228,6 +228,145 @@ export default function PrimaNotaMobile() {
         </button>
       </div>
 
+      {/* Pulsante Inserimento + Form Espandibile */}
+      {activeTab === 'cassa' && (
+        <div style={{ marginBottom: '16px' }}>
+          <button
+            onClick={() => setShowEntryForm(!showEntryForm)}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: showEntryForm ? '#fef3c7' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: showEntryForm ? '#92400e' : 'white',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            {showEntryForm ? '✕ Chiudi' : '➕ Inserisci Corrispettivo / POS / Versamento'}
+          </button>
+          
+          {showEntryForm && (
+            <div style={{
+              marginTop: '12px',
+              background: 'white',
+              borderRadius: '12px',
+              padding: '16px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}>
+              {/* Corrispettivo */}
+              <div style={{ marginBottom: '16px', padding: '12px', background: '#fef3c7', borderRadius: '8px' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#92400e' }}>📊 Corrispettivo</div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input 
+                    type="date" 
+                    value={corrispettivo.data} 
+                    onChange={(e) => setCorrispettivo({...corrispettivo, data: e.target.value})} 
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' }} 
+                  />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="€ Importo" 
+                    value={corrispettivo.importo} 
+                    onChange={(e) => setCorrispettivo({...corrispettivo, importo: e.target.value})} 
+                    style={{ width: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' }} 
+                  />
+                  <button 
+                    onClick={handleSaveCorrispettivo} 
+                    disabled={saving} 
+                    style={{ padding: '10px 16px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}
+                  >
+                    {saving ? '⏳' : '💾'}
+                  </button>
+                </div>
+              </div>
+              
+              {/* POS */}
+              <div style={{ marginBottom: '16px', padding: '12px', background: '#dbeafe', borderRadius: '8px' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#1e40af' }}>💳 POS (1, 2, 3)</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <input 
+                    type="date" 
+                    value={pos.data} 
+                    onChange={(e) => setPos({...pos, data: e.target.value})} 
+                    style={{ flex: '1 1 100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' }} 
+                  />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="POS 1" 
+                    value={pos.pos1} 
+                    onChange={(e) => setPos({...pos, pos1: e.target.value})} 
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', minWidth: '60px' }} 
+                  />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="POS 2" 
+                    value={pos.pos2} 
+                    onChange={(e) => setPos({...pos, pos2: e.target.value})} 
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', minWidth: '60px' }} 
+                  />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="POS 3" 
+                    value={pos.pos3} 
+                    onChange={(e) => setPos({...pos, pos3: e.target.value})} 
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', minWidth: '60px' }} 
+                  />
+                  <button 
+                    onClick={handleSavePos} 
+                    disabled={saving} 
+                    style={{ padding: '10px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}
+                  >
+                    {saving ? '⏳' : '💾'}
+                  </button>
+                </div>
+                <div style={{ marginTop: '8px', textAlign: 'center', fontWeight: 'bold', color: '#1e40af' }}>
+                  Totale: {formatEuro((parseFloat(pos.pos1)||0) + (parseFloat(pos.pos2)||0) + (parseFloat(pos.pos3)||0))}
+                </div>
+              </div>
+              
+              {/* Versamento */}
+              <div style={{ padding: '12px', background: '#dcfce7', borderRadius: '8px' }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#166534' }}>🏦 Versamento in Banca</div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input 
+                    type="date" 
+                    value={versamento.data} 
+                    onChange={(e) => setVersamento({...versamento, data: e.target.value})} 
+                    style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' }} 
+                  />
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="€ Importo" 
+                    value={versamento.importo} 
+                    onChange={(e) => setVersamento({...versamento, importo: e.target.value})} 
+                    style={{ width: '100px', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px' }} 
+                  />
+                  <button 
+                    onClick={handleSaveVersamento} 
+                    disabled={saving} 
+                    style={{ padding: '10px 16px', background: '#22c55e', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}
+                  >
+                    {saving ? '⏳' : '💾'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Totali */}
       {currentTotali && (
         <div style={{
