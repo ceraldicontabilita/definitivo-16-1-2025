@@ -865,27 +865,70 @@ async def global_search_public(
     except Exception as e:
         logger.error(f"Error searching invoices: {e}")
     
-    # Search suppliers (fornitori)
+    # Search suppliers (fornitori) - con matching migliorato
     try:
-        supplier_results = await db[Collections.SUPPLIERS].find(
-            {"$or": [
+        # Prepara regex per matching parziale (ogni parola separatamente)
+        words = q.strip().split()
+        if words:
+            # Crea pattern che cerca ogni parola
+            word_patterns = [{"$or": [
+                {"denominazione": {"$regex": w, "$options": "i"}},
+                {"name": {"$regex": w, "$options": "i"}}
+            ]} for w in words]
+            
+            supplier_query = {"$and": word_patterns} if len(word_patterns) > 1 else word_patterns[0]
+        else:
+            supplier_query = {"$or": [
                 {"denominazione": {"$regex": q, "$options": "i"}},
                 {"name": {"$regex": q, "$options": "i"}},
                 {"partita_iva": {"$regex": q, "$options": "i"}},
                 {"vat_number": {"$regex": q, "$options": "i"}}
-            ]},
+            ]}
+        
+        supplier_results = await db[Collections.SUPPLIERS].find(
+            supplier_query,
             {"_id": 0, "id": 1, "denominazione": 1, "name": 1, "partita_iva": 1, "vat_number": 1}
         ).limit(per_limit).to_list(per_limit)
         
         for sup in supplier_results:
             nome = sup.get("denominazione") or sup.get("name", "N/A")
             piva = sup.get("partita_iva") or sup.get("vat_number", "")
+            sup_id = sup.get("id", "")
+            
+            # Conta fatture per questo fornitore
+            fatture_count = 0
+            fatture_totale = 0
+            try:
+                pipeline = [
+                    {"$match": {"$or": [
+                        {"cedente_denominazione": {"$regex": nome[:20], "$options": "i"}},
+                        {"supplier_name": {"$regex": nome[:20], "$options": "i"}},
+                        {"supplier_id": sup_id}
+                    ]}},
+                    {"$group": {
+                        "_id": None,
+                        "count": {"$sum": 1},
+                        "totale": {"$sum": {"$ifNull": ["$importo_totale", {"$ifNull": ["$total_amount", 0]}]}}
+                    }}
+                ]
+                agg_result = await db[Collections.INVOICES].aggregate(pipeline).to_list(1)
+                if agg_result:
+                    fatture_count = agg_result[0].get("count", 0)
+                    fatture_totale = agg_result[0].get("totale", 0)
+            except Exception as e:
+                logger.warning(f"Error counting invoices for supplier: {e}")
+            
+            sottotitolo = []
+            if piva:
+                sottotitolo.append(f"P.IVA: {piva}")
+            if fatture_count > 0:
+                sottotitolo.append(f"{fatture_count} fatture | €{fatture_totale:,.0f}")
             
             results.append({
                 "tipo": "fornitore",
-                "id": sup.get("id", ""),
+                "id": sup_id,
                 "titolo": nome,
-                "sottotitolo": f"P.IVA: {piva}" if piva else ""
+                "sottotitolo": " | ".join(sottotitolo) if sottotitolo else ""
             })
     except Exception as e:
         logger.error(f"Error searching suppliers: {e}")
