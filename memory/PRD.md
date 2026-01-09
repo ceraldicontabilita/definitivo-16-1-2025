@@ -40,6 +40,37 @@
 - Note: Se il server viene riavviato durante la notte, il task potrebbe saltare
 
 ================================================================================
+# ✅ GESTIONE ACCONTI TFR - IMPLEMENTATA 2026-01-09
+================================================================================
+
+## Sistema Acconti Dipendenti (TFR, Ferie, 13ª, 14ª, Prestiti)
+
+### Backend (/api/tfr/acconti)
+- ✅ `GET /acconti/{dipendente_id}` - Recupera tutti gli acconti raggruppati per tipo
+- ✅ `POST /acconti` - Registra nuovo acconto con aggiornamento automatico TFR
+- ✅ `DELETE /acconti/{acconto_id}` - Elimina acconto con ripristino TFR
+- ✅ `GET /storico-tfr/{dipendente_id}` - Storico completo TFR con accantonamenti/liquidazioni/acconti
+- ✅ `GET /parse-payslips` - Parser PDF buste paga per estrazione dati TFR
+- File: `/app/app/routers/tfr.py`
+
+### Parser PDF Buste Paga
+- ✅ Creato parser per formato Zucchetti/standard
+- ✅ Estrae: codice fiscale, retribuzione utile TFR, netto, competenze, trattenute
+- File: `/app/app/services/payslip_pdf_parser.py`
+
+### Frontend (Tab Acconti in Gestione Dipendenti)
+- ✅ Nuovo tab "Acconti" in `/dipendenti`
+- ✅ Dashboard con saldi: TFR, Ferie, 13ª, 14ª, Prestiti
+- ✅ Form inserimento nuovi acconti
+- ✅ Lista acconti per tipo con possibilità di eliminazione
+- ✅ Calcolo automatico saldo TFR (Accantonato - Acconti)
+- File: `/app/frontend/src/components/dipendenti/AccontiTab.jsx`
+
+### Note sui PDF
+I PDF "Libro Unico" contengono solo la "Retribuzione utile T.F.R." mensile, non il TFR accumulato.
+Il sistema calcola il TFR internamente e traccia gli acconti manualmente inseriti.
+
+================================================================================
 # ✅ FUNZIONALITÀ IMPLEMENTATE - SESSIONE 2026-01-09
 ================================================================================
 
