@@ -485,6 +485,8 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
             logger.warning(f"Errore registrazione acquisti: {e}")
         
         prima_nota_result = {"cassa": None, "banca": None}
+        # Registra in Prima Nota SOLO se non è stato già riconciliato automaticamente
+        # O se il metodo non è misto
         if metodo_pagamento != "misto":
             try:
                 from app.routers.prima_nota import registra_pagamento_fattura
@@ -492,14 +494,22 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
                     fattura=invoice,
                     metodo_pagamento=metodo_pagamento
                 )
+                
+                # Aggiorna fattura con riferimenti Prima Nota
+                update_fields = {
+                    "prima_nota_cassa_id": prima_nota_result.get("cassa"),
+                    "prima_nota_banca_id": prima_nota_result.get("banca")
+                }
+                
+                # Se già riconciliato automaticamente, mantieni lo stato
+                if not riconciliato_automaticamente:
+                    update_fields["pagato"] = True
+                    update_fields["data_pagamento"] = datetime.utcnow().isoformat()[:10]
+                    update_fields["status"] = "paid"
+                
                 await db[Collections.INVOICES].update_one(
                     {"id": invoice["id"]},
-                    {"$set": {
-                        "pagato": True,
-                        "data_pagamento": datetime.utcnow().isoformat()[:10],
-                        "prima_nota_cassa_id": prima_nota_result.get("cassa"),
-                        "prima_nota_banca_id": prima_nota_result.get("banca")
-                    }}
+                    {"$set": update_fields}
                 )
             except Exception as e:
                 logger.warning(f"Prima nota registration failed: {e}")
