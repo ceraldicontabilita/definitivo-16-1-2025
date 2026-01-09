@@ -1276,3 +1276,264 @@ function DetailRow({ label, value, icon, multiline }) {
     </div>
   );
 }
+
+
+// Componente Modal per Modifica Movimento
+function EditMovimentoModal({ movimento, tipo, onClose, onSave }) {
+  const [form, setForm] = useState({
+    data: movimento.data || '',
+    tipo: movimento.tipo || 'uscita',
+    importo: movimento.importo || '',
+    descrizione: movimento.descrizione || '',
+    categoria: movimento.categoria || '',
+    riferimento: movimento.riferimento || '',
+    note: movimento.note || ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  const categorie = tipo === 'cassa' 
+    ? ['Corrispettivi', 'POS', 'Versamento', 'Pagamento fornitore', 'Incasso', 'Spese', 'Altro']
+    : ['Pagamento fornitore', 'Bonifico', 'Assegno', 'F24', 'Altro'];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.importo || !form.descrizione) {
+      alert('Compila importo e descrizione');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const endpoint = tipo === 'cassa' 
+        ? `/api/prima-nota/cassa/${movimento.id}`
+        : `/api/prima-nota/banca/${movimento.id}`;
+      
+      await api.put(endpoint, {
+        data: form.data,
+        tipo: form.tipo,
+        importo: parseFloat(form.importo),
+        descrizione: form.descrizione,
+        categoria: form.categoria,
+        riferimento: form.riferimento,
+        note: form.note
+      });
+      
+      onSave({ ...movimento, ...form, importo: parseFloat(form.importo) });
+    } catch (error) {
+      console.error('Errore salvataggio:', error);
+      alert('Errore nel salvataggio: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: 8,
+    fontSize: 14,
+    outline: 'none'
+  };
+
+  const labelStyle = {
+    display: 'block',
+    fontSize: 12,
+    fontWeight: 600,
+    color: '#374151',
+    marginBottom: 4
+  };
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: 20
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: 'white',
+          borderRadius: 16,
+          width: '100%',
+          maxWidth: 500,
+          maxHeight: '90vh',
+          overflow: 'auto',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '16px 24px',
+          borderBottom: '1px solid #e5e7eb',
+          background: tipo === 'cassa' ? '#4f46e5' : '#2563eb',
+          borderRadius: '16px 16px 0 0',
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>
+            ✏️ Modifica Movimento {tipo === 'cassa' ? 'Cassa' : 'Banca'}
+          </h3>
+          <button 
+            onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: 'white' }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ padding: 24 }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            {/* Data e Tipo */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Data</label>
+                <input
+                  type="date"
+                  value={form.data}
+                  onChange={(e) => setForm({ ...form, data: e.target.value })}
+                  style={inputStyle}
+                  required
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Tipo</label>
+                <select
+                  value={form.tipo}
+                  onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                  style={inputStyle}
+                >
+                  <option value="entrata">↑ DARE (Entrata)</option>
+                  <option value="uscita">↓ AVERE (Uscita)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Importo */}
+            <div>
+              <label style={labelStyle}>Importo (€)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.importo}
+                onChange={(e) => setForm({ ...form, importo: e.target.value })}
+                style={inputStyle}
+                placeholder="0.00"
+                required
+              />
+            </div>
+
+            {/* Categoria */}
+            <div>
+              <label style={labelStyle}>Categoria</label>
+              <select
+                value={form.categoria}
+                onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+                style={inputStyle}
+              >
+                <option value="">-- Seleziona --</option>
+                {categorie.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Descrizione */}
+            <div>
+              <label style={labelStyle}>Descrizione</label>
+              <input
+                type="text"
+                value={form.descrizione}
+                onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
+                style={inputStyle}
+                placeholder="Descrizione movimento"
+                required
+              />
+            </div>
+
+            {/* Riferimento */}
+            <div>
+              <label style={labelStyle}>Riferimento (opzionale)</label>
+              <input
+                type="text"
+                value={form.riferimento}
+                onChange={(e) => setForm({ ...form, riferimento: e.target.value })}
+                style={inputStyle}
+                placeholder="N. fattura, documento, ecc."
+              />
+            </div>
+
+            {/* Note */}
+            <div>
+              <label style={labelStyle}>Note (opzionale)</label>
+              <textarea
+                value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })}
+                style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }}
+                placeholder="Note aggiuntive..."
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{ 
+            marginTop: 24, 
+            paddingTop: 16, 
+            borderTop: '1px solid #e5e7eb',
+            display: 'flex', 
+            justifyContent: 'flex-end', 
+            gap: 12 
+          }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '10px 20px',
+                borderRadius: 8,
+                border: '1px solid #d1d5db',
+                background: 'white',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500
+              }}
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                padding: '10px 20px',
+                borderRadius: 8,
+                border: 'none',
+                background: tipo === 'cassa' ? '#4f46e5' : '#2563eb',
+                color: 'white',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+                opacity: saving ? 0.7 : 1
+              }}
+            >
+              {saving ? 'Salvataggio...' : '💾 Salva Modifiche'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
