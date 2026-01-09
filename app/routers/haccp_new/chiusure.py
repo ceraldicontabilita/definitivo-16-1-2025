@@ -19,9 +19,9 @@ import random
 router = APIRouter(prefix="/chiusure", tags=["Chiusure e Festività"])
 
 # MongoDB connection
-mongo_url = os.environ.get('MONGO_URL')
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'tracciabilita_lotti')]
+# MongoDB - Usa Database singleton
+from app.database import Database
+# Database accessor sarà chiamato con Database.get_db()
 
 # ==================== CALCOLO PASQUA ====================
 
