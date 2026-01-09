@@ -1610,3 +1610,101 @@ async def get_buste_paga_dipendente(dipendente_id: str) -> Dict[str, Any]:
         "totale_buste": len(buste),
         "buste": buste
     }
+
+
+
+@router.post("/buste-paga/dipendente/{dipendente_id}/import")
+async def import_busta_paga_to_dipendente(dipendente_id: str) -> Dict[str, Any]:
+    """
+    Importa i progressivi dall'ultima busta paga trovata per un dipendente specifico.
+    Aggiorna il record del dipendente con TFR, ferie, permessi, paga base, contingenza.
+    """
+    import os
+    from app.utils.busta_paga_parser import get_latest_progressivi
+    
+    db = Database.get_db()
+    
+    # Trova il dipendente nel DB
+    dipendente = await db[Collections.EMPLOYEES].find_one(
+        {"$or": [{"id": dipendente_id}, {"codice_fiscale": dipendente_id}]},
+        {"_id": 0}
+    )
+    
+    if not dipendente:
+        raise HTTPException(status_code=404, detail="Dipendente non trovato")
+    
+    nome_completo = dipendente.get('nome_completo') or f"{dipendente.get('nome', '')} {dipendente.get('cognome', '')}"
+    
+    # Cerca la cartella corrispondente
+    base_path = "/app/documents/buste_paga"
+    cartelle = os.listdir(base_path) if os.path.exists(base_path) else []
+    
+    cartella_trovata = None
+    for cartella in cartelle:
+        nome_cartella = cartella.lower().replace('_', ' ')
+        if nome_completo.lower() in nome_cartella or nome_cartella in nome_completo.lower():
+            cartella_trovata = cartella
+            break
+        # Prova anche invertendo
+        parts = nome_completo.lower().split()
+        if len(parts) >= 2:
+            inverted = f"{parts[-1]} {' '.join(parts[:-1])}"
+            if inverted in nome_cartella or nome_cartella in inverted:
+                cartella_trovata = cartella
+                break
+    
+    if not cartella_trovata:
+        return {
+            "success": False,
+            "dipendente": nome_completo,
+            "message": "Cartella buste paga non trovata per questo dipendente"
+        }
+    
+    # Ottieni i progressivi
+    folder_path = os.path.join(base_path, cartella_trovata)
+    progressivi = get_latest_progressivi(folder_path)
+    
+    if not progressivi:
+        return {
+            "success": False,
+            "dipendente": nome_completo,
+            "cartella": cartella_trovata,
+            "message": "Nessun progressivo trovato nelle buste paga"
+        }
+    
+    # Aggiorna il dipendente
+    update_data = {
+        "paga_base": progressivi.get('paga_base', 0),
+        "contingenza": progressivi.get('contingenza', 0),
+        "progressivi": {
+            "tfr_accantonato": progressivi.get('tfr_accantonato', 0),
+            "tfr_quota_anno": progressivi.get('tfr_quota_anno', 0),
+            "ferie_maturate": progressivi.get('ferie_maturate', 0),
+            "ferie_godute": progressivi.get('ferie_godute', 0),
+            "ferie_residue": progressivi.get('ferie_residue', 0),
+            "permessi_maturati": progressivi.get('permessi_maturati', 0),
+            "permessi_goduti": progressivi.get('permessi_goduti', 0),
+            "permessi_residui": progressivi.get('permessi_residui', 0),
+            "rol_maturati": progressivi.get('rol_maturati', 0),
+            "rol_goduti": progressivi.get('rol_goduti', 0),
+            "rol_residui": progressivi.get('rol_residui', 0),
+            "anno_riferimento": progressivi.get('anno_riferimento'),
+            "mese_riferimento": progressivi.get('mese_riferimento'),
+            "fonte_busta_paga": progressivi.get('fonte')
+        },
+        "updated_at": datetime.utcnow().isoformat(),
+        "progressivi_importati_at": datetime.utcnow().isoformat()
+    }
+    
+    await db[Collections.EMPLOYEES].update_one(
+        {"id": dipendente.get('id')},
+        {"$set": update_data}
+    )
+    
+    return {
+        "success": True,
+        "dipendente": nome_completo,
+        "cartella": cartella_trovata,
+        "progressivi_importati": update_data,
+        "fonte": progressivi.get('fonte')
+    }
