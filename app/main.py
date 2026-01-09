@@ -300,6 +300,9 @@ app.include_router(haccp_ricette, prefix="/api/haccp-v2", tags=["HACCP V2 Ricett
 app.include_router(haccp_non_conformi, prefix="/api/haccp-v2", tags=["HACCP V2 Non Conformità"])
 app.include_router(haccp_fornitori, prefix="/api/haccp-v2", tags=["HACCP V2 Fornitori"])
 
+# --- Configurazioni Sistema ---
+app.include_router(configurazioni.router, prefix="/api/config", tags=["Configurazioni"])
+
 
 # =============================================================================
 # HEALTH CHECK ENDPOINTS
