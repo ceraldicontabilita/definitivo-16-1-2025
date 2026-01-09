@@ -320,12 +320,38 @@ async def root():
 @app.get("/api/health")
 async def health_check():
     """Detailed health check endpoint."""
+    from datetime import datetime, timezone
     db_status = "connected" if Database.db is not None else "disconnected"
     
     return {
         "status": "healthy",
         "database": db_status,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@app.get("/api/ping")
+async def ping():
+    """
+    Lightweight keep-alive endpoint.
+    Use this for periodic health checks to prevent server standby.
+    """
+    return {"pong": True}
+
+
+@app.get("/api/system/lock-status")
+async def system_lock_status():
+    """
+    Stato dei lock per operazioni email/DB.
+    Utile per verificare se ci sono operazioni in corso prima di avviarne altre.
+    """
+    from app.routers.documenti import is_email_operation_running, get_current_operation
+    
+    return {
+        "email_locked": is_email_operation_running(),
+        "operation": get_current_operation(),
+        "can_start_email_operation": not is_email_operation_running()
     }
 
 
