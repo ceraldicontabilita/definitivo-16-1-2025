@@ -1,0 +1,684 @@
+%PDF-1.4
+%‚„œ”
+4 0 obj <</ProcSet [/PDF /Text /ImageB ] /Font <</Fo1 5 0 R /Fo13 6 0 R /Fo50 9 0 R /Fo51 12 0 R /Fo53 15 0 R /Fo54 18 0 R /Fo55 21 0 R /Fo56 24 0 R /Fo57 27 0 R /Fo58 30 0 R /Fo60 33 0 R /Fo61 36 0 R /Fo62 39 0 R /Fo63 42 0 R /Fo64 45 0 R /Fo65 48 0 R /Fo67 51 0 R /Fo68 54 0 R /Fo69 57 0 R /Fo70 60 0 R /Fo71 63 0 R /Fo72 66 0 R /Fo74 69 0 R /Fo75 72 0 R /Fo76 75 0 R /Fo77 78 0 R /Fo78 81 0 R /Fo79 84 0 R /Fo81 87 0 R /Fo82 90 0 R /Fo83 93 0 R /Fo84 96 0 R /Fo85 99 0 R /Fo86 102 0 R /Fo88 105 0 R /Fo89 108 0 R /Fo90 111 0 R /Fo91 114 0 R /Fo92 117 0 R /Fo93 120 0 R /Fo95 123 0 R /Fo96 126 0 R /Fo97 129 0 R /Fo98 132 0 R /Fo99 135 0 R /Fo100 138 0 R /Fo102 141 0 R /Fo103 144 0 R /Fo104 147 0 R /Fo105 150 0 R /Fo106 153 0 R /Fo107 156 0 R /Fo109 159 0 R /Fo110 162 0 R /Fo111 165 0 R /Fo112 168 0 R /Fo113 171 0 R /Fo114 174 0 R /Fo116 177 0 R /Fo117 180 0 R /Fo118 183 0 R /Fo119 186 0 R /Fo120 189 0 R /Fo121 192 0 R /Fo123 195 0 R /Fo124 198 0 R /Fo125 201 0 R /Fo126 204 0 R /Fo127 207 0 R /Fo128 210 0 R /Fo130 213 0 R /Fo131 216 0 R /Fo132 219 0 R /Fo133 222 0 R /Fo134 225 0 R /Fo135 228 0 R /Fo137 231 0 R /Fo138 234 0 R /Fo139 237 0 R /Fo140 240 0 R /Fo141 243 0 R /Fo142 246 0 R /Fo144 249 0 R /Fo145 252 0 R /Fo146 255 0 R /Fo147 258 0 R /Fo148 261 0 R /Fo149 264 0 R /Fo151 267 0 R /Fo152 270 0 R /Fo153 273 0 R /Fo154 276 0 R >> >> endobj
+5 0 obj <</Type /Font /Subtype /TrueType /Name /Fo1 /BaseFont /CourierNew,Bold /Encoding /WinAnsiEncoding >> endobj
+6 0 obj <</Type /Font /Subtype /TrueType /Name /Fo13 /BaseFont /TimesNewRoman,Bold+000013 /FontDescriptor 7 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 8 0 R >> endobj
+7 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+8 0 obj [294.72 332.16 460.8 498.24 498.24 885.12 829.44 332.16 332.16 332.16 498.24 885.12 332.16 332.16 332.16 332.16 498.24 498.24 498.24 498.24 498.24 498.24 498.24 498.24 498.24 498.24 332.16 332.16 995.52 885.12 995.52 498.24 885.12 719.04 664.32 719.04 719.04 664.32 608.64 774.72 774.72 386.88 479.04 774.72 664.32 940.8 719.04 774.72 608.64 774.72 719.04 552.96 664.32 719.04 719.04 995.52 719.04 719.04 664.32 332.16 332.16 332.16 498.24 498.24 332.16 498.24 552.96 442.56 552.96 442.56 350.4 498.24 552.96 276.48 332.16 552.96 276.48 829.44 552.96 498.24 552.96 552.96 442.56 386.88 332.16 552.96 498.24 719.04 498.24 498.24 442.56 498.24 498.24 498.24 995.52 995.52 498.24 0 0 0 0 0 0 0 0 0 552.96 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 386.88 0 0 0 0 0 294.72 332.16 498.24 498.24 498.24 498.24 386.88 498.24 498.24 498.24 498.24 424.32 498.24 885.12 719.04 498.24 498.24 885.12 498.24 498.24 498.24 552.96 498.24 332.16 332.16 498.24 498.24 424.32 885.12 885.12 885.12 498.24 719.04 719.04 719.04 719.04 719.04 719.04 1032.96 719.04 664.32 664.32 664.32 664.32 386.88 386.88 386.88 386.88 719.04 719.04 774.72 774.72 774.72 774.72 774.72 719.04 774.72 719.04 719.04 719.04 719.04 719.04 608.64 552.96 498.24 498.24 498.24 498.24 498.24 498.24 719.04 442.56 442.56 442.56 442.56 442.56 276.48 276.48 276.48 276.48 498.24 552.96 498.24 498.24 498.24 498.24 498.24 885.12 498.24 552.96 552.96 552.96 552.96 498.24 552.96 498.24 ] endobj
+9 0 obj <</Type /Font /Subtype /TrueType /Name /Fo50 /BaseFont /TimesNewRoman+000050 /FontDescriptor 10 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 11 0 R >> endobj
+10 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+11 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+12 0 obj <</Type /Font /Subtype /TrueType /Name /Fo51 /BaseFont /TimesNewRoman+000051 /FontDescriptor 13 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 14 0 R >> endobj
+13 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+14 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+15 0 obj <</Type /Font /Subtype /TrueType /Name /Fo53 /BaseFont /TimesNewRoman,Bold+000053 /FontDescriptor 16 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 17 0 R >> endobj
+16 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+17 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+18 0 obj <</Type /Font /Subtype /TrueType /Name /Fo54 /BaseFont /TimesNewRoman,Bold+000054 /FontDescriptor 19 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 20 0 R >> endobj
+19 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+20 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+21 0 obj <</Type /Font /Subtype /TrueType /Name /Fo55 /BaseFont /TimesNewRoman+000055 /FontDescriptor 22 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 23 0 R >> endobj
+22 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+23 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+24 0 obj <</Type /Font /Subtype /TrueType /Name /Fo56 /BaseFont /TimesNewRoman+000056 /FontDescriptor 25 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 26 0 R >> endobj
+25 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+26 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+27 0 obj <</Type /Font /Subtype /TrueType /Name /Fo57 /BaseFont /TimesNewRoman+000057 /FontDescriptor 28 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 29 0 R >> endobj
+28 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+29 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+30 0 obj <</Type /Font /Subtype /TrueType /Name /Fo58 /BaseFont /TimesNewRoman+000058 /FontDescriptor 31 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 32 0 R >> endobj
+31 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+32 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+33 0 obj <</Type /Font /Subtype /TrueType /Name /Fo60 /BaseFont /TimesNewRoman,Bold+000060 /FontDescriptor 34 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 35 0 R >> endobj
+34 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+35 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+36 0 obj <</Type /Font /Subtype /TrueType /Name /Fo61 /BaseFont /TimesNewRoman,Bold+000061 /FontDescriptor 37 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 38 0 R >> endobj
+37 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+38 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+39 0 obj <</Type /Font /Subtype /TrueType /Name /Fo62 /BaseFont /TimesNewRoman+000062 /FontDescriptor 40 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 41 0 R >> endobj
+40 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+41 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+42 0 obj <</Type /Font /Subtype /TrueType /Name /Fo63 /BaseFont /TimesNewRoman+000063 /FontDescriptor 43 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 44 0 R >> endobj
+43 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+44 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+45 0 obj <</Type /Font /Subtype /TrueType /Name /Fo64 /BaseFont /TimesNewRoman+000064 /FontDescriptor 46 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 47 0 R >> endobj
+46 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+47 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+48 0 obj <</Type /Font /Subtype /TrueType /Name /Fo65 /BaseFont /TimesNewRoman+000065 /FontDescriptor 49 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 50 0 R >> endobj
+49 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+50 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+51 0 obj <</Type /Font /Subtype /TrueType /Name /Fo67 /BaseFont /TimesNewRoman,Bold+000067 /FontDescriptor 52 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 53 0 R >> endobj
+52 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+53 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+54 0 obj <</Type /Font /Subtype /TrueType /Name /Fo68 /BaseFont /TimesNewRoman,Bold+000068 /FontDescriptor 55 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 56 0 R >> endobj
+55 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+56 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+57 0 obj <</Type /Font /Subtype /TrueType /Name /Fo69 /BaseFont /TimesNewRoman+000069 /FontDescriptor 58 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 59 0 R >> endobj
+58 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+59 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+60 0 obj <</Type /Font /Subtype /TrueType /Name /Fo70 /BaseFont /TimesNewRoman+000070 /FontDescriptor 61 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 62 0 R >> endobj
+61 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+62 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+63 0 obj <</Type /Font /Subtype /TrueType /Name /Fo71 /BaseFont /TimesNewRoman+000071 /FontDescriptor 64 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 65 0 R >> endobj
+64 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+65 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+66 0 obj <</Type /Font /Subtype /TrueType /Name /Fo72 /BaseFont /TimesNewRoman+000072 /FontDescriptor 67 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 68 0 R >> endobj
+67 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+68 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+69 0 obj <</Type /Font /Subtype /TrueType /Name /Fo74 /BaseFont /TimesNewRoman,Bold+000074 /FontDescriptor 70 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 71 0 R >> endobj
+70 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+71 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+72 0 obj <</Type /Font /Subtype /TrueType /Name /Fo75 /BaseFont /TimesNewRoman,Bold+000075 /FontDescriptor 73 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 74 0 R >> endobj
+73 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+74 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+75 0 obj <</Type /Font /Subtype /TrueType /Name /Fo76 /BaseFont /TimesNewRoman+000076 /FontDescriptor 76 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 77 0 R >> endobj
+76 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+77 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+78 0 obj <</Type /Font /Subtype /TrueType /Name /Fo77 /BaseFont /TimesNewRoman+000077 /FontDescriptor 79 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 80 0 R >> endobj
+79 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+80 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+81 0 obj <</Type /Font /Subtype /TrueType /Name /Fo78 /BaseFont /TimesNewRoman+000078 /FontDescriptor 82 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 83 0 R >> endobj
+82 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+83 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+84 0 obj <</Type /Font /Subtype /TrueType /Name /Fo79 /BaseFont /TimesNewRoman+000079 /FontDescriptor 85 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 86 0 R >> endobj
+85 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+86 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+87 0 obj <</Type /Font /Subtype /TrueType /Name /Fo81 /BaseFont /TimesNewRoman,Bold+000081 /FontDescriptor 88 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 89 0 R >> endobj
+88 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+89 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+90 0 obj <</Type /Font /Subtype /TrueType /Name /Fo82 /BaseFont /TimesNewRoman,Bold+000082 /FontDescriptor 91 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 92 0 R >> endobj
+91 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+92 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+93 0 obj <</Type /Font /Subtype /TrueType /Name /Fo83 /BaseFont /TimesNewRoman+000083 /FontDescriptor 94 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 95 0 R >> endobj
+94 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+95 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+96 0 obj <</Type /Font /Subtype /TrueType /Name /Fo84 /BaseFont /TimesNewRoman+000084 /FontDescriptor 97 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 98 0 R >> endobj
+97 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+98 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+99 0 obj <</Type /Font /Subtype /TrueType /Name /Fo85 /BaseFont /TimesNewRoman+000085 /FontDescriptor 100 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 101 0 R >> endobj
+100 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+101 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+102 0 obj <</Type /Font /Subtype /TrueType /Name /Fo86 /BaseFont /TimesNewRoman+000086 /FontDescriptor 103 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 104 0 R >> endobj
+103 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+104 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+105 0 obj <</Type /Font /Subtype /TrueType /Name /Fo88 /BaseFont /TimesNewRoman,Bold+000088 /FontDescriptor 106 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 107 0 R >> endobj
+106 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+107 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+108 0 obj <</Type /Font /Subtype /TrueType /Name /Fo89 /BaseFont /TimesNewRoman,Bold+000089 /FontDescriptor 109 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 110 0 R >> endobj
+109 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+110 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+111 0 obj <</Type /Font /Subtype /TrueType /Name /Fo90 /BaseFont /TimesNewRoman+000090 /FontDescriptor 112 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 113 0 R >> endobj
+112 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+113 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+114 0 obj <</Type /Font /Subtype /TrueType /Name /Fo91 /BaseFont /TimesNewRoman+000091 /FontDescriptor 115 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 116 0 R >> endobj
+115 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+116 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+117 0 obj <</Type /Font /Subtype /TrueType /Name /Fo92 /BaseFont /TimesNewRoman+000092 /FontDescriptor 118 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 119 0 R >> endobj
+118 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+119 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+120 0 obj <</Type /Font /Subtype /TrueType /Name /Fo93 /BaseFont /TimesNewRoman+000093 /FontDescriptor 121 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 122 0 R >> endobj
+121 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+122 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+123 0 obj <</Type /Font /Subtype /TrueType /Name /Fo95 /BaseFont /TimesNewRoman,Bold+000095 /FontDescriptor 124 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 125 0 R >> endobj
+124 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+125 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+126 0 obj <</Type /Font /Subtype /TrueType /Name /Fo96 /BaseFont /TimesNewRoman,Bold+000096 /FontDescriptor 127 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 128 0 R >> endobj
+127 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+128 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+129 0 obj <</Type /Font /Subtype /TrueType /Name /Fo97 /BaseFont /TimesNewRoman+000097 /FontDescriptor 130 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 131 0 R >> endobj
+130 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+131 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+132 0 obj <</Type /Font /Subtype /TrueType /Name /Fo98 /BaseFont /TimesNewRoman+000098 /FontDescriptor 133 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 134 0 R >> endobj
+133 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+134 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+135 0 obj <</Type /Font /Subtype /TrueType /Name /Fo99 /BaseFont /TimesNewRoman+000099 /FontDescriptor 136 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 137 0 R >> endobj
+136 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+137 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+138 0 obj <</Type /Font /Subtype /TrueType /Name /Fo100 /BaseFont /TimesNewRoman+000100 /FontDescriptor 139 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 140 0 R >> endobj
+139 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+140 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+141 0 obj <</Type /Font /Subtype /TrueType /Name /Fo102 /BaseFont /TimesNewRoman,Bold+000102 /FontDescriptor 142 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 143 0 R >> endobj
+142 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+143 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+144 0 obj <</Type /Font /Subtype /TrueType /Name /Fo103 /BaseFont /TimesNewRoman,Bold+000103 /FontDescriptor 145 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 146 0 R >> endobj
+145 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+146 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+147 0 obj <</Type /Font /Subtype /TrueType /Name /Fo104 /BaseFont /TimesNewRoman+000104 /FontDescriptor 148 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 149 0 R >> endobj
+148 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+149 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+150 0 obj <</Type /Font /Subtype /TrueType /Name /Fo105 /BaseFont /TimesNewRoman+000105 /FontDescriptor 151 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 152 0 R >> endobj
+151 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+152 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+153 0 obj <</Type /Font /Subtype /TrueType /Name /Fo106 /BaseFont /TimesNewRoman+000106 /FontDescriptor 154 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 155 0 R >> endobj
+154 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+155 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+156 0 obj <</Type /Font /Subtype /TrueType /Name /Fo107 /BaseFont /TimesNewRoman+000107 /FontDescriptor 157 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 158 0 R >> endobj
+157 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+158 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+159 0 obj <</Type /Font /Subtype /TrueType /Name /Fo109 /BaseFont /TimesNewRoman,Bold+000109 /FontDescriptor 160 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 161 0 R >> endobj
+160 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+161 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+162 0 obj <</Type /Font /Subtype /TrueType /Name /Fo110 /BaseFont /TimesNewRoman,Bold+000110 /FontDescriptor 163 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 164 0 R >> endobj
+163 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+164 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+165 0 obj <</Type /Font /Subtype /TrueType /Name /Fo111 /BaseFont /TimesNewRoman+000111 /FontDescriptor 166 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 167 0 R >> endobj
+166 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+167 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+168 0 obj <</Type /Font /Subtype /TrueType /Name /Fo112 /BaseFont /TimesNewRoman+000112 /FontDescriptor 169 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 170 0 R >> endobj
+169 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+170 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+171 0 obj <</Type /Font /Subtype /TrueType /Name /Fo113 /BaseFont /TimesNewRoman+000113 /FontDescriptor 172 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 173 0 R >> endobj
+172 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+173 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+174 0 obj <</Type /Font /Subtype /TrueType /Name /Fo114 /BaseFont /TimesNewRoman+000114 /FontDescriptor 175 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 176 0 R >> endobj
+175 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+176 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+177 0 obj <</Type /Font /Subtype /TrueType /Name /Fo116 /BaseFont /TimesNewRoman,Bold+000116 /FontDescriptor 178 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 179 0 R >> endobj
+178 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+179 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+180 0 obj <</Type /Font /Subtype /TrueType /Name /Fo117 /BaseFont /TimesNewRoman,Bold+000117 /FontDescriptor 181 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 182 0 R >> endobj
+181 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+182 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+183 0 obj <</Type /Font /Subtype /TrueType /Name /Fo118 /BaseFont /TimesNewRoman+000118 /FontDescriptor 184 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 185 0 R >> endobj
+184 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+185 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+186 0 obj <</Type /Font /Subtype /TrueType /Name /Fo119 /BaseFont /TimesNewRoman+000119 /FontDescriptor 187 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 188 0 R >> endobj
+187 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+188 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+189 0 obj <</Type /Font /Subtype /TrueType /Name /Fo120 /BaseFont /TimesNewRoman+000120 /FontDescriptor 190 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 191 0 R >> endobj
+190 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+191 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+192 0 obj <</Type /Font /Subtype /TrueType /Name /Fo121 /BaseFont /TimesNewRoman+000121 /FontDescriptor 193 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 194 0 R >> endobj
+193 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+194 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+195 0 obj <</Type /Font /Subtype /TrueType /Name /Fo123 /BaseFont /TimesNewRoman,Bold+000123 /FontDescriptor 196 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 197 0 R >> endobj
+196 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+197 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+198 0 obj <</Type /Font /Subtype /TrueType /Name /Fo124 /BaseFont /TimesNewRoman,Bold+000124 /FontDescriptor 199 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 200 0 R >> endobj
+199 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+200 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+201 0 obj <</Type /Font /Subtype /TrueType /Name /Fo125 /BaseFont /TimesNewRoman+000125 /FontDescriptor 202 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 203 0 R >> endobj
+202 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+203 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+204 0 obj <</Type /Font /Subtype /TrueType /Name /Fo126 /BaseFont /TimesNewRoman+000126 /FontDescriptor 205 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 206 0 R >> endobj
+205 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+206 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+207 0 obj <</Type /Font /Subtype /TrueType /Name /Fo127 /BaseFont /TimesNewRoman+000127 /FontDescriptor 208 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 209 0 R >> endobj
+208 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+209 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+210 0 obj <</Type /Font /Subtype /TrueType /Name /Fo128 /BaseFont /TimesNewRoman+000128 /FontDescriptor 211 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 212 0 R >> endobj
+211 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+212 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+213 0 obj <</Type /Font /Subtype /TrueType /Name /Fo130 /BaseFont /TimesNewRoman,Bold+000130 /FontDescriptor 214 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 215 0 R >> endobj
+214 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+215 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+216 0 obj <</Type /Font /Subtype /TrueType /Name /Fo131 /BaseFont /TimesNewRoman,Bold+000131 /FontDescriptor 217 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 218 0 R >> endobj
+217 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+218 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+219 0 obj <</Type /Font /Subtype /TrueType /Name /Fo132 /BaseFont /TimesNewRoman+000132 /FontDescriptor 220 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 221 0 R >> endobj
+220 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+221 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+222 0 obj <</Type /Font /Subtype /TrueType /Name /Fo133 /BaseFont /TimesNewRoman+000133 /FontDescriptor 223 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 224 0 R >> endobj
+223 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+224 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+225 0 obj <</Type /Font /Subtype /TrueType /Name /Fo134 /BaseFont /TimesNewRoman+000134 /FontDescriptor 226 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 227 0 R >> endobj
+226 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+227 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+228 0 obj <</Type /Font /Subtype /TrueType /Name /Fo135 /BaseFont /TimesNewRoman+000135 /FontDescriptor 229 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 230 0 R >> endobj
+229 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+230 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+231 0 obj <</Type /Font /Subtype /TrueType /Name /Fo137 /BaseFont /TimesNewRoman,Bold+000137 /FontDescriptor 232 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 233 0 R >> endobj
+232 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+233 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+234 0 obj <</Type /Font /Subtype /TrueType /Name /Fo138 /BaseFont /TimesNewRoman,Bold+000138 /FontDescriptor 235 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 236 0 R >> endobj
+235 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+236 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+237 0 obj <</Type /Font /Subtype /TrueType /Name /Fo139 /BaseFont /TimesNewRoman+000139 /FontDescriptor 238 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 239 0 R >> endobj
+238 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+239 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+240 0 obj <</Type /Font /Subtype /TrueType /Name /Fo140 /BaseFont /TimesNewRoman+000140 /FontDescriptor 241 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 242 0 R >> endobj
+241 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+242 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+243 0 obj <</Type /Font /Subtype /TrueType /Name /Fo141 /BaseFont /TimesNewRoman+000141 /FontDescriptor 244 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 245 0 R >> endobj
+244 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+245 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+246 0 obj <</Type /Font /Subtype /TrueType /Name /Fo142 /BaseFont /TimesNewRoman+000142 /FontDescriptor 247 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 248 0 R >> endobj
+247 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+248 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+249 0 obj <</Type /Font /Subtype /TrueType /Name /Fo144 /BaseFont /TimesNewRoman,Bold+000144 /FontDescriptor 250 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 251 0 R >> endobj
+250 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+251 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+252 0 obj <</Type /Font /Subtype /TrueType /Name /Fo145 /BaseFont /TimesNewRoman,Bold+000145 /FontDescriptor 253 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 254 0 R >> endobj
+253 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+254 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+255 0 obj <</Type /Font /Subtype /TrueType /Name /Fo146 /BaseFont /TimesNewRoman+000146 /FontDescriptor 256 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 257 0 R >> endobj
+256 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+257 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+258 0 obj <</Type /Font /Subtype /TrueType /Name /Fo147 /BaseFont /TimesNewRoman+000147 /FontDescriptor 259 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 260 0 R >> endobj
+259 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+260 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+261 0 obj <</Type /Font /Subtype /TrueType /Name /Fo148 /BaseFont /TimesNewRoman+000148 /FontDescriptor 262 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 263 0 R >> endobj
+262 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+263 0 obj [277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 277.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 777.78 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 555.56 0 0 555.56 555.56 277.78 0 0 222.22 0 0 0 0 0 555.56 0 0 333.33 500 277.78 555.56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+264 0 obj <</Type /Font /Subtype /TrueType /Name /Fo149 /BaseFont /TimesNewRoman+000149 /FontDescriptor 265 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 266 0 R >> endobj
+265 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+266 0 obj [296.3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 666.67 0 0 0 0 0 0 296.3 0 0 555.56 0 0 777.78 0 0 0 666.67 629.63 740.74 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+267 0 obj <</Type /Font /Subtype /TrueType /Name /Fo151 /BaseFont /TimesNewRoman,Bold+000151 /FontDescriptor 268 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 269 0 R >> endobj
+268 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+269 0 obj [288.46 0 0 0 0 0 0 0 0 0 0 0 0 0 282.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 743.59 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+270 0 obj <</Type /Font /Subtype /TrueType /Name /Fo152 /BaseFont /TimesNewRoman,Bold+000152 /FontDescriptor 271 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 272 0 R >> endobj
+271 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman,Bold /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 145 >> endobj
+272 0 obj [291.67 0 0 0 0 875 0 0 0 0 0 0 0 0 291.67 291.67 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 708.33 750 750 750 666.67 0 791.67 0 291.67 0 0 625 833.33 750 791.67 666.67 0 750 666.67 625 750 0 0 0 0 625 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+273 0 obj <</Type /Font /Subtype /TrueType /Name /Fo153 /BaseFont /TimesNewRoman+000153 /FontDescriptor 274 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 275 0 R >> endobj
+274 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+275 0 obj [285.71 0 0 0 0 904.76 0 0 0 0 0 0 0 0 285.71 285.71 0 0 0 571.43 0 0 0 0 0 0 285.71 0 0 0 0 0 0 666.67 666.67 761.9 761.9 666.67 619.05 761.9 0 285.71 0 0 571.43 809.52 761.9 761.9 666.67 0 761.9 666.67 619.05 761.9 666.67 0 0 0 619.05 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+276 0 obj <</Type /Font /Subtype /TrueType /Name /Fo154 /BaseFont /TimesNewRoman+000154 /FontDescriptor 277 0 R /Encoding /WinAnsiEncoding /FirstChar 32 /LastChar 255 /Widths 278 0 R >> endobj
+277 0 obj <</Type /FontDescriptor /FontName /TimesNewRoman /Flags 262178 /FontBBox [-200 -300 1200 900 ] /Ascent 720 /CapHeight 660 /Descent -270 /ItalicAngle 0 /StemV 110 >> endobj
+278 0 obj [291.67 0 0 0 0 0 0 0 0 0 0 0 0 333.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 0 0 0 0 0 0 750 0 0 0 0 666.67 0 0 0 0 0 0 0 0 0 0 0 0 0 541.67 0 0 0 541.67 291.67 0 0 208.33 0 0 208.33 0 0 541.67 541.67 0 333.33 0 291.67 0 0 708.33 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ] endobj
+279 0 obj <</Length 2789 >> stream
+0.93 g 307.01 721.78 53.52 -23.52 re f 0 g
+0.93 g 361.31 721.78 101.52 -23.52 re f 0 g
+0.93 g 19.31 673.78 119.52 -23.52 re f 0 g
+0.93 g 235.31 673.78 23.52 -23.52 re f 0 g
+0.93 g 307.31 673.78 23.52 -23.52 re f 0 g
+0.93 g 259.31 673.78 47.52 -23.52 re f 0 g
+0.93 g 463.31 721.78 108.24 -23.52 re f 0 g
+0.93 g 145.31 697.78 23.52 -23.52 re f 0 g
+0.93 g 169.31 697.78 119.52 -23.52 re f 0 g
+0.93 g 85.31 697.78 35.52 -23.52 re f 0 g
+0.93 g 379.31 697.78 29.52 -23.52 re f 0 g
+0.93 g 19.31 643.68 179.52 -65.52 re f 0 g
+0.93 g 199.31 643.68 179.52 -65.52 re f 0 g
+0.93 g 19.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 19.31 61.78 29.52 -23.52 re f 0 g
+0.93 g 49.31 85.78 59.52 -23.52 re f 0 g
+0.93 g 49.31 61.78 59.52 -23.52 re f 0 g
+0.93 g 109.31 85.78 59.52 -23.52 re f 0 g
+0.93 g 109.31 61.78 59.52 -23.52 re f 0 g
+0.93 g 169.31 85.78 59.52 -23.52 re f 0 g
+0.93 g 229.31 85.78 59.52 -23.52 re f 0 g
+0.93 g 169.31 61.78 59.52 -23.52 re f 0 g
+0.93 g 289.31 85.78 53.52 -23.52 re f 0 g
+0.93 g 343.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 373.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 403.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 433.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 229.31 61.78 59.52 -23.52 re f 0 g
+0.93 g 289.31 61.78 53.52 -23.52 re f 0 g
+0.93 g 373.31 61.78 59.52 -23.52 re f 0 g
+0.93 g 433.31 61.78 59.52 -23.52 re f 0 g
+0.93 g 493.31 61.78 57.12 -23.52 re f 0 g
+0.93 g 550.91 61.78 20.88 -23.52 re f 0 g
+0.93 g 19.31 721.78 65.52 -23.52 re f 0 g
+0.93 g 289.31 697.78 89.52 -23.52 re f 0 g
+0.93 g 409.31 697.78 65.52 -23.52 re f 0 g
+0.93 g 553.31 697.78 18.48 -23.52 re f 0 g
+0.93 g 379.31 643.68 191.76 -65.52 re f 0 g
+0.93 g 463.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 493.31 85.78 29.52 -23.52 re f 0 g
+0.93 g 343.31 61.78 29.52 -23.52 re f 0 g
+0.93 g 121.31 697.78 23.52 -23.52 re f 0 g
+0.93 g 49.31 133.78 59.52 -47.52 re f 0 g
+0.93 g 109.31 133.78 59.52 -47.52 re f 0 g
+0.93 g 169.31 133.78 59.52 -47.52 re f 0 g
+0.93 g 229.31 133.78 59.52 -47.52 re f 0 g
+0.93 g 289.31 133.78 53.52 -47.52 re f 0 g
+0.93 g 19.31 697.78 65.52 -23.52 re f 0 g
+0.93 g 487.31 697.78 65.52 -23.52 re f 0 g
+0.93 g 475.31 697.78 11.52 -23.52 re f 0 g
+0.93 g 139.31 673.78 95.52 -23.52 re f 0 g
+0.93 g 331.31 673.78 47.52 -23.52 re f 0 g
+0.93 g 379.31 673.78 41.52 -23.52 re f 0 g
+0.93 g 421.31 673.78 35.52 -23.52 re f 0 g
+0.93 g 457.31 673.78 17.52 -23.52 re f 0 g
+0.93 g 475.31 673.78 23.52 -23.52 re f 0 g
+0.93 g 511.31 673.78 17.52 -23.52 re f 0 g
+0.93 g 529.31 673.78 42.72 -23.52 re f 0 g
+0.93 g 499.31 673.78 11.52 -23.52 re f 0 g
+0.93 g 343.51 133.78 71.52 -23.52 re f 0 g
+0.93 g 415.31 133.78 71.52 -23.52 re f 0 g
+0.93 g 19.11 469.88 552.24 -336.48 re f 0 g
+0.93 g 19.31 133.78 29.52 -47.52 re f 0 g
+0.93 g 523.31 85.78 48.48 -23.52 re f 0 g
+
+endstream
+endobj
+281 0 obj <</Length 8961 /Filter /FlateDecode >> stream
+xúÕ]›ãd«uoG¡6∆∂Û‚ãå;öΩs´Ó˜bl˜Ù«∏a¶{“›≥ÜççV#yI„¨V±cB$¬
+ˆˇ†'Ö@Ù8D"Oz4Ñº?	ìá≈$ §ùô‘◊ÌæÁﬁsÍ‘Ù„Yf{∫˚÷Ô¸~ıyÍT›[¢äkUB∆Iâ§äe›JÙˇŒ£Á£œ}F»2N6WòonUY˚ÉP äDhõ@ ÷—˛ÙB$ITƒY≠üè≤".Uä$èÖzˇ\îDÎ{—óGGãh∂Zœ÷ßÎ≈W¢ı_Eìµ&X¥≥,” Ä@^äXz%XßÉÄF<"≤(è’FÑà+ö¶qŸR±úM„h4ﬂﬁhí ®é”B'ï2.tJiÚ£I9è7Iîi√◊∞ëÍ•õÁiR¥Æ∞|eõØE(ÍäB &Äæ`Q*æ*â(‚ºE{¥8ú/é'—$“/	öa±1êg}	E“∫ a‡úò“ê™ñ}„·zçg—|∏Õ÷√≠≈qõK™{≤B˙Û—A84&£±¿äb<M¢Èl5mã¬6–¢Ãts2È∑‡¥}¬¿!‰â—Ä!0 }	yn
+∑®†Ç…|Ω\Ë¢-V≠N@¶YÀÄÏ◊ô3´C &Ç4»¥–-¢+‚0ééÜwb–ºÏ”4Ò€nHˆ–DX%RIRú˝r≤^nÈ√ºÕ˙# kºA∞Ù∂¯êÃ/R¨-ñù˘ãÂpΩm∞ïÍA¨.˙cà∑/qõv‹á`ªd©÷ç«ßÛâ*Ö’l<ôﬂ›ˆG"›zøà¢j]Äµ‰åiH–Dÿ¿êŸ‚Ø%Pq4ª3Q#˙ñ<‡Üı"≤‚ÿlW∆e RëDÆÚ.˝„·|5[Ã'ùAŸ!´ñﬂ˜§øÈ™ùı@u„úØsÌªuôü,V≥ª≠ﬁßlgI⁄œ≥,aÚ¨ApÃ˚–DXÔSï¶˜Èpˇ“Iºéª#Wñ∆µ*Ó
+)Ó∫69`Ø∞ﬂEo` ÀíDhõ¿ Ä!-9¬GÇìëeµsù˜
+¢åK”˘(˜q”˘ò°»]`æπ%d˚á†Ù
+ò¿R„z8Ñ"–Ä	AdqÓÂä@s &Ñ¥65◊√!Å‰ M`™%>¡4`CP„]ÈÂä@s &<µ:ìTi∫va/ ∞µöFpUéÊä¿÷j¡U9öC([´IÑ¶ —BÿZM#∏*GrF`k5ç‡*-Õ!ÅÊ Lxjuû1Ì"œ∂V”Æ —BÿZM#∏*GsE`k5â–T9öC([´iWÂH¡l≠¶\••9Ñ"–Ä	!Édr3d”ot”|$}.˝≈P‘˛RpÈ… ¯HzÄè§Ø
+ø~óû¥œÒ¯Hzë§∆_Á Hú h c ÖøSjH
+¨hCH+Á‹ –X¿ÜêÁ˛™‹ –X¿ÜP¶˛Í‹ –X¿ÜP'˛*› –X¿Ç ì“?@44N4ÅqPÛyÔ@Ÿ êX–Ü†±Ch¨
+`C»k≠nh¨
+`C(≠nh¨äöÈ'SaBó<Õ°f˙…TV˛≤H≥úqúÌ0 ËÄü˚€EÄÀë˚€ØB$LY∞*Õò¿JTπ]J≥A†ÎW´9ÁÀ9oÙ¥*É≥*¬y#”sŒpéËÙ‰¨‡Ô‡|ﬂàNO⁄Á¯sæÙåh í 'ÄwΩÄ_‰A )∞x◊¯Eö´ÇuΩÄ_‰A†9∞*X◊¯Eö´ÇuΩÄ_‰A†9∞*8◊˙EößÇwΩÄ_‰A 9∞*x◊¯Eö´ÇuΩÄ_‰A†9∞*X◊åÉö´ÇsΩÁçE†9‘L?…ª^¿/Ú –QP`b'◊ãã£64VÎz±*Õòÿ…ı‚J≥A†ÎW´9Á8'tzr©‡Ô‡¸ ﬂÑNO⁄Á¯sæÙLh í 'Äw}Ä_‚A )∞x◊¯%ö´Çu}Ä_‚A†9∞*X◊¯%ö´Çu}Ä_‚A†9∞*8◊˙%ößÇw}Ä_‚A 9∞*x◊¯%ö´Çu}Ä_‚A†9∞*X◊åCö´Çs}ÁâE†9‘L?…ª>¿/Ò –[+Äâù\nsFÉ@s`U∞Æ´¬!–Äâù\Æ4∫>pµöã\π»ó~CÄà|—Ωl’û€q*o9sÈˇ~zÄè§∑€Î: tR≥Û⁄6‚"Æ⁄{úwÓ∫h'Il≥;wì‰ïáŒ.<◊ﬁqÿZÇ ï“+1LN¸(Õ™(uI2†T©åª2…	¨ÆBë2…ÙXÈËQZöã∂{—Ôø˙ √˚œoyÁ ÕoØ‚≤cXÔ„ˆvÇ£é  B tå¡Ùd&e:FùTz9Ñ"–Ä	!L<[!¯ÁtÅÊ L Yï˙;Á`z?(0Å!Ä≠∑OÇ@s‡v˜6UŒı;tª†ÁÁlÀ&<µöﬁúä¿÷j¡UZöC(Ç∑V{cgMï£9∏v¡"∞µöﬁˇÁ™Õ!Å≠’4ÿz˚$ÏÆw∂VªÒúnÙé+∂eûZM.ù#∞µöFpïñÊä‡≠’ﬁMï£9∏v¡"∞µöﬁÕÈ™Õ!Å≠’4ÿz˚$4á–›ΩÏàc/ $Ö L`Ï› °4`C`Ô	E†9 ÿ‰åª$Å‰ M`Ï› °4`C`Ô	E†9 X√¨2ÄU :=I ‡#ÈπU∞@ß'Ìs¸πE∏@ê8¸X  êX¸X  –XÏX  –XÏX  –XÏX  –X‹\  –8¸X  êX¸X  –XÏX  –XÏ¯zh¨
+nç°Y•`h5”OÚk`¿É@ÿ¿Ü¿Æ1pC~É@s`U∞k¨
+á@s &∞“d◊∏“lË˙¿’jnï¡≠RpÈ7àU
+∫óeÇ“ÅÈù}2®M¶ßÒ¬\ã∆Ó˘ht…8
+ÇcM«'h6ä@ªΩ)”Ñ¯ht(ÕòDºqø˜Ôh¿Ñ'∫¿FƒYz>
+Lx¢lDúE†9<ytò†≤:cÓÎßÿËB Çá0±St!¡√òÿ%∫ä@sÄ&vä."x8 ;E<Äâ‚`˛O¶ß	 ¸‚`˙O¶ßÌs¸πú¸ì 4N ] SÅ¶¿j‡£`ÍO#x8∞*ÿËò˙”¨
+6∫ ¶˛4Çá´Çç.Ä©?ç‡·¿™‡¢pÍO#x8p*¯Ëò˙”4V] S¡√ÅU¡F¿‘üFp`U∞—0’£<X\t°âOp5”OÚ—0ıß<60±StÅÚÇá´Çç.∞*,Çá0±StÅ+Má‡©\≠Ê‚.>¡§ﬂ ‚t/Àƒ¬“7ˆ…¯ôûÿtó’ïæàﬂtGáJ∆[pu:HA#∞!Ü@èÔõ2Ìà1"x8 ;Ö\êÇCp &v	1Ñ"x&•¿ƒN!Ü@á'1 Ñä‹»LÏbE†9 ;ÖBh¿ƒ.!Ü`í4±Sà!ÅÊ LÏbE†9 ;@ÄNO ¯;@ÄNO⁄Á¯s1†Hú >ƒ Êˇí´Å1Ä˘øÅÊ¿™`C`˛ÔA†9∞*ÿòˇ{h¨
+6ƒ Êˇö´Ç1¿˘øÅÊ¿©‡C`˛ÔA 9∞*¯òˇ{h¨
+6ƒ Êˇö´Ç1Ä˘ûÅÊ¿™‡B.H¡#–j¶ü‰C`˛ÔA†l`bß7‰74Vb`U8ö0±SàÅ+ÕÅÆ\≠ÊÇ6H¡¶ﬂ¿Éû^ñ	2¶Ø¸7@“ÈâMYeÛl¢DJ∆Qh*Ê&]E†›ﬁîiB|t!ÅÊ LÏ]∞Ò	ÅÊ LÏ]F†Á£¿ƒN—ÖPö]ˆ`æÇ:ˆ•ıuBû˘%â‘¬ü;,Kóªö}ÇÉ◊&ÎÂ∞uVí,3Á2e‡ˆg{¬Ÿ¨{Nå…)Ri·n#î¶‘Ò8¬ü°úòH$<”Èdπ8\NV^©Öç‹©√˘¸t+¥]fB5ÒóJ÷*S$9S#˙åÌ\ù2=ô,Wãy˚ ∫v˛”¨…ŒZÂC≤æA˘∏X>≥„ì8:YNÓƒÌìÛ&ø¶%˛Á 9kKñH3-Ê≥”√o:«¶E$˛,ÁJ„ùõ 3›ú3≠ß≠√Ê@ñ"¶•d≤º`≤ú)2ÑzmŒuÎd˘tvÿÍÄ +åuÂ∑Í“ì¨9’Xø)Ì!´ÄıhΩúD∫Öˆrú¨,[nDe)ò ¬T6$«+âÙ†¶Övœ∂ãùöI∆W≠åG“sá´òjg≥[]Ü«q4?=nÀ÷fÜ;iÈgÓ“ìÉßaûHïô∂íÛ3ŒÜq…0fcá»ÂÊ‰ﬂ„t;Ú$Â‘o“•ß=F2r‰£(0?hÀ8e„îaÃ(Fg∆œÏˆ$›æèÓ?*˚wÈ…˛ÉÎ0WSöuÿ^ˇ±X≠á—’˚[á¸~tBÛØZ¸È.‰¸”ƒÓ¶(_y¶Ü˙nã$≥T∫EíY[§›@ât›äˇp’w 9å|Ì7Ó“”~!#´Èπßﬁ(˛-ÚmryW„πr„s˘∫EIœâ¯RƒE“±_
+›ósÈ≠},=√ˇo"U´S©≤(—Gô&ÍaNœÕ!ó˜^R˘;ãˆø•æ¨¢˝oF"O¢˝ÉìQ$¢˝ŸqÙ¡´Á*˜£ø‹_}'öç£ˇ∫æ˘ø¡ı‡√Î¡‡S◊◊ÉGÍıiı˛JΩ>uy=¯•z˝™˛N}pu5PW<VÔ>Ò±MÛ∆‡Õk˚˙3ìFΩWi>PØ_’ü]Ÿœ~rÌæ˚∏±Ùî≥Ù©ñ%˝>k,i¿÷G◊œûΩ∂Ø_4©‘´Jıñz˝™˛€{¶π‚„Æ¶ßZñ^WØLiº=xcØ◊õøt:ı˙∂Vv≠_ˇ›|˛ŒUÛπQgØËÈ˚Dc’Z2VüÚÎªz¶Qg‚ u§™ƒÆﬁh Î æ˚7˜∑ßºÓ÷ä~˜Y^çzçZz>—£ê_€ÿ˘•z˜yçÀ®yw£ÊıÓßAjæ∞±Ú∫z˜…∆ä∑lææ—Úñ÷rı£§c„j¿Ë¯ôÂ™9_*ÓWo∞*ûn,\Íˇ¨Ç}´¿‘Z≠·œoT)1:>e≠hTmG∑°Ä÷Û∂÷c€Ü±˜i˜ÈõˆïoC¿ÚïU8xÌö”¯≈ç∆è.ıª´wÔ^˚>µ±Ûa£–ZÚî÷õõ“˙R◊∏7¨oy}bcÁ—•~ßÌ|›ØHiÄzﬁ‚Ù(dhÂΩ∆
+•FÒo¥|†µò^¸Î~5
+˘‹ﬂøÑVº•m‘¸j£ÊÎåöØ9;Ô]Í6•G•/0j˛£•f_•`ÀÜ∂‚-ôØµ¥®ˇ’ª}FÀü¥¨ÿˆiLKØ-©~m”ñﬁwüËÒÈ€“ÆŸ÷ti˚Rc˚ éæèÎ^çüwˇSïﬁ≥Íª_´˜O3*?È,}√ÙÇˆ;Tg´Ã~Í˛~_µ§w‹w?cK≠kÈëc·◊ÙßNìÓﬂ5àˆªPMØµæÛi˙'˚˜ÂŒäÎ›iEô◊Kçÿ|ÊQÚëQ°[U√⁄ß°Ö˝∏¡ˆxuØ_öøØZ\C∏_mŸ2Ï’Î\Œóœ\_oG&èØÛáóçç6vHÎy{”zÏ_ˇ∏ì∂-Ül;°VΩ ˆ.õ≤q£Ìı3å∂œBmFìØ|˛yS>›r°}Óœmm\][^˚œZ[◊|:∂6>’ÿÕ¨ä¡ß≠◊vı´·i®¡¥EFÖÈªúu©Ò~Oõ^r£√znÙ˛’¶L¥k≈Øfã´ñÎ¥=V˝⁄U_—Ø\Õ“„ß÷d∆—≠¶«Í›U_ì≥5¯ÜÛKﬂk¨YU ÷wØ∞ÙŒ¶%ôQ’∂ ÌoõOﬂÙ[ê˝}˜™Ø˜≈ÅQ¸õñbÌÉˇ*HÒcgÌ=Á·õqS Ò±kUÔÎ≤ª≤≥⁄w⁄e˘◊ˆøî5F€ï”¶5io¸◊Ê”`m∆Û7æ´Ï )˚¿Ã.Bu]o-Ø®)Èj˙?][˜›ßO≥∫Hk^e◊[eÉüòŸéMx’Ÿ∫x›¯ËØ˛o√ÎmÑ¬´–÷Gı˛◊ó∫W˘ÿ¯|ŸŸ:bfèµÕ«ç=∂%6Ìœ(oµµQäa‘"§5vy¸˝ı6^‚◊˝õfº~¨À‘é_–˝ã∆3P»§≈Z{˛≤µÔ’7o_æ·∆7ÉJˆëÎe^ø¥˝˜{ÉP}5s}UÆ:e®æØ∑Qm·—¿≈h~ËÍ±.€üil[|™m1L£ã§iÏû	Ph|ªK€jÙ,˘rç¡ @a#‘•˜ıäÍ˚üÎ¡È‡µKç˙≠G˙›œ’ò˘sÛ◊?÷üû>∫aÑÛıœ}f2ã˛¢ŸÉRJª>\Ùb›U÷˙ûﬁÃSWDzÄ∏F°óhK—Y£Æá—‰x∂ZÕÛﬁ*≠≥_cÌ<Î¥•y¢-Ç MÑI¬&ë@√zv≤àFã˘z9\Ø≠•D&≥2Û3h¨!π±ÜLöΩˇ]¶V#%`∂In—EKdÕ¿kæA∞0`"H@^$zπº+`ﬁZ(wu#Kı ÇﬁçëU}‚rsÖ5k≥VØº,)hÅ ÎÆÿ∫jÕ¨ÀÃ∫,≥Æã}YË]åùuŸ/uó®H∆˙∞/„öaÃ(f7(0ãã.=π/è[ó≈68§»‚‰a|ÿ⁄©VÍ<©©™WµÅ{mƒ]∞±ö$€›h!©	hAhxßäwYò6í∫~Î=Tuª£Z¨áGìh>iwSB&≠&(˚À—"c∫©¡∂rò@•ﬁ√®◊oôChÑ4_‘e,≤÷‚†êfm∞‹,Í¡·7¯ùÌ"·l¸πœLß”dÛõåì—4M∆£É‰`:Ó˝éßÊ{}e;›◊ö°Tì+2@Æà≥!'nLn"Ω…T)Ÿ_í\ñ ru,RÑ\Hnî4øÂ43øìQR%#Û:€ﬂ…¡ˆwZn”Ë_@Nmr©àsÑ\»mí4øU2Qôˆ€N◊‚¶Í$‰¶™R™Yh°™üÉÌ?±˘+±ﬂ˘r%ãã¸∑ë+ò˙J ü%·πRh∑Ìwì+∞ï•e\ñO– Zï‹—¥PM}àfë˛\?•≥•€ ≤Do^¯Ωhe»vH5¯È=™Fó≠Óˇx∏^ŒFã£a4õü¨n{6ñÎüÄ—bl7T∆∑;[µuˆÓ’vÿÔUöˆÊ›õ1…!>ΩõîE‡ˆ»{ 
+ÜÇ€ê∆"p€∆i hÅﬁS«"p€®= ¿Ω-éE ∑Ê≤∏Ik≈92ÃtK‹x∂%Õ›OËdk∏ZùŒÔÇYØægÕ+Äù.5Ùåòõ6‘ÊÒ	®àÈl>âñ√ìì≈≤=Û[!oŒ¢ApGÅõ;c”ü ˙î‰ƒQﬂõﬂäÙsO¶mZXryb‚H&Çxã¬Ï/T–Ê}:ùÓØ÷√ÉŸ—Ïx2oÂ~ö∂›q€@–©+…°A∞*0`"l*•FÃ≤Øb±úƒëπ´£7}w¸ë≤óåı¡ÒÔ#∞9ÄÌSÕÙ6lÑø˝¥vzz)“Û¬oΩA∞¸1.∞∏Oiít¯™Ïè£÷mêùË>lõ}á`Èc\Ù¸≠¨07‰e∫£ø’ûrçì⁄Mπ¶”‹˛V„§*õ9ai¶dzj6Â TÕüÑ\{ZS Œ:˛È©Ç…EV‰6Ø”›&≠LP4-ßÓwå¸⁄Ôíƒ3WÌpSΩw˘{¬≠3Ò…JU/”>∑¿âObSÚﬂ∆2lNHÙD?nœﬂﬁÇmo◊bÒX°ƒª∞'?âø∑»%√æA {h",F,ÃM¿]ˆj¥l1ƒ≤4Œ∫vKi˚íπ√Ç¿iGòßÊ$]ÊÀ…x<k{X†N ˛õiÇÀvdîÂ™B>ëX∂∑CÛôÒeú_"VEﬁ∫ ÚZax#–Ñá˜6\ö⁄P∫–ﬁz˚é•Â“‹·;jé"kMA0˛÷≥•≠7$h"à¶É›¬‹Í[t˘◊Î”ˆ˝èàzi2L±5∫.–O"K˛Ë&—Œ–~t∏çé´^Uıë∑Ñz…+„ˇiéÕÌ6ﬂ¿Zî’≈Ûp¶ƒéV£ËV4?˚˛≈ã˜d;ﬁ±•£CEàÇq4âV—(ZF≥ËÆ˙]DÛ»ó*™> h1ûçZwJG/ËÖ,m.ØtvÎ9ô.#°õø)¢$z\ßÉ)!◊IvùÜ\óA◊È⁄t]f◊‹—r]ñ©¥+Ì¶ÅvÛ∞rìEò]YÜŸïu¢£n<ø$¨‹§~<M»ui†^}£x»uytù(√ÙÍõºÉÆ´√Ï §√ÀØÀΩ˘lüYòU>ï”I“n[ﬂ€^?µ˜…5ësÅ[D  ,H—G–è?Åp0V¥ëU=Ñ4)√ Ç◊çÿØzNDDS+QÆ@/7E·X º‹“O“q'[D√U+^©¯%^vÈ⁄W£,- ⁄†o‰M˙Ã˛ú…¸t=È.ﬂ;t.˙ì FAw@Çœlø∆ä`¥8>ô(	w[˛H;&N> àãôì{>ìÏ	…»-B‰ûóﬁÓ…¿“3{NêIàrÚﬁ.=Å2wî∑uÓ8.&˜>–€^Ä=rÀ!–'≥Ù√¥=Bh¿˝0máPö0A?L€√!Å‰ M–”¶9#–Ä	˙a⁄°4`Ç|ú6M¡ùπ≈•'	 |Úq⁄¥˝ÊâLz“>«‡{Œ€‚ Hú h¿s⁄ã@R`5@û”∂Xö´òú∂≈"–X¿ÑÁ¥-ÅÊ¿™ &<ßm±4V0·9mãE†9p*†	œi[,…ÅUMxN€bh¨
+`¬s⁄ã@s`U û”ïXö´¢f˙…ÊÃ0ÅÊP3˝dsÕ°yFá@ÿ¿˝0mn»oh¨
+w†ÕÅU·h¿˝0mOù‰J≥A†ÎW´›ô\
+¯„∏ŸÙ¯„∏=Ωl’Óû»3√∏ÙŒ>yfÌ¸πcµ˙Ï/!oñ©≥øhÑîi¡¥õ2Ì°9òãÊä@s &Ë'c{8∏≥øXö0A?€√!Åû\Ùì±=ìÀPö*pÅ
+Ω“ö$f— DÖ*πyz≥˙‹∆*éfÀEt:üç—xrÔ,‘„£8BÓÀ$©"˝”] äJ>q`)ä≠wÌ›éí|ﬂ â:äKıÅ∑Ûäƒ≥TUg–Eæ˙‚¡˝˝ËÏG˜/^>èÊØæt˛‡B1KÛ¢ «ËπÛoG≤ÿOÑ&^cKÉ˙6ïDÔ6VÉl/*Ö!∞µxg1öD„Y¥.„(ë"i-∂WÌ^?©êïÑ6§—ÅÏàòΩ|vˇ≈ËÂXvaŸ'ä}⁄fﬂ1¶R˙â„ïŒ?˝Zd©öˆï12ÎØinkáé¸Èß„’˝Lü/ÓLéñ°
+∞Wh€
+ñôifYe=à—d9<Rπx∏\úûD´xıû3ﬁ*ehu˛‹yt;äv,˙ıÛd6º{wçÜÀŸzÅëÒà∂ bïà4ª5û,éfQÁg>ÏA÷MùØ§›ﬂ/Ä\»¨,ã<)o©O∫?IñÀ¥“•ú·≠¥±ê’".S‘Ç(nE∫≈ÌZrZQ¸‘kíÈ˝ƒIì_u\’QôÙ MˆÖÿ˜◊,–∆S7ı‡Œl>öÃÔ.:y”É¨1äôƒ!Eæüî˚¢.≥~ÚçûT5ä“ÚËŒh^fG"üVi˝-∫◊‘}7Å1\-ñ≥aØ¨π. ~È»ÃıΩyÓ	ê “–Q}@Å”QØ©b¢{$ÅPÊÜÄTWVa9Yùƒ√„„ÿü5M6À⁄ì1§Ÿ|<YOñ«≥π^j‚≤8KÏV)Lî∞„çîXÆ4öd&Ã}Wyø_ì∫]ã4›3»TøÀÂ^"M>óÍ/ıπÃÌ◊XA“FU#R6eø£ﬂ˛Jt2<ö56PÆ©T+uçöTÊ∆:∂P∞´”ì≠≥„E§2yvGÅ™Ô˜tO·µTëq_*LΩÎy6?T≠º›.Ú¥ÿ+EU∂ÏPÆT≥3®rØñTì˛PójLs_{4úﬂùÁj\˘3À5-˜J4∂›JeÜvΩw©ãÎÓ•ΩJ]÷YΩó˘Â¶ ?∫È∏ﬁ¥5ÅSΩîrNêZÁ<ë´≥$_$Ÿ—´I~|ñ«ÁIyx?©‘wıÍL$„!é^Ú¯L§«Á";º/Ú;Á¢PﬂïÍªJ}Wü…‰¯\ä√˚Rﬁ9óÈÍLf„ôΩ*ı]©æ´‘wıùÛ4Yùyõª£õıKf:YE≈^ñË_U“&ßì•˘m>◊ü5w©Ô4VKÁ)ÚRw‹‚HàH?ÿy©z¶≈r¨∫®Â¨;ºEõN„YﬂPe¥1ÂûPûE⁄Gï≤ T‡ÅUûÆÊç∏≤N£ÈR7’Ë`2üLgÎ¬õÓπZY#ÕYNòç<ﬂ+äg˘|ï˝zP©_≠gwL√‘∑ÇÃNµÛ˜mΩüPµﬁÌO°m9ãÿ†sVM}2Åπú»(Qñ—Ò0V3¥8/é'jŒ¶{ë|©S)ˆRŸ7—xÇ©∞Gñ!&ÑÓ§}πj¶¬RÓâD+b•∏®})åbÃ;ÃtÛúM¢√≈¯t=¡¿}Ç{EÖ˘{tQ©V†zW∂®“™ﬂ¥dY€¢jf”∂Œ!-Ødù¢BMöRU¿\ ]ä )F|†∫Æõ÷dÓ2å÷ÒTÕÀ˙å_„Qúîî	ë0ísñT Q÷cl¶¿ïˆY±ƒﬂ˝-˝x|K„æßEø'q„˛v'Ÿ<ùa.m]@eë{Iây'_ê¥ø≥|A<f5_7[´ÃëX≥ÒD˚Z˝	7û/€∆U≈j∞¬‡ÎΩ‘3ùu›	ñPM7¥∑˛¨Ì@J±WW∑º≥
+´0ÎwLzÙüœf™Ù›°BëÍW˙=[‡ö†ÃQX’ÍΩ26¥Ó8Çàßﬂú;q§¸ì˛\ï!®üàî£∞E≠º¶Ï¶¸˜ﬁ5ùÌ±$.ˇf4jP#-ÖöÍ>(@íTM¨ˆíÙ¶ êI∆¶ÚªsoíÛYñ~l^djº√™k3õ∞}Å¨˚ı~8«À…a<úœˆ&ñ€¥ì.î¥«èO‘§	©OIπôXcpR(«‡ßôoi=™”ΩôrzJ£Å´ˆ“öïÉLˆÜ£Q¨%ÈÅ‰tngí¨áäLÖ»A‡“Ωë”iô{∫∂Ω›bãˆ?±\öÖø*Í=QﬂÚµÛ™6´à+ú®Nø±û(∑ÿ¸!‚≤*Ù»@v:™Á%
+x|ˆ0Vùπö8dtr!ÑéIíÈ£®Tº<ÈKÛ⁄~Ç”oï≥Ω-q≤èfKªPÓl^≈¢Ùq˘Ä¿^<GBıR‚@vÛÅJØÀƒWM>Ïöﬁ“G‹Ó’Ÿãä}Yá∞ßí"ïú*√¶QMT?Ãô–bC◊˛ê˝Oûö!
+£ë%™ÙEN+Pï+…#ƒÔyæÒÃÑrÃÑˆzM√tò˙o©˙5∫eÆ)™=©f @ßJ˚„ÛøΩÔ|yx›{%RıGŸŒ£WÓÈ›0ë‚ê¶ï~—À≥˝ãı}‡˙Rß&ç◊€¸±ŸT~~ˆ¢^8|x›ªx9zx~ÔÂã/^∏≠^:{0ö^<xÈÑöπ!»˝Ì/ètåı‚˚˜‡˛ﬂ{	5ùª%ïï„≥ág—…É˚/?åú=ˇØ£W‚≥ﬁ¥Æ[Ñô>œÔ=|¯˝€˚˚?¯¡‚W^z¯º˛&æwÒ“Ôˇ%áì5
+endstream
+endobj
+283 0 obj <</Type /Annot /Subtype /Link /Rect [36 0 374 0 ] /A <</Type /Action /S /URI /URI (http://www.smtforms.com) >> >> endobj
+284 0 obj <</Producer (iLovePDF) /ModDate (D:20201224052256Z) >> endobj
+286 0 obj
+<< /Type /Catalog /Pages 287 0 R>>
+endobj
+287 0 obj
+<< /Type /Pages /Kids [ 288 0 R ] /Count 1 >>
+endobj
+288 0 obj
+<< /Type /Page  /Parent 287 0 R /Resources 4 0 R  /Contents [279 0 R 281 0 R ]  /Annots [283 0 R ]  /MediaBox [0 0 595.28 841.88 ]  /TrimBox [0 0 595.28 841.88 ]  /Rotate 0  >>
+endobj
+xref
+0 1
+0000000001 65535 f
+4 276
+0000000015 00000 n
+0000001376 00000 n
+0000001493 00000 n
+0000001685 00000 n
+0000001871 00000 n
+0000003311 00000 n
+0000003500 00000 n
+0000003682 00000 n
+0000004217 00000 n
+0000004407 00000 n
+0000004589 00000 n
+0000005095 00000 n
+0000005290 00000 n
+0000005477 00000 n
+0000005960 00000 n
+0000006155 00000 n
+0000006342 00000 n
+0000006885 00000 n
+0000007075 00000 n
+0000007257 00000 n
+0000007843 00000 n
+0000008033 00000 n
+0000008215 00000 n
+0000008752 00000 n
+0000008942 00000 n
+0000009124 00000 n
+0000009659 00000 n
+0000009849 00000 n
+0000010031 00000 n
+0000010537 00000 n
+0000010732 00000 n
+0000010919 00000 n
+0000011402 00000 n
+0000011597 00000 n
+0000011784 00000 n
+0000012327 00000 n
+0000012517 00000 n
+0000012699 00000 n
+0000013285 00000 n
+0000013475 00000 n
+0000013657 00000 n
+0000014194 00000 n
+0000014384 00000 n
+0000014566 00000 n
+0000015101 00000 n
+0000015291 00000 n
+0000015473 00000 n
+0000015979 00000 n
+0000016174 00000 n
+0000016361 00000 n
+0000016844 00000 n
+0000017039 00000 n
+0000017226 00000 n
+0000017769 00000 n
+0000017959 00000 n
+0000018141 00000 n
+0000018727 00000 n
+0000018917 00000 n
+0000019099 00000 n
+0000019636 00000 n
+0000019826 00000 n
+0000020008 00000 n
+0000020543 00000 n
+0000020733 00000 n
+0000020915 00000 n
+0000021421 00000 n
+0000021616 00000 n
+0000021803 00000 n
+0000022286 00000 n
+0000022481 00000 n
+0000022668 00000 n
+0000023211 00000 n
+0000023401 00000 n
+0000023583 00000 n
+0000024169 00000 n
+0000024359 00000 n
+0000024541 00000 n
+0000025078 00000 n
+0000025268 00000 n
+0000025450 00000 n
+0000025985 00000 n
+0000026175 00000 n
+0000026357 00000 n
+0000026863 00000 n
+0000027058 00000 n
+0000027245 00000 n
+0000027728 00000 n
+0000027923 00000 n
+0000028110 00000 n
+0000028653 00000 n
+0000028843 00000 n
+0000029025 00000 n
+0000029611 00000 n
+0000029801 00000 n
+0000029983 00000 n
+0000030520 00000 n
+0000030712 00000 n
+0000030895 00000 n
+0000031431 00000 n
+0000031624 00000 n
+0000031807 00000 n
+0000032314 00000 n
+0000032512 00000 n
+0000032700 00000 n
+0000033184 00000 n
+0000033382 00000 n
+0000033570 00000 n
+0000034114 00000 n
+0000034307 00000 n
+0000034490 00000 n
+0000035077 00000 n
+0000035270 00000 n
+0000035453 00000 n
+0000035991 00000 n
+0000036184 00000 n
+0000036367 00000 n
+0000036903 00000 n
+0000037096 00000 n
+0000037279 00000 n
+0000037786 00000 n
+0000037984 00000 n
+0000038172 00000 n
+0000038656 00000 n
+0000038854 00000 n
+0000039042 00000 n
+0000039586 00000 n
+0000039779 00000 n
+0000039962 00000 n
+0000040549 00000 n
+0000040742 00000 n
+0000040925 00000 n
+0000041463 00000 n
+0000041656 00000 n
+0000041839 00000 n
+0000042375 00000 n
+0000042569 00000 n
+0000042752 00000 n
+0000043259 00000 n
+0000043458 00000 n
+0000043646 00000 n
+0000044130 00000 n
+0000044329 00000 n
+0000044517 00000 n
+0000045061 00000 n
+0000045255 00000 n
+0000045438 00000 n
+0000046025 00000 n
+0000046219 00000 n
+0000046402 00000 n
+0000046940 00000 n
+0000047134 00000 n
+0000047317 00000 n
+0000047853 00000 n
+0000048047 00000 n
+0000048230 00000 n
+0000048737 00000 n
+0000048936 00000 n
+0000049124 00000 n
+0000049608 00000 n
+0000049807 00000 n
+0000049995 00000 n
+0000050539 00000 n
+0000050733 00000 n
+0000050916 00000 n
+0000051503 00000 n
+0000051697 00000 n
+0000051880 00000 n
+0000052418 00000 n
+0000052612 00000 n
+0000052795 00000 n
+0000053331 00000 n
+0000053525 00000 n
+0000053708 00000 n
+0000054215 00000 n
+0000054414 00000 n
+0000054602 00000 n
+0000055086 00000 n
+0000055285 00000 n
+0000055473 00000 n
+0000056017 00000 n
+0000056211 00000 n
+0000056394 00000 n
+0000056981 00000 n
+0000057175 00000 n
+0000057358 00000 n
+0000057896 00000 n
+0000058090 00000 n
+0000058273 00000 n
+0000058809 00000 n
+0000059003 00000 n
+0000059186 00000 n
+0000059693 00000 n
+0000059892 00000 n
+0000060080 00000 n
+0000060564 00000 n
+0000060763 00000 n
+0000060951 00000 n
+0000061495 00000 n
+0000061689 00000 n
+0000061872 00000 n
+0000062459 00000 n
+0000062653 00000 n
+0000062836 00000 n
+0000063374 00000 n
+0000063568 00000 n
+0000063751 00000 n
+0000064287 00000 n
+0000064481 00000 n
+0000064664 00000 n
+0000065171 00000 n
+0000065370 00000 n
+0000065558 00000 n
+0000066042 00000 n
+0000066241 00000 n
+0000066429 00000 n
+0000066973 00000 n
+0000067167 00000 n
+0000067350 00000 n
+0000067937 00000 n
+0000068131 00000 n
+0000068314 00000 n
+0000068852 00000 n
+0000069046 00000 n
+0000069229 00000 n
+0000069765 00000 n
+0000069959 00000 n
+0000070142 00000 n
+0000070649 00000 n
+0000070848 00000 n
+0000071036 00000 n
+0000071520 00000 n
+0000071719 00000 n
+0000071907 00000 n
+0000072451 00000 n
+0000072645 00000 n
+0000072828 00000 n
+0000073415 00000 n
+0000073609 00000 n
+0000073792 00000 n
+0000074330 00000 n
+0000074524 00000 n
+0000074707 00000 n
+0000075243 00000 n
+0000075437 00000 n
+0000075620 00000 n
+0000076127 00000 n
+0000076326 00000 n
+0000076514 00000 n
+0000076998 00000 n
+0000077197 00000 n
+0000077385 00000 n
+0000077929 00000 n
+0000078123 00000 n
+0000078306 00000 n
+0000078893 00000 n
+0000079087 00000 n
+0000079270 00000 n
+0000079808 00000 n
+0000080002 00000 n
+0000080185 00000 n
+0000080721 00000 n
+0000080915 00000 n
+0000081098 00000 n
+0000081605 00000 n
+0000081804 00000 n
+0000081992 00000 n
+0000082476 00000 n
+0000082675 00000 n
+0000082863 00000 n
+0000083407 00000 n
+0000083601 00000 n
+0000083784 00000 n
+0000084371 00000 n
+0000084565 00000 n
+0000084748 00000 n
+0000085286 00000 n
+281 1
+0000088132 00000 n
+283 2
+0000097171 00000 n
+0000097303 00000 n
+286 3
+0000097376 00000 n
+0000097428 00000 n
+0000097491 00000 n
+trailer
+<</Size 289 /ID [(	ÂØ	⁄¸c∑´Ïºö) (	ÂØ	⁄¸c∑´Ïºö) ] /Root 286 0 R /Info 284 0 R >> 
+startxref
+97685
+%%EOF
