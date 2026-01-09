@@ -5,7 +5,7 @@ import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { 
   Search, Edit2, Trash2, Plus, FileText, Building2, 
   Phone, Mail, MapPin, CreditCard, AlertCircle, Check,
-  Users, X
+  Users, X, TrendingUp
 } from 'lucide-react';
 
 // Hook per debounce
