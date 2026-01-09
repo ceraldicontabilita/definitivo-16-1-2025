@@ -3,6 +3,41 @@
 # AGGIORNATO: 2026-01-09 (Fork Session 3)
 
 ================================================================================
+# ✅ PARSER BUSTE PAGA PDF - 2026-01-09
+================================================================================
+
+## Funzionalità Implementate
+
+### Parser Backend (/app/app/utils/busta_paga_parser.py)
+- ✅ Estrazione dati da PDF buste paga (pdfplumber)
+- ✅ Parsing: Paga Base, Contingenza, TFR, Ferie, Permessi, ROL, Netto
+- ✅ Supporto formato Zucchetti (struttura testata)
+- ✅ Scan automatico cartelle dipendenti
+
+### API Endpoints
+- ✅ `GET /api/dipendenti/buste-paga/scan` - Scansiona tutte le cartelle e mostra progressivi
+- ✅ `GET /api/dipendenti/buste-paga/dipendente/{id}` - Lista buste paga di un dipendente
+- ✅ `POST /api/dipendenti/buste-paga/dipendente/{id}/import` - Importa progressivi nel DB
+- ✅ `POST /api/dipendenti/buste-paga/import` - Import batch (dry_run supportato)
+
+### Frontend
+- ✅ Pulsante "📥 Importa da Busta Paga" nella modale dipendente
+- ✅ Aggiornamento automatico dei campi dopo import
+
+### Dati Estratti per Dipendente
+- Paga Base mensile (€)
+- Contingenza mensile (€)
+- TFR Accantonato, Quota Anno
+- Ferie: Maturate, Godute, Residue
+- Permessi: Maturati, Goduti, Residui
+- ROL: Maturati, Goduti, Residui
+- Netto del mese
+
+### File Importati
+- 📁 `/app/documents/buste_paga/` - 30 cartelle dipendenti
+- 📄 ~1542 PDF buste paga dal 2017 al 2025
+
+================================================================================
 # ✅ FIX UI ADMIN & VERIFICA COERENZA - 2026-01-09
 ================================================================================
 
