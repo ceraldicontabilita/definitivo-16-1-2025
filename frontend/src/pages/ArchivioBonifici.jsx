@@ -474,9 +474,26 @@ export default function ArchivioBonifici() {
           placeholder="🔍 Cerca causale, CRO/TRN..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') loadTransfers(); }}
           style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', minWidth: 200 }}
           data-testid="bonifici-search"
         />
+        <button
+          onClick={loadTransfers}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 8,
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 'bold'
+          }}
+          data-testid="bonifici-search-btn"
+        >
+          🔍 Cerca
+        </button>
         <input
           type="text"
           placeholder="Filtra ordinante..."
@@ -498,6 +515,28 @@ export default function ArchivioBonifici() {
           onChange={(e) => setYearFilter(e.target.value)}
           style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', width: 120 }}
         />
+        {/* Bottone Reset Filtri */}
+        {(search || ordinanteFilter || beneficiarioFilter || yearFilter) && (
+          <button
+            onClick={() => {
+              setSearch('');
+              setOrdinanteFilter('');
+              setBeneficiarioFilter('');
+              setYearFilter('');
+            }}
+            style={{
+              padding: '8px 12px',
+              borderRadius: 8,
+              background: '#f1f5f9',
+              color: '#64748b',
+              border: '1px solid #e2e8f0',
+              cursor: 'pointer',
+              fontSize: 12
+            }}
+          >
+            ✕ Reset
+          </button>
+        )}
         
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button
