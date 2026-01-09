@@ -1163,6 +1163,146 @@ export default function Fornitori() {
         onSave={handleSave}
         saving={saving}
       />
+
+      {/* Modale Fatturato */}
+      {fatturatoModal.open && ReactDOM.createPortal(
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '500px',
+            overflow: 'hidden',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+          }}>
+            {/* Header */}
+            <div style={{
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              padding: '20px 24px',
+              color: 'white'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <TrendingUp size={20} /> Fatturato {fatturatoModal.data?.anno || selectedYear}
+                  </h2>
+                  <p style={{ margin: '4px 0 0', opacity: 0.9, fontSize: '14px' }}>
+                    {fatturatoModal.data?.fornitore || ''}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setFatturatoModal({ open: false, data: null, loading: false })} 
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    cursor: 'pointer',
+                    color: 'white'
+                  }}
+                  data-testid="close-fatturato-modal"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '24px' }}>
+              {fatturatoModal.loading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    border: '4px solid #e5e7eb',
+                    borderTopColor: '#0284c7',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto'
+                  }} />
+                  <p style={{ marginTop: '16px', color: '#6b7280' }}>Caricamento fatturato...</p>
+                </div>
+              ) : fatturatoModal.data ? (
+                <div>
+                  {/* Totale Principale */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    marginBottom: '20px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '14px', color: '#0369a1', marginBottom: '4px' }}>TOTALE FATTURATO {fatturatoModal.data.anno}</div>
+                    <div style={{ fontSize: '36px', fontWeight: 700, color: '#0c4a6e' }}>
+                      € {fatturatoModal.data.totale_fatturato?.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                    </div>
+                    <div style={{ fontSize: '14px', color: '#0369a1', marginTop: '8px' }}>
+                      {fatturatoModal.data.numero_fatture} fatture
+                    </div>
+                  </div>
+
+                  {/* Stats Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                    <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '12px', color: '#16a34a' }}>Pagate</div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#15803d' }}>{fatturatoModal.data.fatture_pagate || 0}</div>
+                      <div style={{ fontSize: '11px', color: '#6b7280' }}>€ {(fatturatoModal.data.importo_pagato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                    <div style={{ background: '#fef2f2', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                      <div style={{ fontSize: '12px', color: '#dc2626' }}>Da Pagare</div>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#b91c1c' }}>{fatturatoModal.data.fatture_non_pagate || 0}</div>
+                      <div style={{ fontSize: '11px', color: '#6b7280' }}>€ {(fatturatoModal.data.importo_non_pagato || 0).toLocaleString('it-IT', { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+
+                  {/* Dettaglio Mensile (se disponibile) */}
+                  {fatturatoModal.data.dettaglio_mensile && fatturatoModal.data.dettaglio_mensile.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '8px' }}>Dettaglio Mensile</div>
+                      <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {fatturatoModal.data.dettaglio_mensile.map((m, idx) => (
+                          <div key={idx} style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '8px 12px',
+                            borderBottom: '1px solid #f3f4f6',
+                            fontSize: '13px'
+                          }}>
+                            <span style={{ color: '#6b7280' }}>{m.mese_nome}</span>
+                            <span style={{ fontWeight: 600, color: '#1f2937' }}>
+                              € {m.totale?.toLocaleString('it-IT', { minimumFractionDigits: 2 })} 
+                              <span style={{ fontWeight: 400, color: '#9ca3af', marginLeft: '8px' }}>({m.numero_fatture} fatt.)</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {fatturatoModal.data.numero_fatture === 0 && (
+                    <div style={{ textAlign: 'center', color: '#6b7280', padding: '20px' }}>
+                      Nessuna fattura registrata per questo anno
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
