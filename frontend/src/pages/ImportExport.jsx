@@ -338,7 +338,8 @@ export default function ImportExport() {
       ref: versamentoFileRef, 
       handler: handleImportVersamenti,
       accept: ".xlsx,.xls,.csv",
-      desc: "Importa versamenti da file Excel (data, importo, descrizione)"
+      desc: "Importa versamenti da file Excel (data, importo, descrizione)",
+      templateUrl: "/api/import-templates/versamenti"
     },
     { 
       id: "pos", 
@@ -347,7 +348,8 @@ export default function ImportExport() {
       ref: posFileRef, 
       handler: handleImportPOS,
       accept: ".xlsx,.xls,.csv",
-      desc: "Importa incassi POS giornalieri (data, POS1, POS2, POS3, totale)"
+      desc: "Importa incassi POS giornalieri (data, POS1, POS2, POS3, totale)",
+      templateUrl: "/api/import-templates/pos"
     },
     { 
       id: "corrispettivi", 
@@ -356,7 +358,8 @@ export default function ImportExport() {
       ref: corrispettiviFileRef, 
       handler: handleImportCorrispettivi,
       accept: ".xlsx,.xls,.csv",
-      desc: "Importa corrispettivi giornalieri (data, importo, imponibile)"
+      desc: "Importa corrispettivi giornalieri (data, importo, imponibile)",
+      templateUrl: "/api/import-templates/corrispettivi"
     },
     { 
       id: "f24", 
@@ -365,7 +368,8 @@ export default function ImportExport() {
       ref: f24FileRef, 
       handler: handleImportF24,
       accept: ".pdf",
-      desc: "Importa modello F24 da PDF (INPS, IRPEF, tributi regionali)"
+      desc: "Importa modello F24 da PDF (INPS, IRPEF, tributi regionali)",
+      templateUrl: null // F24 è un PDF, non serve template
     },
     { 
       id: "paghe", 
@@ -374,7 +378,8 @@ export default function ImportExport() {
       ref: pagheFileRef, 
       handler: handleImportPaghe,
       accept: ".pdf",
-      desc: "Importa buste paga PDF e inserisce netto in Prima Nota Salari"
+      desc: "Importa buste paga PDF e inserisce netto in Prima Nota Salari",
+      templateUrl: null // Buste paga è un PDF, non serve template
     }
   ];
 
