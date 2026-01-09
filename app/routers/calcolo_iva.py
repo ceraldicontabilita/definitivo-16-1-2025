@@ -92,23 +92,31 @@ async def calcola_iva_periodo(
     
     # === IVA VENDITE (a debito) ===
     # Da fatture emesse
-    iva_vendite_fatture = await db["invoices"].aggregate([
-        {"$match": {
-            "invoice_date": {"$gte": data_inizio, "$lt": data_fine},
-            "tipo_documento": {"$in": ["TD01", "TD24", "TD26"]},  # Solo fatture emesse
-            "inclusa_in_corrispettivo": {"$ne": True}  # Escludi fatture già in corrispettivi
-        }},
-        {"$group": {
-            "_id": None,
-            "imponibile": {"$sum": "$taxable_amount"},
-            "iva": {"$sum": "$vat_amount"},
-            "num_fatture": {"$sum": 1}
-        }}
-    ]).to_list(1)
+    # === IVA VENDITE (a debito) ===
+    # Da fatture emesse - usa riepilogo_iva o campi alternativi
+    fatture_vendita = await db["invoices"].find({
+        "invoice_date": {"$gte": data_inizio, "$lt": data_fine},
+        "tipo_documento": {"$in": ["TD01", "TD24", "TD26"]},  # Solo fatture emesse
+        "inclusa_in_corrispettivo": {"$ne": True}  # Escludi fatture già in corrispettivi
+    }, {"_id": 0, "riepilogo_iva": 1, "vat_amount": 1, "taxable_amount": 1, "iva": 1, "imponibile": 1}).to_list(10000)
     
-    iva_vendite = iva_vendite_fatture[0]["iva"] if iva_vendite_fatture else 0
-    imponibile_vendite = iva_vendite_fatture[0]["imponibile"] if iva_vendite_fatture else 0
-    num_fatture_vendite = iva_vendite_fatture[0]["num_fatture"] if iva_vendite_fatture else 0
+    iva_vendite = 0
+    imponibile_vendite = 0
+    num_fatture_vendite = len(fatture_vendita)
+    
+    for f in fatture_vendita:
+        riepilogo = f.get("riepilogo_iva", [])
+        if riepilogo:
+            for r in riepilogo:
+                if r.get("natura"):  # Escludi nature N1-N7
+                    continue
+                iva_vendite += float(r.get("imposta", 0) or 0)
+                imponibile_vendite += float(r.get("imponibile", 0) or 0)
+        else:
+            iva_val = f.get("vat_amount") or f.get("iva") or 0
+            imp_val = f.get("taxable_amount") or f.get("imponibile") or 0
+            iva_vendite += float(iva_val)
+            imponibile_vendite += float(imp_val)
     
     # === IVA CORRISPETTIVI ===
     # Calcolo IVA scorporata dai corrispettivi
