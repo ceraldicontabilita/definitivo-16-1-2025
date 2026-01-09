@@ -2088,3 +2088,108 @@ async def regenerate_prima_nota_from_invoices(anno: int = Query(..., description
         "errors": errors[:20] if errors else []
     }
 
+
+@router.post("/fix-categories-and-duplicates")
+async def fix_categories_and_duplicates(anno: int = Query(None, description="Anno specifico")) -> Dict[str, Any]:
+    """
+    Corregge le categorie errate e rimuove i duplicati.
+    
+    - "altro" + "POS" in descrizione -> "POS"
+    - "tasse" + "Corrispettivo" in descrizione -> "Corrispettivi"
+    - "altro" + "Versamento" in descrizione -> "Versamento"
+    - Rimuove movimenti duplicati (stessa data, importo, descrizione)
+    """
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["data"] = {"$regex": f"^{anno}"}
+    
+    fixed_categories = 0
+    removed_duplicates = 0
+    
+    # === FIX CATEGORIE CASSA ===
+    movimenti_cassa = await db[COLLECTION_PRIMA_NOTA_CASSA].find(query, {"_id": 0}).to_list(20000)
+    
+    for mov in movimenti_cassa:
+        categoria = mov.get("categoria", "")
+        descrizione = (mov.get("descrizione") or "").lower()
+        new_categoria = None
+        
+        # Fix categoria "altro"
+        if categoria == "altro":
+            if "pos" in descrizione:
+                new_categoria = "POS"
+            elif "versamento" in descrizione:
+                new_categoria = "Versamento"
+            elif "corrispettiv" in descrizione:
+                new_categoria = "Corrispettivi"
+        
+        # Fix categoria "tasse" -> Corrispettivi
+        if categoria == "tasse":
+            if "corrispettiv" in descrizione:
+                new_categoria = "Corrispettivi"
+        
+        if new_categoria:
+            await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
+                {"id": mov["id"]},
+                {"$set": {"categoria": new_categoria}}
+            )
+            fixed_categories += 1
+    
+    # === FIX CATEGORIE BANCA ===
+    movimenti_banca = await db[COLLECTION_PRIMA_NOTA_BANCA].find(query, {"_id": 0}).to_list(20000)
+    
+    for mov in movimenti_banca:
+        categoria = mov.get("categoria", "")
+        descrizione = (mov.get("descrizione") or "").lower()
+        new_categoria = None
+        
+        if categoria == "altro":
+            if "versamento" in descrizione:
+                new_categoria = "Versamento"
+            elif "bonifico" in descrizione:
+                new_categoria = "Bonifico"
+        
+        if new_categoria:
+            await db[COLLECTION_PRIMA_NOTA_BANCA].update_one(
+                {"id": mov["id"]},
+                {"$set": {"categoria": new_categoria}}
+            )
+            fixed_categories += 1
+    
+    # === RIMUOVI DUPLICATI CASSA ===
+    # Raggruppa per data+importo+descrizione
+    seen_cassa = set()
+    for mov in movimenti_cassa:
+        key = f"{mov.get('data')}|{mov.get('importo')}|{mov.get('descrizione', '')[:50]}"
+        if key in seen_cassa:
+            # Duplicato - elimina
+            await db[COLLECTION_PRIMA_NOTA_CASSA].delete_one({"id": mov["id"]})
+            removed_duplicates += 1
+        else:
+            seen_cassa.add(key)
+    
+    # === RIMUOVI DUPLICATI BANCA ===
+    seen_banca = set()
+    for mov in movimenti_banca:
+        key = f"{mov.get('data')}|{mov.get('importo')}|{mov.get('descrizione', '')[:50]}"
+        if key in seen_banca:
+            await db[COLLECTION_PRIMA_NOTA_BANCA].delete_one({"id": mov["id"]})
+            removed_duplicates += 1
+        else:
+            seen_banca.add(key)
+    
+    # === RIMUOVI MOVIMENTI CON IMPORTO ZERO ===
+    zero_cassa = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({**query, "importo": 0})
+    zero_banca = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({**query, "importo": 0})
+    
+    return {
+        "success": True,
+        "anno": anno,
+        "categorie_corrette": fixed_categories,
+        "duplicati_rimossi": removed_duplicates,
+        "zeri_rimossi_cassa": zero_cassa.deleted_count,
+        "zeri_rimossi_banca": zero_banca.deleted_count
+    }
+
