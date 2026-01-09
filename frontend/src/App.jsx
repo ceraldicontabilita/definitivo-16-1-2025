@@ -178,7 +178,7 @@ export default function App() {
                   className={`nav-submenu-trigger ${openSubmenus[item.label] ? 'open' : ''}`}
                   onClick={() => toggleSubmenu(item.label)}
                 >
-                  <span style={{ fontSize: 16, marginRight: 10 }}>{item.icon}</span>
+                  <span style={{ fontSize: 13, marginRight: 8 }}>{item.icon}</span>
                   <span>{item.label}</span>
                   <span className="submenu-arrow">{openSubmenus[item.label] ? '▼' : '▶'}</span>
                 </button>
@@ -190,7 +190,7 @@ export default function App() {
                         to={child.to}
                         className={({ isActive }) => `nav-submenu-item ${isActive ? "active" : ""}`}
                       >
-                        <span style={{ fontSize: 14, marginRight: 8 }}>{child.icon}</span>
+                        <span style={{ fontSize: 11, marginRight: 6 }}>{child.icon}</span>
                         <span>{child.label}</span>
                       </NavLink>
                     ))}
@@ -204,7 +204,7 @@ export default function App() {
                 className={({ isActive }) => isActive ? "active" : ""}
                 style={{ position: 'relative' }}
               >
-                <span style={{ fontSize: 16, marginRight: 10 }}>{item.icon}</span>
+                <span style={{ fontSize: 13, marginRight: 8 }}>{item.icon}</span>
                 <span>{item.label}</span>
                 {item.hasBadge && notificheNonLette > 0 && (
                   <span style={{
