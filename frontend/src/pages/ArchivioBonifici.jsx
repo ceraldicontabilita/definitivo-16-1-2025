@@ -509,51 +509,69 @@ export default function ArchivioBonifici() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1200, fontSize: 12 }}>
               <thead>
                 <tr style={{ background: '#1e3a5f', color: 'white' }}>
-                  <th style={{ padding: 12, textAlign: 'center', width: 50 }}>✓</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>Data</th>
-                  <th style={{ padding: 12, textAlign: 'right' }}>Importo</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>Ordinante</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>IBAN Ord.</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>Beneficiario</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>IBAN Ben.</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>Causale</th>
-                  <th style={{ padding: 12, textAlign: 'left' }}>CRO/TRN</th>
-                  <th style={{ padding: 12, textAlign: 'center', width: 80 }}>Azioni</th>
+                  <th style={{ padding: 8, textAlign: 'center', width: 40 }}>✓</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>Data</th>
+                  <th style={{ padding: 8, textAlign: 'right' }}>Importo</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>Beneficiario</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>Causale</th>
+                  <th style={{ padding: 8, textAlign: 'left' }}>CRO/TRN</th>
+                  <th style={{ padding: 8, textAlign: 'left', width: 150 }}>Note</th>
+                  <th style={{ padding: 8, textAlign: 'center', width: 70 }}>Azioni</th>
                 </tr>
               </thead>
               <tbody>
                 {transfers.map((t, idx) => (
                   <tr key={t.id || idx} style={{ borderBottom: '1px solid #f1f5f9', background: t.riconciliato ? '#f0fdf4' : 'white' }}>
-                    <td style={{ padding: 12, textAlign: 'center' }}>
+                    <td style={{ padding: 8, textAlign: 'center' }}>
                       {t.riconciliato ? (
-                        <span style={{ color: '#16a34a', fontSize: 20 }} title={`Riconciliato: ${t.movimento_descrizione || 'Trovato in estratto conto'}`}>✅</span>
+                        <span style={{ color: '#16a34a', fontSize: 16 }} title={`Riconciliato: ${t.movimento_descrizione || 'Trovato in estratto conto'}`}>✅</span>
                       ) : (
-                        <span style={{ color: '#d1d5db', fontSize: 16 }}>○</span>
+                        <span style={{ color: '#d1d5db', fontSize: 14 }}>○</span>
                       )}
                     </td>
-                    <td style={{ padding: 12 }}>{formatDate(t.data)}</td>
-                    <td style={{ padding: 12, textAlign: 'right', fontWeight: 'bold', color: '#16a34a' }}>
+                    <td style={{ padding: 8, whiteSpace: 'nowrap' }}>{formatDate(t.data)}</td>
+                    <td style={{ padding: 8, textAlign: 'right', fontWeight: 'bold', color: '#16a34a', whiteSpace: 'nowrap' }}>
                       {formatEuro(t.importo)}
                     </td>
-                    <td style={{ padding: 12 }}>{t.ordinante?.nome || '-'}</td>
-                    <td style={{ padding: 12, fontSize: 11, color: '#64748b' }}>{t.ordinante?.iban || '-'}</td>
-                    <td style={{ padding: 12 }}>{t.beneficiario?.nome || '-'}</td>
-                    <td style={{ padding: 12, fontSize: 11, color: '#64748b' }}>{t.beneficiario?.iban || '-'}</td>
-                    <td style={{ padding: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.causale}>
+                    <td style={{ padding: 8 }}>{t.beneficiario?.nome || '-'}</td>
+                    <td style={{ padding: 8, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={t.causale}>
                       {t.causale || '-'}
                     </td>
-                    <td style={{ padding: 12, fontSize: 11 }}>{t.cro_trn || '-'}</td>
-                    <td style={{ padding: 12, textAlign: 'center' }}>
+                    <td style={{ padding: 8, fontSize: 10 }}>{t.cro_trn || '-'}</td>
+                    <td style={{ padding: 8 }}>
+                      {editingNote === t.id ? (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <input
+                            type="text"
+                            value={noteText}
+                            onChange={(e) => setNoteText(e.target.value)}
+                            style={{ padding: 4, borderRadius: 4, border: '1px solid #e2e8f0', fontSize: 11, width: 100 }}
+                            autoFocus
+                          />
+                          <button onClick={() => handleSaveNote(t.id)} style={{ padding: '2px 6px', background: '#16a34a', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 10 }}>✓</button>
+                          <button onClick={() => { setEditingNote(null); setNoteText(''); }} style={{ padding: '2px 6px', background: '#94a3b8', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 10 }}>✗</button>
+                        </div>
+                      ) : (
+                        <div 
+                          onClick={() => { setEditingNote(t.id); setNoteText(t.note || ''); }}
+                          style={{ cursor: 'pointer', color: t.note ? '#1e3a5f' : '#94a3b8', fontSize: 11 }}
+                          title="Clicca per modificare"
+                        >
+                          {t.note || '+ Aggiungi nota'}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: 8, textAlign: 'center' }}>
                       <button
                         onClick={() => handleDelete(t.id)}
                         style={{ 
                           background: 'none', 
                           border: 'none', 
                           cursor: 'pointer', 
-                          fontSize: 16,
+                          fontSize: 14,
                           opacity: 0.6
                         }}
                         title="Elimina"
