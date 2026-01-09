@@ -91,7 +91,7 @@ export default function App() {
   const [notificheNonLette, setNotificheNonLette] = useState(0);
   const [alertCommercialista, setAlertCommercialista] = useState(null);
   const [openSubmenus, setOpenSubmenus] = useState({});
-  const [showF24Sync, setShowF24Sync] = useState(true); // Mostra sync F24 all'avvio
+  const [showF24Sync, setShowF24Sync] = useState(false); // Disabilitato - popup F24 email rimosso
   const location = useLocation();
 
   // Toggle submenu open/close
