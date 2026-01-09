@@ -136,7 +136,7 @@ from app.routers import (
     operazioni_da_confermare, previsioni_acquisti,
     cedolini, tfr, cespiti, scadenzario_fornitori, calcolo_iva,
     controllo_gestione, indici_bilancio, chiusura_esercizio,
-    gestione_iva_speciale
+    gestione_iva_speciale, configurazioni
 )
 
 # --- HACCP V2 System (Nuovo sistema completo) ---
