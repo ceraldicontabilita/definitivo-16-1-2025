@@ -147,7 +147,16 @@ async def scarica_documenti_email(
     Usa le credenziali configurate nel .env.
     Se parole_chiave è specificato, cerca email con quelle parole nell'oggetto.
     Se background=true, avvia il download in background e restituisce un task_id per il polling.
+    
+    NOTA: Se c'è già un'operazione email in corso, restituisce errore.
     """
+    # Verifica se c'è già un'operazione in corso
+    if is_email_operation_running():
+        raise HTTPException(
+            status_code=423,  # Locked
+            detail=f"Operazione in corso: {get_current_operation()}. Attendere il completamento."
+        )
+    
     db = Database.get_db()
     
     # Recupera credenziali email
