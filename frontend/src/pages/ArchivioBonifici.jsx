@@ -388,23 +388,35 @@ export default function ArchivioBonifici() {
         </button>
       </div>
 
-      {/* Riepilogo per Anno */}
+      {/* Riepilogo per Anno con Download ZIP */}
       {Object.keys(summary).length > 0 && (
         <div style={{ background: '#f8fafc', padding: 16, borderRadius: 12, marginBottom: 24 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 12, color: '#475569' }}>📊 Riepilogo per Anno</h3>
+          <h3 style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 12, color: '#475569' }}>📊 Riepilogo per Anno (clicca per scaricare ZIP)</h3>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {Object.entries(summary).sort(([a], [b]) => b.localeCompare(a)).map(([year, data]) => (
-              <div key={year} style={{ 
-                background: 'white', 
-                padding: '8px 16px', 
-                borderRadius: 8,
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{ fontWeight: 'bold', color: '#1e3a5f' }}>{year}</div>
+              <div 
+                key={year} 
+                style={{ 
+                  background: 'white', 
+                  padding: '8px 16px', 
+                  borderRadius: 8,
+                  border: '1px solid #e2e8f0',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onClick={() => handleDownloadZip(year)}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+              >
+                <div style={{ fontWeight: 'bold', color: '#1e3a5f', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {year}
+                  <span style={{ fontSize: 12, color: '#3b82f6' }}>📥</span>
+                </div>
                 <div style={{ fontSize: 12, color: '#64748b' }}>{data.count} bonifici • {formatEuro(data.total)}</div>
               </div>
             ))}
           </div>
+          {downloadingZip && <div style={{ marginTop: 8, fontSize: 12, color: '#3b82f6' }}>⏳ Preparazione ZIP in corso...</div>}
         </div>
       )}
 
