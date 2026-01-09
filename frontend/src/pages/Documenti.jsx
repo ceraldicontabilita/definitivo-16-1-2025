@@ -74,11 +74,19 @@ export default function Documenti() {
 
   useEffect(() => {
     loadData();
+    checkEmailLock(); // Controlla stato lock all'avvio
     // Carica parole chiave personalizzate dal localStorage
     const saved = localStorage.getItem('documentKeywords');
     if (saved) {
       setCustomKeywords(JSON.parse(saved));
     }
+    
+    // Polling per stato lock ogni 5 secondi se sta scaricando
+    const lockInterval = setInterval(() => {
+      if (downloading || backgroundTask) {
+        checkEmailLock();
+      }
+    }, 5000);
     
     // Cleanup polling on unmount
     return () => {
