@@ -28,7 +28,7 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
     if (!invoice) return;
     
     const printWindow = window.open('', '_blank');
-    const isADE = viewMode === 'ade';
+    const isMinisteriale = viewMode === 'ministeriale';
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -38,16 +38,16 @@ export default function InvoiceXMLViewer({ invoice, onClose }) {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
-            font-family: ${isADE ? "'Times New Roman', serif" : "'Segoe UI', Arial, sans-serif"}; 
+            font-family: ${isMinisteriale ? "'Times New Roman', serif" : "'Arial', sans-serif"}; 
             padding: 30px; 
             max-width: 800px; 
             margin: 0 auto;
             color: #333;
-            line-height: 1.5;
-            font-size: ${isADE ? '12px' : '14px'};
+            line-height: 1.4;
+            font-size: ${isMinisteriale ? '11px' : '12px'};
           }
-          ${isADE ? `
-          /* Stile Agenzia Entrate */
+          ${isMinisteriale ? `
+          /* Stile Ministeriale (Agenzia Entrate/Sogei) */
           .ade-header {
             text-align: center;
             border: 2px solid #000;
