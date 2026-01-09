@@ -3,6 +3,34 @@
 # AGGIORNATO: 2026-01-09 (Fork Session 3)
 
 ================================================================================
+# ✅ ASSOCIAZIONE BONIFICI-DIPENDENTI - 2026-01-09
+================================================================================
+
+## Funzionalità Implementata
+
+### Backend API (`/app/app/routers/bank/archivio_bonifici.py`)
+- ✅ `POST /api/archivio-bonifici/associa-dipendenti` - Associazione automatica
+- ✅ `GET /api/archivio-bonifici/dipendente/{id}` - Bonifici di un dipendente
+- ✅ `POST /api/archivio-bonifici/associa-manuale/{bonifico_id}` - Associazione manuale
+- ✅ `DELETE /api/archivio-bonifici/disassocia/{bonifico_id}` - Rimuovi associazione
+
+### Algoritmo di Matching
+- Score 2: Cognome trovato nella causale
+- Score 4: Nome + Cognome trovati
+- Score 6: Entrambi trovati (match perfetto)
+- Soglia minima: Score >= 2
+
+### Frontend (`DipendenteDetailModal.jsx`)
+- ✅ Nuovo tab "🏦 Bonifici" nella modale dipendente
+- ✅ Mostra totale importo e numero operazioni
+- ✅ Tabella con data, importo, causale, stato riconciliazione
+- ✅ Pulsante "Aggiorna" per ricaricare i dati
+
+### Risultati Test
+- 5/5 bonifici associati automaticamente
+- Esempio: Antonietta Ceraldi → €11.790 (4 bonifici)
+
+================================================================================
 # ✅ PARSER BUSTE PAGA PDF MULTI-FORMATO - 2026-01-09
 ================================================================================
 
