@@ -114,7 +114,22 @@ export default function NotificationBell() {
       >
         <Bell size={18} style={{ color: 'white' }} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+          <span style={{
+            position: 'absolute',
+            top: '-4px',
+            right: '-4px',
+            background: '#ef4444',
+            color: 'white',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            borderRadius: '50%',
+            minWidth: '18px',
+            height: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 4px'
+          }}>
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -122,11 +137,40 @@ export default function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[70vh] overflow-hidden flex flex-col">
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          marginTop: '8px',
+          width: '340px',
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          border: '1px solid #e5e7eb',
+          zIndex: 99999,
+          maxHeight: '70vh',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900">
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Bell size={18} />
+          <div style={{
+            padding: '12px 16px',
+            borderBottom: '1px solid #e5e7eb',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: '#f8fafc'
+          }}>
+            <h3 style={{ 
+              margin: 0, 
+              fontWeight: 600, 
+              fontSize: '14px',
+              color: '#1f2937',
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px' 
+            }}>
+              <Bell size={16} />
               Notifiche
               {unreadCount > 0 && (
                 <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full">
