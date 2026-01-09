@@ -160,7 +160,7 @@ export default function GestioneDipendenti() {
     if (!selectedDipendente?.id) return;
     try {
       await api.put(`/api/dipendenti/${selectedDipendente.id}`, editData);
-      loadDipendenti();
+      loadData();
       setEditMode(false);
       setSelectedDipendente({ ...selectedDipendente, ...editData });
       alert('Dipendente aggiornato con successo!');
@@ -425,7 +425,7 @@ export default function GestioneDipendenti() {
           onSave={async (data) => {
             try {
               await api.post('/api/dipendenti', data);
-              loadDipendenti();
+              loadData();
               setShowForm(false);
             } catch (e) {
               alert('Errore: ' + (e.response?.data?.detail || e.message));
