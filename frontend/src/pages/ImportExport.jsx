@@ -24,6 +24,7 @@ export default function ImportExport() {
   const corrispettiviFileRef = useRef(null);
   const f24FileRef = useRef(null);
   const pagheFileRef = useRef(null);
+  const estrattoContoFileRef = useRef(null);
   
   // Fatture XML/ZIP upload ref
   const fattureXmlRef = useRef(null);
