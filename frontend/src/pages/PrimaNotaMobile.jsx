@@ -12,6 +12,14 @@ export default function PrimaNotaMobile() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('cassa');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [showEntryForm, setShowEntryForm] = useState(false);
+  
+  // Form states
+  const today = new Date().toISOString().split('T')[0];
+  const [corrispettivo, setCorrispettivo] = useState({ data: today, importo: '' });
+  const [pos, setPos] = useState({ data: today, pos1: '', pos2: '', pos3: '' });
+  const [versamento, setVersamento] = useState({ data: today, importo: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadData();
