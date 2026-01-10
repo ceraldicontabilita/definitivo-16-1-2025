@@ -152,7 +152,7 @@ export default function VerificaCoerenza() {
             <TrendingUp style={{ width: 16, height: 16, marginRight: 8 }} /> IVA Mensile
           </TabsTrigger>
           <TabsTrigger value="discrepanze" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <AlertTriangle className="w-4 h-4 mr-2" /> Discrepanze
+            <AlertTriangle style={{ width: 16, height: 16, marginRight: 8 }} /> Discrepanze
           </TabsTrigger>
         </TabsList>
 
