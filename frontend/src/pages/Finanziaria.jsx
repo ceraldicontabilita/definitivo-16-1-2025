@@ -28,11 +28,11 @@ export default function Finanziaria() {
   return (
     <>
       {/* Header con Selettore Anno */}
-      <div className="card">
+      <div style={{ background: "white", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <div>
-            <div className="h1">📊 Situazione Finanziaria {selectedYear}</div>
-            <div className="small">Riepilogo finanziario con IVA da Corrispettivi e Fatture</div>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>📊 Situazione Finanziaria {selectedYear}</div>
+            <div style={{ fontSize: 13, color: "#64748b" }}>Riepilogo finanziario con IVA da Corrispettivi e Fatture</div>
           </div>
           
           <div style={{ background: '#dbeafe', padding: '10px 20px', borderRadius: 8, color: '#1e40af', fontWeight: 'bold' }}>
@@ -45,16 +45,16 @@ export default function Finanziaria() {
       </div>
 
       {loading ? (
-        <div className="card">
-          <div className="small">⏳ Caricamento dati finanziari per {selectedYear}...</div>
+        <div style={{ background: "white", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
+          <div style={{ fontSize: 13, color: "#64748b" }}>⏳ Caricamento dati finanziari per {selectedYear}...</div>
         </div>
       ) : (
         <>
           {/* KPI Principali */}
-          <div className="grid">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
             <div className="card" style={{ background: "#e8f5e9" }}>
-              <div className="small">💰 Entrate Totali</div>
-              <div className="kpi" style={{ color: "#2e7d32" }}>
+              <div style={{ fontSize: 13, color: "#64748b" }}>💰 Entrate Totali</div>
+              <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: "#2e7d32" }}>
                 {formatEuro(summary?.total_income)}
               </div>
               <div className="small" style={{ marginTop: 5 }}>
@@ -62,8 +62,8 @@ export default function Finanziaria() {
               </div>
             </div>
             <div className="card" style={{ background: "#ffebee" }}>
-              <div className="small">💸 Uscite Totali (Cassa + Banca)</div>
-              <div className="kpi" style={{ color: "#c62828" }}>
+              <div style={{ fontSize: 13, color: "#64748b" }}>💸 Uscite Totali (Cassa + Banca)</div>
+              <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: "#c62828" }}>
                 {formatEuro(summary?.total_expenses)}
               </div>
               <div className="small" style={{ marginTop: 5, lineHeight: 1.5 }}>
@@ -72,8 +72,8 @@ export default function Finanziaria() {
               </div>
             </div>
             <div className="card" style={{ background: summary?.balance >= 0 ? "#e3f2fd" : "#fff3e0" }}>
-              <div className="small">📈 Saldo</div>
-              <div className="kpi" style={{ color: summary?.balance >= 0 ? "#1565c0" : "#e65100" }}>
+              <div style={{ fontSize: 13, color: "#64748b" }}>📈 Saldo</div>
+              <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: summary?.balance >= 0 ? "#1565c0" : "#e65100" }}>
                 {formatEuro(summary?.balance)}
               </div>
             </div>
@@ -81,12 +81,12 @@ export default function Finanziaria() {
 
           {/* Sezione IVA - Corrispettivi vs Fatture */}
           <div className="card" style={{ background: "#f5f5f5" }}>
-            <div className="h1">🧾 Riepilogo IVA {selectedYear}</div>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>🧾 Riepilogo IVA {selectedYear}</div>
             <div className="small" style={{ marginBottom: 15 }}>
               IVA estratta automaticamente da Corrispettivi XML (vendite) e Fatture XML (acquisti)
             </div>
             
-            <div className="grid">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
               {/* IVA Debito (Corrispettivi) */}
               <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8 }}>
                 <div className="small" style={{ fontWeight: "bold", color: "#e65100" }}>
@@ -150,8 +150,8 @@ export default function Finanziaria() {
           </div>
 
           {/* Dettaglio Prima Nota */}
-          <div className="card">
-            <div className="h1">📒 Dettaglio Prima Nota</div>
+          <div style={{ background: "white", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>📒 Dettaglio Prima Nota</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #ddd" }}>
@@ -219,8 +219,8 @@ export default function Finanziaria() {
           </div>
 
           {/* Situazione Debiti */}
-          <div className="card">
-            <div className="h1">📋 Situazione Debiti/Crediti</div>
+          <div style={{ background: "white", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>📋 Situazione Debiti/Crediti</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
                 <tr style={{ borderBottom: "1px solid #eee" }}>
@@ -252,7 +252,7 @@ export default function Finanziaria() {
 
           {/* Info */}
           <div className="card" style={{ background: "#e3f2fd" }}>
-            <div className="h1">ℹ️ Come vengono calcolati i dati</div>
+            <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>ℹ️ Come vengono calcolati i dati</div>
             <ul style={{ paddingLeft: 20, lineHeight: 1.8 }}>
               <li><strong>Entrate/Uscite:</strong> Somma movimenti Prima Nota Cassa + Banca</li>
               <li><strong>IVA Debito:</strong> Estratta dai file XML dei Corrispettivi giornalieri (vendite)</li>
