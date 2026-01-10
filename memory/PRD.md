@@ -1,7 +1,32 @@
 # ERP Contabilità - Product Requirements Document
 
 ## Overview
-Sistema ERP completo per la gestione contabile di piccole/medie imprese italiane. Include gestione fatture, prima nota, riconciliazione bancaria, IVA, F24, e report.
+Sistema ERP completo per la gestione contabile di piccole/medie imprese italiane. Include gestione fatture, prima nota, riconciliazione bancaria, IVA, F24, HACCP e report.
+
+## Design System
+
+**REGOLA FONDAMENTALE**: Tutte le pagine devono seguire lo stile Tailwind + lucide-react definito in `/app/memory/DESIGN_SYSTEM.md`.
+
+### Principi UI
+- **Primary Color**: emerald-500 (#10b981)
+- **Card**: `bg-white rounded-xl shadow-sm border border-gray-100`
+- **Button Primary**: `bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg`
+- **Button Secondary**: `bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg`
+- **Icone**: Solo lucide-react, MAI emoji
+- **Tabelle**: Header `bg-gray-50`, righe con `hover:bg-gray-50`
+
+### Pagine Aggiornate con Nuovo Stile
+- [x] HACCPCompleto.jsx - Tailwind + lucide-react ✅
+- [x] Corrispettivi.jsx - Tailwind + lucide-react ✅
+- [x] Assegni.jsx - Tailwind + lucide-react ✅
+- [ ] Fatture.jsx - DA AGGIORNARE
+- [ ] Fornitori.jsx - DA AGGIORNARE
+- [ ] Dashboard.jsx - DA AGGIORNARE
+- [ ] IVA.jsx - DA AGGIORNARE
+- [ ] LiquidazioneIVA.jsx - DA AGGIORNARE
+- [ ] PrimaNota.jsx - DA AGGIORNARE
+
+---
 
 ## Architettura Import Centralizzato
 
