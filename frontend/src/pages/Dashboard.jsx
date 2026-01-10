@@ -418,11 +418,11 @@ export default function Dashboard() {
 
       {/* Trend Mensile Chart */}
       {trendData && (
-        <div className="card" style={{ marginTop: 20 }}>
+        <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginTop: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div>
-              <div className="h1" style={{ fontSize: 18, margin: 0 }}>📈 Trend Mensile {anno}</div>
-              <div className="small">Entrate vs Uscite</div>
+              <h2 style={{ fontSize: 18, margin: 0, fontWeight: 'bold', color: '#1e3a5f' }}>📈 Trend Mensile {anno}</h2>
+              <span style={{ fontSize: 13, color: '#6b7280' }}>Entrate vs Uscite</span>
             </div>
             <div style={{ display: 'flex', gap: 20, fontSize: 14 }}>
               <div>
