@@ -517,7 +517,7 @@ export default function ArchivioBonifici() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1200, fontSize: 12 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1400, fontSize: 12 }}>
               <thead>
                 <tr style={{ background: '#1e3a5f', color: 'white' }}>
                   <th style={{ padding: 8, textAlign: 'center', width: 40 }}>✓</th>
@@ -526,8 +526,9 @@ export default function ArchivioBonifici() {
                   <th style={{ padding: 8, textAlign: 'left' }}>Beneficiario</th>
                   <th style={{ padding: 8, textAlign: 'left' }}>Causale</th>
                   <th style={{ padding: 8, textAlign: 'left' }}>CRO/TRN</th>
-                  <th style={{ padding: 8, textAlign: 'left', width: 150 }}>Note</th>
-                  <th style={{ padding: 8, textAlign: 'center', width: 70 }}>Azioni</th>
+                  <th style={{ padding: 8, textAlign: 'left', width: 200 }}>Associa a Salario</th>
+                  <th style={{ padding: 8, textAlign: 'left', width: 120 }}>Note</th>
+                  <th style={{ padding: 8, textAlign: 'center', width: 50 }}>🗑️</th>
                 </tr>
               </thead>
               <tbody>
