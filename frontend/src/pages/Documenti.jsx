@@ -339,7 +339,7 @@ export default function Documenti() {
           </p>
         </div>
         <Button onClick={loadData} disabled={loading} variant="outline">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw style={{ height: 16, width: 16, marginRight: 8, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
           Aggiorna
         </Button>
       </div>
