@@ -246,8 +246,10 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
             # ===== 1. CERCA FATTURE (per uscite) =====
             if tipo == "uscita" and not match_found:
                 num_fattura = extract_invoice_number(descrizione)
+                supplier_name = extract_supplier_name(descrizione)
                 
-                # Cerca fattura per numero
+                # Prima cerca fattura per numero fattura nella descrizione
+                if num_fattura:
                 if num_fattura:
                     fattura = await db[Collections.INVOICES].find_one({
                         "$or": [
