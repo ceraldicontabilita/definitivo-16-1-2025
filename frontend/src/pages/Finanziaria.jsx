@@ -52,7 +52,7 @@ export default function Finanziaria() {
         <>
           {/* KPI Principali */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-            <div className="card" style={{ background: "#e8f5e9" }}>
+            <div style={{ background: "#e8f5e9", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
               <div style={{ fontSize: 13, color: "#64748b" }}>💰 Entrate Totali</div>
               <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: "#2e7d32" }}>
                 {formatEuro(summary?.total_income)}
