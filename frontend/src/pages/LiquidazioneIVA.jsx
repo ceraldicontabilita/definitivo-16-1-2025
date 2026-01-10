@@ -485,9 +485,14 @@ export default function LiquidazioneIVA() {
                     {formatEuro(riepilogoAnnuale.totali?.credito_finale || 0)}
                   </td>
                   <td style={{ textAlign: 'center', padding: 12 }}>
-                    <span className={`badge ${
-                      riepilogoAnnuale.totali?.saldo_annuale > 0 ? 'amber' : 'blue'
-                    }`}>
+                    <span style={{ 
+                      padding: '4px 10px', 
+                      borderRadius: 6, 
+                      fontSize: 12, 
+                      fontWeight: '600',
+                      background: riepilogoAnnuale.totali?.saldo_annuale > 0 ? '#fef3c7' : '#dbeafe',
+                      color: riepilogoAnnuale.totali?.saldo_annuale > 0 ? '#d97706' : '#1d4ed8'
+                    }}>
                       {riepilogoAnnuale.totali?.saldo_annuale > 0 ? 'Da Versare' : 'A Credito'}
                     </span>
                   </td>
@@ -499,11 +504,9 @@ export default function LiquidazioneIVA() {
       </div>
 
       {/* Note informative */}
-      <div className="info-box">
-        <h4 className="info-box-title">
-          ℹ️ Note sul calcolo
-        </h4>
-        <ul className="info-box-content" style={{ paddingLeft: 20, lineHeight: 1.8 }}>
+      <div style={{ marginTop: 20, padding: 16, background: '#f0f9ff', borderRadius: 8, fontSize: 13, color: '#1e3a5f' }}>
+        <strong>ℹ️ Note sul calcolo</strong>
+        <ul style={{ margin: '8px 0 0 16px', padding: 0, lineHeight: 1.8 }}>
           <li><strong>IVA a Debito</strong>: calcolata dalla somma dell'IVA sui corrispettivi del periodo</li>
           <li><strong>IVA a Credito</strong>: calcolata dalla somma dell'IVA sulle fatture d'acquisto ricevute nel periodo</li>
           <li><strong>Deroghe temporali</strong>: applicate regola 15 giorni e 12 giorni per fatture mese precedente</li>
