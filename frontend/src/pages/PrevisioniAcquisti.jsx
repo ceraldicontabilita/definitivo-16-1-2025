@@ -192,7 +192,7 @@ export default function PrevisioniAcquisti() {
       {/* Lista Prodotti */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {activeTab === 'statistiche' ? (
               <>
                 <BarChart3 className="h-5 w-5" />
