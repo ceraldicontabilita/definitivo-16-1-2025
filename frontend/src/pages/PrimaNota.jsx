@@ -1030,7 +1030,7 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
               <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>DARE</th>
               <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>AVERE</th>
               <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Saldo</th>
-              <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Azioni</th>
+              {!readOnly && <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Azioni</th>}
             </tr>
           </thead>
           <tbody>
