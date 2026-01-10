@@ -207,7 +207,7 @@ export default function RicercaProdotti() {
           Catalogo prodotti popolato automaticamente dalle fatture XML. Trova il miglior prezzo per fornitore.
         </div>
         
-        <div className="row" style={{ gap: 10, flexWrap: "wrap", position: "relative", alignItems: "center" }}>
+        <div style={{ ...rowStyle, gap: 10, flexWrap: "wrap", position: "relative" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
             <input
               type="text"
