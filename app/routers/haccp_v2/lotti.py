@@ -100,6 +100,92 @@ def genera_numero_lotto(data: datetime, progressivo: int) -> str:
     """Genera numero lotto in formato YYYYMMDD-XXX"""
     return f"{data.strftime('%Y%m%d')}-{progressivo:03d}"
 
+
+def estrai_codice_lotto(descrizione: str) -> Optional[str]:
+    """
+    Estrae il codice lotto dalla descrizione della fattura.
+    Cerca pattern comuni come:
+    - "Lotto: ABC123"
+    - "LOT: ABC123"
+    - "L: ABC123"
+    - "LOTTO ABC123"
+    - "N.LOTTO: ABC123"
+    - "BATCH: ABC123"
+    - Codici alfanumerici tipici (es. "L24A1234")
+    """
+    if not descrizione:
+        return None
+    
+    descrizione_upper = descrizione.upper()
+    
+    # Pattern per codici lotto espliciti
+    patterns = [
+        r'LOTTO[:\s]+([A-Z0-9\-]+)',
+        r'LOT[:\s]+([A-Z0-9\-]+)',
+        r'N\.?\s*LOTTO[:\s]+([A-Z0-9\-]+)',
+        r'BATCH[:\s]+([A-Z0-9\-]+)',
+        r'\bL[:\s]+([A-Z0-9]{4,})',
+        r'PARTITA[:\s]+([A-Z0-9\-]+)',
+        # Pattern per codici lotto tipici italiani (es. L24A1234, 2024-001)
+        r'\b(L\d{2}[A-Z]\d{3,})\b',
+        r'\b(\d{4}[\-/]\d{3,})\b',
+        r'\b([A-Z]{2}\d{6,})\b',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, descrizione_upper)
+        if match:
+            lotto = match.group(1).strip()
+            # Verifica che il lotto sia valido (almeno 4 caratteri)
+            if len(lotto) >= 4:
+                return lotto
+    
+    return None
+
+
+def estrai_scadenza(descrizione: str) -> Optional[str]:
+    """
+    Estrae la data di scadenza dalla descrizione.
+    Cerca pattern come:
+    - "Scad: 31/12/2026"
+    - "Scadenza 2026-12-31"
+    - "EXP: 12/2026"
+    """
+    if not descrizione:
+        return None
+    
+    descrizione_upper = descrizione.upper()
+    
+    patterns = [
+        # DD/MM/YYYY o DD-MM-YYYY
+        r'SCAD[A-Z]*[:\s]+(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4})',
+        r'EXP[A-Z]*[:\s]+(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4})',
+        # MM/YYYY
+        r'SCAD[A-Z]*[:\s]+(\d{1,2}[\-/]\d{4})',
+        # YYYY-MM-DD
+        r'SCAD[A-Z]*[:\s]+(\d{4}[\-/]\d{1,2}[\-/]\d{1,2})',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, descrizione_upper)
+        if match:
+            data_str = match.group(1)
+            # Prova a parsare la data
+            try:
+                # Formato DD/MM/YYYY
+                if '/' in data_str and len(data_str.split('/')) == 3:
+                    parts = data_str.split('/')
+                    if len(parts[2]) == 2:
+                        parts[2] = '20' + parts[2]
+                    return f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
+                # Formato YYYY-MM-DD
+                elif '-' in data_str and len(data_str.split('-')[0]) == 4:
+                    return data_str
+            except:
+                pass
+    
+    return None
+
 # ==================== ENDPOINTS ====================
 
 @router.get("")
