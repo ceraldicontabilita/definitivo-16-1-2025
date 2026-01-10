@@ -324,9 +324,9 @@ export default function MetodiPagamento() {
       </div>
 
       {/* Statistiche */}
-      <div className="card" style={{ background: "#e8f5e9" }}>
-        <div className="h1">Statistiche</div>
-        <div className="grid">
+      <div style={{ ...cardStyle, background: "#dcfce7" }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>📊 Statistiche</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
           <div>
             <strong>Fornitori Configurati</strong>
             <div style={{ fontSize: 24, fontWeight: "bold", color: "#2e7d32" }}>
