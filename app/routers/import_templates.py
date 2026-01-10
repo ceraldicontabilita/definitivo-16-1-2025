@@ -171,19 +171,24 @@ async def template_estratto_conto():
     ws = wb.active
     ws.title = "Estratto Conto"
     
-    headers = ["data_operazione", "data_valuta", "descrizione", "dare", "avere", "saldo"]
+    # Intestazioni corrette come da file banca
+    headers = ["Ragione Sociale", "Data contabile", "Data valuta", "Banca", "Rapporto", "Importo", "Divisa", "Descrizione", "Categoria/sottocategoria", "Hashtag"]
     descriptions = [
-        "Data operazione",
-        "Data valuta",
+        "Nome azienda",
+        "Data operazione (DD/MM/YYYY)",
+        "Data valuta (DD/MM/YYYY)",
+        "Nome banca e codice",
+        "Numero rapporto/conto",
+        "Importo (+ entrata, - uscita)",
+        "Valuta (EUR)",
         "Descrizione movimento",
-        "Importo uscita (€)",
-        "Importo entrata (€)",
-        "Saldo progressivo (€)"
+        "Categoria contabile",
+        "Tag opzionale"
     ]
     
     style_header_row(ws, headers, descriptions)
-    add_example_row(ws, ["2025-01-15", "2025-01-15", "PAGAMENTO BONIFICO FORNITORE XYZ", 1500.00, "", 10000.00])
-    add_example_row(ws, ["2025-01-16", "2025-01-16", "VERSAMENTO CONTANTI", "", 3000.00, 13000.00], start_row=4)
+    add_example_row(ws, ["AZIENDA SRL", "08/01/2026", "08/01/2026", "05034 - BANCO BPM S.P.A.", "5462 - 03406 - 178800005462", "254,50", "EUR", "INCAS. TRAMITE P.O.S - NUMIA-PGBNT DEL 07/01/26", "Ricavi - Incasso tramite POS", ""])
+    add_example_row(ws, ["AZIENDA SRL", "08/01/2026", "08/01/2026", "05034 - BANCO BPM S.P.A.", "5462 - 03406 - 178800005462", "-1500,00", "EUR", "BONIFICO A FAVORE FORNITORE XYZ", "Costi - Pagamento fornitore", ""], start_row=4)
     
     output = io.BytesIO()
     wb.save(output)
