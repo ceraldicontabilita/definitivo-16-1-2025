@@ -50,6 +50,7 @@ export default function Admin() {
     loadSchedulerStatus();
     loadEmailAccounts();
     loadParoleChiave();
+    loadSyncStatus();
   }, []);
 
   async function loadStats() {
