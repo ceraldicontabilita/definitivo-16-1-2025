@@ -578,6 +578,103 @@ export default function ImportExport() {
     }
   };
 
+  const handleImportBonifici = async () => {
+    const files = bonificiFileRef.current?.files;
+    if (!files || files.length === 0) {
+      showMessage("error", "Seleziona file PDF o ZIP contenenti bonifici bancari");
+      return;
+    }
+    
+    setLoading(true);
+    setUploadProgress({
+      active: true,
+      current: 0,
+      total: 0,
+      filename: "Preparazione...",
+      duplicates: 0,
+      imported: 0,
+      errors: []
+    });
+
+    try {
+      // 1. Crea job
+      const jobRes = await api.post("/api/archivio-bonifici/jobs");
+      const jobId = jobRes.data.job_id;
+
+      // 2. Upload files
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append('files', file);
+      }
+
+      const uploadRes = await api.post(`/api/archivio-bonifici/jobs/${jobId}/upload`, formData, {
+        timeout: 300000
+      });
+
+      // 3. Polling per progress
+      const pollProgress = async () => {
+        try {
+          const statusRes = await api.get(`/api/archivio-bonifici/jobs/${jobId}/status`);
+          const data = statusRes.data;
+          
+          setUploadProgress(prev => ({
+            ...prev,
+            current: data.processed || 0,
+            total: data.total || 0,
+            filename: `Elaborazione: ${data.processed || 0}/${data.total || 0}`,
+            imported: data.imported || 0,
+            duplicates: data.duplicates || 0,
+            errors: data.errors ? [{ error: `${data.errors} errori` }] : []
+          }));
+
+          if (data.status === 'completed' || data.status === 'error') {
+            setImportResults({
+              type: "bonifici",
+              total_files: data.total || 0,
+              imported: data.imported || 0,
+              duplicates: data.duplicates || 0,
+              errors: data.errors || 0
+            });
+            
+            if (data.errors > 0) {
+              showMessage("error", `Importati ${data.imported} bonifici. ${data.duplicates || 0} duplicati. ${data.errors} errori.`);
+            } else {
+              showMessage("success", `Importati ${data.imported} bonifici. ${data.duplicates || 0} duplicati ignorati.`);
+            }
+            
+            setLoading(false);
+            setTimeout(() => setUploadProgress(prev => ({ ...prev, active: false })), 2000);
+            return;
+          }
+
+          setTimeout(pollProgress, 1000);
+        } catch (e) {
+          setLoading(false);
+          showMessage("error", "Errore durante il polling: " + e.message);
+        }
+      };
+
+      if (uploadRes.data.total > 0) {
+        setUploadProgress(prev => ({
+          ...prev,
+          total: uploadRes.data.total,
+          filename: `Trovati ${uploadRes.data.total} file da elaborare`
+        }));
+        pollProgress();
+      } else {
+        setLoading(false);
+        showMessage("error", "Nessun file PDF trovato negli archivi");
+        setUploadProgress(prev => ({ ...prev, active: false }));
+      }
+
+      bonificiFileRef.current.value = "";
+    } catch (e) {
+      setLoading(false);
+      showMessage("error", "Errore upload: " + (e.response?.data?.detail || e.message));
+      setUploadProgress(prev => ({ ...prev, active: false }));
+    }
+  };
+
   // ========== DOWNLOAD TEMPLATE ==========
   
   const handleDownloadTemplate = async (templateUrl) => {
