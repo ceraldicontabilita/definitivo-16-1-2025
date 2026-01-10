@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://erp-invoicing-1.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://erp-invoicing-1.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://erp-invoicing-1.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://invoice-flow-64.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://invoice-flow-64.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://invoice-flow-64.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {
