@@ -621,57 +621,97 @@ async def get_operazioni_dubbi(limit: int = 100, offset: int = 0) -> Dict[str, A
 @router.post("/correggi-metodi-pagamento")
 async def correggi_metodi_pagamento() -> Dict[str, Any]:
     """
-    Corregge i metodi di pagamento errati:
-    - Rimuove "Bonifico" dalle fatture che NON sono in banca
-    - Applica il metodo del fornitore se definito
+    BONIFICA COMPLETA: Corregge i metodi di pagamento errati.
+    
+    REGOLE APPLICATE:
+    1. Se metodo="Bonifico" o "Assegno" ma in_banca=false → ERRORE
+       - Resetta pagato=false, status="imported"
+       - Applica metodo fornitore se definito, altrimenti rimuovi metodo
+    
+    2. Se pagato=true ma in_banca=false E metodo="Bonifico/Assegno" → ERRORE
+       - Stesso trattamento sopra
+    
+    3. Se fornitore ha metodo definito (es. "Cassa") → rispettalo
     """
     db = Database.get_db()
     now = datetime.utcnow().isoformat()
     
-    # Trova fatture con "Bonifico" ma senza flag in_banca
-    fatture_errate = await db[Collections.INVOICES].find({
+    results = {
+        "bonifico_errati": 0,
+        "assegno_errati": 0,
+        "metodo_fornitore_applicato": 0,
+        "metodo_rimosso": 0,
+        "totale_corrette": 0
+    }
+    
+    # CASO 1: Fatture con "Bonifico" ma senza in_banca=true
+    fatture_bonifico = await db[Collections.INVOICES].find({
         "metodo_pagamento": "Bonifico",
         "in_banca": {"$ne": True}
     }).to_list(5000)
     
-    corrette = 0
+    # CASO 2: Fatture con "Assegno" (qualsiasi variante) ma senza in_banca=true
+    fatture_assegno = await db[Collections.INVOICES].find({
+        "metodo_pagamento": {"$regex": "^Assegno", "$options": "i"},
+        "in_banca": {"$ne": True}
+    }).to_list(5000)
+    
+    fatture_errate = fatture_bonifico + fatture_assegno
     
     for fattura in fatture_errate:
         piva = fattura.get("cedente_partita_iva") or fattura.get("supplier_vat")
+        metodo_attuale = fattura.get("metodo_pagamento", "")
         
-        # Cerca metodo fornitore
+        # Cerca metodo default del fornitore
         supplier = None
+        metodo_fornitore = None
         if piva:
             supplier = await db[COLLECTION_SUPPLIERS].find_one({"vat_number": piva})
+            if supplier:
+                metodo_fornitore = supplier.get("metodo_pagamento")
         
-        nuovo_metodo = None
-        if supplier and supplier.get("metodo_pagamento"):
-            nuovo_metodo = supplier.get("metodo_pagamento")
-        
-        # Aggiorna fattura
-        update = {
-            "updated_at": now
+        # Prepara update
+        update_set = {
+            "updated_at": now,
+            "pagato": False,
+            "paid": False,
+            "status": "imported",
+            "bonifica_applicata": now,
+            "bonifica_motivo": f"metodo '{metodo_attuale}' non valido senza corrispondenza in estratto conto"
         }
         
-        if nuovo_metodo:
-            update["metodo_pagamento"] = nuovo_metodo
+        update_unset = {
+            "riconciliato_con_ec": "",
+            "riconciliato_automaticamente": ""
+        }
+        
+        if metodo_fornitore and metodo_fornitore.lower() not in ["bonifico", "assegno"]:
+            # Fornitore ha metodo diverso (es. Cassa) → usa quello
+            update_set["metodo_pagamento"] = metodo_fornitore
+            results["metodo_fornitore_applicato"] += 1
         else:
-            # Rimuovi metodo se non c'è fornitore definito
-            await db[Collections.INVOICES].update_one(
-                {"_id": fattura["_id"]},
-                {"$unset": {"metodo_pagamento": ""}, "$set": {"updated_at": now}}
-            )
-            corrette += 1
-            continue
+            # Rimuovi metodo pagamento
+            update_unset["metodo_pagamento"] = ""
+            results["metodo_rimosso"] += 1
         
         await db[Collections.INVOICES].update_one(
             {"_id": fattura["_id"]},
-            {"$set": update}
+            {"$set": update_set, "$unset": update_unset}
         )
-        corrette += 1
+        
+        if "Bonifico" in metodo_attuale:
+            results["bonifico_errati"] += 1
+        elif "Assegno" in metodo_attuale:
+            results["assegno_errati"] += 1
+        
+        results["totale_corrette"] += 1
     
     return {
         "success": True,
-        "message": f"Corrette {corrette} fatture con metodo pagamento errato",
-        "fatture_corrette": corrette
+        "message": f"Bonifica completata: {results['totale_corrette']} fatture corrette",
+        **results,
+        "dettaglio": {
+            "regola": "Se metodo=Bonifico/Assegno ma in_banca=false → errore logico → reset a stato iniziale",
+            "azione": "pagato=false, status=imported, metodo=fornitore_default o rimosso"
+        }
     }
