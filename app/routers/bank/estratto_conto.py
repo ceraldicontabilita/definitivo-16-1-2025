@@ -214,23 +214,37 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
             wb = openpyxl.load_workbook(io.BytesIO(contents))
             sheet = wb.active
             
-            headers = [str(cell.value or '').lower() for cell in sheet[1]]
+            # Mappa header originali a chiavi normalizzate
+            headers_raw = [str(cell.value or '') for cell in sheet[1]]
+            headers = [h.lower().strip() for h in headers_raw]
             
             for row_num in range(2, sheet.max_row + 1):
                 row_data = {headers[i]: sheet.cell(row=row_num, column=i+1).value 
                            for i in range(len(headers))}
                 
-                # Trova colonne
+                # Trova colonne con supporto per varianti
                 data_contabile = None
                 importo = None
                 descrizione = ""
                 categoria = ""
                 data_valuta = None
+                ragione_sociale = ""
+                banca = ""
+                rapporto = ""
+                divisa = "EUR"
+                hashtag = ""
                 
                 for h, v in row_data.items():
                     if not v:
                         continue
-                    if 'data contabile' in h or (h == 'data' and not data_contabile):
+                    h_lower = h.lower()
+                    
+                    # Ragione Sociale
+                    if 'ragione sociale' in h_lower:
+                        ragione_sociale = str(v).strip()
+                    
+                    # Data contabile
+                    elif 'data contabile' in h_lower or (h_lower == 'data' and not data_contabile):
                         if isinstance(v, (datetime, date)):
                             data_contabile = v if isinstance(v, date) else v.date()
                         elif '/' in str(v):
@@ -239,10 +253,28 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
                                 data_contabile = date(int(parts[2]), int(parts[1]), int(parts[0]))
                             except (ValueError, TypeError, IndexError):
                                 pass
-                    elif 'data valuta' in h:
+                    
+                    # Data valuta
+                    elif 'data valuta' in h_lower or 'data valut' in h_lower:
                         if isinstance(v, (datetime, date)):
                             data_valuta = v if isinstance(v, date) else v.date()
-                    elif 'importo' in h:
+                        elif '/' in str(v):
+                            parts = str(v).split('/')
+                            try:
+                                data_valuta = date(int(parts[2]), int(parts[1]), int(parts[0]))
+                            except (ValueError, TypeError, IndexError):
+                                pass
+                    
+                    # Banca
+                    elif h_lower == 'banca':
+                        banca = str(v).strip()
+                    
+                    # Rapporto
+                    elif h_lower == 'rapporto':
+                        rapporto = str(v).strip()
+                    
+                    # Importo
+                    elif 'importo' in h_lower:
                         if isinstance(v, (int, float)):
                             importo = float(v)
                         else:
@@ -250,20 +282,37 @@ async def import_estratto_conto(file: UploadFile = File(...)) -> Dict[str, Any]:
                                 importo = float(str(v).replace('.', '').replace(',', '.'))
                             except (ValueError, TypeError):
                                 pass
-                    elif 'descri' in h:
-                        descrizione = str(v)
-                    elif 'categoria' in h:
-                        categoria = str(v)
+                    
+                    # Divisa
+                    elif h_lower == 'divisa':
+                        divisa = str(v).strip()
+                    
+                    # Descrizione
+                    elif 'descri' in h_lower:
+                        descrizione = str(v).strip()
+                    
+                    # Categoria
+                    elif 'categoria' in h_lower:
+                        categoria = str(v).strip()
+                    
+                    # Hashtag
+                    elif h_lower == 'hashtag':
+                        hashtag = str(v).strip()
                 
                 if data_contabile and importo is not None:
                     movimenti.append({
                         "data": data_contabile,
+                        "ragione_sociale": ragione_sociale if ragione_sociale else None,
                         "fornitore": estrai_fornitore_pulito(descrizione),
                         "importo": importo,
                         "numero_fattura": estrai_numero_fattura(descrizione),
                         "data_pagamento": data_valuta,
                         "categoria": categoria,
                         "descrizione_originale": descrizione,
+                        "banca": banca,
+                        "rapporto": rapporto,
+                        "divisa": divisa,
+                        "hashtag": hashtag,
                         "tipo": "uscita" if importo < 0 else "entrata"
                     })
         except Exception as e:
