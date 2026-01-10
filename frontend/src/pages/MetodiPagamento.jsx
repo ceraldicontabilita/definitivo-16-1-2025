@@ -158,9 +158,9 @@ export default function MetodiPagamento() {
         <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>📦 Fornitori Configurati ({filteredFornitori.length})</h2>
         
         {loading ? (
-          <div className="small">Caricamento...</div>
+          <div style={{ fontSize: 14, color: '#6b7280', padding: 20 }}>⏳ Caricamento...</div>
         ) : filteredFornitori.length === 0 ? (
-          <div className="small" style={{ color: "#999" }}>
+          <div style={{ fontSize: 14, color: '#6b7280', padding: 20 }}>
             Nessun fornitore configurato. Usa "Importa da Fatture" per iniziare.
           </div>
         ) : (
