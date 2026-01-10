@@ -38,6 +38,11 @@ export default function Admin() {
   // Parole chiave globali
   const [paroleChiave, setParoleChiave] = useState({});
   const [newKeyword, setNewKeyword] = useState({ categoria: 'generale', parola: '' });
+  
+  // Sincronizzazione dati
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [verificaCorrispettivi, setVerificaCorrispettivi] = useState(null);
 
   useEffect(() => {
     loadStats();
