@@ -73,7 +73,7 @@ export default function Finanziaria() {
             </div>
             <div style={{ background: summary?.balance >= 0 ? "#e3f2fd" : "#fff3e0", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
               <div style={{ fontSize: 13, color: "#64748b" }}>📈 Saldo</div>
-              <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: summary?.balance >= 0 ? "#1565c0" : "#e65100" }}>
+              <div style={{ fontSize: 32, fontWeight: "bold", color: summary?.balance >= 0 ? "#1565c0" : "#e65100" }}>
                 {formatEuro(summary?.balance)}
               </div>
             </div>
@@ -82,20 +82,20 @@ export default function Finanziaria() {
           {/* Sezione IVA - Corrispettivi vs Fatture */}
           <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
             <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>🧾 Riepilogo IVA {selectedYear}</div>
-            <div style={{ fontSize: 13, color: "#64748b",{{ marginBottom: 15 }}>
+            <div style={{ fontSize: 13, color: "#64748b", marginBottom: 15 }}>
               IVA estratta automaticamente da Corrispettivi XML (vendite) e Fatture XML (acquisti)
             </div>
             
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
               {/* IVA Debito (Corrispettivi) */}
               <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8 }}>
-                <div style={{ fontSize: 13, color: "#64748b",{{ fontWeight: "bold", color: "#e65100" }}>
+                <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold" }}>
                   📤 IVA a DEBITO (Corrispettivi)
                 </div>
                 <div style={{ fontSize: 28, fontWeight: "bold", color: "#e65100", marginTop: 5 }}>
                   {formatEuro(summary?.vat_debit)}
                 </div>
-                <div style={{ fontSize: 13, color: "#64748b",{{ marginTop: 8, color: "#666" }}>
+                <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
                   Da {summary?.corrispettivi?.count || 0} corrispettivi
                   <br />
                   Totale vendite: {formatEuro(summary?.corrispettivi?.totale)}
