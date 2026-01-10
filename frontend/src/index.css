@@ -1,4 +1,6 @@
 /* Base styles without Tailwind */
+@import './styles/common.css';
+
 body {
     margin: 0;
     font-family:
