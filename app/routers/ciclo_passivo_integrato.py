@@ -202,15 +202,37 @@ async def get_or_create_fornitore(db, parsed_data: Dict) -> Dict[str, Any]:
 
 # ==================== MODULO 1: MAGAZZINO ====================
 
-async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee: List[Dict], data_fattura: str) -> Dict:
+def genera_id_lotto_interno(fornitore_nome: str, data_fattura: str, numero_linea: str) -> str:
+    """
+    Genera un ID lotto interno univoco.
+    Formato: YYYYMMDD-FORN-NNN dove FORN = prime 4 lettere fornitore
+    """
+    try:
+        data_part = data_fattura[:10].replace("-", "")
+    except (TypeError, IndexError):
+        data_part = datetime.now().strftime("%Y%m%d")
+    
+    # Estrai prime 4 lettere uppercase del fornitore
+    forn_clean = re.sub(r'[^A-Za-z]', '', fornitore_nome or "XXXX")[:4].upper()
+    if len(forn_clean) < 4:
+        forn_clean = forn_clean.ljust(4, 'X')
+    
+    # Aggiungi componente univoco
+    unique_part = str(uuid.uuid4())[:4].upper()
+    
+    return f"{data_part}-{forn_clean}-{numero_linea.zfill(3)}-{unique_part}"
+
+
+async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee: List[Dict], data_fattura: str, numero_documento: str = "") -> Dict:
     """
     Processa il carico a magazzino per ogni riga della fattura.
-    Crea movimenti di carico e aggiorna giacenze.
+    Crea movimenti di carico, aggiorna giacenze e genera lotti HACCP con tracciabilità completa.
     """
     movimenti_creati = 0
     lotti_creati = 0
+    lotti_dettaglio = []
     
-    for linea in linee:
+    for idx, linea in enumerate(linee):
         descrizione = linea.get("descrizione", "")
         if not descrizione or len(descrizione) < 3:
             continue
@@ -222,9 +244,13 @@ async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee:
             quantita = 1
             prezzo_unitario = 0
         
-        # Estrai codice lotto e scadenza
-        codice_lotto = estrai_codice_lotto(descrizione)
-        scadenza = estrai_scadenza(descrizione)
+        # Usa dati lotto dal parser (se estratti) o estrai nuovamente
+        lotto_fornitore = linea.get("lotto_fornitore") or estrai_codice_lotto(descrizione)
+        scadenza_prodotto = linea.get("scadenza_prodotto") or estrai_scadenza(descrizione)
+        
+        # Genera ID lotto interno univoco
+        numero_linea = linea.get("numero_linea", str(idx + 1))
+        lotto_interno = genera_id_lotto_interno(fornitore.get("ragione_sociale", ""), data_fattura, numero_linea)
         
         # Cerca o crea prodotto in magazzino
         prodotto = await db[COL_MAGAZZINO].find_one(
@@ -279,37 +305,89 @@ async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee:
             "fattura_id": fattura_id,
             "fornitore_id": fornitore.get("id"),
             "fornitore_nome": fornitore.get("ragione_sociale"),
-            "codice_lotto": codice_lotto,
-            "data_scadenza": scadenza,
+            "lotto_interno": lotto_interno,
+            "lotto_fornitore": lotto_fornitore,
+            "data_scadenza": scadenza_prodotto,
             "data_movimento": data_fattura,
-            "note": f"Carico da fattura {fattura_id[:8]}",
+            "note": f"Carico da fattura {numero_documento or fattura_id[:8]}",
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db[COL_MOVIMENTI_MAG].insert_one(movimento)
         movimenti_creati += 1
         
-        # Se c'è un lotto, registralo nel modulo HACCP
-        if codice_lotto:
-            lotto = {
-                "id": str(uuid.uuid4()),
-                "numero_lotto": codice_lotto,
-                "prodotto": descrizione[:100],
-                "fornitore": fornitore.get("ragione_sociale"),
-                "fattura_riferimento": fattura_id[:8],
-                "data_produzione": data_fattura,
-                "data_scadenza": scadenza or (datetime.strptime(data_fattura[:10], "%Y-%m-%d") + timedelta(days=30)).strftime("%Y-%m-%d"),
-                "quantita": quantita,
-                "unita_misura": linea.get("unita_misura", "pz"),
-                "stato": "disponibile",
-                "source": "import_xml",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
-            await db[COL_LOTTI].insert_one(lotto)
-            lotti_creati += 1
+        # Calcola data scadenza di default se non presente
+        if not scadenza_prodotto:
+            try:
+                data_base = datetime.strptime(data_fattura[:10], "%Y-%m-%d")
+                scadenza_prodotto = (data_base + timedelta(days=30)).strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                scadenza_prodotto = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        
+        # Crea lotto HACCP con tracciabilità completa
+        lotto_id = str(uuid.uuid4())
+        lotto = {
+            "id": lotto_id,
+            # Identificativi lotto
+            "lotto_interno": lotto_interno,
+            "lotto_fornitore": lotto_fornitore,
+            "lotto_fornitore_estratto": linea.get("lotto_estratto_automaticamente", False),
+            "lotto_da_inserire_manualmente": lotto_fornitore is None,
+            
+            # Prodotto
+            "prodotto": descrizione[:100],
+            "prodotto_id": prodotto_id,
+            "numero_linea_fattura": numero_linea,
+            
+            # Fornitore
+            "fornitore": fornitore.get("ragione_sociale"),
+            "fornitore_id": fornitore.get("id"),
+            "fornitore_piva": fornitore.get("partita_iva"),
+            
+            # Riferimenti fattura
+            "fattura_id": fattura_id,
+            "fattura_numero": numero_documento,
+            "fattura_data": data_fattura,
+            
+            # Date
+            "data_carico": data_fattura,
+            "data_scadenza": scadenza_prodotto,
+            
+            # Quantità
+            "quantita_iniziale": quantita,
+            "quantita_disponibile": quantita,
+            "quantita_scaricata": 0,
+            "unita_misura": linea.get("unita_misura", "pz"),
+            
+            # Prezzo
+            "prezzo_unitario": prezzo_unitario,
+            "valore_totale": quantita * prezzo_unitario,
+            
+            # Stato
+            "stato": "disponibile",
+            "esaurito": False,
+            
+            # Metadata
+            "source": "import_xml_integrato",
+            "etichetta_stampata": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db[COL_LOTTI].insert_one(lotto)
+        lotti_creati += 1
+        
+        lotti_dettaglio.append({
+            "lotto_id": lotto_id,
+            "lotto_interno": lotto_interno,
+            "lotto_fornitore": lotto_fornitore or "Da inserire",
+            "prodotto": descrizione[:50],
+            "quantita": quantita,
+            "scadenza": scadenza_prodotto
+        })
     
     return {
         "movimenti_creati": movimenti_creati,
-        "lotti_creati": lotti_creati
+        "lotti_creati": lotti_creati,
+        "lotti": lotti_dettaglio
     }
 
 
