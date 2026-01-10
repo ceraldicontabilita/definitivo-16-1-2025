@@ -303,7 +303,7 @@ export default function RicercaProdotti() {
             ))}
           </select>
           
-          <button onClick={loadProducts} className="primary" data-testid="search-btn">
+          <button onClick={loadProducts} style={btnPrimary} data-testid="search-btn">
             🔍 Cerca
           </button>
         </div>
