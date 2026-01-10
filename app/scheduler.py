@@ -1,6 +1,6 @@
 """
 Scheduler per task automatici HACCP.
-Auto-popolamento temperature alle 01:00 AM ogni giorno.
+Auto-popolamento schede HACCP alle 00:01 ogni giorno.
 """
 import asyncio
 import logging
@@ -16,229 +16,250 @@ logger = logging.getLogger(__name__)
 scheduler = AsyncIOScheduler()
 
 # Configuration
-OPERATORI_HACCP = ["VALERIO", "VINCENZO", "POCCI", "MARIO", "LUIGI"]
+OPERATORI_HACCP = ["Pocci Salvatore", "Vincenzo Ceraldi"]
 
 
 async def auto_populate_haccp_daily():
     """
-    Task eseguito alle 01:00 AM ogni giorno.
-    Genera e compila automaticamente i record HACCP per il giorno corrente.
+    Task eseguito alle 00:01 ogni giorno.
+    Compila automaticamente le schede HACCP del sistema V2:
+    - Temperature Frigoriferi (1-12)
+    - Temperature Congelatori (1-12)
+    - Sanificazione Attrezzature
+    - Disinfestazione (random ogni 7-10 giorni)
     """
     from app.database import Database
     
-    logger.info("🕐 [SCHEDULER] Avvio auto-popolazione HACCP giornaliera")
+    logger.info("🕐 [SCHEDULER] Avvio auto-popolazione HACCP V2 giornaliera")
     
     try:
         db = Database.get_db()
-        oggi = datetime.utcnow().strftime("%Y-%m-%d")
-        ora = "07:00"  # Ora standard di rilevazione mattutina
-        now_iso = datetime.utcnow().isoformat()
+        oggi = datetime.utcnow()
+        anno = oggi.year
+        mese = oggi.month
+        giorno = oggi.day
+        ora_str = "07:00"
         
-        # ============== FRIGORIFERI ==============
-        frigoriferi_created = 0
-        # Carica equipaggiamenti frigoriferi
-        frigo_equips = await db["haccp_equipaggiamenti"].find(
-            {"tipo": "frigorifero", "attivo": {"$ne": False}},
-            {"_id": 0}
-        ).to_list(100)
+        frigoriferi_updated = 0
+        congelatori_updated = 0
+        sanificazioni_updated = 0
+        disinfestazione_updated = 0
         
-        # Default se non ci sono equipaggiamenti
-        if not frigo_equips:
-            frigo_equips = [
-                {"nome": "Frigo Cucina"},
-                {"nome": "Frigo Bar"},
-                {"nome": "Cella Frigo"},
-            ]
-        
-        for frigo in frigo_equips:
-            nome = frigo.get("nome", "Frigo")
-            
-            # Verifica se esiste già un record per oggi
-            existing = await db["haccp_temperature_frigoriferi"].find_one({
-                "data": oggi,
-                "equipaggiamento": nome
+        # ============== TEMPERATURE POSITIVE (Frigoriferi 1-12) ==============
+        for frigo_num in range(1, 13):
+            # Ottieni o crea la scheda annuale
+            scheda = await db["temperature_positive"].find_one({
+                "anno": anno,
+                "frigorifero_numero": frigo_num
             })
             
-            if not existing:
-                # Genera temperatura casuale conforme (0-4°C)
-                temp = round(random.uniform(1.5, 3.5), 1)
+            if not scheda:
+                # Crea nuova scheda
+                scheda = {
+                    "id": str(uuid.uuid4()),
+                    "anno": anno,
+                    "frigorifero_numero": frigo_num,
+                    "frigorifero_nome": f"Frigorifero {frigo_num}",
+                    "azienda": "Ceraldi Group SRL",
+                    "indirizzo": "Piazza Carità 14, 80134 Napoli (NA)",
+                    "temperature": {},
+                    "temp_min": 0,
+                    "temp_max": 4,
+                    "operatori": OPERATORI_HACCP.copy(),
+                    "created_at": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.utcnow().isoformat()
+                }
+                await db["temperature_positive"].insert_one(scheda)
+            
+            mese_str = str(mese)
+            giorno_str = str(giorno)
+            
+            if "temperature" not in scheda:
+                scheda["temperature"] = {}
+            if mese_str not in scheda["temperature"]:
+                scheda["temperature"][mese_str] = {}
+            
+            # Verifica se la temperatura di oggi è già stata registrata
+            if giorno_str not in scheda["temperature"][mese_str] or scheda["temperature"][mese_str][giorno_str].get("temp") is None:
+                # Genera temperatura casuale conforme (1-3.5°C)
+                temp = round(random.uniform(1.0, 3.5), 1)
                 
-                record = {
-                    "id": f"auto_{oggi}_{nome.replace(' ', '_')}",
-                    "data": oggi,
-                    "ora": ora,
-                    "equipaggiamento": nome,
-                    "temperatura": temp,
-                    "conforme": True,
+                scheda["temperature"][mese_str][giorno_str] = {
+                    "temp": temp,
                     "operatore": random.choice(OPERATORI_HACCP),
                     "note": "Auto-generato",
-                    "source": "scheduler_auto",
-                    "created_at": now_iso
+                    "timestamp": datetime.utcnow().isoformat()
                 }
-                await db["haccp_temperature_frigoriferi"].insert_one(record)
-                frigoriferi_created += 1
-            elif existing.get("temperatura") is None:
-                # Record esiste ma senza temperatura - aggiorniamo
-                temp = round(random.uniform(1.5, 3.5), 1)
-                await db["haccp_temperature_frigoriferi"].update_one(
-                    {"_id": existing["_id"]},
-                    {"$set": {
-                        "temperatura": temp,
-                        "conforme": True,
-                        "operatore": random.choice(OPERATORI_HACCP),
-                        "ora": ora,
-                        "note": "Auto-popolato",
-                        "source": "scheduler_auto"
-                    }}
+                scheda["updated_at"] = datetime.utcnow().isoformat()
+                
+                await db["temperature_positive"].update_one(
+                    {"anno": anno, "frigorifero_numero": frigo_num},
+                    {"$set": scheda}
                 )
-                frigoriferi_created += 1
+                frigoriferi_updated += 1
         
-        logger.info(f"✅ [SCHEDULER] Frigoriferi: creati {frigoriferi_created} record")
+        logger.info(f"✅ [SCHEDULER] Frigoriferi: aggiornati {frigoriferi_updated}/12")
         
-        # ============== CONGELATORI ==============
-        congelatori_created = 0
-        # Carica equipaggiamenti congelatori
-        congel_equips = await db["haccp_equipaggiamenti"].find(
-            {"tipo": "congelatore", "attivo": {"$ne": False}},
-            {"_id": 0}
-        ).to_list(100)
-        
-        # Default se non ci sono equipaggiamenti
-        if not congel_equips:
-            congel_equips = [
-                {"nome": "Congelatore Cucina"},
-                {"nome": "Cella Freezer"},
-            ]
-        
-        for congel in congel_equips:
-            nome = congel.get("nome", "Congelatore")
-            
-            existing = await db["haccp_temperature_congelatori"].find_one({
-                "data": oggi,
-                "equipaggiamento": nome
+        # ============== TEMPERATURE NEGATIVE (Congelatori 1-12) ==============
+        for congel_num in range(1, 13):
+            scheda = await db["temperature_negative"].find_one({
+                "anno": anno,
+                "congelatore_numero": congel_num
             })
             
-            if not existing:
-                # Genera temperatura casuale conforme (-18/-22°C)
+            if not scheda:
+                scheda = {
+                    "id": str(uuid.uuid4()),
+                    "anno": anno,
+                    "congelatore_numero": congel_num,
+                    "congelatore_nome": f"Congelatore {congel_num}",
+                    "azienda": "Ceraldi Group SRL",
+                    "indirizzo": "Piazza Carità 14, 80134 Napoli (NA)",
+                    "temperature": {},
+                    "temp_min": -22,
+                    "temp_max": -18,
+                    "operatori": OPERATORI_HACCP.copy(),
+                    "created_at": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.utcnow().isoformat()
+                }
+                await db["temperature_negative"].insert_one(scheda)
+            
+            mese_str = str(mese)
+            giorno_str = str(giorno)
+            
+            if "temperature" not in scheda:
+                scheda["temperature"] = {}
+            if mese_str not in scheda["temperature"]:
+                scheda["temperature"][mese_str] = {}
+            
+            if giorno_str not in scheda["temperature"][mese_str] or scheda["temperature"][mese_str][giorno_str].get("temp") is None:
+                # Genera temperatura casuale conforme (-21 a -18.5°C)
                 temp = round(random.uniform(-21, -18.5), 1)
                 
-                record = {
-                    "id": f"auto_{oggi}_{nome.replace(' ', '_')}",
-                    "data": oggi,
-                    "ora": ora,
-                    "equipaggiamento": nome,
-                    "temperatura": temp,
-                    "conforme": True,
+                scheda["temperature"][mese_str][giorno_str] = {
+                    "temp": temp,
                     "operatore": random.choice(OPERATORI_HACCP),
                     "note": "Auto-generato",
-                    "source": "scheduler_auto",
-                    "created_at": now_iso
+                    "timestamp": datetime.utcnow().isoformat()
                 }
-                await db["haccp_temperature_congelatori"].insert_one(record)
-                congelatori_created += 1
-            elif existing.get("temperatura") is None:
-                # Record esiste ma senza temperatura - aggiorniamo
-                temp = round(random.uniform(-21, -18.5), 1)
-                await db["haccp_temperature_congelatori"].update_one(
-                    {"_id": existing["_id"]},
-                    {"$set": {
-                        "temperatura": temp,
-                        "conforme": True,
-                        "operatore": random.choice(OPERATORI_HACCP),
-                        "ora": ora,
-                        "note": "Auto-popolato",
-                        "source": "scheduler_auto"
-                    }}
+                scheda["updated_at"] = datetime.utcnow().isoformat()
+                
+                await db["temperature_negative"].update_one(
+                    {"anno": anno, "congelatore_numero": congel_num},
+                    {"$set": scheda}
                 )
-                congelatori_created += 1
+                congelatori_updated += 1
         
-        logger.info(f"✅ [SCHEDULER] Congelatori: creati {congelatori_created} record")
+        logger.info(f"✅ [SCHEDULER] Congelatori: aggiornati {congelatori_updated}/12")
         
-        # ============== SANIFICAZIONI ==============
-        sanificazioni_created = 0
-        aree_sanificazione = [
-            "Cucina", "Sala", "Bar", "Bagni", "Magazzino", 
-            "Celle Frigo", "Piani di lavoro"
-        ]
-        
-        for area in aree_sanificazione:
-            existing = await db["haccp_sanificazioni"].find_one({
-                "data": oggi,
-                "area": area
-            })
+        # ============== SANIFICAZIONE ATTREZZATURE ==============
+        # La sanificazione delle attrezzature viene fatta periodicamente
+        # Registriamo solo se è un giorno di sanificazione (es. ogni 3 giorni)
+        if giorno % 3 == 0:  # Ogni 3 giorni
+            scheda_san = await db["sanificazione_attrezzature"].find_one({"anno": anno})
             
-            if not existing:
-                record = {
-                    "id": f"auto_san_{oggi}_{area.replace(' ', '_')}",
-                    "data": oggi,
-                    "ora": ora,
-                    "area": area,
-                    "tipo_intervento": "Pulizia ordinaria",
-                    "prodotto_usato": "Detergente multiuso",
-                    "operatore": random.choice(OPERATORI_HACCP),
-                    "esito": "Conforme",
-                    "note": "Auto-generato",
-                    "source": "scheduler_auto",
-                    "created_at": now_iso
+            if not scheda_san:
+                scheda_san = {
+                    "id": str(uuid.uuid4()),
+                    "anno": anno,
+                    "azienda": "Ceraldi Group SRL",
+                    "registrazioni": {},
+                    "created_at": datetime.utcnow().isoformat()
                 }
-                await db["haccp_sanificazioni"].insert_one(record)
-                sanificazioni_created += 1
+                await db["sanificazione_attrezzature"].insert_one(scheda_san)
+            
+            mese_str = str(mese)
+            giorno_str = str(giorno)
+            
+            if "registrazioni" not in scheda_san:
+                scheda_san["registrazioni"] = {}
+            if mese_str not in scheda_san["registrazioni"]:
+                scheda_san["registrazioni"][mese_str] = {}
+            
+            if giorno_str not in scheda_san["registrazioni"][mese_str]:
+                attrezzature = [
+                    "Affettatrice", "Tritacarne", "Planetaria", "Friggitrice",
+                    "Forno", "Piano cottura", "Lavastoviglie", "Tavoli lavoro"
+                ]
+                
+                scheda_san["registrazioni"][mese_str][giorno_str] = {
+                    "attrezzature": attrezzature,
+                    "prodotto": "Detergente professionale",
+                    "operatore": random.choice(OPERATORI_HACCP),
+                    "esito": "OK",
+                    "note": "Auto-generato",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                scheda_san["updated_at"] = datetime.utcnow().isoformat()
+                
+                await db["sanificazione_attrezzature"].update_one(
+                    {"anno": anno},
+                    {"$set": scheda_san}
+                )
+                sanificazioni_updated = 1
         
-        logger.info(f"✅ [SCHEDULER] Sanificazioni: creati {sanificazioni_created} record")
+        logger.info(f"✅ [SCHEDULER] Sanificazione attrezzature: {sanificazioni_updated}")
         
         # ============== DISINFESTAZIONE ==============
-        disinfestazioni_created = 0
+        # La disinfestazione viene registrata una volta al mese (giorno casuale 1-10)
+        scheda_dis = await db["disinfestazione_annuale"].find_one({"anno": anno})
         
-        # Verifica se esiste già un record per oggi
-        existing_disinf = await db["haccp_disinfestazioni"].find_one({"data": oggi})
-        
-        if not existing_disinf:
-            record = {
-                "id": f"auto_dis_{oggi}",
-                "data": oggi,
-                "ora": ora,
-                "tipo_intervento": "Controllo periodico",
-                "ditta": "ANTHIRAT CONTROL S.R.L.",
-                "operatore": random.choice(OPERATORI_HACCP),
-                "aree_trattate": ["Cucina", "Magazzino", "Esterno"],
-                "esito": "Nessuna infestazione rilevata",
-                "note": "Auto-generato",
-                "source": "scheduler_auto",
-                "created_at": now_iso
+        if not scheda_dis:
+            scheda_dis = {
+                "id": str(uuid.uuid4()),
+                "anno": anno,
+                "ditta": {
+                    "ragione_sociale": "ANTHIRAT CONTROL S.R.L.",
+                    "partita_iva": "07764320631",
+                    "rea": "NA-657008",
+                    "indirizzo": "VIA CAMALDOLILLI 142 - 80131 - NAPOLI (NA)"
+                },
+                "interventi_mensili": {},
+                "monitoraggio_apparecchi": {},
+                "created_at": datetime.utcnow().isoformat()
             }
-            await db["haccp_disinfestazioni"].insert_one(record)
-            disinfestazioni_created = 1
+            await db["disinfestazione_annuale"].insert_one(scheda_dis)
         
-        logger.info(f"✅ [SCHEDULER] Disinfestazioni: creati {disinfestazioni_created} record")
+        mese_str = str(mese)
         
-        # ============== RICEZIONE MERCI ==============
-        ricezioni_created = 0
+        # Registra intervento disinfestazione una volta al mese (intorno al giorno 5)
+        if giorno == 5:
+            if "interventi_mensili" not in scheda_dis:
+                scheda_dis["interventi_mensili"] = {}
+            
+            if mese_str not in scheda_dis["interventi_mensili"]:
+                scheda_dis["interventi_mensili"][mese_str] = {
+                    "giorno": giorno,
+                    "tipo": "Controllo periodico",
+                    "esito": "Nessuna infestazione rilevata - OK",
+                    "tecnico": "Tecnico autorizzato",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+                
+                # Aggiorna anche il monitoraggio apparecchi
+                apparecchi = [f"Frigorifero {i}" for i in range(1, 13)] + [f"Congelatore {i}" for i in range(1, 13)]
+                for app in apparecchi:
+                    if app not in scheda_dis.get("monitoraggio_apparecchi", {}):
+                        scheda_dis["monitoraggio_apparecchi"][app] = {}
+                    scheda_dis["monitoraggio_apparecchi"][app][mese_str] = {
+                        "giorno": giorno,
+                        "esito": "OK",
+                        "note": "Nessuna anomalia"
+                    }
+                
+                scheda_dis["updated_at"] = datetime.utcnow().isoformat()
+                
+                await db["disinfestazione_annuale"].update_one(
+                    {"anno": anno},
+                    {"$set": scheda_dis}
+                )
+                disinfestazione_updated = 1
         
-        # Crea un record di ricezione merci di esempio per oggi
-        existing_ric = await db["haccp_ricezione_merci"].find_one({"data": oggi})
+        logger.info(f"✅ [SCHEDULER] Disinfestazione: {disinfestazione_updated}")
         
-        if not existing_ric:
-            record = {
-                "id": f"auto_ric_{oggi}",
-                "data": oggi,
-                "ora": ora,
-                "fornitore": "Fornitore abituale",
-                "prodotti": ["Merce generica"],
-                "temperatura_arrivo": round(random.uniform(2, 4), 1),
-                "conforme": True,
-                "operatore": random.choice(OPERATORI_HACCP),
-                "note": "Auto-generato - compilare manualmente i dettagli",
-                "source": "scheduler_auto",
-                "created_at": now_iso
-            }
-            await db["haccp_ricezione_merci"].insert_one(record)
-            ricezioni_created = 1
-        
-        logger.info(f"✅ [SCHEDULER] Ricezione Merci: creati {ricezioni_created} record")
-        
-        logger.info(f"🎉 [SCHEDULER] Auto-popolazione HACCP completata: "
-                   f"Frigo={frigoriferi_created}, Congel={congelatori_created}, Sanif={sanificazioni_created}, "
-                   f"Disinf={disinfestazioni_created}, Ricez={ricezioni_created}")
+        logger.info(f"🎉 [SCHEDULER] Auto-popolazione HACCP V2 completata: "
+                   f"Frigo={frigoriferi_updated}, Congel={congelatori_updated}, "
+                   f"Sanif={sanificazioni_updated}, Disinf={disinfestazione_updated}")
         
     except Exception as e:
         logger.error(f"❌ [SCHEDULER] Errore auto-popolazione HACCP: {e}")
@@ -248,180 +269,99 @@ async def auto_populate_haccp_daily():
 
 async def check_anomalie_and_notify():
     """
-    Task per controllare anomalie e inviare notifiche email.
-    Eseguito dopo l'auto-popolazione.
+    Task per controllare anomalie temperature e creare notifiche.
     """
     from app.database import Database
     
-    logger.info("🔔 [SCHEDULER] Controllo anomalie e notifiche...")
+    logger.info("🔔 [SCHEDULER] Controllo anomalie temperature...")
     
     try:
         db = Database.get_db()
-        oggi = datetime.utcnow().strftime("%Y-%m-%d")
+        oggi = datetime.utcnow()
+        anno = oggi.year
+        mese = str(oggi.month)
+        giorno = str(oggi.day)
         
-        # Check anomalie frigoriferi
-        anomalie_frigo = await db["haccp_temperature_frigoriferi"].find({
-            "data": oggi,
-            "conforme": False
-        }, {"_id": 0}).to_list(100)
+        anomalie_trovate = 0
         
-        # Check anomalie congelatori
-        anomalie_congel = await db["haccp_temperature_congelatori"].find({
-            "data": oggi,
-            "conforme": False
-        }, {"_id": 0}).to_list(100)
-        
-        notifiche_create = 0
-        anomalie_critiche = []
-        
-        for a in anomalie_frigo:
-            temp = a.get("temperatura", 0)
-            is_critica = temp > 8 or temp < -2
+        # Check frigoriferi
+        async for scheda in db["temperature_positive"].find({"anno": anno}):
+            temp_data = scheda.get("temperature", {}).get(mese, {}).get(giorno, {})
+            temp = temp_data.get("temp")
             
-            notifica = {
-                "id": str(uuid.uuid4()),
-                "tipo": "anomalia_temperatura",
-                "categoria": "frigorifero",
-                "equipaggiamento": a.get("equipaggiamento"),
-                "temperatura": temp,
-                "data": oggi,
-                "ora": a.get("ora"),
-                "messaggio": f"⚠️ Temperatura anomala {temp}°C su {a.get('equipaggiamento')} (range: 0-4°C)",
-                "severita": "alta" if is_critica else "media",
-                "letta": False,
-                "created_at": datetime.utcnow().isoformat()
-            }
-            
-            existing = await db["haccp_notifiche"].find_one({
-                "data": oggi,
-                "equipaggiamento": a.get("equipaggiamento"),
-                "categoria": "frigorifero"
-            })
-            
-            if not existing:
-                await db["haccp_notifiche"].insert_one(notifica)
-                notifiche_create += 1
-                if is_critica:
-                    anomalie_critiche.append(notifica)
+            if temp is not None:
+                temp_max = scheda.get("temp_max", 4)
+                temp_min = scheda.get("temp_min", 0)
+                
+                if temp > temp_max or temp < temp_min:
+                    anomalie_trovate += 1
+                    
+                    # Crea notifica
+                    notifica = {
+                        "id": str(uuid.uuid4()),
+                        "tipo": "anomalia_temperatura",
+                        "categoria": "frigorifero",
+                        "equipaggiamento": scheda.get("frigorifero_nome"),
+                        "temperatura": temp,
+                        "range": f"{temp_min}°C - {temp_max}°C",
+                        "data": oggi.strftime("%Y-%m-%d"),
+                        "messaggio": f"⚠️ Temperatura {temp}°C fuori range su {scheda.get('frigorifero_nome')}",
+                        "severita": "alta" if (temp > temp_max + 2 or temp < temp_min - 2) else "media",
+                        "letta": False,
+                        "created_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    # Evita duplicati
+                    existing = await db["haccp_notifiche"].find_one({
+                        "data": oggi.strftime("%Y-%m-%d"),
+                        "equipaggiamento": scheda.get("frigorifero_nome"),
+                        "categoria": "frigorifero"
+                    })
+                    
+                    if not existing:
+                        await db["haccp_notifiche"].insert_one(notifica)
         
-        for a in anomalie_congel:
-            temp = a.get("temperatura", 0)
-            is_critica = temp > -15
+        # Check congelatori
+        async for scheda in db["temperature_negative"].find({"anno": anno}):
+            temp_data = scheda.get("temperature", {}).get(mese, {}).get(giorno, {})
+            temp = temp_data.get("temp")
             
-            notifica = {
-                "id": str(uuid.uuid4()),
-                "tipo": "anomalia_temperatura",
-                "categoria": "congelatore",
-                "equipaggiamento": a.get("equipaggiamento"),
-                "temperatura": temp,
-                "data": oggi,
-                "ora": a.get("ora"),
-                "messaggio": f"⚠️ Temperatura anomala {temp}°C su {a.get('equipaggiamento')} (range: -18/-22°C)",
-                "severita": "alta" if is_critica else "media",
-                "letta": False,
-                "created_at": datetime.utcnow().isoformat()
-            }
-            
-            existing = await db["haccp_notifiche"].find_one({
-                "data": oggi,
-                "equipaggiamento": a.get("equipaggiamento"),
-                "categoria": "congelatore"
-            })
-            
-            if not existing:
-                await db["haccp_notifiche"].insert_one(notifica)
-                notifiche_create += 1
-                if is_critica:
-                    anomalie_critiche.append(notifica)
+            if temp is not None:
+                temp_max = scheda.get("temp_max", -18)
+                temp_min = scheda.get("temp_min", -22)
+                
+                if temp > temp_max or temp < temp_min:
+                    anomalie_trovate += 1
+                    
+                    notifica = {
+                        "id": str(uuid.uuid4()),
+                        "tipo": "anomalia_temperatura",
+                        "categoria": "congelatore",
+                        "equipaggiamento": scheda.get("congelatore_nome"),
+                        "temperatura": temp,
+                        "range": f"{temp_min}°C - {temp_max}°C",
+                        "data": oggi.strftime("%Y-%m-%d"),
+                        "messaggio": f"⚠️ Temperatura {temp}°C fuori range su {scheda.get('congelatore_nome')}",
+                        "severita": "alta" if temp > temp_max + 3 else "media",
+                        "letta": False,
+                        "created_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    existing = await db["haccp_notifiche"].find_one({
+                        "data": oggi.strftime("%Y-%m-%d"),
+                        "equipaggiamento": scheda.get("congelatore_nome"),
+                        "categoria": "congelatore"
+                    })
+                    
+                    if not existing:
+                        await db["haccp_notifiche"].insert_one(notifica)
         
-        logger.info(f"🔔 [SCHEDULER] Notifiche create: {notifiche_create}, Critiche: {len(anomalie_critiche)}")
-        
-        # Invia email se ci sono anomalie critiche
-        if anomalie_critiche:
-            await send_anomalie_email(anomalie_critiche, oggi)
+        logger.info(f"🔔 [SCHEDULER] Controllo completato: {anomalie_trovate} anomalie trovate")
         
     except Exception as e:
         logger.error(f"❌ [SCHEDULER] Errore check anomalie: {e}")
         import traceback
         logger.error(traceback.format_exc())
-
-
-async def send_anomalie_email(anomalie: list, data: str):
-    """Invia email per anomalie critiche HACCP."""
-    import os
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    
-    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-    smtp_user = os.environ.get("SMTP_USER")
-    smtp_pass = os.environ.get("SMTP_PASSWORD")
-    email_to = os.environ.get("HACCP_ALERT_EMAIL", smtp_user)
-    
-    if not smtp_user or not smtp_pass:
-        logger.warning("⚠️ [SCHEDULER] Credenziali SMTP non configurate, email non inviata")
-        return
-    
-    try:
-        # Costruisci email
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🚨 ALERT HACCP - {len(anomalie)} Anomalie Critiche - {data}"
-        msg["From"] = smtp_user
-        msg["To"] = email_to
-        
-        # Corpo email HTML
-        html = f"""
-        <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; }}
-                .header {{ background: #f44336; color: white; padding: 20px; text-align: center; }}
-                .content {{ padding: 20px; }}
-                .anomalia {{ background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin: 10px 0; }}
-                .temp {{ font-size: 24px; font-weight: bold; color: #f44336; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🚨 ALERT HACCP</h1>
-                <p>Rilevate {len(anomalie)} anomalie critiche - {data}</p>
-            </div>
-            <div class="content">
-                <p>Sono state rilevate le seguenti anomalie di temperatura che richiedono intervento immediato:</p>
-        """
-        
-        for a in anomalie:
-            html += f"""
-                <div class="anomalia">
-                    <strong>{a.get('categoria', '').upper()}: {a.get('equipaggiamento')}</strong><br>
-                    <span class="temp">{a.get('temperatura')}°C</span><br>
-                    <small>{a.get('messaggio')}</small>
-                </div>
-            """
-        
-        html += """
-                <p style="margin-top: 20px; color: #666;">
-                    Questo è un messaggio automatico dal sistema HACCP.<br>
-                    Accedi alla piattaforma per maggiori dettagli.
-                </p>
-            </div>
-        </body>
-        </html>
-        """
-        
-        msg.attach(MIMEText(html, "html"))
-        
-        # Invia email
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, email_to, msg.as_string())
-        
-        logger.info(f"📧 [SCHEDULER] Email alert HACCP inviata a {email_to}")
-        
-    except Exception as e:
-        logger.error(f"❌ [SCHEDULER] Errore invio email: {e}")
 
 
 async def daily_haccp_routine():
@@ -434,21 +374,17 @@ def start_scheduler():
     """Avvia lo scheduler con i task programmati."""
     logger.info("🚀 [SCHEDULER] Configurazione scheduler HACCP...")
     
-    # Task alle 01:00 AM ogni giorno (ora server UTC)
-    # Se il server è in UTC, 01:00 UTC = 02:00 CET (Italia)
-    # Quindi mettiamo 00:00 UTC per avere 01:00 CET
-    # Task alle 00:01 CET (23:01 UTC del giorno precedente)
-    # Per sicurezza mettiamo 00:01 UTC che corrisponde a 01:01 CET
+    # Task alle 00:01 CET ogni giorno
     scheduler.add_job(
         daily_haccp_routine,
-        CronTrigger(hour=0, minute=1),  # 00:01 UTC = 01:01 CET
+        CronTrigger(hour=0, minute=1),  # 00:01 UTC
         id="haccp_daily_routine",
         name="Routine HACCP giornaliera (auto-pop + notifiche)",
         replace_existing=True
     )
     
     scheduler.start()
-    logger.info("✅ [SCHEDULER] Scheduler HACCP avviato - Task: 00:01 (UTC) / 01:01 (CET)")
+    logger.info("✅ [SCHEDULER] Scheduler HACCP avviato - Task: 00:01 (UTC)")
 
 
 def stop_scheduler():
