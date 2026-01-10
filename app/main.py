@@ -116,6 +116,9 @@ from app.routers.invoices import (
     fatture_ricevute
 )
 
+# --- Sync Relazionale ---
+from app.routers import sync_relazionale
+
 # --- Ciclo Passivo Integrato ---
 from app.routers import ciclo_passivo_integrato
 
