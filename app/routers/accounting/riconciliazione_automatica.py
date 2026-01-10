@@ -180,17 +180,19 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                 # Cerca fattura per numero + importo ESATTO (case-insensitive)
                 if num_fattura:
                     fattura = await db[Collections.INVOICES].find_one({
-                        "$or": [
-                            {"numero_fattura": {"$regex": f"^{num_fattura}$", "$options": "i"}},
-                            {"invoice_number": {"$regex": f"^{num_fattura}$", "$options": "i"}},
-                            {"numero_fattura": {"$regex": f".*{num_fattura}.*", "$options": "i"}},
-                            {"invoice_number": {"$regex": f".*{num_fattura}.*", "$options": "i"}}
-                        ],
-                        "$or": [
-                            {"importo_totale": {"$gte": importo - 0.05, "$lte": importo + 0.05}},
-                            {"total_amount": {"$gte": importo - 0.05, "$lte": importo + 0.05}}
-                        ],
-                        "pagato": {"$ne": True}
+                        "$and": [
+                            {"$or": [
+                                {"numero_fattura": {"$regex": f"^{num_fattura}$", "$options": "i"}},
+                                {"invoice_number": {"$regex": f"^{num_fattura}$", "$options": "i"}},
+                                {"numero_fattura": {"$regex": f".*{num_fattura}.*", "$options": "i"}},
+                                {"invoice_number": {"$regex": f".*{num_fattura}.*", "$options": "i"}}
+                            ]},
+                            {"$or": [
+                                {"importo_totale": {"$gte": importo - 0.05, "$lte": importo + 0.05}},
+                                {"total_amount": {"$gte": importo - 0.05, "$lte": importo + 0.05}}
+                            ]},
+                            {"pagato": {"$ne": True}}
+                        ]
                     })
                     
                     if fattura:
