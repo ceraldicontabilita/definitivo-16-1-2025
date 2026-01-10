@@ -65,7 +65,7 @@ export default function ContabilitaAvanzata() {
   const [activeTab, setActiveTab] = useState('imposte');
   const [message, setMessage] = useState(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
       const [impRes, statRes, bilRes, aliqRes] = await Promise.all([
@@ -80,9 +80,9 @@ export default function ContabilitaAvanzata() {
       if (aliqRes.ok) { const data = await aliqRes.json(); setAliquoteIrap(data.aliquote || {}); }
     } catch (err) { console.error('Errore caricamento dati:', err); }
     setLoading(false);
-  }, [regione, selectedYear]);
+  };
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); }, [regione, selectedYear]);
 
   const handleRicategorizza = async () => {
     if (!window.confirm('Vuoi ricategorizzare tutte le fatture? Questa operazione aggiornerà il Piano dei Conti.')) return;
