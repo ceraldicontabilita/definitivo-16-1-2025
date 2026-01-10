@@ -1043,14 +1043,14 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
                 <td style={{ padding: '6px 8px', textAlign: 'right', color: '#166534', fontWeight: mov.tipo === 'entrata' ? 'bold' : 'normal', fontSize: 12 }}>
                   {mov.tipo === 'entrata' ? formatEuro(mov.importo) : '-'}
                 </td>
-                <td style={{ padding: '8px 10px', textAlign: 'right', color: '#991b1b', fontWeight: mov.tipo === 'uscita' ? 'bold' : 'normal' }}>
+                <td style={{ padding: '6px 8px', textAlign: 'right', color: '#991b1b', fontWeight: mov.tipo === 'uscita' ? 'bold' : 'normal', fontSize: 12 }}>
                   {mov.tipo === 'uscita' ? formatEuro(mov.importo) : '-'}
                 </td>
-                <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: mov.saldoProgressivo >= 0 ? '#166534' : '#991b1b' }}>
+                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 'bold', color: mov.saldoProgressivo >= 0 ? '#166534' : '#991b1b', fontSize: 12 }}>
                   {formatEuro(mov.saldoProgressivo)}
                 </td>
                 {!readOnly && (
-                  <td style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                  <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setEditingMovimento(mov); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, marginRight: 8 }}
