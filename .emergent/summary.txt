@@ -1,142 +1,132 @@
 <analysis>**original_problem_statement:**
-L'utente ha richiesto l'implementazione di una serie di funzionalità avanzate per il modulo HACCP e contabilità, seguita da un refactoring completo dell'applicazione per renderla completamente responsive.
-
-**PRODUCT REQUIREMENTS:**
-1.  **Associazione Bonifici a Salari (COMPLETATO):**
-    *   Nella pagina , per ogni bonifico, mostrare un menu a tendina che suggerisca le operazioni compatibili dalla .
-    *   Permettere all'utente di associare il bonifico all'operazione corretta.
-2.  **Gestione Allergeni (COMPLETATO):**
-    *   Implementare un sistema per associare gli allergeni (es. glutine, latte) agli ingredienti delle ricette.
-    *   Evidenziare gli allergeni sulle etichette stampate ().
-    *   Creare una nuova pagina , un registro stampabile in PDF di tutti gli ingredienti e dei relativi allergeni, da esporre nell'attività. La pagina deve essere modificabile.
-3.  **Refactoring Responsive (IN CORSO):**
-    *   Rendere l'intera applicazione atomica e adattiva per funzionare correttamente su diverse dimensioni di schermo: PC, tablet da 12 pollici e telefoni da 6 pollici.
+L'utente ha inizialmente richiesto un refactoring completo dell'applicazione per renderla responsive. Tuttavia, le priorità sono cambiate rapidamente. Le nuove richieste includono:
+1.  **Arricchimento Ricettario (COMPLETATO):** Ricerca web tramite LLM di nuove ricette (pasticceria, rosticceria) e normalizzazione di tutte le ricette (nuove ed esistenti) a una base di 1kg per l'ingrediente principale.
+2.  **Logica di Riconciliazione (COMPLETATO):** Miglioramento della logica di riconciliazione automatica delle fatture per includere controlli su importo, nome fornitore e numero fattura.
+3.  **Correzione e Gestione Logo (COMPLETATO):** Risoluzione di un problema di visualizzazione del logo, conversione in bianco per una migliore leggibilità, salvataggio nel database e creazione di un endpoint API per servirlo.
+4.  **Importazione e Logica Contabile (IN CORSO):** Importazione di dati da file XLSX (), correzione della logica di calcolo delle entrate e implementazione di un sistema di sincronizzazione dati relazionale.
+5.  **Correzioni UI/UX (IN CORSO):** Risoluzione di un errore 404 sulla pagina di dettaglio fattura e implementazione di un filtro anno globale per l'intera applicazione.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione è un ERP completo con moduli per contabilità, fatturazione, magazzino e un sistema HACCP avanzato. Il frontend utilizza esclusivamente stili JavaScript inline. Recentemente sono state implementate e testate con successo le seguenti funzionalità:
-*   Un sistema di associazione manuale tra i bonifici in archivio e le voci di pagamento dei salari in prima nota.
-*   Un sistema completo di gestione degli allergeni, che include un Libro degli Allergeni stampabile e l'evidenziazione degli allergeni sulle etichette dei lotti.
-*   Un modulo HACCP avanzato con ricettario dinamico collegato alle fatture XML, schede di controllo (temperature, sanificazione) e gestione delle non conformità.
-
-Tutti i file di test e i report generati in precedenza sono stati eliminati su richiesta dell'utente.
+L'applicazione è un ERP con moduli di contabilità, HACCP e magazzino. La logica di backend principale si trova in .
+*   **Modulo Ricettario:** Una nuova funzionalità di ricerca web basata su LLM (Claude Sonnet 4.5) è stata implementata con successo. Il database è stato ampliato a 158 ricette, di cui 122 sono state normalizzate a una base di 1kg. L'interfaccia utente è stata aggiornata di conseguenza.
+*   **Logica Contabile:** La riconciliazione automatica è stata potenziata per un matching più accurato. È stato importato con successo un file di prima nota cassa per l'anno 2025.
+*   **Asset e UI:** Il logo aziendale è stato corretto, cambiato in bianco, salvato nel database e viene ora servito tramite un'API dedicata (). L'errore 404 sulla pagina di dettaglio fattura è stato risolto.
+*   **Filtro Anno Globale:** La pagina  è stata refattorizzata per utilizzare il contesto globale , come primo passo per un filtro anno a livello di applicazione.
+*   **Documentazione:** Sono stati creati o aggiornati numerosi file di documentazione in  per riflettere le nuove logiche implementate.
 
 **Last working item**:
-- **Last item agent was working**: L'agente ha iniziato il massiccio task di refactoring per rendere l'intera applicazione responsive. Ha creato un hook riutilizzabile, , per rilevare la dimensione dello schermo e ha completato la conversione della prima pagina, , per renderla adattiva.
+- **Last item agent was working**: L'agente stava implementando un filtro anno globale per l'intera applicazione. Ha completato con successo il refactoring della pagina  per utilizzare il contesto globale , che prende il valore dalla barra di navigazione superiore.
 - **Status**: IN PROGRESS
-- **Agent Testing Done**: N (Solo una pagina è stata modificata, il test completo avverrà alla fine).
-- **Which testing method agent to use?**: frontend testing agent. Al termine del refactoring di tutte le pagine, sarà necessario un test di regressione completo su più dispositivi (o viewport simulate) per verificare che layout, funzionalità e leggibilità siano corretti su mobile, tablet e desktop.
+- **Agent Testing Done**: Y (solo per la pagina )
+- **Which testing method agent to use?**: frontend testing agent. Al termine del refactoring di tutte le pagine, sarà necessario un test per verificare che il filtro anno funzioni in modo coerente su tutti i moduli (contabilità, magazzino, reportistica, ecc.).
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-Nessuno.
+- **Issue 1: (P0) Implementare la Sincronizzazione Dati Relazionale**
+  - **Description**: L'utente ha richiesto che la modifica di un dato (es. una fattura) in una sezione si rifletta automaticamente in tutte le altre sezioni in cui quel dato è presente.
+  - **Attempted fixes**: È stato creato un nuovo router  e un file di documentazione. Un primo endpoint di match è stato creato ma non ha funzionato per mancanza di dati di test nel DB corrente.
+  - **Next debug checklist**:
+    1.  Caricare dati di esempio (fatture XML e movimenti di prima nota) per abilitare il test.
+    2.  Eseguire il debug dell'endpoint  per trovare le corrispondenze.
+    3.  Progettare e implementare update hooks o un servizio centralizzato che venga invocato alla modifica di entità chiave (Fatture, PrimaNota, Fornitori) per propagare le modifiche.
+  - **Why fix this issue and what will be achieved with the fix?**: Garantire la coerenza e l'integrità dei dati in tutta l'applicazione, requisito fondamentale per un sistema ERP.
+  - **Status**: IN PROGRESS
+  - **Should Test frontend/backend/both after fix?**: both
+  - **Blocked on other issue**: None
+
+- **Issue 2: (P1) Verificare e Correggere la Logica delle Entrate**
+  - **Description**: L'utente ha specificato che le  nella prima nota cassa devono corrispondere alla somma lorda dei corrispettivi (imponibile + IVA). L'agente ha aggiornato la documentazione, ma il codice deve essere verificato.
+  - **Next debug checklist**:
+    1.  Cercare entrate e corrispettivi in tutti i file del backend.
+    2.  Analizzare gli endpoint di importazione dei corrispettivi e di calcolo dei totali per assicurarsi che utilizzino l'importo lordo.
+  - **Why fix this issue and what will be achieved with the fix?**: Assicurare la correttezza dei calcoli contabili.
+  - **Status**: NOT STARTED
+  - **Should Test frontend/backend/both after fix?**: backend
 
 **In progress Task List**:
-- **Task 1: (P0) Completare il Refactoring Responsive dell'Applicazione**
-  - **Where to resume**: L'hook  è stato creato e la pagina  è stata completamente refattorizzata come esempio. Il prossimo passo è applicare lo stesso pattern atomico a tutte le altre pagine dell'applicazione.
-  - **What will be achieved with this?**: L'applicazione sarà pienamente utilizzabile e visivamente corretta su PC, tablet e smartphone, migliorando drasticamente l'esperienza utente.
+- **Task 1: (P0) Rendere il Filtro Anno Globale per Tutte le Pagine**
+  - **Where to resume**: Il file  è stato già convertito. Il prossimo passo è identificare tutte le altre pagine che mostrano dati annuali (es. Dashboard, report, altre sezioni contabili) e refattorizzarle per utilizzare l'hook  da .
+  - **What will be achieved with this?**: L'utente potrà selezionare un anno nella barra di navigazione principale e vedere tutti i dati dell'applicazione filtrati per quell'anno, garantendo un'esperienza utente coerente.
   - **Status**: IN PROGRESS
   - **Should Test frontend/backend/both after fix?**: frontend
   - **Blocked on something**: None
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks**:
-    *   **(P0) Refactoring Responsive delle pagine rimanenti.** Le prossime pagine da convertire in ordine di priorità potrebbero essere:
-        1.  Dashboard ()
-        2.  
-        3.  
-        4.  Pagine del modulo HACCP (, , )
-        5.  Tutte le altre pagine dell'ERP.
-*   **Future Tasks**:
-    *   Nessun task futuro definito. L'attenzione è concentrata sul completamento del refactoring responsive.
+- **Upcoming Tasks**:
+    - **(P1) Associare Metodo di Pagamento a Fattura:** Nella pagina di dettaglio fattura (), aggiungere la logica per pre-popolare o associare il metodo di pagamento predefinito del fornitore.
+    - **(P2) Rimpicciolire UI Prima Nota Cassa:** Modificare lo stile della pagina della Prima Nota Cassa per renderla più compatta, simile alla pagina della Prima Nota Banca.
+    - **(P2) Completare associazione fatture a pagamenti:** Associare le fatture caricate via XML ai pagamenti in cassa (dal file excel) e marcare le restanti come da pagare tramite banca, con possibilità di modifica manuale.
+- **Future Tasks**:
+    - **(P2) Completare Refactoring Responsive (in Pausa):** Riprendere il task di rendere l'intera applicazione mobile-friendly, attualmente sospeso su richiesta dell'utente.
 
 **Completed work in this session**
-- **Verifica Refactoring UI (DONE):**
-  - Testato e validato il refactoring a stili inline delle pagine , , e .
-- **Pulizia Codice Morto (DONE):**
-  - Rimosse la cartella  e i file , .
-- **Modulo HACCP Avanzato e Ricettario Dinamico (DONE):**
-  - Creato backend e frontend per il ricettario dinamico e la gestione delle non conformità.
-  - Integrato l'aggiornamento automatico delle ricette all'importazione delle fatture XML.
-  - Create pagine standalone per i controlli di Temperature e Sanificazione.
-- **Associazione Bonifici a Salari (DONE):**
-  - Implementata la UI e il backend per suggerire e associare i bonifici alle buste paga.
-- **Gestione Allergeni (DONE):**
-  - Creato il backend e la pagina frontend per il Libro degli Allergeni stampabile in PDF.
-  - Aggiornato il componente  per evidenziare gli allergeni.
-- **Regressione Completa (DONE):**
-  - Eseguito un test completo con successo (18/18 test passati) per tutte le nuove funzionalità.
-- **Pulizia File di Test (DONE):**
-  - Cancellati tutti i file di test e i report su richiesta dell'utente.
-
-**Earlier issues found/mentioned but not fixed**
-- I bug precedentemente menzionati (, consolidamento IVA) sono stati investigati e si è concluso che erano già stati risolti o non erano più presenti.
-
-**Known issue recurrence from previous fork**
-- None.
+- **Ricerca Web Ricette e Normalizzazione 1kg (DONE):** Implementata la ricerca di ricette tramite LLM e la normalizzazione automatica, arricchendo il database con 63 nuove ricette.
+- **Miglioramento Logica di Riconciliazione (DONE):** Potenziato il matching delle fatture per includere importo, fornitore e numero fattura in .
+- **Correzione Logo (DONE):** Risolto un bug del logo, cambiato il colore in bianco per leggibilità, e salvato su DB con un endpoint API dedicato.
+- **Importazione Prima Nota Cassa (DONE):** Importati con successo 730 movimenti contabili per il 2025 da un file XLSX.
+- **Fix Upload XML (DONE):** Corretto un  in  che impediva il caricamento delle fatture.
+- **Fix Pagina Dettaglio Fattura (DONE):** Creata la pagina  e la relativa rotta per risolvere un errore 404, e rimosso un link obsoleto dalla navigazione.
+- **Aggiornamento Documentazione (DONE):** Aggiornati e creati file in  per documentare le nuove funzionalità.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- Backend: FastAPI, MongoDB.
-- Frontend: React, Stili JavaScript inline.
-- **Responsive Design**: Utilizzo di un hook custom  per applicare stili condizionali basati sulla larghezza della viewport, evitando l'uso di media query CSS.
+- **Backend:** FastAPI, MongoDB (sorgenti in ).
+- **Frontend:** React, Stili JavaScript Inline.
+- **Integrazioni:**  per chiamate LLM (Claude Sonnet 4.5),  per parsing Excel,  per manipolazione immagini.
+- **Architettura Dati:** Implementazione di un sistema di sincronizzazione dati relazionale per garantire la coerenza tra i vari moduli.
 
 **key DB schema**
-Nessuna modifica allo schema del database in questa sessione.
+- : 
+- : 
+- : 
+- : 
 
 **All files of reference**
--  (La base per il refactoring responsive)
--  (Il primo esempio di pagina responsive completata)
--  (Da rendere responsive)
--  (Contiene la navigazione principale, andrà resa responsive)
-
-**Areas that need refactoring**:
-- L'intera applicazione frontend necessita di un refactoring per diventare responsive, utilizzando il pattern stabilito in  e .
-
-**key api endpoints**
-- : (GET) Cerca operazioni in prima nota salari compatibili con un bonifico.
-- : (POST) Associa un bonifico a un'operazione salariale.
-- : (GET) Genera i dati per il libro degli allergeni.
-- : (GET) Restituisce la lista degli allergeni standard.
+-  (Contesto per il filtro anno globale)
+-  (Pagina di esempio che usa il filtro globale)
+-  (Router per la nuova logica di sincronizzazione)
+-  (Contiene la logica di matching migliorata)
+-  (Documentazione per la sincronizzazione relazionale)
 
 **Critical Info for New Agent**
-- **PRIORITÀ ASSOLUTA (P0): Completare il Refactoring Responsive.** La tua missione principale è estendere il pattern responsive a tutta l'applicazione. Parti dall'hook  e dalla pagina  come riferimento. Procedi in modo atomico, pagina per pagina, partendo da quelle a più alta visibilità (Dashboard, Archivio Bonifici, etc.).
-- **ASSENZA DI TEST AUTOMATIZZATI:** Su richiesta dell'utente, tutti i file di test sono stati eliminati. Questo aumenta l'importanza di test manuali rigorosi e dell'uso del  dopo aver completato il refactoring di un numero significativo di pagine. Qualsiasi nuova logica di backend dovrebbe essere testata con  prima di procedere.
-- **STILE INLINE OBBLIGATORIO:** Continua a seguire il vincolo di utilizzare esclusivamente stili JavaScript inline () per tutto il CSS.
-
-**documents and test reports created in this job**
-- Tutti i documenti di test e report sono stati **eliminati** su richiesta dell'utente.
+- **Struttura Progetto:** Il codice backend principale si trova in , non in . Qualsiasi nuova logica backend va aggiunta lì.
+- **Priorità P0:** Le massime priorità attuali sono 1) l'implementazione della **logica relazionale** per la consistenza dei dati e 2) l'applicazione del **filtro anno globale** a tutte le pagine rilevanti.
+- **Stato Database:** Il database in uso sembra essere quasi vuoto. È necessario caricare dati di test (es. fatture XML) per poter verificare correttamente molte delle funzionalità richieste.
+- **Priorità in Pausa:** Il refactoring responsive è sospeso. Non lavorarci a meno che l'utente non lo richieda esplicitamente.
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **User (Message 406):** Ha richiesto di rendere l'intera app responsive per PC, tablet e smartphone in modo atomico.
-- **User (Message 398):** Ha chiesto di eliminare tutti i file di test.
-- **User (Message 391):** Ha richiesto l'esecuzione di un test agent per un refactor completo (interpretato come un test di regressione).
-- **User (Message 292):** Ha fornito chiarimenti sulla richiesta di associazione bonifici (cercare in ) e sul libro allergeni (una semplice tabella stampabile).
-- **User (Message 289):** Ha inviato la richiesta per l'associazione dei bonifici e la gestione degli allergeni.
+10. **Utente:** Imposta il filtro dell'anno come globale in tutta l'app.
+9. **Utente:** Associa pagamenti in cassa (da file) a fatture XML, il resto in banca, e implementa la logica relazionale per cui una modifica si propaga ovunque.
+8. **Utente:** Segnala errore 404 su dettaglio fattura, chiede di rimuovere Fatture vecchie e di aggiungere un filtro anno globale.
+7. **Utente:** Segnala un errore nel caricamento di XML multipli.
+6. **Utente:** Chiarisce che le entrate () sono la somma dei corrispettivi (imponibile + imposta).
+5. **Utente:** Chiede di importare un file Excel di prima nota cassa.
+4. **Utente:** Chiede di aggiornare tutta la documentazione in .
+3. **Utente:** Chiede se la logica di contabilità, magazzino e HACCP è documentata.
+2. **Utente:** Chiede di cambiare il colore del logo in bianco perché non si legge.
+1. **Utente:** Segnala che il logo non compare e chiede di salvarlo nel database.
 
 **Project Health Check:**
-- **Broken**: Nessuno.
+- **Broken**: La sincronizzazione relazionale dei dati è incompleta, il che può portare a incongruenze.
 - **Mocked**: Nessuno.
-- **Technical Debt**: **Molto Alta**. L'uso esclusivo di stili inline e la recente eliminazione di tutti i file di test rendono la manutenzione e l'evoluzione future molto complesse e rischiose.
+- **Technical Debt**: Alta. L'assenza di test automatici e l'uso esclusivo di stili inline aumentano il rischio e la complessità della manutenzione.
 
 **3rd Party Integrations**
-- 
-- , 
-- 
-- 
-- 
+- : Utilizzata per chiamate LLM (Claude Sonnet 4.5) tramite Emergent LLM Key.
+- , : Utilizzate per il parsing di file Excel.
+- : Utilizzata per la manipolazione di immagini.
+- Altre: , , .
 
 **Testing status**
-- **Testing agent used after significant changes**: YES. L'ultima esecuzione ha dato esito positivo al 100% prima della cancellazione dei file.
-- **Troubleshoot agent used after agent stuck in loop**: NO.
-- **Test files created**: [DELETED]
-- **Known regressions**: Nessuna.
-
-**Credentials to test flow:**
-Non sono necessarie credenziali specifiche.
+- **Test files created**: Nessuno.
+- **Known regressions**: Nessuna identificata, ma il rischio è alto data la mancanza di una suite di test.
 
 **What agent forgot to execute**
-Niente. L'agente stava seguendo un piano chiaro per il refactoring responsive prima della fine della sessione.</analysis>
+- Applicare il filtro anno globale a tutte le pagine, non solo a .
+- Ridurre le dimensioni dell'interfaccia utente della Prima Nota Cassa come richiesto.
+- Implementare l'associazione del metodo di pagamento del fornitore nella pagina di dettaglio della fattura.
+- Eseguire una revisione completa di tutti gli endpoint che calcolano le  per garantire la coerenza con la logica dei .</analysis>
