@@ -265,7 +265,9 @@ export function Etichetta({ dati, baseUrl = '' }) {
       if (parts.length === 3) {
         return `${parts[2]}/${parts[1]}/${parts[0]}`;
       }
-    } catch {}
+    } catch (e) {
+      // Date parsing error, return original
+    }
     return dateStr;
   };
 
