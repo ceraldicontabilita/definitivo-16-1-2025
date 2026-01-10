@@ -39,7 +39,19 @@ const NAV_ITEMS = [
   { to: "/ricerca-prodotti", label: "Ricerca Prodotti", icon: "🔍", short: "Ricerca" },
   { to: "/ordini-fornitori", label: "Ordini Fornitori", icon: "📝", short: "Ordini" },
   { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝", short: "Assegni" },
-  { to: "/haccp", label: "HACCP & Tracciabilità", icon: "📦", short: "HACCP", hasBadge: true },
+  { 
+    label: "HACCP & Tracciabilità", 
+    icon: "📦", 
+    short: "HACCP",
+    hasBadge: true,
+    isSubmenu: true,
+    children: [
+      { to: "/haccp", label: "Dashboard HACCP", icon: "📊" },
+      { to: "/ricettario-dinamico", label: "Ricettario Dinamico", icon: "📖" },
+      { to: "/haccp-v2/non-conformita", label: "Non Conformità", icon: "⚠️" },
+      { to: "/registro-lotti", label: "Registro Lotti", icon: "📋" },
+    ]
+  },
   // Dipendenti è ora un sottomenu
   { 
     label: "Dipendenti", 
