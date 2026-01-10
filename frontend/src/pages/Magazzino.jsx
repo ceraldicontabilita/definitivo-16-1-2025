@@ -329,10 +329,9 @@ export default function Magazzino() {
           ) : activeTab === 'catalogo' ? (
             // Catalogo Prodotti da Fatture
             filteredProducts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
-                <div>{catalogProducts.length > 0 ? 'Nessun prodotto corrisponde ai filtri.' : 'Nessun prodotto trovato nel catalogo.'}</div>
-                <div className="small">{catalogProducts.length === 0 ? 'I prodotti verranno aggiunti automaticamente dalle fatture XML.' : 'Prova a modificare i filtri di ricerca.'}</div>
+              <div style={{ fontSize: 14, color: '#6b7280', padding: 40, textAlign: 'center' }}>
+                📦 Nessun prodotto trovato<br/>
+                <span style={{ fontSize: 12 }}>{catalogProducts.length === 0 ? 'I prodotti verranno aggiunti automaticamente dalle fatture XML.' : 'Prova a modificare i filtri di ricerca.'}</span>
               </div>
             ) : (
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
