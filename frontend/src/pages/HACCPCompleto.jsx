@@ -249,7 +249,10 @@ export default function HACCPCompleto() {
       <div style={styles.tabsHaccp}>
         <span style={{ color: '#9ca3af', fontSize: 13, marginRight: 8 }}>HACCP:</span>
         {TABS_HACCP.map(tab => (
-          <button key={tab.id} style={styles.tabHaccp} onClick={() => navigate(`/haccp/${tab.id}`)}>
+          <button key={tab.id} 
+            style={{ ...styles.tabHaccp, ...(activeTab === tab.id ? { background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' } : {}) }} 
+            onClick={() => { setActiveTab(tab.id); setLetteraFiltro('Tutte'); setSearch(''); }}
+            data-testid={`haccp-tab-${tab.id}`}>
             {tab.icon} {tab.label}
           </button>
         ))}
