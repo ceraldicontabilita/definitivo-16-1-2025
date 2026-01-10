@@ -209,7 +209,7 @@ export default function PrevisioniAcquisti() {
         <CardContent>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
-              <RefreshCw className="animate-spin" style={{ margin: '0 auto 16px' }} size={32} />
+              <RefreshCw style={{ animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} size={32} />
               Caricamento...
             </div>
           ) : filteredData.length === 0 ? (
