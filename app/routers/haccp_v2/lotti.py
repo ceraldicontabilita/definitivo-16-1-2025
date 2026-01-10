@@ -299,3 +299,112 @@ async def reset_lotti():
     db = Database.get_db()
     result = await db["haccp_lotti"].delete_many({})
     return {"success": True, "deleted": result.deleted_count}
+
+
+# ==================== GENERA LOTTO DA RICETTA ====================
+
+@router.post("/genera-da-ricetta/{nome_ricetta}")
+async def genera_lotto_da_ricetta(
+    nome_ricetta: str,
+    data_produzione: str = Query(..., description="Data produzione YYYY-MM-DD"),
+    data_scadenza: str = Query(..., description="Data scadenza YYYY-MM-DD"),
+    quantita: float = Query(default=1),
+    unita_misura: str = Query(default="pz")
+):
+    """
+    Genera un lotto di produzione da una ricetta esistente.
+    Calcola automaticamente gli allergeni dagli ingredienti.
+    
+    Formato numero lotto: PROD-{progressivo}-{quantita}{unita}-{data}
+    Esempio: PROD-001-1pz-06012026
+    """
+    db = Database.get_db()
+    
+    # Trova la ricetta per nome (case-insensitive)
+    ricetta = await db["ricette"].find_one(
+        {"nome": {"$regex": f"^{nome_ricetta}$", "$options": "i"}},
+        {"_id": 0}
+    )
+    
+    if not ricetta:
+        raise HTTPException(status_code=404, detail=f"Ricetta '{nome_ricetta}' non trovata")
+    
+    # Estrai gli ingredienti
+    ingredienti = ricetta.get("ingredienti", [])
+    ingredienti_lista = []
+    
+    for ing in ingredienti:
+        if isinstance(ing, dict):
+            ingredienti_lista.append(ing.get("nome", ""))
+        else:
+            ingredienti_lista.append(str(ing))
+    
+    # Calcola allergeni dagli ingredienti
+    allergeni_trovati = set()
+    allergeni_dettaglio = {}
+    
+    for ing_nome in ingredienti_lista:
+        allergeni_ing = detect_allergeni(ing_nome)
+        for all_nome in allergeni_ing:
+            allergeni_trovati.add(all_nome)
+            if all_nome not in allergeni_dettaglio:
+                allergeni_dettaglio[all_nome] = []
+            allergeni_dettaglio[all_nome].append(ing_nome)
+    
+    # Conta progressivo del giorno
+    count_oggi = await db["haccp_lotti"].count_documents({"data_produzione": data_produzione})
+    progressivo = count_oggi + 1
+    
+    # Genera numero lotto formato: PROD-001-1pz-06012026
+    try:
+        data_obj = datetime.strptime(data_produzione, "%Y-%m-%d")
+        data_formatted = data_obj.strftime("%d%m%Y")
+    except:
+        data_formatted = data_produzione.replace("-", "")
+    
+    numero_lotto = f"PROD-{progressivo:03d}-{int(quantita)}{unita_misura}-{data_formatted}"
+    
+    # Genera testo allergeni
+    allergeni_testo = ", ".join(sorted(allergeni_trovati)) if allergeni_trovati else "Nessun allergene rilevato"
+    
+    # Crea il lotto
+    lotto = {
+        "id": str(uuid.uuid4()),
+        "prodotto": ricetta.get("nome"),
+        "ricetta_id": ricetta.get("id"),
+        "ingredienti_dettaglio": ingredienti_lista,
+        "data_produzione": data_produzione,
+        "data_scadenza": data_scadenza,
+        "numero_lotto": numero_lotto,
+        "quantita": quantita,
+        "unita_misura": unita_misura,
+        "allergeni": list(allergeni_trovati),
+        "allergeni_dettaglio": allergeni_dettaglio,
+        "allergeni_testo": allergeni_testo,
+        "progressivo": progressivo,
+        "categoria": detect_categoria(ricetta.get("nome", "")),
+        "source": "produzione_interna",
+        "etichetta": f"LOTTO: {numero_lotto}\nPROD: {data_produzione}\nSCAD: {data_scadenza}\nALLERGENI: {allergeni_testo}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db["haccp_lotti"].insert_one(lotto)
+    
+    # Rimuovi _id
+    if "_id" in lotto:
+        del lotto["_id"]
+    
+    return lotto
+
+
+# Alias per compatibilità con frontend esistente
+@router.post("/../genera-lotto/{nome_ricetta}")
+async def genera_lotto_alias(
+    nome_ricetta: str,
+    data_produzione: str = Query(...),
+    data_scadenza: str = Query(...),
+    quantita: float = Query(default=1),
+    unita_misura: str = Query(default="pz")
+):
+    """Alias per genera-lotto (compatibilità)"""
+    return await genera_lotto_da_ricetta(nome_ricetta, data_produzione, data_scadenza, quantita, unita_misura)
