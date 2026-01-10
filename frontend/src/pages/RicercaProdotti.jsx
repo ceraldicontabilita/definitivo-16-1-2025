@@ -381,13 +381,13 @@ export default function RicercaProdotti() {
       </div>
 
       {/* Lista Prodotti */}
-      <div className="card">
-        <div className="h1">Catalogo ({products.length} prodotti)</div>
+      <div style={cardStyle}>
+        <div style={h1Style}>Catalogo ({products.length} prodotti)</div>
         
         {loading ? (
-          <div className="small">Caricamento catalogo...</div>
+          <div style={smallStyle}>Caricamento catalogo...</div>
         ) : products.length === 0 ? (
-          <div className="small">
+          <div style={smallStyle}>
             Nessun prodotto trovato. Il catalogo si popola automaticamente quando carichi fatture XML.
           </div>
         ) : (
