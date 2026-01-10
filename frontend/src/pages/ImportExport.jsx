@@ -756,6 +756,17 @@ export default function ImportExport() {
       multiple: true,
       desc: "PDF singoli, multipli o ZIP. Netto inserito in Prima Nota Salari",
       templateUrl: null
+    },
+    { 
+      id: "bonifici", 
+      label: "Archivio Bonifici", 
+      icon: "📑", 
+      ref: bonificiFileRef, 
+      handler: handleImportBonifici,
+      accept: ".pdf,.zip",
+      multiple: true,
+      desc: "PDF o ZIP contenenti bonifici bancari. Parsing automatico con deduplicazione",
+      templateUrl: null
     }
   ];
 
