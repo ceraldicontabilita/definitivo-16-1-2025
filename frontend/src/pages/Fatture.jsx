@@ -731,8 +731,8 @@ export default function Fatture() {
       )}
 
       {/* Lista Fatture */}
-      <div className="card">
-        <div className="h1">Elenco Fatture ({filteredInvoices.length}{activeFiltersCount > 0 ? ` / ${invoices.length}` : ""})</div>
+      <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>Elenco Fatture ({filteredInvoices.length}{activeFiltersCount > 0 ? ` / ${invoices.length}` : ""})</h2>
         {loading ? (
           <div className="small">Caricamento...</div>
         ) : filteredInvoices.length === 0 ? (
