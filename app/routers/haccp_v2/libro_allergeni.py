@@ -293,7 +293,8 @@ async def aggiungi_voce_manuale(voce: VoceLibroAllergeni) -> Dict[str, Any]:
     
     await db["libro_allergeni_voci"].insert_one(doc)
     
-    del doc["_id"] if "_id" in doc else None
+    if "_id" in doc:
+        del doc["_id"]
     
     return {
         "success": True,
