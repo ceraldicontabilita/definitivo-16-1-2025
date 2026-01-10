@@ -218,7 +218,7 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 - [x] ~~Bonifica fatture con metodo pagamento errato~~ ✅ COMPLETATO (1319 fatture corrette)
 
 ### P1 - High
-- [ ] Uniformità stilistica UI (2/~60 pagine completate)
+- [~] Uniformità stilistica UI (completata per pagine critiche: IVA, Liquidazione IVA, Corrispettivi, Fatture, Assegni)
 - [ ] Re-importazione dati POS e Versamenti per Prima Nota Cassa
 - [ ] Migliorare intelligenza riconciliazione automatica
 
