@@ -540,7 +540,7 @@ export default function Fatture() {
                 value={newInvoice.descrizione}
                 onChange={(e) => setNewInvoice({ ...newInvoice, descrizione: e.target.value })}
               />
-              <button type="submit" className="primary">Salva</button>
+              <button type="submit" style={{ padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>Salva</button>
               <button type="button" onClick={() => setShowForm(false)}>Annulla</button>
             </div>
           </form>
