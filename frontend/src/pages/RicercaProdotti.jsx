@@ -191,12 +191,19 @@ export default function RicercaProdotti() {
     }
   }
 
+  const cardStyle = { background: 'white', borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb' };
+  const h1Style = { fontSize: 24, fontWeight: 'bold', color: '#1e293b', marginBottom: 12 };
+  const smallStyle = { fontSize: 13, color: '#64748b' };
+  const rowStyle = { display: 'flex', alignItems: 'center' };
+  const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 16 };
+  const btnPrimary = { padding: '10px 18px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: '600' };
+
   return (
-    <>
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
       {/* Header con ricerca */}
-      <div className="card">
-        <div className="h1">Ricerca Prodotti</div>
-        <div className="small" style={{ marginBottom: 15 }}>
+      <div style={cardStyle}>
+        <div style={h1Style}>Ricerca Prodotti</div>
+        <div style={{ ...smallStyle, marginBottom: 15 }}>
           Catalogo prodotti popolato automaticamente dalle fatture XML. Trova il miglior prezzo per fornitore.
         </div>
         
