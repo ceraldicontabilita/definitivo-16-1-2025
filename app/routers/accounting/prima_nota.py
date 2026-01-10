@@ -1748,6 +1748,151 @@ async def get_fattura_allegata_cassa(movimento_id: str) -> Dict[str, Any]:
     }
 
 
+# ============== CORREZIONE ENTRATE CORRISPETTIVI ==============
+
+@router.post("/cassa/fix-corrispettivi-importo")
+async def fix_corrispettivi_importo(anno: int = Query(...)) -> Dict[str, Any]:
+    """
+    Corregge l'importo dei corrispettivi in Prima Nota Cassa.
+    REGOLA: ENTRATA = IMPONIBILE + IVA (totale lordo)
+    
+    I corrispettivi importati da Excel potrebbero avere importo = imponibile.
+    Questa funzione corregge aggiungendo l'IVA all'importo.
+    """
+    db = Database.get_db()
+    
+    date_start = f"{anno}-01-01"
+    date_end = f"{anno}-12-31"
+    
+    # Trova movimenti corrispettivi con imponibile e imposta separati
+    movimenti = await db[COLLECTION_PRIMA_NOTA_CASSA].find({
+        "categoria": "Corrispettivi",
+        "tipo": "entrata",
+        "data": {"$gte": date_start, "$lte": date_end},
+        "imponibile": {"$exists": True, "$gt": 0},
+        "imposta": {"$exists": True}
+    }, {"_id": 0}).to_list(10000)
+    
+    corretti = 0
+    gia_corretti = 0
+    totale_differenza = 0
+    dettagli = []
+    
+    for mov in movimenti:
+        imponibile = float(mov.get("imponibile", 0) or 0)
+        imposta = float(mov.get("imposta", 0) or 0)
+        importo_attuale = float(mov.get("importo", 0) or 0)
+        importo_corretto = imponibile + imposta
+        
+        # Tollera una piccola differenza di arrotondamento
+        if abs(importo_attuale - importo_corretto) > 0.10:
+            differenza = importo_corretto - importo_attuale
+            
+            await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
+                {"id": mov["id"]},
+                {"$set": {
+                    "importo": round(importo_corretto, 2),
+                    "importo_originale": importo_attuale,
+                    "fix_note": "Corretto: importo = imponibile + IVA",
+                    "fixed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            corretti += 1
+            totale_differenza += differenza
+            
+            if len(dettagli) < 10:
+                dettagli.append({
+                    "data": mov.get("data"),
+                    "importo_originale": importo_attuale,
+                    "importo_corretto": round(importo_corretto, 2),
+                    "differenza": round(differenza, 2)
+                })
+        else:
+            gia_corretti += 1
+    
+    return {
+        "success": True,
+        "anno": anno,
+        "movimenti_analizzati": len(movimenti),
+        "corretti": corretti,
+        "gia_corretti": gia_corretti,
+        "totale_differenza_euro": round(totale_differenza, 2),
+        "dettagli_esempio": dettagli,
+        "messaggio": f"Corretti {corretti} movimenti. Differenza totale: €{round(totale_differenza, 2)}"
+    }
+
+
+@router.get("/cassa/verifica-entrate-corrispettivi")
+async def verifica_entrate_corrispettivi(anno: int = Query(...)) -> Dict[str, Any]:
+    """
+    Verifica che le entrate corrispettivi siano corrette (imponibile + IVA).
+    Mostra discrepanze senza correggere.
+    """
+    db = Database.get_db()
+    
+    date_start = f"{anno}-01-01"
+    date_end = f"{anno}-12-31"
+    
+    # Trova movimenti corrispettivi
+    movimenti = await db[COLLECTION_PRIMA_NOTA_CASSA].find({
+        "categoria": "Corrispettivi",
+        "tipo": "entrata",
+        "data": {"$gte": date_start, "$lte": date_end}
+    }, {"_id": 0}).to_list(10000)
+    
+    corretti = 0
+    errati = 0
+    mancano_dettagli = 0
+    totale_importo_attuale = 0
+    totale_importo_corretto = 0
+    problemi = []
+    
+    for mov in movimenti:
+        imponibile = float(mov.get("imponibile", 0) or 0)
+        imposta = float(mov.get("imposta", 0) or 0)
+        importo = float(mov.get("importo", 0) or 0)
+        
+        totale_importo_attuale += importo
+        
+        if imponibile == 0:
+            mancano_dettagli += 1
+            totale_importo_corretto += importo
+            continue
+            
+        importo_corretto = imponibile + imposta
+        totale_importo_corretto += importo_corretto
+        
+        if abs(importo - importo_corretto) > 0.10:
+            errati += 1
+            if len(problemi) < 5:
+                problemi.append({
+                    "data": mov.get("data"),
+                    "importo_registrato": importo,
+                    "imponibile": imponibile,
+                    "iva": imposta,
+                    "importo_corretto": round(importo_corretto, 2),
+                    "differenza": round(importo_corretto - importo, 2)
+                })
+        else:
+            corretti += 1
+    
+    return {
+        "anno": anno,
+        "totale_movimenti": len(movimenti),
+        "corretti": corretti,
+        "errati": errati,
+        "senza_dettaglio_iva": mancano_dettagli,
+        "totale_registrato": round(totale_importo_attuale, 2),
+        "totale_corretto": round(totale_importo_corretto, 2),
+        "differenza_totale": round(totale_importo_corretto - totale_importo_attuale, 2),
+        "esempi_problemi": problemi if problemi else None,
+        "status": "OK" if errati == 0 else "RICHIEDE_CORREZIONE"
+    }
+
+
+
+
 @router.get("/banca/{movimento_id}/fattura")
 async def get_fattura_allegata_banca(movimento_id: str) -> Dict[str, Any]:
     """
