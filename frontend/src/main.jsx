@@ -205,6 +205,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <LazyPage><Dashboard /></LazyPage> },
       { path: "fatture", element: <LazyPage><Fatture /></LazyPage> },
+      { path: "fatture-ricevute", element: <LazyPage><ArchivioFattureRicevute /></LazyPage> },
       { path: "corrispettivi", element: <LazyPage><Corrispettivi /></LazyPage> },
       { path: "prima-nota-cassa", element: <LazyPage><PrimaNotaCassa /></LazyPage> },
       { path: "prima-nota-banca", element: <LazyPage><PrimaNotaBanca /></LazyPage> },
