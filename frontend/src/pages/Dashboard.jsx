@@ -538,11 +538,11 @@ export default function Dashboard() {
 
       {/* Calendario POS Sfasamento */}
       {posCalendario && (
-        <div className="card" style={{ marginTop: 20 }}>
+        <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginTop: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
             <div>
-              <div className="h1" style={{ fontSize: 18, margin: 0 }}>💳 Calendario POS - Sfasamento Accrediti</div>
-              <div className="small">Mese corrente - Giorni con sfasamento lungo evidenziati</div>
+              <h2 style={{ fontSize: 18, margin: 0, fontWeight: 'bold', color: '#1e3a5f' }}>💳 Calendario POS - Sfasamento Accrediti</h2>
+              <span style={{ fontSize: 13, color: '#6b7280' }}>Mese corrente - Giorni con sfasamento lungo evidenziati</span>
             </div>
             <Link to="/riconciliazione" style={{
               padding: '6px 12px',
