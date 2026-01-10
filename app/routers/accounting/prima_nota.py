@@ -715,7 +715,7 @@ async def registra_pagamento_fattura(
     logger.info(f"Registrazione fattura {numero_fattura}: tipo_doc={fattura.get('tipo_documento')}, "
                 f"movimento={tipo_movimento}, categoria={categoria}")
     
-    if metodo_pagamento == "cassa" or metodo_pagamento == "contanti":
+    if metodo_pagamento.lower() in ["cassa", "contanti"]:
         # Tutto in cassa
         movimento_cassa = {
             "id": str(uuid.uuid4()),
