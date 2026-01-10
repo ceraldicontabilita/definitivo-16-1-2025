@@ -121,11 +121,10 @@ export default function HACCPSanificazione() {
 
   const cambiaMese = (delta) => {
     let m = mese + delta;
-    let a = anno;
-    if (m < 1) { m = 12; a--; }
-    if (m > 12) { m = 1; a++; }
+    // Anno è globale - limita navigazione all'anno corrente
+    if (m < 1) m = 1;
+    if (m > 12) m = 12;
     setMese(m);
-    setAnno(a);
   };
 
   return (
