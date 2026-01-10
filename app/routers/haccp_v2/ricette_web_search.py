@@ -309,7 +309,7 @@ async def cerca_ricetta_web(request: RicettaWebSearch) -> Dict[str, Any]:
         "fattore_normalizzazione": fattore,
         "procedimento": ricetta_raw.get("procedimento", ""),
         "note": ricetta_raw.get("note", ""),
-        "fonte": "AI Generated - GPT-5.2",
+        "fonte": "AI Generated - Claude Sonnet 4.5",
         "normalizzata_a_1kg": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
