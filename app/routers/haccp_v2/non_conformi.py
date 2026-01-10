@@ -373,12 +373,3 @@ async def statistiche_annuali(anno: int) -> Dict[str, Any]:
         "motivi_disponibili": MOTIVI_NON_CONFORMITA,
         "azioni_disponibili": AZIONI_CORRETTIVE
     }
-
-@router.get("/motivi-azioni")
-async def get_motivi_azioni() -> Dict[str, Any]:
-    """Lista motivi e azioni disponibili per UI."""
-    return {
-        "motivi": MOTIVI_NON_CONFORMITA,
-        "azioni": AZIONI_CORRETTIVE,
-        "operatori": OPERATORI_HACCP
-    }
