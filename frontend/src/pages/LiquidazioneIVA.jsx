@@ -113,13 +113,13 @@ export default function LiquidazioneIVA() {
           </h3>
         </div>
         <div className="card-content">
-          <div className="filter-bar">
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>Anno</label>
               <select
                 value={anno}
                 onChange={(e) => setAnno(parseInt(e.target.value))}
-                className="form-select"
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, minWidth: 100 }}
                 data-testid="select-anno"
               >
                 {[2023, 2024, 2025, 2026].map(a => (
@@ -133,7 +133,7 @@ export default function LiquidazioneIVA() {
               <select
                 value={mese}
                 onChange={(e) => setMese(parseInt(e.target.value))}
-                className="form-select"
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, minWidth: 150 }}
                 data-testid="select-mese"
               >
                 {MESI.slice(1).map((m, i) => (
@@ -151,13 +151,12 @@ export default function LiquidazioneIVA() {
                 value={creditoPrecedente}
                 onChange={(e) => setCreditoPrecedente(parseFloat(e.target.value) || 0)}
                 placeholder="0.00"
-                className="form-input"
-                style={{ width: 150 }}
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, width: 150 }}
                 data-testid="input-credito-precedente"
               />
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               <button 
                 onClick={calcolaLiquidazione} 
                 disabled={loading}
