@@ -392,8 +392,8 @@ export default function ImportExport() {
       icon: "🏦", 
       ref: estrattoContoFileRef, 
       handler: handleImportEstrattoConto,
-      accept: ".pdf,.xlsx,.xls,.csv",
-      desc: "Importa estratto conto bancario (PDF o Excel)",
+      accept: ".xlsx,.xls,.csv",
+      desc: "Importa estratto conto bancario CSV/Excel (Ragione Sociale, Data contabile, Importo, Descrizione, Categoria)",
       templateUrl: "/api/import-templates/estratto-conto"
     },
     { 
