@@ -185,13 +185,13 @@ export default function HACCPCompleto() {
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="row" style={{ gap: 10 }}>
           <button onClick={() => setActiveTab("materie")} className={activeTab === "materie" ? "primary" : ""}>
-            📦 Materie Prime ({materiePrime.length})
+            📦 Materie Prime ({(materiePrime || []).length})
           </button>
           <button onClick={() => setActiveTab("ricette")} className={activeTab === "ricette" ? "primary" : ""}>
-            📖 Ricette ({ricette.length})
+            📖 Ricette ({(ricette || []).length})
           </button>
           <button onClick={() => setActiveTab("lotti")} className={activeTab === "lotti" ? "primary" : ""}>
-            🏭 Lotti Produzione ({lotti.length})
+            🏭 Lotti Produzione ({(lotti || []).length})
           </button>
         </div>
       </div>
