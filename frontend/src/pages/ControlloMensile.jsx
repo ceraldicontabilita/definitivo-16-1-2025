@@ -52,7 +52,7 @@ import { useAnnoGlobale } from '../contexts/AnnoContext';
 export default function ControlloMensile() {
   const [loading, setLoading] = useState(true);
   const currentYear = new Date().getFullYear();
-  const [anno, setAnno] = useState(currentYear);
+  const { anno } = useAnnoGlobale(); // Anno dal contesto globale
   const [viewMode, setViewMode] = useState('anno'); // 'anno' or 'mese'
   const [meseSelezionato, setMeseSelezionato] = useState(null);
   

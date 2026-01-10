@@ -271,7 +271,7 @@ export default function CicloPassivoIntegrato() {
   const [loadingSuggerimenti, setLoadingSuggerimenti] = useState(false);
   
   // Filtri anno/mese
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const { anno } = useAnnoGlobale(); // Anno dal contesto globale
   const [mese, setMese] = useState(null);
 
   const loadDashboard = useCallback(async () => {

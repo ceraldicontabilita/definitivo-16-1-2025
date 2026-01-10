@@ -150,7 +150,7 @@ function DashboardGestioneRiservata({ onLogout }) {
     categoria: "altro",
     note: ""
   });
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const { anno } = useAnnoGlobale(); // Anno dal contesto globale
   const [mese, setMese] = useState(null);
 
   useEffect(() => {
