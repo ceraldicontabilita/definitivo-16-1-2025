@@ -576,23 +576,21 @@ export default function ControlloMensile() {
       <div style={{ display: 'flex', gap: 15, marginBottom: 20, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <label style={{ fontWeight: 'bold' }}>Anno:</label>
-          <select
-            value={anno}
-            onChange={(e) => setAnno(parseInt(e.target.value))}
+          <div
             style={{ 
               padding: '10px 16px', 
               borderRadius: 8, 
               border: '2px solid #e0e0e0', 
               fontSize: 16,
-              cursor: 'pointer',
-              minWidth: 100
+              minWidth: 100,
+              background: '#f1f5f9',
+              color: '#64748b',
+              fontWeight: 600
             }}
-            data-testid="year-selector"
+            data-testid="year-display"
           >
-            {yearOptions.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+            {anno} <span style={{ fontSize: 10, opacity: 0.7 }}>(globale)</span>
+          </div>
         </div>
 
         {viewMode === 'mese' && (

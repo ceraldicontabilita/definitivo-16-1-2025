@@ -424,16 +424,12 @@ export default function CicloPassivoIntegrato() {
           </p>
         </div>
         <div style={styles.flexRow}>
-          <select 
-            style={styles.select}
-            value={anno}
-            onChange={(e) => setAnno(parseInt(e.target.value))}
-            data-testid="select-anno"
+          <div 
+            style={{ ...styles.select, background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}
+            data-testid="anno-display"
           >
-            {[2024, 2025, 2026].map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+            {anno} <span style={{ fontSize: 10, opacity: 0.7 }}>(globale)</span>
+          </div>
           <select 
             style={styles.select}
             value={mese || ''}

@@ -272,15 +272,12 @@ function DashboardGestioneRiservata({ onLogout }) {
         flexWrap: "wrap",
         alignItems: "center"
       }}>
-        <select
-          value={anno}
-          onChange={(e) => setAnno(parseInt(e.target.value))}
-          style={{ padding: "10px 16px", borderRadius: 8, border: "1px solid #e2e8f0" }}
+        <div
+          style={{ padding: "10px 16px", borderRadius: 8, border: "1px solid #e2e8f0", background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}
+          data-testid="anno-display"
         >
-          {[2023, 2024, 2025, 2026].map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+          {anno} <span style={{ fontSize: 10, opacity: 0.7 }}>(globale)</span>
+        </div>
         <select
           value={mese || ""}
           onChange={(e) => setMese(e.target.value ? parseInt(e.target.value) : null)}
