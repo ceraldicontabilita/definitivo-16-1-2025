@@ -93,23 +93,21 @@ async def template_versamenti():
 
 @router.get("/pos")
 async def template_pos():
-    """Template per importazione incassi POS."""
+    """Template per importazione incassi POS - formato banca."""
     wb = create_styled_workbook()
     ws = wb.active
     ws.title = "Incassi POS"
     
-    headers = ["data", "POS1", "POS2", "POS3", "totale"]
+    headers = ["DATA", "CONTO", "IMPORTO"]
     descriptions = [
-        "Formato: YYYY-MM-DD",
-        "Importo POS 1 (€)",
-        "Importo POS 2 (€)",
-        "Importo POS 3 (€)",
-        "Totale giornaliero (€)"
+        "Data operazione",
+        "Tipo conto (pos)",
+        "Importo giornaliero (€)"
     ]
     
     style_header_row(ws, headers, descriptions)
-    add_example_row(ws, ["2025-01-15", 1500.00, 800.50, 450.25, 2750.75])
-    add_example_row(ws, ["2025-01-16", 2000.00, 950.00, 600.00, 3550.00], start_row=4)
+    add_example_row(ws, ["2025-01-15", "pos", 1500.00])
+    add_example_row(ws, ["2025-01-16", "pos", 2000.00], start_row=4)
     
     output = io.BytesIO()
     wb.save(output)
