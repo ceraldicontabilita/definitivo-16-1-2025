@@ -15,6 +15,11 @@ export default function PrimaNotaBanca() {
     reference: ""
   });
 
+  const cardStyle = { background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', marginBottom: 20 };
+  const btnPrimary = { padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: 14 };
+  const btnSecondary = { padding: '10px 20px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: '600', fontSize: 14 };
+  const inputStyle = { padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14 };
+
   useEffect(() => {
     loadStatements();
   }, []);
@@ -52,24 +57,40 @@ export default function PrimaNotaBanca() {
   }
 
   return (
-    <>
-      <div className="card">
-        <div className="h1">Prima Nota Banca</div>
-        <div className="row">
-          <button className="primary" onClick={() => setShowForm(!showForm)}>+ Nuovo Movimento</button>
-          <button onClick={loadStatements}>🔄 Aggiorna</button>
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 20,
+        padding: '15px 20px',
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
+        borderRadius: 12,
+        color: 'white'
+      }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 'bold' }}>🏦 Prima Nota Banca</h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, opacity: 0.9 }}>Gestione movimenti bancari</p>
         </div>
-        {err && <div className="small" style={{ color: "#c00", marginTop: 10 }}>{err}</div>}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={btnPrimary} onClick={() => setShowForm(!showForm)}>➕ Nuovo Movimento</button>
+          <button style={btnSecondary} onClick={loadStatements}>🔄 Aggiorna</button>
+        </div>
       </div>
+      
+      {err && <div style={{ padding: 16, background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 20 }}>❌ {err}</div>}
 
+      {/* Form Nuovo Movimento */}
       {showForm && (
-        <div className="card">
-          <div className="h1">Nuovo Movimento Bancario</div>
+        <div style={cardStyle}>
+          <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>➕ Nuovo Movimento Bancario</h2>
           <form onSubmit={handleCreateStatement}>
-            <div className="row" style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
               <select
                 value={newStatement.type}
                 onChange={(e) => setNewStatement({ ...newStatement, type: e.target.value })}
+                style={{ ...inputStyle, minWidth: 150, background: 'white' }}
               >
                 <option value="accredito">Accredito (Entrata)</option>
                 <option value="addebito">Addebito (Uscita)</option>
@@ -81,75 +102,85 @@ export default function PrimaNotaBanca() {
                 value={newStatement.amount}
                 onChange={(e) => setNewStatement({ ...newStatement, amount: e.target.value })}
                 required
+                style={inputStyle}
               />
               <input
                 placeholder="Descrizione"
                 value={newStatement.description}
                 onChange={(e) => setNewStatement({ ...newStatement, description: e.target.value })}
                 required
+                style={{ ...inputStyle, flex: 1, minWidth: 200 }}
               />
             </div>
-            <div className="row">
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <input
                 placeholder="Conto Bancario"
                 value={newStatement.bank_account}
                 onChange={(e) => setNewStatement({ ...newStatement, bank_account: e.target.value })}
+                style={inputStyle}
               />
               <input
                 placeholder="Riferimento"
                 value={newStatement.reference}
                 onChange={(e) => setNewStatement({ ...newStatement, reference: e.target.value })}
+                style={inputStyle}
               />
-              <button type="submit" className="primary">Registra</button>
-              <button type="button" onClick={() => setShowForm(false)}>Annulla</button>
+              <button type="submit" style={btnPrimary}>✅ Registra</button>
+              <button type="button" style={btnSecondary} onClick={() => setShowForm(false)}>Annulla</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="card">
-        <div className="h1">Movimenti Bancari ({statements.length})</div>
+      {/* Lista Movimenti */}
+      <div style={cardStyle}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>📋 Movimenti Bancari ({statements.length})</h2>
         {loading ? (
-          <div className="small">Caricamento...</div>
+          <div style={{ fontSize: 14, color: '#6b7280', padding: 20 }}>⏳ Caricamento...</div>
         ) : statements.length === 0 ? (
-          <div className="small">Nessun movimento bancario registrato.</div>
+          <div style={{ fontSize: 14, color: '#6b7280', padding: 20 }}>Nessun movimento bancario registrato.</div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left" }}>
-                <th style={{ padding: 8 }}>Data</th>
-                <th style={{ padding: 8 }}>Tipo</th>
-                <th style={{ padding: 8 }}>Importo</th>
-                <th style={{ padding: 8 }}>Descrizione</th>
-                <th style={{ padding: 8 }}>Conto</th>
-                <th style={{ padding: 8 }}>Riferimento</th>
-              </tr>
-            </thead>
-            <tbody>
-              {statements.map((s, i) => (
-                <tr key={s.id || i} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: 8 }}>{formatDateIT(s.date || s.created_at)}</td>
-                  <td style={{ padding: 8 }}>
-                    <span style={{ 
-                      background: s.type === "accredito" ? "#c8e6c9" : "#ffcdd2",
-                      padding: "2px 8px",
-                      borderRadius: 4
-                    }}>
-                      {s.type === "accredito" ? "↑ Accredito" : "↓ Addebito"}
-                    </span>
-                  </td>
-                  <td style={{ padding: 8, color: s.type === "accredito" ? "#2e7d32" : "#c62828", fontWeight: "bold" }}>
-                    {s.type === "accredito" ? "+" : "-"} {formatEuro(s.amount)}
-                  </td>
-                  <td style={{ padding: 8 }}>{s.description}</td>
-                  <td style={{ padding: 8 }}>{s.bank_account || "-"}</td>
-                  <td style={{ padding: 8 }}>{s.reference || "-"}</td>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e5e7eb", background: '#f9fafb' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Data</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Tipo</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600' }}>Importo</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Descrizione</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Conto</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Riferimento</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {statements.map((s, i) => (
+                  <tr key={s.id || i} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? 'white' : '#f9fafb' }}>
+                    <td style={{ padding: '12px 16px' }}>{formatDateIT(s.date || s.created_at)}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span style={{ 
+                        background: s.type === "accredito" ? "#dcfce7" : "#fee2e2",
+                        color: s.type === "accredito" ? "#16a34a" : "#dc2626",
+                        padding: "4px 10px",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        fontWeight: '600'
+                      }}>
+                        {s.type === "accredito" ? "↑ Accredito" : "↓ Addebito"}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', color: s.type === "accredito" ? "#16a34a" : "#dc2626", fontWeight: "bold" }}>
+                      {s.type === "accredito" ? "+" : "-"} {formatEuro(s.amount)}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>{s.description}</td>
+                    <td style={{ padding: '12px 16px' }}>{s.bank_account || "-"}</td>
+                    <td style={{ padding: '12px 16px' }}>{s.reference || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
