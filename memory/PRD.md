@@ -61,10 +61,26 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 
 **SACRA - NON MODIFICARE SENZA RICHIESTA ESPLICITA**
 
-| Registro | Entrate | Uscite |
-|----------|---------|--------|
-| **CASSA** | Corrispettivi | POS, Versamenti |
-| **BANCA** | Vuota | Vuota |
+### CASSA (prima_nota_cassa)
+| Tipo | Categoria | Descrizione |
+|------|-----------|-------------|
+| DARE (Entrate) | Corrispettivi | Incassi giornalieri da vendite al dettaglio |
+| DARE (Entrate) | Incasso cliente | Pagamenti in contanti |
+| AVERE (Uscite) | POS | Trasferimento incassi elettronici verso banca |
+| AVERE (Uscite) | Versamento | Deposito contanti sul c/c bancario |
+| AVERE (Uscite) | Pagamento fornitore | Fatture pagate in contanti |
+
+### BANCA (prima_nota_banca)
+| Tipo | Categoria | Descrizione |
+|------|-----------|-------------|
+| DARE (Entrate) | Incasso cliente | Bonifici in entrata da clienti |
+| AVERE (Uscite) | Pagamento fornitore | Bonifici/assegni a fornitori |
+| AVERE (Uscite) | F24 | Pagamento tributi |
+
+### REGOLA FONDAMENTALE VERSAMENTI
+- I **VERSAMENTI** importati da CSV sono registrati **SOLO** in `prima_nota_cassa` come tipo="uscita"
+- La corrispondente entrata in Banca arriverà dalla **riconciliazione con l'estratto conto**
+- Questo evita duplicazioni e rispetta la partita doppia
 
 ---
 
