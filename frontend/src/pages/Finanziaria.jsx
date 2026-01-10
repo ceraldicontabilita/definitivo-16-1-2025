@@ -258,7 +258,7 @@ export default function Finanziaria() {
               <li><strong>IVA Debito:</strong> Estratta dai file XML dei Corrispettivi giornalieri (vendite)</li>
               <li><strong>IVA Credito:</strong> Estratta dai file XML delle Fatture (acquisti fornitori)</li>
               <li><strong>Saldo IVA:</strong> IVA Debito - IVA Credito = importo da versare o a credito</li>
-              <li><strong>Fatture da pagare:</strong> Fatture con stato diverso da "Pagata"</li>
+              <li><strong>Fatture da pagare:</strong> Fatture con stato diverso da &quot;Pagata&quot;</li>
             </ul>
           </div>
         </>
