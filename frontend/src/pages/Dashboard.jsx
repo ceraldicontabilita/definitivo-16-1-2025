@@ -119,7 +119,7 @@ export default function Dashboard() {
           ) : (
             <span style={{ padding: '4px 10px', background: '#dcfce7', color: '#16a34a', borderRadius: 6, fontSize: 12, fontWeight: '600' }}>
               ✓ Backend connesso
-            </div>
+            </span>
           )}
         </div>
       </div>
