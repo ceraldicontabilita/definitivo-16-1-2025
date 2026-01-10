@@ -347,6 +347,20 @@ async def ping():
     return {"pong": True}
 
 
+@app.post("/api/haccp/esegui-scheduler")
+async def esegui_scheduler_haccp():
+    """
+    Esegue manualmente la routine HACCP giornaliera.
+    Utile per testare lo scheduler o per forzare l'auto-compilazione.
+    """
+    from app.scheduler import daily_haccp_routine
+    try:
+        await daily_haccp_routine()
+        return {"success": True, "message": "Routine HACCP eseguita con successo"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 @app.get("/api/system/lock-status")
 async def system_lock_status():
     """
