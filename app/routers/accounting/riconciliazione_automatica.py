@@ -637,7 +637,7 @@ async def correggi_metodi_pagamento() -> Dict[str, Any]:
     now = datetime.utcnow().isoformat()
     
     results = {
-        "bonifico_errati": 0,
+        "bancario_errati": 0,
         "assegno_errati": 0,
         "metodo_fornitore_applicato": 0,
         "metodo_rimosso": 0,
