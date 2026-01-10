@@ -45,20 +45,31 @@ All'importazione di una fattura XML tramite `/api/ciclo-passivo/import-integrato
 | `/{id}` | GET/PUT/DELETE | Dettaglio/Aggiorna/Elimina |
 | `/statistiche/{anno}` | GET | Statistiche annuali |
 
-### Frontend JSX (Stili Inline)
+### Frontend JSX (Stili Inline) - Tutte le pagine HACCP
 - `/app/frontend/src/pages/HACCPNonConformita.jsx` - Registro non conformità
 - `/app/frontend/src/pages/RicettarioDinamico.jsx` - Ricettario con tracciabilità XML
+- `/app/frontend/src/pages/HACCPTemperature.jsx` - Monitoraggio Frigoriferi e Congelatori
+- `/app/frontend/src/pages/HACCPSanificazione.jsx` - Registro Sanificazione
 
-### Route Frontend
+### Route Frontend HACCP
 - `/haccp-v2/non-conformita` - Registro Non Conformità
 - `/ricettario-dinamico` o `/haccp-v2/ricettario` - Ricettario Dinamico
+- `/haccp-v2/temperature` - Monitoraggio Temperature (Frigo/Congelatori)
+- `/haccp-v2/sanificazione` - Registro Sanificazione
 
-### Menu Sidebar (App.jsx)
-Menu HACCP espandibile con:
-- Dashboard HACCP
-- Ricettario Dinamico
-- Non Conformità
-- Registro Lotti
+### Menu Sidebar HACCP (App.jsx)
+Menu espandibile con 6 voci:
+- 📊 Dashboard HACCP
+- 📖 Ricettario Dinamico
+- 🌡️ Temperature
+- 🧹 Sanificazione
+- ⚠️ Non Conformità
+- 📋 Registro Lotti
+
+### Test Report (iteration_47.json)
+- Backend: 17/17 test passati (100%)
+- Frontend: 4/4 pagine verificate (100%)
+- Test file: `/app/tests/test_haccp_v2_iteration47.py`
 
 ---
 
