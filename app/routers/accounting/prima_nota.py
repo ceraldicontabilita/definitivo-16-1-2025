@@ -192,57 +192,6 @@ async def create_prima_nota_cassa(
     return {"message": "Movimento cassa creato", "id": movimento["id"]}
 
 
-@router.delete("/cassa/{movimento_id}")
-async def delete_movimento_cassa(
-    movimento_id: str,
-    force: bool = Query(False, description="Forza eliminazione")
-) -> Dict[str, Any]:
-    """
-    Elimina un singolo movimento cassa con validazione.
-    
-    **Regole:**
-    - Non può eliminare movimenti riconciliati
-    - Movimenti confermati richiedono force=true
-    """
-    from app.services.business_rules import BusinessRules, EntityStatus
-    
-    db = Database.get_db()
-    
-    # Recupera movimento
-    mov = await db[COLLECTION_PRIMA_NOTA_CASSA].find_one({"id": movimento_id})
-    if not mov:
-        raise HTTPException(status_code=404, detail="Movimento non trovato")
-    
-    # Valida eliminazione
-    validation = BusinessRules.can_delete_movement(mov)
-    
-    if not validation.is_valid:
-        raise HTTPException(
-            status_code=400,
-            detail={"message": "Eliminazione non consentita", "errors": validation.errors}
-        )
-    
-    if validation.warnings and not force:
-        return {
-            "status": "warning",
-            "message": "Eliminazione richiede conferma",
-            "warnings": validation.warnings,
-            "require_force": True
-        }
-    
-    # Soft-delete
-    await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
-        {"id": movimento_id},
-        {"$set": {
-            "entity_status": EntityStatus.DELETED.value,
-            "status": "deleted",
-            "deleted_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
-    
-    return {"success": True, "message": "Movimento eliminato (archiviato)"}
-
-
 # ============== BULK DELETE ENDPOINTS (PRIMA DEI PARAMETRICI) ==============
 # IMPORTANTE: Questi endpoint DEVONO essere definiti PRIMA di quelli con {movimento_id}
 # altrimenti FastAPI interpreta "delete-all" come un movimento_id
