@@ -363,8 +363,8 @@ export default function RicercaProdotti() {
       )}
 
       {/* Statistiche */}
-      <div className="card" style={{ background: "#f5f5f5" }}>
-        <div className="grid">
+      <div style={{ ...cardStyle, background: "#f8fafc" }}>
+        <div style={gridStyle}>
           <div>
             <strong>Prodotti nel catalogo</strong>
             <div style={{ fontSize: 24, fontWeight: "bold", color: "#1565c0" }}>{products.length}</div>
