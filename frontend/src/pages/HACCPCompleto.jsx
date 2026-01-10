@@ -150,9 +150,9 @@ const DisinfestazioneView = ({ annoGlobale }) => {
   );
 };
 
-const SanificazioneView = () => {
+const SanificazioneView = ({ annoGlobale }) => {
   const [mese, setMese] = useState(new Date().getMonth() + 1);
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const anno = annoGlobale; // Usa anno globale
   const [scheda, setScheda] = useState(null);
   const [loading, setLoading] = useState(true);
   const numGiorni = new Date(anno, mese, 0).getDate();
@@ -170,11 +170,10 @@ const SanificazioneView = () => {
 
   const cambiaMese = (delta) => {
     let nuovoMese = mese + delta;
-    let nuovoAnno = anno;
-    if (nuovoMese < 1) { nuovoMese = 12; nuovoAnno--; }
-    if (nuovoMese > 12) { nuovoMese = 1; nuovoAnno++; }
+    // Anno è globale - limita ai mesi dell'anno corrente
+    if (nuovoMese < 1) nuovoMese = 1;
+    if (nuovoMese > 12) nuovoMese = 12;
     setMese(nuovoMese);
-    setAnno(nuovoAnno);
   };
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>;
@@ -222,9 +221,9 @@ const SanificazioneView = () => {
   );
 };
 
-const TemperatureNegativeView = () => {
+const TemperatureNegativeView = ({ annoGlobale }) => {
   const [mese, setMese] = useState(new Date().getMonth() + 1);
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const anno = annoGlobale; // Usa anno globale
   const [schede, setSchede] = useState([]);
   const [selectedCongelatore, setSelectedCongelatore] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -243,11 +242,10 @@ const TemperatureNegativeView = () => {
 
   const cambiaMese = (delta) => {
     let nuovoMese = mese + delta;
-    let nuovoAnno = anno;
-    if (nuovoMese < 1) { nuovoMese = 12; nuovoAnno--; }
-    if (nuovoMese > 12) { nuovoMese = 1; nuovoAnno++; }
+    // Anno è globale - limita ai mesi dell'anno corrente
+    if (nuovoMese < 1) nuovoMese = 1;
+    if (nuovoMese > 12) nuovoMese = 12;
     setMese(nuovoMese);
-    setAnno(nuovoAnno);
   };
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>;
@@ -321,9 +319,9 @@ const TemperatureNegativeView = () => {
   );
 };
 
-const TemperaturePositiveView = () => {
+const TemperaturePositiveView = ({ annoGlobale }) => {
   const [mese, setMese] = useState(new Date().getMonth() + 1);
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const anno = annoGlobale; // Usa anno globale
   const [schede, setSchede] = useState([]);
   const [selectedFrigorifero, setSelectedFrigorifero] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -342,11 +340,10 @@ const TemperaturePositiveView = () => {
 
   const cambiaMese = (delta) => {
     let nuovoMese = mese + delta;
-    let nuovoAnno = anno;
-    if (nuovoMese < 1) { nuovoMese = 12; nuovoAnno--; }
-    if (nuovoMese > 12) { nuovoMese = 1; nuovoAnno++; }
+    // Anno è globale - limita ai mesi dell'anno corrente
+    if (nuovoMese < 1) nuovoMese = 1;
+    if (nuovoMese > 12) nuovoMese = 12;
     setMese(nuovoMese);
-    setAnno(nuovoAnno);
   };
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>;
