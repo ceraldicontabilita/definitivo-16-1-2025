@@ -162,6 +162,25 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
     
     results["movimenti_analizzati"] = len(movimenti_ec)
     
+    # Importi tipici commissioni bancarie da ignorare
+    IMPORTI_COMMISSIONI = [0.75, 1.00, 1.10, 1.50, 2.00, 2.50, 3.00]
+    
+    def is_commissione(desc: str, imp: float) -> bool:
+        """Verifica se è una commissione bancaria da ignorare."""
+        desc_upper = (desc or "").upper()
+        imp_abs = abs(imp)
+        
+        # Keywords commissioni
+        if any(kw in desc_upper for kw in ['COMMISSIONI', 'COMM.', 'SPESE', 'CANONE', 'BOLLO', 'IMPOSTA']):
+            return True
+        
+        # Importi tipici commissioni
+        if any(abs(imp_abs - c) < 0.01 for c in IMPORTI_COMMISSIONI):
+            if imp_abs <= 3.00:  # Solo se importo molto basso
+                return True
+        
+        return False
+    
     for mov in movimenti_ec:
         try:
             mov_id = mov.get("id")
@@ -171,6 +190,20 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
             tipo = mov.get("tipo", "")  # "entrata" o "uscita"
             
             if importo == 0:
+                continue
+            
+            # Ignora automaticamente le commissioni bancarie
+            if is_commissione(descrizione, importo):
+                # Marca come "ignorato" silenziosamente
+                await db[COLLECTION_ESTRATTO_CONTO].update_one(
+                    {"id": mov_id},
+                    {"$set": {
+                        "riconciliato": True,
+                        "tipo_riconciliazione": "commissione_ignorata",
+                        "updated_at": now
+                    }}
+                )
+                results["non_trovati"] += 1
                 continue
             
             match_found = False
