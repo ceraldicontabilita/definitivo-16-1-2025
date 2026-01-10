@@ -1472,17 +1472,19 @@ async def get_dati_etichetta(lotto_id: str):
         raise HTTPException(status_code=404, detail="Lotto non trovato")
     
     # URL per QR code (punta alla fattura nell'ERP)
-    fattura_url = f"/fatture-ricevute?fattura={lotto.get('fattura_id', '')}"
+    # Supporta sia fattura_id che fattura_riferimento
+    fattura_ref = lotto.get('fattura_id') or lotto.get('fattura_riferimento', '')
+    fattura_url = f"/fatture-ricevute?fattura={fattura_ref}"
     
     return {
         "lotto": lotto,
         "etichetta": {
             "nome_prodotto": lotto.get("prodotto", ""),
-            "lotto_interno": lotto.get("lotto_interno", ""),
+            "lotto_interno": lotto.get("lotto_interno") or lotto.get("numero_lotto", ""),
             "lotto_fornitore": lotto.get("lotto_fornitore") or "N/D",
             "fornitore": lotto.get("fornitore", ""),
             "data_scadenza": lotto.get("data_scadenza", ""),
-            "fattura_numero": lotto.get("fattura_numero", ""),
+            "fattura_numero": lotto.get("fattura_numero") or lotto.get("fattura_riferimento", ""),
             "fattura_data": lotto.get("fattura_data", ""),
             "quantita": f"{lotto.get('quantita_iniziale', 0)} {lotto.get('unita_misura', 'pz')}",
             "qr_data": fattura_url
