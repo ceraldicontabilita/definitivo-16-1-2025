@@ -43,6 +43,61 @@ def is_commissione(desc: str, imp: float) -> bool:
     return False
 
 
+def match_fornitore_descrizione(fornitore: str, descrizione: str) -> bool:
+    """
+    Verifica se il nome fornitore è presente nella descrizione dell'estratto conto.
+    Cerca parole chiave del nome fornitore nella descrizione.
+    """
+    if not fornitore or not descrizione:
+        return False
+    
+    desc_upper = descrizione.upper()
+    fornitore_upper = fornitore.upper()
+    
+    # Rimuovi forme giuridiche comuni per il confronto
+    forme_giuridiche = ['S.R.L.', 'SRL', 'S.P.A.', 'SPA', 'S.A.S.', 'SAS', 'S.N.C.', 'SNC', 'DI', 'DI.']
+    fornitore_clean = fornitore_upper
+    for fg in forme_giuridiche:
+        fornitore_clean = fornitore_clean.replace(fg, '')
+    
+    # Estrai parole significative (>3 caratteri)
+    parole_fornitore = [p.strip() for p in fornitore_clean.split() if len(p.strip()) > 3]
+    
+    if not parole_fornitore:
+        return False
+    
+    # Conta quante parole del fornitore sono nella descrizione
+    matches = sum(1 for p in parole_fornitore if p in desc_upper)
+    
+    # Match se almeno il 50% delle parole o almeno 1 parola significativa
+    return matches >= max(1, len(parole_fornitore) // 2)
+
+
+def match_numero_fattura_descrizione(numero_fattura: str, descrizione: str) -> bool:
+    """
+    Verifica se il numero fattura è presente nella descrizione dell'estratto conto.
+    """
+    if not numero_fattura or not descrizione:
+        return False
+    
+    desc_upper = descrizione.upper()
+    num_clean = numero_fattura.strip().upper()
+    
+    # Rimuovi prefissi comuni (FT, FAT, etc.)
+    num_clean = re.sub(r'^(FT|FAT|FATT|INV|N\.?|NR\.?)\s*', '', num_clean)
+    
+    # Cerca il numero nella descrizione
+    if num_clean in desc_upper:
+        return True
+    
+    # Cerca anche senza zeri iniziali
+    num_no_zeros = num_clean.lstrip('0')
+    if num_no_zeros and num_no_zeros in desc_upper:
+        return True
+    
+    return False
+
+
 def extract_invoice_number(descrizione: str) -> Optional[str]:
     """Estrae numero fattura dalla descrizione estratto conto."""
     if not descrizione:
