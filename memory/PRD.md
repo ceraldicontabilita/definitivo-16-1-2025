@@ -250,12 +250,13 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 - [x] ~~Riconciliazione automatica estratto conto~~ ✅ IMPLEMENTATO
 - [x] ~~Bonifica fatture con metodo pagamento errato~~ ✅ COMPLETATO (1319 fatture corrette)
 - [x] ~~Fix backend modulo HACCP V2~~ ✅ COMPLETATO (12 test passati)
+- [x] ~~Implementare UI sezioni HACCP~~ ✅ COMPLETATO (6 sezioni)
 
 ### P1 - High
-- [~] Uniformità stilistica UI (completata per pagine critiche: IVA, Liquidazione IVA, Corrispettivi, Fatture, Assegni, HACCP)
-- [ ] Testare logica di business HACCP (creazione ricette, produzione lotti, modale "Genera Lotto")
+- [x] ~~Uniformità stilistica UI~~ ✅ completata per pagine critiche
+- [x] ~~Testare logica di business HACCP~~ ✅ Genera Lotto funzionante
 - [ ] Verificare integrazione Fatture XML → HACCP (tracciabilità automatica)
-- [ ] Testare Stampa Etichette Lotto
+- [ ] Testare Stampa Etichette Lotto (funzionalità stampa browser)
 - [ ] Re-importazione dati POS e Versamenti per Prima Nota Cassa
 - [ ] Migliorare intelligenza riconciliazione automatica
 
