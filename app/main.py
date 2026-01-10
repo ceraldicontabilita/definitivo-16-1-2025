@@ -116,6 +116,9 @@ from app.routers.invoices import (
     fatture_ricevute
 )
 
+# --- Ciclo Passivo Integrato ---
+from app.routers import ciclo_passivo_integrato
+
 # --- Employees Module ---
 from app.routers.employees import (
     dipendenti, employees_payroll, employee_contracts, buste_paga, shifts, staff
@@ -232,6 +235,9 @@ app.include_router(invoices_export.router, prefix="/api/invoices", tags=["Invoic
 app.include_router(fatture_upload.router, prefix="/api/fatture", tags=["Fatture Upload"])
 app.include_router(fatture_ricevute.router, prefix="/api/fatture-ricevute", tags=["Fatture Ricevute"])
 app.include_router(corrispettivi.router, prefix="/api/corrispettivi", tags=["Corrispettivi"])
+
+# --- Ciclo Passivo Integrato (XML → Magazzino → Prima Nota → Scadenziario → Riconciliazione) ---
+app.include_router(ciclo_passivo_integrato.router, prefix="/api/ciclo-passivo", tags=["Ciclo Passivo Integrato"])
 
 # --- Employees Module ---
 app.include_router(dipendenti.router, prefix="/api/dipendenti", tags=["Dipendenti"])
