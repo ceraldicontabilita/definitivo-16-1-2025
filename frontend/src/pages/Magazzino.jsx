@@ -351,7 +351,7 @@ export default function Magazzino() {
                     <tr key={p.id || p.product_id || i} style={{ borderBottom: "1px solid #eee" }}>
                       <td style={{ padding: 12 }}>
                         <div style={{ fontWeight: 500 }}>{p.nome || p.description || p.name || '-'}</div>
-                        {p.unita_misura && <div className="small" style={{ color: '#64748b' }}>{p.unita_misura}</div>}
+                        {p.unita_misura && <span style={{ fontSize: 12, color: '#6b7280' }}>{p.unita_misura}</span>}
                       </td>
                       <td style={{ padding: 12 }}>
                         <span style={{ 
