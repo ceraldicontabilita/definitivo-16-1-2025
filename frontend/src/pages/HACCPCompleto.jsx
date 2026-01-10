@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
+import { useAnnoGlobale } from '../contexts/AnnoContext';
 
 const MESI_IT = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
                 "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
@@ -15,9 +16,9 @@ const inputStyle = { padding: '10px 12px', borderRadius: 8, border: '2px solid #
 
 // ==================== HACCP VIEWS ====================
 
-const DisinfestazioneView = () => {
+const DisinfestazioneView = ({ annoGlobale }) => {
   const [mese, setMese] = useState(new Date().getMonth() + 1);
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const anno = annoGlobale; // Usa anno globale
   const [scheda, setScheda] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,11 +35,10 @@ const DisinfestazioneView = () => {
 
   const cambiaMese = (delta) => {
     let nuovoMese = mese + delta;
-    let nuovoAnno = anno;
-    if (nuovoMese < 1) { nuovoMese = 12; nuovoAnno--; }
-    if (nuovoMese > 12) { nuovoMese = 1; nuovoAnno++; }
+    // Anno è globale - limita ai mesi dell'anno corrente
+    if (nuovoMese < 1) nuovoMese = 1;
+    if (nuovoMese > 12) nuovoMese = 12;
     setMese(nuovoMese);
-    setAnno(nuovoAnno);
   };
 
   const getMonitoraggioMese = (apparecchio) => scheda?.monitoraggio_apparecchi?.[apparecchio]?.[String(mese)];
