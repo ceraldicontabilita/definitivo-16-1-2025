@@ -243,6 +243,55 @@ async def delete_movimento_cassa(
     return {"success": True, "message": "Movimento eliminato (archiviato)"}
 
 
+# ============== BULK DELETE ENDPOINTS (PRIMA DEI PARAMETRICI) ==============
+# IMPORTANTE: Questi endpoint DEVONO essere definiti PRIMA di quelli con {movimento_id}
+# altrimenti FastAPI interpreta "delete-all" come un movimento_id
+
+@router.delete("/cassa/delete-all")
+async def delete_all_prima_nota_cassa() -> Dict[str, Any]:
+    """Elimina TUTTI i movimenti dalla prima nota cassa."""
+    db = Database.get_db()
+    result = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({})
+    return {"message": f"Eliminati {result.deleted_count} movimenti dalla cassa"}
+
+@router.delete("/banca/delete-all")
+async def delete_all_prima_nota_banca() -> Dict[str, Any]:
+    """Elimina TUTTI i movimenti dalla prima nota banca."""
+    db = Database.get_db()
+    result = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({})
+    return {"message": f"Eliminati {result.deleted_count} movimenti dalla banca"}
+
+@router.delete("/banca/delete-versamenti")
+async def delete_all_versamenti_banca() -> Dict[str, Any]:
+    """Elimina tutti i versamenti dalla prima nota banca."""
+    db = Database.get_db()
+    result = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({"categoria": "Versamento"})
+    return {"message": f"Eliminati {result.deleted_count} versamenti dalla banca", "deleted_count": result.deleted_count}
+
+@router.delete("/cassa/delete-versamenti")
+async def delete_all_versamenti_cassa() -> Dict[str, Any]:
+    """Elimina tutti i versamenti dalla prima nota cassa."""
+    db = Database.get_db()
+    result = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({"categoria": "Versamento"})
+    return {"message": f"Eliminati {result.deleted_count} versamenti dalla cassa", "deleted_count": result.deleted_count}
+
+@router.delete("/cassa/delete-by-source/{source}")
+async def delete_cassa_by_source(source: str) -> Dict[str, Any]:
+    """Elimina movimenti cassa per source."""
+    db = Database.get_db()
+    result = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({"source": source})
+    return {"message": f"Eliminati {result.deleted_count} movimenti con source={source}"}
+
+@router.delete("/banca/delete-by-source/{source}")
+async def delete_banca_by_source(source: str) -> Dict[str, Any]:
+    """Elimina movimenti banca per source."""
+    db = Database.get_db()
+    result = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({"source": source})
+    return {"message": f"Eliminati {result.deleted_count} movimenti con source={source}"}
+
+
+# ============== ENDPOINT PARAMETRICO BANCA ==============
+
 @router.delete("/banca/{movimento_id}")
 async def delete_movimento_banca(
     movimento_id: str,
@@ -287,49 +336,6 @@ async def delete_movimento_banca(
     )
     
     return {"success": True, "message": "Movimento eliminato (archiviato)"}
-
-
-@router.delete("/cassa/delete-all")
-async def delete_all_prima_nota_cassa() -> Dict[str, Any]:
-    """Elimina TUTTI i movimenti dalla prima nota cassa."""
-    db = Database.get_db()
-    result = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({})
-    return {"message": f"Eliminati {result.deleted_count} movimenti dalla cassa"}
-
-@router.delete("/banca/delete-all")
-async def delete_all_prima_nota_banca() -> Dict[str, Any]:
-    """Elimina TUTTI i movimenti dalla prima nota banca."""
-    db = Database.get_db()
-    result = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({})
-    return {"message": f"Eliminati {result.deleted_count} movimenti dalla banca"}
-
-@router.delete("/banca/delete-versamenti")
-async def delete_all_versamenti_banca() -> Dict[str, Any]:
-    """Elimina tutti i versamenti dalla prima nota banca."""
-    db = Database.get_db()
-    result = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({"categoria": "Versamento"})
-    return {"message": f"Eliminati {result.deleted_count} versamenti dalla banca", "deleted_count": result.deleted_count}
-
-@router.delete("/cassa/delete-versamenti")
-async def delete_all_versamenti_cassa() -> Dict[str, Any]:
-    """Elimina tutti i versamenti dalla prima nota cassa."""
-    db = Database.get_db()
-    result = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({"categoria": "Versamento"})
-    return {"message": f"Eliminati {result.deleted_count} versamenti dalla cassa", "deleted_count": result.deleted_count}
-
-@router.delete("/cassa/delete-by-source/{source}")
-async def delete_cassa_by_source(source: str) -> Dict[str, Any]:
-    """Elimina movimenti cassa per source."""
-    db = Database.get_db()
-    result = await db[COLLECTION_PRIMA_NOTA_CASSA].delete_many({"source": source})
-    return {"message": f"Eliminati {result.deleted_count} movimenti con source={source}"}
-
-@router.delete("/banca/delete-by-source/{source}")
-async def delete_banca_by_source(source: str) -> Dict[str, Any]:
-    """Elimina movimenti banca per source."""
-    db = Database.get_db()
-    result = await db[COLLECTION_PRIMA_NOTA_BANCA].delete_many({"source": source})
-    return {"message": f"Eliminati {result.deleted_count} movimenti con source={source}"}
 
 
 @router.post("/import-batch")
