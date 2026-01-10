@@ -57,7 +57,7 @@ export default function Finanziaria() {
               <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: "#2e7d32" }}>
                 {formatEuro(summary?.total_income)}
               </div>
-              <div className="small" style={{ marginTop: 5 }}>
+              <div style={{ fontSize: 13, color: "#64748b",{{ marginTop: 5 }}>
                 Cassa: {formatEuro(summary?.cassa?.entrate)} | Banca: {formatEuro(summary?.banca?.entrate)}
               </div>
             </div>
@@ -66,7 +66,7 @@ export default function Finanziaria() {
               <div style={{ fontSize: 32, fontWeight: "bold" }} style={{ color: "#c62828" }}>
                 {formatEuro(summary?.total_expenses)}
               </div>
-              <div className="small" style={{ marginTop: 5, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 13, color: "#64748b",{{ marginTop: 5, lineHeight: 1.5 }}>
                 <div>🏪 Cassa: <strong>{formatEuro(summary?.cassa?.uscite)}</strong></div>
                 <div>🏦 Banca: {formatEuro(summary?.banca?.uscite)} <span style={{fontSize: 10, color: '#666'}}>(incl. salari e F24)</span></div>
               </div>
@@ -82,20 +82,20 @@ export default function Finanziaria() {
           {/* Sezione IVA - Corrispettivi vs Fatture */}
           <div style={{ background: "#f5f5f5", borderRadius: 12, padding: 20, marginBottom: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb" }}>
             <div style={{ fontSize: 24, fontWeight: "bold", color: "#1e293b", marginBottom: 12 }}>🧾 Riepilogo IVA {selectedYear}</div>
-            <div className="small" style={{ marginBottom: 15 }}>
+            <div style={{ fontSize: 13, color: "#64748b",{{ marginBottom: 15 }}>
               IVA estratta automaticamente da Corrispettivi XML (vendite) e Fatture XML (acquisti)
             </div>
             
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
               {/* IVA Debito (Corrispettivi) */}
               <div style={{ background: "#fff3e0", padding: 15, borderRadius: 8 }}>
-                <div className="small" style={{ fontWeight: "bold", color: "#e65100" }}>
+                <div style={{ fontSize: 13, color: "#64748b",{{ fontWeight: "bold", color: "#e65100" }}>
                   📤 IVA a DEBITO (Corrispettivi)
                 </div>
                 <div style={{ fontSize: 28, fontWeight: "bold", color: "#e65100", marginTop: 5 }}>
                   {formatEuro(summary?.vat_debit)}
                 </div>
-                <div className="small" style={{ marginTop: 8, color: "#666" }}>
+                <div style={{ fontSize: 13, color: "#64748b",{{ marginTop: 8, color: "#666" }}>
                   Da {summary?.corrispettivi?.count || 0} corrispettivi
                   <br />
                   Totale vendite: {formatEuro(summary?.corrispettivi?.totale)}
@@ -104,13 +104,13 @@ export default function Finanziaria() {
               
               {/* IVA Credito (Fatture) */}
               <div style={{ background: "#e8f5e9", padding: 15, borderRadius: 8 }}>
-                <div className="small" style={{ fontWeight: "bold", color: "#2e7d32" }}>
+                <div style={{ fontSize: 13, color: "#64748b",{{ fontWeight: "bold", color: "#2e7d32" }}>
                   📥 IVA a CREDITO (Fatture)
                 </div>
                 <div style={{ fontSize: 28, fontWeight: "bold", color: "#2e7d32", marginTop: 5 }}>
                   {formatEuro(summary?.vat_credit)}
                 </div>
-                <div className="small" style={{ marginTop: 8, color: "#666" }}>
+                <div style={{ fontSize: 13, color: "#64748b",{{ marginTop: 8, color: "#666" }}>
                   Da {summary?.fatture?.count || 0} fatture
                   <br />
                   Totale acquisti: {formatEuro(summary?.fatture?.totale)}
@@ -123,7 +123,7 @@ export default function Finanziaria() {
                 padding: 15, 
                 borderRadius: 8 
               }}>
-                <div className="small" style={{ fontWeight: "bold" }}>
+                <div style={{ fontSize: 13, color: "#64748b",{{ fontWeight: "bold" }}>
                   ⚖️ Saldo IVA
                 </div>
                 <div style={{ 
@@ -134,7 +134,7 @@ export default function Finanziaria() {
                 }}>
                   {formatEuro(summary?.vat_balance)}
                 </div>
-                <div className="small" style={{ marginTop: 8 }}>
+                <div style={{ fontSize: 13, color: "#64748b",{{ marginTop: 8 }}>
                   <span style={{ 
                     background: summary?.vat_balance > 0 ? "#c62828" : "#2e7d32",
                     color: "white",
