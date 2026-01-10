@@ -1,0 +1,77 @@
+{
+  "summary": "Iteration 42 - Prima Nota Versamenti Accounting Logic Fix Testing Complete. Backend: 14/14 tests passed (100%). Frontend: All features verified working. Fixed route ordering bug that prevented DELETE /api/prima-nota/cassa/delete-versamenti from working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_prima_nota_versamenti.py",
+    "/app/test_reports/pytest/pytest_iteration_42.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED: Route ordering bug in /app/app/routers/accounting/prima_nota.py - The parametric route @router.delete('/cassa/{movimento_id}') was defined BEFORE the specific routes like /cassa/delete-versamenti, causing FastAPI to match 'delete-versamenti' as a movimento_id",
+    "Versamenti are now correctly registered ONLY in prima_nota_cassa as tipo='uscita'",
+    "Prima Nota Banca does NOT contain versamenti (categoria='Versamento') - verified after cleanup",
+    "DELETE /api/prima-nota/banca/delete-versamenti endpoint works correctly",
+    "DELETE /api/prima-nota/cassa/delete-versamenti endpoint now works correctly after route fix",
+    "Document /app/memory/ragioneria_applicata.md exists and contains correct accounting principles"
+  ],
+  "updated_files": [
+    "/app/app/routers/accounting/prima_nota.py",
+    "/app/tests/test_prima_nota_versamenti.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {},
+  "seed_data_creation": "Created TEST_ITER42_ prefixed versamenti during testing (cleaned up automatically)",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Prima Nota versamenti accounting logic fully tested. Key fix: Route ordering in prima_nota.py - parametric routes must come AFTER specific routes. Test file: /app/tests/test_prima_nota_versamenti.py covers: versamenti CRUD, delete endpoints, automation stats, ragioneria document verification.",
+  "verified_features": {
+    "versamenti_only_in_cassa": {
+      "status": "WORKING",
+      "description": "Versamenti are registered ONLY in prima_nota_cassa as tipo='uscita'"
+    },
+    "banca_no_versamenti": {
+      "status": "WORKING",
+      "description": "Prima Nota Banca does NOT contain versamenti after cleanup"
+    },
+    "delete_versamenti_banca": {
+      "status": "WORKING",
+      "description": "DELETE /api/prima-nota/banca/delete-versamenti works correctly"
+    },
+    "delete_versamenti_cassa": {
+      "status": "WORKING",
+      "description": "DELETE /api/prima-nota/cassa/delete-versamenti works correctly (after route fix)"
+    },
+    "frontend_info_message": {
+      "status": "WORKING",
+      "description": "Prima Nota Banca shows informational message about riconciliazione con estratto conto"
+    },
+    "ragioneria_document": {
+      "status": "WORKING",
+      "description": "/app/memory/ragioneria_applicata.md exists with correct accounting principles"
+    }
+  },
+  "bug_fixed": {
+    "description": "Route ordering bug in prima_nota.py",
+    "root_cause": "FastAPI matches routes in order of definition. The parametric route @router.delete('/cassa/{movimento_id}') at line 195 was catching requests to /cassa/delete-versamenti before they could reach the specific endpoint at line 271",
+    "fix_applied": "Moved the parametric route @router.delete('/cassa/{movimento_id}') to AFTER all specific routes like /cassa/delete-all, /cassa/delete-versamenti, etc.",
+    "file_modified": "/app/app/routers/accounting/prima_nota.py"
+  },
+  "screenshots": [
+    ".screenshots/01_homepage.png",
+    ".screenshots/02_prima_nota_page.png",
+    ".screenshots/03_prima_nota_cassa.png",
+    ".screenshots/04_prima_nota_banca.png",
+    ".screenshots/05_prima_nota_final.png"
+  ]
+}
