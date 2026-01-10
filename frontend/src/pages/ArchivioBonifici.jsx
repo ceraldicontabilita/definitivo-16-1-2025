@@ -463,7 +463,7 @@ export default function ArchivioBonifici() {
           <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>⏳ Caricamento...</div>
         ) : transfers.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-            Nessun bonifico trovato. Carica dei PDF o ZIP per iniziare.
+            Nessun bonifico trovato. <a href="/import-export" style={{ color: '#3b82f6' }}>Vai a Import Dati</a> per caricare PDF o ZIP.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
