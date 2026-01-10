@@ -389,12 +389,15 @@ async def popola_lotti_da_fatture(anno: int = Query(default=2026)):
             
             await db["haccp_lotti"].insert_one(lotto)
             lotti_creati += 1
+            if lotto_estratto:
+                lotti_con_codice_estratto += 1
     
     return {
         "success": True,
         "anno": anno,
         "fatture_analizzate": len(fatture),
         "lotti_creati": lotti_creati,
+        "lotti_con_codice_estratto": lotti_con_codice_estratto,
         "prodotti_unici": len(prodotti_processati)
     }
 
