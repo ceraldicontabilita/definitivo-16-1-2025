@@ -429,7 +429,7 @@ export default function VerificaCoerenza() {
             <Card style={{ border: '2px solid #fecaca' }}>
               <CardHeader style={{ padding: '12px 16px', background: '#fef2f2' }}>
                 <CardTitle style={{ fontSize: 14, color: '#991b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTriangle style={{ height: 16, width: 16 }} />
                   Discrepanze Rilevate ({verificaCompleta.discrepanze.length})
                 </CardTitle>
               </CardHeader>
