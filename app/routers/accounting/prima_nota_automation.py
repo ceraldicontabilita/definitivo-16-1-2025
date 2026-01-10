@@ -1262,3 +1262,236 @@ async def import_corrispettivi(
         logger.error(f"Error importing corrispettivi: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+# ============== IMPORT CORRISPETTIVI XML ==============
+
+@router.post("/import-corrispettivi-xml")
+async def import_corrispettivi_xml(
+    file: UploadFile = File(..., description="File XML corrispettivi da RT")
+) -> Dict[str, Any]:
+    """
+    Importa corrispettivi da file XML del registratore telematico.
+    
+    Struttura XML:
+    - DataOraRilevazione: data/ora del corrispettivo
+    - DatiRT/Riepilogo: dettaglio per aliquota IVA (AliquotaIVA, Imposta, Ammontare)
+    - DatiRT/Totali: PagatoContanti, PagatoElettronico
+    
+    LORDO = PagatoContanti + PagatoElettronico
+    (viene salvato anche il dettaglio IVA per calcoli fiscali)
+    """
+    import xml.etree.ElementTree as ET
+    
+    if not file.filename.lower().endswith('.xml'):
+        raise HTTPException(status_code=400, detail="Solo file XML supportati")
+    
+    content = await file.read()
+    db = Database.get_db()
+    now = datetime.utcnow().isoformat()
+    
+    results = {
+        "imported": 0,
+        "skipped": 0,
+        "errors": [],
+        "corrispettivi": []
+    }
+    
+    try:
+        # Parse XML
+        root = ET.fromstring(content)
+        
+        # Trova namespace
+        ns = {}
+        for elem in root.iter():
+            if '}' in elem.tag:
+                ns_url = elem.tag.split('}')[0] + '}'
+                ns['n1'] = ns_url.replace('{', '').replace('}', '')
+                break
+        
+        # Estrai DataOraRilevazione
+        data_elem = root.find('.//{*}DataOraRilevazione')
+        if data_elem is None:
+            data_elem = root.find('.//DataOraRilevazione')
+        
+        if data_elem is None or not data_elem.text:
+            raise HTTPException(status_code=400, detail="DataOraRilevazione non trovata nell'XML")
+        
+        # Parse data (formato: 2025-01-03T21:50:57+01:00)
+        data_str = data_elem.text[:10]  # Prendi solo YYYY-MM-DD
+        data = data_str
+        
+        # Estrai Totali
+        totali_elem = root.find('.//{*}Totali')
+        if totali_elem is None:
+            totali_elem = root.find('.//Totali')
+        
+        pagato_contanti = 0.0
+        pagato_elettronico = 0.0
+        
+        if totali_elem is not None:
+            pc_elem = totali_elem.find('{*}PagatoContanti') or totali_elem.find('PagatoContanti')
+            pe_elem = totali_elem.find('{*}PagatoElettronico') or totali_elem.find('PagatoElettronico')
+            
+            if pc_elem is not None and pc_elem.text:
+                pagato_contanti = float(pc_elem.text)
+            if pe_elem is not None and pe_elem.text:
+                pagato_elettronico = float(pe_elem.text)
+        
+        # LORDO = somma pagamenti
+        totale_lordo = pagato_contanti + pagato_elettronico
+        
+        if totale_lordo <= 0:
+            results["skipped"] += 1
+            results["errors"].append({"error": f"Totale lordo = 0 per data {data}"})
+            return {
+                "success": False,
+                "message": "Nessun corrispettivo valido trovato",
+                **results
+            }
+        
+        # Estrai dettaglio IVA dai Riepilogo
+        dettaglio_iva = []
+        totale_imponibile = 0.0
+        totale_imposta = 0.0
+        
+        for riepilogo in root.findall('.//{*}Riepilogo') or root.findall('.//Riepilogo'):
+            iva_elem = riepilogo.find('{*}IVA') or riepilogo.find('IVA')
+            ammontare_elem = riepilogo.find('{*}Ammontare') or riepilogo.find('Ammontare')
+            
+            aliquota = 0.0
+            imposta = 0.0
+            ammontare = 0.0
+            
+            if iva_elem is not None:
+                aliq_elem = iva_elem.find('{*}AliquotaIVA') or iva_elem.find('AliquotaIVA')
+                imp_elem = iva_elem.find('{*}Imposta') or iva_elem.find('Imposta')
+                
+                if aliq_elem is not None and aliq_elem.text:
+                    aliquota = float(aliq_elem.text)
+                if imp_elem is not None and imp_elem.text:
+                    imposta = float(imp_elem.text)
+            
+            if ammontare_elem is not None and ammontare_elem.text:
+                ammontare = float(ammontare_elem.text)
+            
+            if ammontare > 0 or imposta > 0:
+                dettaglio_iva.append({
+                    "aliquota": aliquota,
+                    "imponibile": ammontare,
+                    "imposta": imposta
+                })
+                totale_imponibile += ammontare
+                totale_imposta += imposta
+        
+        # CONTROLLO DUPLICATI per data + importo
+        existing = await db[COLLECTION_PRIMA_NOTA_CASSA].find_one({
+            "data": data,
+            "importo": {"$gte": totale_lordo - 0.01, "$lte": totale_lordo + 0.01},
+            "categoria": "Corrispettivi"
+        })
+        
+        if existing:
+            results["skipped"] += 1
+            results["errors"].append({"error": f"Duplicato: corrispettivo del {data} importo €{totale_lordo}"})
+            return {
+                "success": False,
+                "message": f"Corrispettivo già presente per il {data}",
+                **results
+            }
+        
+        # Corrispettivi = ENTRATA in cassa (LORDO)
+        movimento = {
+            "id": str(uuid.uuid4()),
+            "data": data,
+            "tipo": "entrata",
+            "importo": totale_lordo,  # LORDO
+            "descrizione": f"Corrispettivo giornaliero del {data}",
+            "categoria": "Corrispettivi",
+            "source": "xml_import",
+            "pagato_contanti": pagato_contanti,
+            "pagato_elettronico": pagato_elettronico,
+            "imponibile": totale_imponibile,
+            "imposta": totale_imposta,
+            "dettaglio_iva": dettaglio_iva,
+            "filename": file.filename,
+            "created_at": now
+        }
+        
+        await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento)
+        
+        results["imported"] = 1
+        results["corrispettivi"].append({
+            "data": data,
+            "totale_lordo": totale_lordo,
+            "pagato_contanti": pagato_contanti,
+            "pagato_elettronico": pagato_elettronico,
+            "imponibile": totale_imponibile,
+            "imposta": totale_imposta,
+            "dettaglio_iva": dettaglio_iva
+        })
+        
+        return {
+            "success": True,
+            "message": f"Importato corrispettivo del {data}: €{totale_lordo:.2f}",
+            **results
+        }
+        
+    except ET.ParseError as e:
+        logger.error(f"XML Parse Error: {e}")
+        raise HTTPException(status_code=400, detail=f"Errore parsing XML: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error importing corrispettivi XML: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/import-corrispettivi-xml-multipli")
+async def import_corrispettivi_xml_multipli(
+    files: List[UploadFile] = File(..., description="File XML corrispettivi multipli")
+) -> Dict[str, Any]:
+    """Importa multipli file XML corrispettivi."""
+    results = {
+        "totale_file": len(files),
+        "importati": 0,
+        "duplicati": 0,
+        "errori": 0,
+        "dettagli": []
+    }
+    
+    for file in files:
+        try:
+            # Chiama l'import singolo
+            result = await import_corrispettivi_xml(file)
+            
+            if result.get("success"):
+                results["importati"] += 1
+            else:
+                results["duplicati"] += 1
+            
+            results["dettagli"].append({
+                "filename": file.filename,
+                "success": result.get("success"),
+                "message": result.get("message")
+            })
+            
+        except HTTPException as e:
+            results["errori"] += 1
+            results["dettagli"].append({
+                "filename": file.filename,
+                "success": False,
+                "error": e.detail
+            })
+        except Exception as e:
+            results["errori"] += 1
+            results["dettagli"].append({
+                "filename": file.filename,
+                "success": False,
+                "error": str(e)
+            })
+    
+    return {
+        "success": True,
+        "message": f"Importati {results['importati']}/{results['totale_file']} corrispettivi",
+        **results
+    }
+
