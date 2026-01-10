@@ -463,7 +463,7 @@ function TabButton({ active, onClick, icon, label, color, testId }) {
       }}
     >
       <span>{icon}</span>
-      <span className="tab-label">{label}</span>
+      <span style={{ marginLeft: 8 }}>{label}</span>
     </button>
   );
 }
