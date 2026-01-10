@@ -104,13 +104,13 @@ export default function Finanziaria() {
               
               {/* IVA Credito (Fatture) */}
               <div style={{ background: "#e8f5e9", padding: 15, borderRadius: 8 }}>
-                <div style={{ fontSize: 13, color: "#64748b", fontWeight: "bold", color: "#2e7d32" }}>
+                <div style={{ fontSize: 13, fontWeight: "bold", color: "#2e7d32" }}>
                   📥 IVA a CREDITO (Fatture)
                 </div>
                 <div style={{ fontSize: 28, fontWeight: "bold", color: "#2e7d32", marginTop: 5 }}>
                   {formatEuro(summary?.vat_credit)}
                 </div>
-                <div style={{ fontSize: 13, color: "#64748b", marginTop: 8, color: "#666" }}>
+                <div style={{ fontSize: 13, color: "#666", marginTop: 8 }}>
                   Da {summary?.fatture?.count || 0} fatture
                   <br />
                   Totale acquisti: {formatEuro(summary?.fatture?.totale)}
