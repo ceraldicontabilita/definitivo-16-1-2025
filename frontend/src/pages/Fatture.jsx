@@ -562,7 +562,7 @@ export default function Fatture() {
               <div>{selectedInvoice.fornitore?.denominazione || selectedInvoice.supplier_name}</div>
               <div style={{ fontSize: 13, color: '#6b7280' }}>P.IVA: {selectedInvoice.fornitore?.partita_iva || selectedInvoice.supplier_vat}</div>
               {selectedInvoice.fornitore?.indirizzo && (
-                <div className="small">
+                <div style={{ fontSize: 13, color: '#6b7280' }}>
                   {selectedInvoice.fornitore.indirizzo}, {selectedInvoice.fornitore.cap} {selectedInvoice.fornitore.comune} ({selectedInvoice.fornitore.provincia})
                 </div>
               )}
@@ -571,7 +571,7 @@ export default function Fatture() {
               <strong>Cliente</strong>
               <div>{selectedInvoice.cliente?.denominazione || "-"}</div>
               {selectedInvoice.cliente?.partita_iva && (
-                <div className="small">P.IVA: {selectedInvoice.cliente.partita_iva}</div>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>P.IVA: {selectedInvoice.cliente.partita_iva}</div>
               )}
             </div>
           </div>
