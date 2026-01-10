@@ -118,8 +118,8 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 ```
 
 ### Key Collections (MongoDB)
-- `prima_nota_cassa` - Movimenti cassa (Corrispettivi, POS, Versamenti)
-- `prima_nota_banca` - Movimenti banca (vuota)
+- `prima_nota_cassa` - Movimenti cassa (Corrispettivi, POS, Versamenti come uscita)
+- `prima_nota_banca` - Movimenti banca (Incassi clienti, Pagamenti fornitori)
 - `estratto_conto_movimenti` - Movimenti estratto conto
 - `invoices` - Fatture XML
 - `f24_models` - Modelli F24 con PDF (base64)
@@ -129,7 +129,16 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 
 ## Changelog
 
-### 2026-01-10
+### 2026-01-10 (Sessione 2)
+- ✅ **FIX LOGICA CONTABILE PRIMA NOTA**
+- ✅ Creato documento `/app/memory/ragioneria_applicata.md` con principi contabili
+- ✅ Versamenti ora registrati SOLO in prima_nota_cassa come tipo="uscita"
+- ✅ Eliminati 66 versamenti errati dalla Prima Nota Banca
+- ✅ Fix routing FastAPI: endpoint parametrici ora dopo quelli specifici
+- ✅ Aggiornati messaggi informativi nel frontend Prima Nota Banca
+- ✅ Test completi: Backend 14/14 (100%), Frontend verificato
+
+### 2026-01-10 (Sessione 1)
 - ✅ **CENTRALIZZAZIONE IMPORT COMPLETATA**
 - ✅ Tutte le 8 card con stile uniforme (3 pulsanti: Singolo, Multipli, ZIP Massivo)
 - ✅ Descrizioni uniformi: "[TIPO] singoli/multipli, ZIP, ZIP annidati. Duplicati ignorati automaticamente"
@@ -148,9 +157,10 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 ## Backlog
 
 ### P0 - Critical
-- [ ] Fix UX pagina /riconciliazione (bottoni percepiti come non funzionanti)
+- [x] ~~Fix logica contabile Prima Nota (versamenti solo in Cassa)~~ ✅ RISOLTO
 
 ### P1 - High
+- [ ] Fix UX pagina /riconciliazione (bottoni percepiti come non funzionanti)
 - [ ] Completare arricchimento dati fornitori (email/PEC)
 
 ### P2 - Medium
