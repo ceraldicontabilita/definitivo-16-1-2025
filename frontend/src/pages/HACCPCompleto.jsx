@@ -527,6 +527,7 @@ const ManualeHACCPView = () => {
 export default function HACCPCompleto() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { anno: annoGlobale } = useAnnoGlobale(); // Anno dal contesto globale
   
   const getTabFromPath = () => {
     const path = location.pathname;
