@@ -431,7 +431,7 @@ SCHEMA MOVIMENTO:
   "tipo": "entrata|uscita",
   "importo": 150.00,
   "descrizione": "Incasso corrispettivi",
-  "categoria": "Corrispettivi|Acquisti|Stipendi|Varie",
+  "categoria": "Corrispettivi|Fornitori|Stipendi|Varie",
   "metodo": "contanti|pos|assegno",
   "fattura_id": null,
   "fornitore": null,
@@ -442,17 +442,27 @@ SCHEMA MOVIMENTO:
   "created_at": "ISO timestamp"
 }
 
+⚠️ REGOLA FONDAMENTALE:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ENTRATE CASSA = CORRISPETTIVI (IMPONIBILE + IVA)                            │
+│                                                                             │
+│ Totale Entrata = Σ (imponibile_vendite + imposta_vendite)                   │
+│                = Σ corrispettivi.totale_lordo                               │
+│                                                                             │
+│ NON usare solo imponibile! Sempre LORDO (imponibile + IVA)                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
 CATEGORIE ENTRATA:
-- Corrispettivi (vendite giornaliere)
-- POS (incassi carte)
-- Versamenti (da banca)
+- Corrispettivi → IMPONIBILE + IVA (totale lordo incassato)
+- POS → incassi carte (poi vanno in banca)
+- Versamenti da banca → prelievi per cassa
 - Altre entrate
 
 CATEGORIE USCITA:
-- Acquisti merce
-- Stipendi (se pagati in contanti)
+- Fornitori → fatture pagate in contanti
+- Stipendi → se pagati in contanti
 - Spese varie
-- Versamenti (verso banca)
+- Versamenti verso banca
 ```
 
 ## 3.3 Prima Nota Banca
