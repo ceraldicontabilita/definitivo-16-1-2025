@@ -1019,28 +1019,28 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
                 onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? 'white' : '#f9fafb'}
                 data-testid={`movimento-row-${mov.id || idx}`}
               >
-                <td style={{ padding: 10, fontFamily: 'monospace', fontSize: 12 }}>{formatDate(mov.data)}</td>
-                <td style={{ padding: 10, textAlign: 'center' }}>
+                <td style={{ padding: '6px 8px', fontFamily: 'monospace', fontSize: 11 }}>{formatDate(mov.data)}</td>
+                <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                   <span style={{
-                    padding: '3px 8px',
-                    borderRadius: 12,
-                    fontSize: 10,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    fontSize: 9,
                     fontWeight: 'bold',
                     background: mov.tipo === 'entrata' ? '#dcfce7' : '#fee2e2',
                     color: mov.tipo === 'entrata' ? '#166534' : '#991b1b'
                   }}>
-                    {mov.tipo === 'entrata' ? '↑ DARE' : '↓ AVERE'}
+                    {mov.tipo === 'entrata' ? '↑' : '↓'}
                   </span>
                 </td>
-                <td style={{ padding: 10 }}>
-                  <span style={{ background: '#f3f4f6', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                <td style={{ padding: '6px 8px' }}>
+                  <span style={{ background: '#f3f4f6', padding: '2px 4px', borderRadius: 3, fontSize: 10 }}>
                     {mov.categoria || '-'}
                   </span>
                 </td>
-                <td style={{ padding: '8px 10px', maxWidth: 400, wordBreak: 'break-word', whiteSpace: 'pre-wrap', fontSize: 12, lineHeight: 1.3 }}>
+                <td style={{ padding: '6px 8px', maxWidth: 400, wordBreak: 'break-word', whiteSpace: 'pre-wrap', fontSize: 11, lineHeight: 1.3 }}>
                   {mov.descrizione || mov.descrizione_originale || '-'}
                 </td>
-                <td style={{ padding: '8px 10px', textAlign: 'right', color: '#166534', fontWeight: mov.tipo === 'entrata' ? 'bold' : 'normal' }}>
+                <td style={{ padding: '6px 8px', textAlign: 'right', color: '#166534', fontWeight: mov.tipo === 'entrata' ? 'bold' : 'normal', fontSize: 12 }}>
                   {mov.tipo === 'entrata' ? formatEuro(mov.importo) : '-'}
                 </td>
                 <td style={{ padding: '8px 10px', textAlign: 'right', color: '#991b1b', fontWeight: mov.tipo === 'uscita' ? 'bold' : 'normal' }}>
