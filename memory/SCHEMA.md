@@ -95,6 +95,8 @@ class Collections:
 - `anomalie_haccp` - Anomalie registrate
 - `lotti_produzione` - Tracciabilità lotti
 - `manuale_haccp` - Documenti manuale
+- `ricette` - Ricettario dinamico (158 ricette normalizzate a 1kg)
+- `settings_assets` - Logo e asset aziendali
 
 ### Contabilità
 - `piano_conti` - Piano dei conti
