@@ -418,7 +418,7 @@ export default function Documenti() {
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download style={{ height: 16, width: 16, marginRight: 8 }} />
                     Scarica da Email
                   </>
                 )}
