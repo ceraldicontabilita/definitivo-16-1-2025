@@ -785,29 +785,29 @@ function PrimaNotaDesktop() {
           <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span>🏦</span> Prima Nota Banca
+                <span>🏦</span> Prima Nota Banca - Estratto Conto
               </h1>
               <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: 14 }}>
-                Registro movimenti bancari • DARE: Incassi clienti (bonifici) • AVERE: Pagamenti fornitori (bonifici)
+                Visualizzazione movimenti dall'estratto conto bancario importato
               </p>
             </div>
           </div>
 
           {/* Summary Cards Banca */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
-            <SummaryCard title="Totale Entrate (DARE)" value={formatEuro(bancaData.totale_entrate)} color="#10b981" icon="📈" subtitle="Incassi clienti (bonifici)" />
-            <SummaryCard title="Totale Uscite (AVERE)" value={formatEuro(bancaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="Pagamenti fornitori" />
-            <SummaryCard title="Saldo Banca" value={formatEuro(bancaData.saldo)} color={bancaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
+            <SummaryCard title="Totale Entrate" value={formatEuro(bancaData.totale_entrate)} color="#10b981" icon="📈" subtitle="Accrediti sul conto" />
+            <SummaryCard title="Totale Uscite" value={formatEuro(bancaData.totale_uscite)} color="#ef4444" icon="📉" subtitle="Addebiti dal conto" />
+            <SummaryCard title="Saldo Periodo" value={formatEuro(bancaData.saldo)} color={bancaData.saldo >= 0 ? '#10b981' : '#ef4444'} icon="💰" highlight />
           </div>
 
           {/* Info Box */}
           <div style={{ background: '#eff6ff', border: '1px solid #3b82f6', borderRadius: 12, padding: 16, marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 20 }}>ℹ️</span>
-              <strong style={{ color: '#1e40af' }}>Informazioni</strong>
+              <strong style={{ color: '#1e40af' }}>Estratto Conto Bancario</strong>
             </div>
             <p style={{ margin: 0, fontSize: 13, color: '#1e40af' }}>
-              La Prima Nota Banca contiene: <strong>DARE</strong> (entrate) = incassi clienti via bonifico; <strong>AVERE</strong> (uscite) = pagamenti fornitori tramite bonifico/assegno. I versamenti da cassa andranno qui dopo la riconciliazione con l'estratto conto.
+              Questa sezione visualizza i movimenti importati dall'<strong>estratto conto bancario</strong>. Per importare nuovi movimenti, vai alla pagina <strong>Import/Export</strong> e carica il file CSV dell'estratto conto.
             </p>
           </div>
 
