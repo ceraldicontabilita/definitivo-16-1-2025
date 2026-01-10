@@ -163,18 +163,30 @@ def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
             if causale_el.text:
                 causali.append(causale_el.text)
         
-        # Estrai linee dettaglio
+        # Estrai linee dettaglio con estrazione intelligente lotto/scadenza
         linee = []
         for linea in find_all_elements(body, 'DettaglioLinee'):
+            descrizione = get_text(linea, 'Descrizione')
+            
+            # Estrai lotto fornitore dalla descrizione
+            lotto_fornitore = estrai_lotto_fornitore(descrizione)
+            
+            # Estrai data scadenza dalla descrizione
+            scadenza_prodotto = estrai_scadenza_prodotto(descrizione)
+            
             linea_data = {
                 "numero_linea": get_text(linea, 'NumeroLinea'),
-                "descrizione": get_text(linea, 'Descrizione'),
+                "descrizione": descrizione,
                 "quantita": get_text(linea, 'Quantita', '1'),
                 "unita_misura": get_text(linea, 'UnitaMisura'),
                 "prezzo_unitario": get_text(linea, 'PrezzoUnitario', '0'),
                 "prezzo_totale": get_text(linea, 'PrezzoTotale', '0'),
                 "aliquota_iva": get_text(linea, 'AliquotaIVA', '0'),
                 "natura": get_text(linea, 'Natura'),
+                # Dati estratti per tracciabilità HACCP
+                "lotto_fornitore": lotto_fornitore,
+                "scadenza_prodotto": scadenza_prodotto,
+                "lotto_estratto_automaticamente": lotto_fornitore is not None,
             }
             linee.append(linea_data)
         
