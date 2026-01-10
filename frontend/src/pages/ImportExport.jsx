@@ -377,25 +377,120 @@ export default function ImportExport() {
   };
 
   const handleImportPaghe = async () => {
-    const file = pagheFileRef.current?.files[0];
-    if (!file) {
-      showMessage("error", "Seleziona un file PDF buste paga");
+    const files = pagheFileRef.current?.files;
+    if (!files || files.length === 0) {
+      showMessage("error", "Seleziona file PDF o ZIP contenenti buste paga");
       return;
     }
     
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    
+    setUploadProgress({
+      active: true,
+      current: 0,
+      total: 0,
+      filename: "Preparazione...",
+      duplicates: 0,
+      imported: 0,
+      errors: []
+    });
+
     try {
-      const res = await api.post("/api/employees/paghe/upload-pdf", formData);
-      setImportResults(res.data);
-      showMessage("success", `Importate ${res.data.imported || 0} buste paga`);
+      // Collect all PDF files (from direct PDFs and extracted from ZIPs)
+      let allPdfFiles = [];
+      
+      for (const file of files) {
+        if (file.name.toLowerCase().endsWith('.zip')) {
+          const JSZip = (await import('jszip')).default;
+          const zip = await JSZip.loadAsync(file);
+          for (const [filename, zipEntry] of Object.entries(zip.files)) {
+            if (filename.toLowerCase().endsWith('.pdf') && !zipEntry.dir) {
+              const content = await zipEntry.async('blob');
+              allPdfFiles.push(new File([content], filename, { type: 'application/pdf' }));
+            }
+          }
+        } else if (file.name.toLowerCase().endsWith('.pdf')) {
+          allPdfFiles.push(file);
+        }
+      }
+
+      if (allPdfFiles.length === 0) {
+        showMessage("error", "Nessun file PDF trovato");
+        setUploadProgress(prev => ({ ...prev, active: false }));
+        setLoading(false);
+        return;
+      }
+
+      setUploadProgress(prev => ({
+        ...prev,
+        total: allPdfFiles.length,
+        filename: `Trovati ${allPdfFiles.length} PDF buste paga`
+      }));
+
+      let imported = 0;
+      let duplicates = 0;
+      let errors = [];
+
+      for (let i = 0; i < allPdfFiles.length; i++) {
+        const pdfFile = allPdfFiles[i];
+        
+        setUploadProgress(prev => ({
+          ...prev,
+          current: i + 1,
+          filename: pdfFile.name
+        }));
+
+        const formData = new FormData();
+        formData.append("file", pdfFile);
+
+        try {
+          const res = await api.post("/api/employees/paghe/upload-pdf", formData);
+          if (res.data.success !== false) {
+            imported++;
+          } else {
+            errors.push({ file: pdfFile.name, error: res.data.error || "Errore" });
+          }
+        } catch (e) {
+          const errorMsg = e.response?.data?.detail || e.message;
+          const statusCode = e.response?.status;
+          if (statusCode === 409 || errorMsg.toLowerCase().includes('duplicat') || errorMsg.toLowerCase().includes('già presente')) {
+            duplicates++;
+          } else {
+            errors.push({ file: pdfFile.name, error: errorMsg });
+          }
+        }
+
+        setUploadProgress(prev => ({
+          ...prev,
+          imported,
+          duplicates,
+          errors: [...errors]
+        }));
+
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      setImportResults({
+        type: "paghe",
+        total_files: allPdfFiles.length,
+        imported,
+        duplicates,
+        errors: errors.length
+      });
+
+      if (errors.length === 0) {
+        showMessage("success", `Importate ${imported} buste paga. ${duplicates} duplicati ignorati.`);
+      } else {
+        showMessage("error", `Importate ${imported} buste paga. ${duplicates} duplicati. ${errors.length} errori.`);
+      }
+
       pagheFileRef.current.value = "";
     } catch (e) {
-      showMessage("error", e.response?.data?.detail || "Errore import paghe");
+      showMessage("error", "Errore durante l'import: " + e.message);
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        setUploadProgress(prev => ({ ...prev, active: false }));
+      }, 2000);
     }
   };
 
