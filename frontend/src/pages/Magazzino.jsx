@@ -290,7 +290,8 @@ export default function Magazzino() {
       )}
 
       {/* Tabs */}
-      <div className="card" style={{ padding: 0 }}>
+      {/* Lista Prodotti */}
+      <div style={{ ...cardStyle, padding: 0 }}>
         <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0' }}>
           <button
             onClick={() => setActiveTab('catalogo')}
