@@ -242,6 +242,9 @@ export default function Admin() {
           <TabsTrigger value="system" style={{ padding: '10px 16px', borderRadius: 8 }}>
             <Database style={{ width: 16, height: 16, marginRight: 8 }} /> Sistema
           </TabsTrigger>
+          <TabsTrigger value="sync" style={{ padding: '10px 16px', borderRadius: 8 }}>
+            <RefreshCw style={{ width: 16, height: 16, marginRight: 8 }} /> Sincronizzazione
+          </TabsTrigger>
           <TabsTrigger value="export" style={{ padding: '10px 16px', borderRadius: 8 }}>
             <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Esportazioni
           </TabsTrigger>
