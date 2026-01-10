@@ -76,39 +76,60 @@ export default function PrimaNotaCassa() {
     }
   }
 
-  return (
-    <>
-      <div className="card">
-        <div className="h1">Prima Nota Cassa</div>
-        <div className="row">
-          <button className="primary" onClick={() => setShowForm(!showForm)}>+ Nuovo Movimento</button>
-          <button onClick={loadMovements}>🔄 Aggiorna</button>
-        </div>
-        {err && <div className="small" style={{ color: "#c00", marginTop: 10 }}>{err}</div>}
-      </div>
+  const cardStyle = { background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', marginBottom: 20 };
+  const btnPrimary = { padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: 14 };
+  const btnSecondary = { padding: '10px 20px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: '600', fontSize: 14 };
+  const inputStyle = { padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14 };
 
-      <div className="grid">
-        <div className="card" style={{ background: balance >= 0 ? "#e8f5e9" : "#ffebee" }}>
-          <div className="small">Saldo Cassa</div>
-          <div className="kpi" style={{ color: balance >= 0 ? "#2e7d32" : "#c62828" }}>
+  return (
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 20,
+        padding: '15px 20px',
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
+        borderRadius: 12,
+        color: 'white'
+      }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 'bold' }}>💵 Prima Nota Cassa</h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, opacity: 0.9 }}>Gestione movimenti di cassa</p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={btnPrimary} onClick={() => setShowForm(!showForm)}>➕ Nuovo Movimento</button>
+          <button style={btnSecondary} onClick={loadMovements}>🔄 Aggiorna</button>
+        </div>
+      </div>
+      
+      {err && <div style={{ padding: 16, background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 20 }}>❌ {err}</div>}
+
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 20 }}>
+        <div style={{ ...cardStyle, background: balance >= 0 ? "#dcfce7" : "#fee2e2", textAlign: 'center', marginBottom: 0 }}>
+          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Saldo Cassa</div>
+          <div style={{ fontSize: 32, fontWeight: 'bold', color: balance >= 0 ? "#16a34a" : "#dc2626" }}>
             {formatEuro(balance)}
           </div>
         </div>
-        <div className="card">
-          <div className="small">Movimenti Totali</div>
-          <div className="kpi">{movements.length}</div>
+        <div style={{ ...cardStyle, textAlign: 'center', marginBottom: 0 }}>
+          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>Movimenti Totali</div>
+          <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e3a5f' }}>{movements.length}</div>
         </div>
       </div>
 
+      {/* Form Nuovo Movimento */}
       {showForm && (
-        <div className="card">
-          <div className="h1">Nuovo Movimento Cassa</div>
+        <div style={cardStyle}>
+          <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>➕ Nuovo Movimento Cassa</h2>
           <form onSubmit={handleCreateMovement}>
-            <div className="row" style={{ marginBottom: 10 }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
               <select
                 value={newMov.type}
                 onChange={(e) => setNewMov({ ...newMov, type: e.target.value })}
-                style={{ minWidth: 120 }}
+                style={{ ...inputStyle, minWidth: 120, background: 'white' }}
               >
                 <option value="entrata">Entrata</option>
                 <option value="uscita">Uscita</option>
@@ -120,44 +141,49 @@ export default function PrimaNotaCassa() {
                 value={newMov.amount}
                 onChange={(e) => setNewMov({ ...newMov, amount: e.target.value })}
                 required
+                style={inputStyle}
               />
               <input
                 placeholder="Descrizione"
                 value={newMov.description}
                 onChange={(e) => setNewMov({ ...newMov, description: e.target.value })}
                 required
+                style={{ ...inputStyle, flex: 1, minWidth: 200 }}
               />
               <input
                 placeholder="Categoria"
                 value={newMov.category}
                 onChange={(e) => setNewMov({ ...newMov, category: e.target.value })}
+                style={inputStyle}
               />
             </div>
-            <div className="row">
-              <button type="submit" className="primary">Registra</button>
-              <button type="button" onClick={() => setShowForm(false)}>Annulla</button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="submit" style={btnPrimary}>✅ Registra</button>
+              <button type="button" style={btnSecondary} onClick={() => setShowForm(false)}>Annulla</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="card">
-        <div className="h1">Movimenti Cassa</div>
+      {/* Lista Movimenti */}
+      <div style={cardStyle}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: 18, fontWeight: 'bold', color: '#1e3a5f' }}>📋 Movimenti Cassa</h2>
         {loading ? (
-          <div className="small">Caricamento...</div>
+          <div style={{ fontSize: 14, color: '#6b7280', padding: 20 }}>⏳ Caricamento...</div>
         ) : movements.length === 0 ? (
-          <div className="small">Nessun movimento registrato.</div>
+          <div style={{ fontSize: 14, color: '#6b7280', padding: 20 }}>Nessun movimento registrato.</div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #ddd", textAlign: "left" }}>
-                <th style={{ padding: 8 }}>Data</th>
-                <th style={{ padding: 8 }}>Tipo</th>
-                <th style={{ padding: 8 }}>Importo</th>
-                <th style={{ padding: 8 }}>Descrizione</th>
-                <th style={{ padding: 8 }}>Categoria</th>
-                <th style={{ padding: 8 }}>Allegato</th>
-              </tr>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e5e7eb", background: '#f9fafb' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Data</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Tipo</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600' }}>Importo</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Descrizione</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }}>Categoria</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: '600' }}>Allegato</th>
+                </tr>
             </thead>
             <tbody>
               {movements.map((m, i) => (
