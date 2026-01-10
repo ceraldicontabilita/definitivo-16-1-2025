@@ -365,13 +365,27 @@ export default function ArchivioFatture() {
                       )}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      <button
-                        onClick={() => navigate(`/fatture-ricevute/${f.id}`)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
-                        title="Visualizza dettaglio"
-                      >
-                        👁️
-                      </button>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                        <button
+                          onClick={() => navigate(`/fatture-ricevute/${f.id}`)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                          title="Visualizza dettaglio"
+                          data-testid={`btn-view-${f.id}`}
+                        >
+                          👁️
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedFatturaId(f.id);
+                            setShowEtichette(true);
+                          }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                          title="Stampa etichette lotto"
+                          data-testid={`btn-etichette-${f.id}`}
+                        >
+                          🏷️
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
