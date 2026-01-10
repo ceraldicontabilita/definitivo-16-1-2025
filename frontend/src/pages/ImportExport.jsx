@@ -122,8 +122,14 @@ export default function ImportExport() {
         const formData = new FormData();
         formData.append("file", currentFile);
 
+        // Determina l'endpoint corretto in base all'estensione del file
+        let actualEndpoint = endpoint;
+        if (type === 'corrispettivi' && currentFile.name.toLowerCase().endsWith('.xml')) {
+          actualEndpoint = '/api/prima-nota-auto/import-corrispettivi-xml';
+        }
+
         try {
-          const res = await api.post(endpoint, formData, {
+          const res = await api.post(actualEndpoint, formData, {
             headers: { "Content-Type": "multipart/form-data" }
           });
 
