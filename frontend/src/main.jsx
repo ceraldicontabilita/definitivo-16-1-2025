@@ -116,6 +116,7 @@ const DizionarioArticoli = lazy(() => import("./pages/DizionarioArticoli.jsx"));
 
 // HACCP
 const HACCP = lazy(() => import("./pages/HACCP.jsx"));
+const HACCPSection = lazy(() => import("./pages/HACCPSection.jsx"));
 const HACCPDashboard = lazy(() => import("./pages/HACCPDashboard.jsx"));
 const HACCPTemperatureFrigo = lazy(() => import("./pages/HACCPTemperatureFrigo.jsx"));
 const HACCPTemperaturaCongelatori = lazy(() => import("./pages/HACCPTemperaturaCongelatori.jsx"));
