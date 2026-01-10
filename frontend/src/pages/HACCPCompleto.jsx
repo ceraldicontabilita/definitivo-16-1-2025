@@ -130,7 +130,7 @@ const DisinfestazioneView = () => {
       {/* Monitoraggio Frigoriferi */}
       <Card>
         <div className="bg-orange-50 px-4 py-3 rounded-t-xl flex items-center gap-2 border-b border-orange-100">
-          <Refrigerator size={20} className="text-orange-600" />
+          <Thermometer size={20} className="text-orange-600" />
           <h3 className="font-semibold text-orange-800">Monitoraggio Frigoriferi - {MESI_IT[mese-1]} {anno}</h3>
         </div>
         <div className="p-4">
