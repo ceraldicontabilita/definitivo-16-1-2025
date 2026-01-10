@@ -92,15 +92,47 @@ def extract_invoice_number(descrizione: str) -> Optional[str]:
     if not descrizione:
         return None
     
+    desc_upper = descrizione.upper()
+    
     patterns = [
+        # Formato esplicito fattura
         r'(?:FAT(?:TURA)?|FT|FATT)[\s\.\-:]*N?[\s\.\-:]*(\d+[\/-]?\d*)',
         r'(?:SALDO|PAG(?:AMENTO)?)\s+(?:FAT(?:TURA)?|FT)\s*N?[\s\.\-:]*(\d+[\/-]?\d*)',
-        r'RIF\.?\s*(\d{4,}[\/-]?\d*)',
-        r'N\.?\s*(\d{4,}[\/-]?\d*)',
+        # Riferimento numerico
+        r'RIF\.?\s*[:\s]*(\d{3,}[\/-]?\d*)',
+        r'(?:N|NR|NUM)\.?\s*(\d{3,}[\/-]?\d*)',
+        # Formato MBV o simile (codice bonifico con numero)
+        r'MBV[A-Z0-9]+\s+.*?(\d{3,})',
+        # Numero alla fine dopo trattino o spazio
+        r'[\s\-](\d{4,})(?:\s|$)',
     ]
     
     for pattern in patterns:
-        match = re.search(pattern, descrizione.upper())
+        match = re.search(pattern, desc_upper)
+        if match:
+            num = match.group(1).strip()
+            # Evita di prendere date come numeri fattura
+            if len(num) <= 8 and not (len(num) == 8 and num.startswith('20')):
+                return num
+    
+    return None
+
+
+def extract_supplier_name(descrizione: str) -> Optional[str]:
+    """Estrae nome fornitore dalla descrizione estratto conto."""
+    if not descrizione:
+        return None
+    
+    desc_upper = descrizione.upper()
+    
+    # Pattern comuni per identificare il beneficiario
+    patterns = [
+        r'(?:BENEF(?:ICIARIO)?|A FAVORE DI|VERSO|PER)[\s:]+([A-Z][A-Z\s\.]+(?:S\.?R\.?L\.?|S\.?P\.?A\.?|S\.?A\.?S\.?|S\.?N\.?C\.?))',
+        r'([A-Z][A-Z\s]+(?:S\.?R\.?L\.?|S\.?P\.?A\.?|S\.?A\.?S\.?|S\.?N\.?C\.?))',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, desc_upper)
         if match:
             return match.group(1).strip()
     
