@@ -109,13 +109,38 @@ function PrimaNotaDesktop() {
         params.append('data_a', `${selectedYear}-${monthStr}-${daysInMonth}`);
       }
 
-      const [cassaRes, bancaRes] = await Promise.all([
+      // Parametri per estratto conto
+      const ecParams = new URLSearchParams();
+      ecParams.append('limit', '2000');
+      ecParams.append('anno', selectedYear.toString());
+      if (selectedMonth !== null) {
+        ecParams.append('mese', String(selectedMonth + 1));
+      }
+
+      const [cassaRes, estrattoContoRes] = await Promise.all([
         api.get(`/api/prima-nota/cassa?${params}`),
-        api.get(`/api/prima-nota/banca?${params}`)
+        api.get(`/api/estratto-conto-movimenti/movimenti?${ecParams}`)
       ]);
 
       setCassaData(cassaRes.data);
-      setBancaData(bancaRes.data);
+      
+      // Trasforma i dati dell'estratto conto nel formato della Prima Nota Banca
+      const ecData = estrattoContoRes.data;
+      const movimenti = (ecData.movimenti || []).map(m => ({
+        ...m,
+        tipo: m.tipo || (m.importo >= 0 ? 'entrata' : 'uscita'),
+        importo: Math.abs(m.importo || 0),
+        descrizione: m.descrizione || m.descrizione_originale || '',
+        categoria: m.categoria || 'Movimento bancario'
+      }));
+      
+      setBancaData({
+        movimenti: movimenti,
+        saldo: (ecData.totale_entrate || 0) - (ecData.totale_uscite || 0),
+        totale_entrate: ecData.totale_entrate || 0,
+        totale_uscite: ecData.totale_uscite || 0,
+        count: ecData.totale || movimenti.length
+      });
       
       // Aggiorna anni disponibili dopo caricamento
       loadAvailableYears();
