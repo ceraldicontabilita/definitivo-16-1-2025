@@ -758,6 +758,14 @@ async def import_fattura_integrato(file: UploadFile = File(...)):
         {"$set": {"integrazione_completata": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     
+    # 8. MODULO RICETTARIO DINAMICO - Aggiorna costi ingredienti
+    try:
+        ricettario_result = await aggiorna_ricettario_da_fattura(db, fattura_id)
+        risultato["ricettario"] = ricettario_result
+    except Exception as e:
+        logger.error(f"Errore aggiornamento ricettario: {e}")
+        risultato["ricettario"] = {"error": str(e)}
+    
     risultato["success"] = True
     return risultato
 
