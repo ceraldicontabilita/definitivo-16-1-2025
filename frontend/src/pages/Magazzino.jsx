@@ -125,16 +125,35 @@ export default function Magazzino() {
     }
   }
 
+  const cardStyle = { background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', marginBottom: 20 };
+  const btnPrimary = { padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: 14 };
+  const btnSecondary = { padding: '10px 20px', background: '#e5e7eb', color: '#374151', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: '600', fontSize: 14 };
+  const inputStyle = { padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14 };
+
   return (
-    <>
-      <div className="card">
-        <div className="h1">📦 Magazzino</div>
-        <div className="row">
-          <button className="primary" onClick={() => setShowForm(!showForm)}>+ Nuovo Prodotto</button>
-          <button onClick={loadProducts}>🔄 Aggiorna</button>
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 20,
+        padding: '15px 20px',
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
+        borderRadius: 12,
+        color: 'white'
+      }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 'bold' }}>📦 Magazzino</h1>
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, opacity: 0.9 }}>Gestione prodotti e inventario</p>
         </div>
-        {err && <div className="small" style={{ color: "#c00", marginTop: 10 }}>{err}</div>}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={btnPrimary} onClick={() => setShowForm(!showForm)}>➕ Nuovo Prodotto</button>
+          <button style={btnSecondary} onClick={loadProducts}>🔄 Aggiorna</button>
+        </div>
       </div>
+      
+      {err && <div style={{ padding: 16, background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, color: "#dc2626", marginBottom: 20 }}>❌ {err}</div>}
 
       {/* Statistiche */}
       {activeTab === 'catalogo' && (
