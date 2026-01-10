@@ -48,6 +48,8 @@ const NAV_ITEMS = [
     children: [
       { to: "/haccp", label: "Dashboard HACCP", icon: "📊" },
       { to: "/ricettario-dinamico", label: "Ricettario Dinamico", icon: "📖" },
+      { to: "/haccp-v2/temperature", label: "Temperature", icon: "🌡️" },
+      { to: "/haccp-v2/sanificazione", label: "Sanificazione", icon: "🧹" },
       { to: "/haccp-v2/non-conformita", label: "Non Conformità", icon: "⚠️" },
       { to: "/registro-lotti", label: "Registro Lotti", icon: "📋" },
     ]
