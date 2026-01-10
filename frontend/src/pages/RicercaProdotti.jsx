@@ -499,8 +499,8 @@ export default function RicercaProdotti() {
       </div>
 
       {/* Informazioni */}
-      <div className="card">
-        <div className="h1">Come Funziona</div>
+      <div style={cardStyle}>
+        <div style={h1Style}>Come Funziona</div>
         <ul style={{ paddingLeft: 20 }}>
           <li><strong>Auto-popolamento:</strong> Ogni fattura XML caricata aggiunge automaticamente i prodotti al catalogo</li>
           <li><strong>Best Price:</strong> Il sistema calcola il miglior prezzo degli ultimi 90 giorni per ogni prodotto</li>
