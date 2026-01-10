@@ -620,35 +620,6 @@ function PrimaNotaDesktop() {
                 Registro movimenti di cassa • DARE: Corrispettivi, Finanziamenti • AVERE: POS, Versamenti, Fatture
               </p>
             </div>
-            {/* Pulsanti Elimina */}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                onClick={async () => {
-                  if (window.confirm('⚠️ Eliminare TUTTI i versamenti dalla Cassa? Questa azione è irreversibile!')) {
-                    try {
-                      const res = await api.delete('/api/prima-nota/cassa/delete-versamenti');
-                      alert(`✅ ${res.data.message}`);
-                      loadAllData();
-                    } catch (e) {
-                      alert('❌ Errore: ' + (e.response?.data?.detail || e.message));
-                    }
-                  }
-                }}
-                style={{
-                  padding: '8px 14px',
-                  background: '#fef3c7',
-                  color: '#92400e',
-                  border: '1px solid #f59e0b',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: 500
-                }}
-                data-testid="delete-all-versamenti-cassa"
-              >
-                🗑️ Elimina tutti Versamenti
-              </button>
-            </div>
           </div>
 
           {/* Summary Cards Cassa - Compatti */}
