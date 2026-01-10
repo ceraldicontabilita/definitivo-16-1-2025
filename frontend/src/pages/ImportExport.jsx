@@ -465,78 +465,74 @@ export default function ImportExport() {
           </div>
 
           {/* Multiple files */}
-          {!isBatch && (
-            <div>
-              <input
-                type="file"
-                ref={multiRef}
-                accept={fileAccept}
-                multiple
-                onChange={handleMultiple}
-                style={{ display: "none" }}
-                data-testid={`import-${id}-multi-file`}
-              />
-              <button
-                onClick={() => multiRef.current?.click()}
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "10px 16px",
-                  background: loading ? "#9ca3af" : "#10b981",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  fontWeight: 500,
-                  fontSize: 14,
-                  cursor: loading ? "wait" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8
-                }}
-                data-testid={`import-${id}-multi-btn`}
-              >
-                📁 Upload {extension.toUpperCase().replace('.', '')} Multipli
-              </button>
-            </div>
-          )}
+          <div>
+            <input
+              type="file"
+              ref={multiRef}
+              accept={fileAccept}
+              multiple
+              onChange={handleMultiple}
+              style={{ display: "none" }}
+              data-testid={`import-${id}-multi-file`}
+            />
+            <button
+              onClick={() => multiRef.current?.click()}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                background: loading ? "#9ca3af" : "#10b981",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                fontWeight: 500,
+                fontSize: 14,
+                cursor: loading ? "wait" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8
+              }}
+              data-testid={`import-${id}-multi-btn`}
+            >
+              📁 Upload {extension.toUpperCase().replace('.', '')} Multipli
+            </button>
+          </div>
 
           {/* ZIP upload */}
-          {!isBatch && (
-            <div>
-              <input
-                type="file"
-                ref={zipRef}
-                accept=".zip"
-                multiple
-                onChange={handleZip}
-                style={{ display: "none" }}
-                data-testid={`import-${id}-zip-file`}
-              />
-              <button
-                onClick={() => zipRef.current?.click()}
-                disabled={loading}
-                style={{
-                  width: "100%",
-                  padding: "10px 16px",
-                  background: loading ? "#9ca3af" : "#f59e0b",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  fontWeight: 500,
-                  fontSize: 14,
-                  cursor: loading ? "wait" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8
-                }}
-                data-testid={`import-${id}-zip-btn`}
-              >
-                📦 Upload ZIP Massivo
-              </button>
-            </div>
-          )}
+          <div>
+            <input
+              type="file"
+              ref={zipRef}
+              accept=".zip"
+              multiple
+              onChange={handleZip}
+              style={{ display: "none" }}
+              data-testid={`import-${id}-zip-file`}
+            />
+            <button
+              onClick={() => zipRef.current?.click()}
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "10px 16px",
+                background: loading ? "#9ca3af" : "#f59e0b",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                fontWeight: 500,
+                fontSize: 14,
+                cursor: loading ? "wait" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8
+              }}
+              data-testid={`import-${id}-zip-btn`}
+            >
+              📦 Upload ZIP Massivo
+            </button>
+          </div>
         </div>
       </div>
     );
