@@ -3,37 +3,60 @@
 ## Overview
 Sistema ERP completo per la gestione contabile di piccole/medie imprese italiane. Include gestione fatture, prima nota, riconciliazione bancaria, IVA, F24, HACCP e report.
 
-## CICLO PASSIVO INTEGRATO (2026-01-10) ✅ COMPLETATO
+## WORKFLOW "DALL'XML ALL'ETICHETTA" (2026-01-10) ✅ COMPLETATO
 
-### Descrizione
-Sistema completamente integrato per la gestione del ciclo passivo aziendale. Quando si importa una fattura XML, il sistema esegue automaticamente:
-1. **Magazzino**: Carico merce + creazione lotti HACCP
-2. **Prima Nota**: Scritture contabili Dare/Avere
-3. **Scadenziario**: Creazione scadenze di pagamento
-4. **Riconciliazione**: Tentativo match automatico con movimenti bancari
+### Descrizione Completa
+Sistema completamente integrato per la gestione del ciclo passivo aziendale con tracciabilità HACCP avanzata.
 
-### Endpoints Backend (`/api/ciclo-passivo/`)
-- `POST /import-integrato` - Import singola fattura XML con workflow completo
-- `POST /import-integrato-batch` - Import multiplo XML
-- `GET /dashboard-riconciliazione` - Dashboard con statistiche e scadenze
-- `GET /suggerimenti-match/{scadenza_id}` - Suggerimenti match bancari
-- `POST /match-manuale` - Riconciliazione manuale scadenza-transazione
-- `POST /scarico-produzione` - Scarico materie prime per produzione
-- `GET /tracciabilita-lotto/{lotto_id}` - Tracciabilità completa lotto
+### 1. Parser XML Intelligente
+- **Estrazione automatica lotto fornitore**: Pattern supportati: LOTTO:, L., BATCH:, LOT:, N.LOTTO:
+- **Estrazione automatica scadenza**: Pattern supportati: SCAD:, EXP:, TMC:, BB:, BEST BEFORE:
+- File: `/app/app/parsers/fattura_elettronica_parser.py`
 
-### Frontend (`/ciclo-passivo`)
-4 Tab:
-1. **Import XML**: Upload drag&drop con spiegazione workflow
-2. **Scadenze Aperte**: Lista scadenze con bottone "Riconcilia"
-3. **Riconciliazione**: Split view per match manuale
-4. **Storico Pagamenti**: Pagamenti completati
+### 2. Automazione Magazzino e HACCP
+Ogni riga XML genera automaticamente:
+- **Movimento carico**: Incremento giacenza prodotto
+- **Lotto HACCP completo** con:
+  - `lotto_interno`: ID univoco generato (formato: YYYYMMDD-FORN-NNN-XXXX)
+  - `lotto_fornitore`: Estratto da XML o "Da inserire manualmente"
+  - `data_scadenza`: Estratta da XML o calcolata +30gg
+  - Tracciabilità completa: fattura_id, fornitore, prodotto
 
-### File Principali
-- `/app/app/routers/ciclo_passivo_integrato.py` - Backend completo
-- `/app/frontend/src/pages/CicloPassivoIntegrato.jsx` - Frontend completo
+### 3. Componente Stampa Etichette 80mm
+File: `/app/frontend/src/components/EtichettaLotto.jsx`
+- Layout ottimizzato per stampanti termiche 80mm
+- CSS: `@media print { @page { size: 80mm auto; margin: 0; } }`
+- Contenuto etichetta:
+  - Nome Prodotto (grassetto)
+  - Lotto Interno + Lotto Fornitore
+  - Fornitore + N. Fattura
+  - **Scadenza evidenziata** (box nero)
+  - **QR Code** (punta alla fattura nell'ERP)
+- Bottone 🏷️ in tabella Archivio Fatture
+
+### 4. Logica FEFO per Scarico Produzione
+- **First Expired, First Out**: Suggerisce sempre il lotto con scadenza più vicina
+- Endpoint: `GET /api/ciclo-passivo/lotti/suggerimento-fefo/{prodotto}`
+- Endpoint: `POST /api/ciclo-passivo/scarico-produzione-fefo`
+- Genera automaticamente **rettifica Prima Nota** (Dare: COSTI_PRODUZIONE, Avere: MAGAZZINO)
+
+### 5. Endpoints Backend (`/api/ciclo-passivo/`)
+| Endpoint | Metodo | Descrizione |
+|----------|--------|-------------|
+| `/import-integrato` | POST | Import XML con workflow completo |
+| `/lotti` | GET | Lista lotti con filtri e statistiche |
+| `/lotti/fattura/{id}` | GET | Lotti di una fattura specifica |
+| `/lotto/{id}` | GET | Dettaglio singolo lotto |
+| `/lotto/{id}` | PUT | Aggiorna lotto (fornitore, scadenza) |
+| `/lotto/{id}/segna-etichetta-stampata` | POST | Flag stampa etichetta |
+| `/lotti/suggerimento-fefo/{prodotto}` | GET | Suggerimenti FEFO |
+| `/scarico-produzione-fefo` | POST | Scarico FEFO + Prima Nota |
+| `/etichetta/{id}` | GET | Dati per stampa etichetta con QR |
+| `/dashboard-riconciliazione` | GET | Dashboard statistiche |
 
 ### Test
-- `/app/tests/test_ciclo_passivo_integrato.py` - 11 test (100% passed)
+- `/app/tests/test_iteration_44.json` - Ciclo passivo base (11 test)
+- `/app/tests/test_iteration_45_lotti_etichette.py` - Lotti/FEFO/Etichette (14 test)
 
 ---
 
