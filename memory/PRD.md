@@ -115,12 +115,11 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 
 ### 2026-01-10
 - ✅ **CENTRALIZZAZIONE IMPORT COMPLETATA**
+- ✅ Tutte le 8 card con stile uniforme (3 pulsanti: Singolo, Multipli, ZIP Massivo)
+- ✅ Descrizioni uniformi: "[TIPO] singoli/multipli, ZIP, ZIP annidati. Duplicati ignorati automaticamente"
 - ✅ Rimossi tutti gli export dalla pagina Import/Export
-- ✅ Import Fatture XML: 3 pulsanti separati (XML Singolo, XML Multipli, ZIP Massivo)
-- ✅ Rimosso upload da `/fatture` - solo visualizzazione + link Import
-- ✅ Rimosso upload da `/f24` - solo visualizzazione + viewer PDF
-- ✅ Rimosso upload da `/archivio-bonifici` - solo visualizzazione + link Import
-- ✅ Aggiunto import Archivio Bonifici a Import/Export
+- ✅ Import Fatture XML, Versamenti, POS, Corrispettivi, Estratto Conto, F24, Buste Paga, Bonifici
+- ✅ Rimosso upload da `/fatture`, `/f24`, `/archivio-bonifici` - solo visualizzazione + link Import
 - ✅ Parser DEFINITIVI con intestazioni esatte dai file banca
 - ✅ Fix rilevamento duplicati (HTTP 409 + "già presente")
 
