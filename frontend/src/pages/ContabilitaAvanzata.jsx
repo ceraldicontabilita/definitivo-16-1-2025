@@ -82,6 +82,7 @@ export default function ContabilitaAvanzata() {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchData(); }, [regione, selectedYear]);
 
   const handleRicategorizza = async () => {
