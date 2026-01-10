@@ -108,6 +108,9 @@ const RiconciliazioneF24 = lazy(() => import("./pages/RiconciliazioneF24.jsx"));
 const ControlloMensile = lazy(() => import("./pages/ControlloMensile.jsx"));
 const VerificaCoerenza = lazy(() => import("./pages/VerificaCoerenza.jsx"));
 
+// Ciclo Passivo Integrato
+const CicloPassivoIntegrato = lazy(() => import("./pages/CicloPassivoIntegrato.jsx"));
+
 // Fornitori & Magazzino
 const Fornitori = lazy(() => import("./pages/Fornitori.jsx"));
 const Magazzino = lazy(() => import("./pages/Magazzino.jsx"));
@@ -279,6 +282,8 @@ const router = createBrowserRouter([
       { path: "utile-obiettivo", element: <LazyPage><UtileObiettivo /></LazyPage> },
       // Previsioni Acquisti
       { path: "previsioni-acquisti", element: <LazyPage><PrevisioniAcquisti /></LazyPage> },
+      // Ciclo Passivo Integrato
+      { path: "ciclo-passivo", element: <LazyPage><CicloPassivoIntegrato /></LazyPage> },
     ],
   },
 ]);
