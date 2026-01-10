@@ -158,6 +158,18 @@ Riferimento completo: `/app/memory/DESIGN_SYSTEM.md`
 
 ---
 
+## Pulizia Codice Morto (2026-01-10) ✅
+
+**File/cartelle rimossi:**
+- `/app/frontend/src/components/haccp/` - Componenti HACCP non più utilizzati (sostituiti da HACCPCompleto.jsx)
+- `/app/app/main_backup.py` - File backup non utilizzato
+- `/app/app/main_refactored.py` - File refactoring non utilizzato
+
+**File mantenuti:**
+- `/app/app/routers/invoices/fatture_upload.py` - Attivamente utilizzato in main.py
+
+---
+
 ## Architettura Import Centralizzato
 
 **PRINCIPIO FONDAMENTALE**: Tutti gli import sono centralizzati in `/import-export`. Le altre pagine mostrano solo i dati e rimandano a Import/Export per il caricamento.
