@@ -204,32 +204,32 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                         }
                         results["riconciliati_fatture"] += 1
                 
-                # Se non trovata per numero, cerca per importo simile (dubbio)
+                # Se non trovata per numero, cerca per importo ESATTO (±0.05€)
                 if not match_found:
-                    fatture_simili = await db[Collections.INVOICES].find({
+                    fatture_esatte = await db[Collections.INVOICES].find({
                         "$or": [
-                            {"importo_totale": {"$gte": importo - 1, "$lte": importo + 1}},
-                            {"total_amount": {"$gte": importo - 1, "$lte": importo + 1}}
+                            {"importo_totale": {"$gte": importo - 0.05, "$lte": importo + 0.05}},
+                            {"total_amount": {"$gte": importo - 0.05, "$lte": importo + 0.05}}
                         ],
                         "pagato": {"$ne": True}
-                    }).to_list(5)
+                    }).to_list(10)
                     
-                    if len(fatture_simili) == 1:
-                        # Una sola fattura con importo simile - dubbio
-                        fattura = fatture_simili[0]
-                        confidence = "medio"
-                        match_type = "fattura_dubbio"
+                    if len(fatture_esatte) == 1:
+                        # Una sola fattura con importo ESATTO - riconcilia automaticamente
+                        fattura = fatture_esatte[0]
+                        match_found = True
+                        match_type = "fattura"
+                        confidence = "alto"
                         match_details = {
                             "fattura_id": str(fattura.get("_id", fattura.get("id"))),
                             "numero_fattura": fattura.get("numero_fattura") or fattura.get("invoice_number"),
                             "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
-                            "importo_fattura": fattura.get("importo_totale") or fattura.get("total_amount"),
-                            "motivo_dubbio": "Importo simile ma numero fattura non trovato"
+                            "importo_fattura": fattura.get("importo_totale") or fattura.get("total_amount")
                         }
-                        results["dubbi"] += 1
-                    elif len(fatture_simili) > 1:
-                        # Più fatture con stesso importo - dubbio
-                        confidence = "basso"
+                        results["riconciliati_fatture"] += 1
+                    elif len(fatture_esatte) > 1:
+                        # Più fatture con STESSO importo esatto - va confermato manualmente
+                        confidence = "medio"
                         match_type = "fatture_multiple"
                         match_details = {
                             "fatture_candidate": [
@@ -239,11 +239,12 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                                     "fornitore": f.get("cedente_denominazione") or f.get("supplier_name"),
                                     "importo": f.get("importo_totale") or f.get("total_amount")
                                 }
-                                for f in fatture_simili[:5]
+                                for f in fatture_esatte[:5]
                             ],
-                            "motivo_dubbio": f"Trovate {len(fatture_simili)} fatture con importo simile"
+                            "motivo_dubbio": f"Trovate {len(fatture_esatte)} fatture con stesso importo esatto"
                         }
                         results["dubbi"] += 1
+                    # Se nessuna fattura con importo esatto -> non creare operazione da confermare
             
             # ===== 2. CERCA ASSEGNI (per uscite) =====
             if tipo == "uscita" and not match_found:
