@@ -550,6 +550,107 @@ export default function ArchivioBonifici() {
                       {t.causale || '-'}
                     </td>
                     <td style={{ padding: 8, fontSize: 10 }}>{t.cro_trn || '-'}</td>
+                    {/* Colonna Associa a Salario */}
+                    <td style={{ padding: 8, position: 'relative' }}>
+                      {t.salario_associato ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ 
+                            background: '#dcfce7', 
+                            color: '#16a34a', 
+                            padding: '4px 8px', 
+                            borderRadius: 6, 
+                            fontSize: 10,
+                            fontWeight: 500
+                          }}>
+                            ✓ {t.operazione_salario_desc?.substring(0, 20) || 'Associato'}
+                          </span>
+                          <button
+                            onClick={() => handleDisassocia(t.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#dc2626' }}
+                            title="Rimuovi associazione"
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <button
+                            onClick={() => toggleAssociaDropdown(t.id)}
+                            style={{
+                              padding: '4px 10px',
+                              background: associaDropdown === t.id ? '#3b82f6' : '#f1f5f9',
+                              color: associaDropdown === t.id ? 'white' : '#475569',
+                              border: 'none',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 11,
+                              fontWeight: 500
+                            }}
+                            data-testid={`btn-associa-${t.id}`}
+                          >
+                            {associaDropdown === t.id ? '▼ Seleziona' : '+ Associa'}
+                          </button>
+                          {/* Dropdown operazioni */}
+                          {associaDropdown === t.id && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              zIndex: 100,
+                              background: 'white',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: 8,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              minWidth: 300,
+                              maxHeight: 250,
+                              overflowY: 'auto'
+                            }}>
+                              {loadingOperazioni ? (
+                                <div style={{ padding: 16, textAlign: 'center', color: '#6b7280' }}>⏳ Caricamento...</div>
+                              ) : operazioniCompatibili.length === 0 ? (
+                                <div style={{ padding: 16, textAlign: 'center', color: '#6b7280', fontSize: 11 }}>
+                                  Nessuna operazione salari compatibile trovata
+                                </div>
+                              ) : (
+                                operazioniCompatibili.map((op, idx) => (
+                                  <div
+                                    key={op.id || idx}
+                                    onClick={() => handleAssocia(t.id, op.id)}
+                                    style={{
+                                      padding: '10px 12px',
+                                      borderBottom: '1px solid #f1f5f9',
+                                      cursor: 'pointer',
+                                      transition: 'background 0.1s'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.background = '#f0f9ff'}
+                                    onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                                  >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontWeight: 500, fontSize: 11 }}>
+                                        {op.dipendente || op.descrizione || 'Operazione'}
+                                      </span>
+                                      <span style={{ 
+                                        background: op.compatibilita_score >= 70 ? '#dcfce7' : op.compatibilita_score >= 40 ? '#fef3c7' : '#fee2e2',
+                                        color: op.compatibilita_score >= 70 ? '#16a34a' : op.compatibilita_score >= 40 ? '#d97706' : '#dc2626',
+                                        padding: '2px 6px',
+                                        borderRadius: 4,
+                                        fontSize: 9,
+                                        fontWeight: 600
+                                      }}>
+                                        {op.compatibilita_score}%
+                                      </span>
+                                    </div>
+                                    <div style={{ fontSize: 10, color: '#6b7280', marginTop: 4 }}>
+                                      {formatDate(op.data)} • {formatEuro(op.importo_display)}
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: 8 }}>
                       {editingNote === t.id ? (
                         <div style={{ display: 'flex', gap: 4 }}>
