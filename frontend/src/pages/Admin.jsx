@@ -223,7 +223,7 @@ export default function Admin() {
       }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Settings className="w-6 h-6" /> Amministrazione
+            <Settings style={{ width: 24, height: 24 }} /> Amministrazione
           </h1>
           <p style={{ color: '#64748b', margin: '4px 0 0 0', fontSize: 'clamp(12px, 3vw, 14px)' }}>
             Configurazione sistema, email e parametri
@@ -234,16 +234,16 @@ export default function Admin() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList style={{ marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 12 }}>
           <TabsTrigger value="email" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Mail className="w-4 h-4 mr-2" /> Email
+            <Mail style={{ width: 16, height: 16, marginRight: 8 }} /> Email
           </TabsTrigger>
           <TabsTrigger value="keywords" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Key className="w-4 h-4 mr-2" /> Parole Chiave
+            <Key style={{ width: 16, height: 16, marginRight: 8 }} /> Parole Chiave
           </TabsTrigger>
           <TabsTrigger value="system" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Database className="w-4 h-4 mr-2" /> Sistema
+            <Database style={{ width: 16, height: 16, marginRight: 8 }} /> Sistema
           </TabsTrigger>
           <TabsTrigger value="export" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Download className="w-4 h-4 mr-2" /> Esportazioni
+            <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Esportazioni
           </TabsTrigger>
         </TabsList>
 
@@ -254,7 +254,7 @@ export default function Admin() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <CardTitle style={{ fontSize: 16 }}>Account Email Configurati</CardTitle>
                 <Button size="sm" onClick={() => setShowNewForm(true)}>
-                  <Plus className="w-4 h-4 mr-1" /> Aggiungi Email
+                  <Plus style={{ width: 16, height: 16, marginRight: 4 }} /> Aggiungi Email
                 </Button>
               </div>
             </CardHeader>
@@ -275,7 +275,7 @@ export default function Admin() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 14 }}>
-                            <Mail className="w-4 h-4 text-blue-600" />
+                            <Mail style={{ width: 16, height: 16, color: "#2563eb" }} />
                             {acc.nome}
                             {acc.is_env_default && (
                               <span style={{ fontSize: 10, background: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: 4 }}>
@@ -292,14 +292,14 @@ export default function Admin() {
                         </div>
                         <div style={{ display: 'flex', gap: 4 }}>
                           <Button size="sm" variant="outline" onClick={() => testEmailConnection(acc.id)} disabled={testingConnection === acc.id}>
-                            {testingConnection === acc.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Test'}
+                            {testingConnection === acc.id ? <RefreshCw style={{ width: 12, height: 12, animation: "spin 1s linear infinite" }} /> : 'Test'}
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => { setEditingAccount({...acc}); setEditKeywordInput(''); }}>
                             Modifica
                           </Button>
                           {!acc.is_env_default && (
                             <Button size="sm" variant="outline" onClick={() => deleteEmailAccount(acc.id)} style={{ color: '#dc2626' }}>
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 style={{ width: 12, height: 12 }} />
                             </Button>
                           )}
                         </div>
@@ -313,7 +313,7 @@ export default function Admin() {
                           onClick={() => setShowPassword({...showPassword, [acc.id]: !showPassword[acc.id]})} 
                           style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
                         >
-                          {showPassword[acc.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          {showPassword[acc.id] ? <EyeOff style={{ width: 12, height: 12 }} /> : <Eye style={{ width: 12, height: 12 }} />}
                         </button>
                       </div>
                       
@@ -393,7 +393,7 @@ export default function Admin() {
                           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeywordToAccount(false))}
                         />
                         <Button type="button" onClick={() => addKeywordToAccount(false)} size="sm">
-                          <Plus className="w-4 h-4" />
+                          <Plus style={{ width: 16, height: 16 }} />
                         </Button>
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -414,7 +414,7 @@ export default function Admin() {
                               onClick={() => removeKeywordFromAccount(kw, false)} 
                               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
                             >
-                              <X className="w-3 h-3 text-red-500" />
+                              <X style={{ width: 12, height: 12, color: "#ef4444" }} />
                             </button>
                           </span>
                         ))}
@@ -423,10 +423,10 @@ export default function Admin() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                     <Button onClick={() => saveEmailAccount(newAccount)}>
-                      <Check className="w-4 h-4 mr-1" /> Salva
+                      <Check style={{ width: 16, height: 16, marginRight: 4 }} /> Salva
                     </Button>
                     <Button variant="outline" onClick={() => { setShowNewForm(false); setNewKeywordInput(''); }}>
-                      <X className="w-4 h-4 mr-1" /> Annulla
+                      <X style={{ width: 16, height: 16, marginRight: 4 }} /> Annulla
                     </Button>
                   </div>
                 </div>
@@ -488,7 +488,7 @@ export default function Admin() {
                           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeywordToAccount(true))}
                         />
                         <Button type="button" onClick={() => addKeywordToAccount(true)} size="sm">
-                          <Plus className="w-4 h-4" />
+                          <Plus style={{ width: 16, height: 16 }} />
                         </Button>
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -509,7 +509,7 @@ export default function Admin() {
                               onClick={() => removeKeywordFromAccount(kw, true)} 
                               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
                             >
-                              <X className="w-3 h-3 text-red-500" />
+                              <X style={{ width: 12, height: 12, color: "#ef4444" }} />
                             </button>
                           </span>
                         ))}
@@ -521,10 +521,10 @@ export default function Admin() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                     <Button onClick={() => saveEmailAccount(editingAccount)}>
-                      <Check className="w-4 h-4 mr-1" /> Salva Modifiche
+                      <Check style={{ width: 16, height: 16, marginRight: 4 }} /> Salva Modifiche
                     </Button>
                     <Button variant="outline" onClick={() => { setEditingAccount(null); setEditKeywordInput(''); }}>
-                      <X className="w-4 h-4 mr-1" /> Annulla
+                      <X style={{ width: 16, height: 16, marginRight: 4 }} /> Annulla
                     </Button>
                   </div>
                 </div>
@@ -564,7 +564,7 @@ export default function Admin() {
                   onKeyDown={e => e.key === 'Enter' && addParolaChiave()} 
                 />
                 <Button onClick={addParolaChiave}>
-                  <Plus className="w-4 h-4 mr-1" /> Aggiungi
+                  <Plus style={{ width: 16, height: 16, marginRight: 4 }} /> Aggiungi
                 </Button>
               </div>
 
@@ -592,7 +592,7 @@ export default function Admin() {
                             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                             data-testid={`remove-keyword-${cat}-${kw}`}
                           >
-                            <X className="w-3 h-3 text-red-500" />
+                            <X style={{ width: 12, height: 12, color: "#ef4444" }} />
                           </button>
                         </span>
                       ))}
@@ -614,7 +614,7 @@ export default function Admin() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Server className="w-4 h-4" /> Stato Sistema
+                  <Server style={{ width: 16, height: 16 }} /> Stato Sistema
                 </CardTitle>
               </CardHeader>
               <CardContent style={{ padding: 16 }}>
@@ -651,7 +651,7 @@ export default function Admin() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Clock className="w-4 h-4" /> Scheduler HACCP
+                  <Clock style={{ width: 16, height: 16 }} /> Scheduler HACCP
                 </CardTitle>
               </CardHeader>
               <CardContent style={{ padding: 16 }}>
@@ -672,7 +672,7 @@ export default function Admin() {
                       <span style={{ fontSize: 11 }}>{schedulerStatus.last_run || 'Mai'}</span>
                     </div>
                     <Button onClick={handleTriggerHACCP} disabled={triggerLoading} size="sm" style={{ marginTop: 8 }}>
-                      {triggerLoading ? <RefreshCw className="w-4 h-4 mr-1 animate-spin" /> : <Activity className="w-4 h-4 mr-1" />}
+                      {triggerLoading ? <RefreshCw className="w-4 h-4 mr-1 animate-spin" /> : <Activity style={{ width: 16, height: 16, marginRight: 4 }} />}
                       Trigger HACCP Manuale
                     </Button>
                   </div>
@@ -713,7 +713,7 @@ export default function Admin() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText className="w-4 h-4" /> Esporta Fatture
+                  <FileText style={{ width: 16, height: 16 }} /> Esporta Fatture
                 </CardTitle>
               </CardHeader>
               <CardContent style={{ padding: 16 }}>
@@ -724,7 +724,7 @@ export default function Admin() {
                   onClick={() => window.open(`${api.defaults.baseURL}/api/exports/invoices?anno=${anno}`, '_blank')}
                   style={{ width: '100%' }}
                 >
-                  <Download className="w-4 h-4 mr-2" /> Scarica Excel Fatture
+                  <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Scarica Excel Fatture
                 </Button>
               </CardContent>
             </Card>
@@ -732,7 +732,7 @@ export default function Admin() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText className="w-4 h-4" /> Esporta Prima Nota
+                  <FileText style={{ width: 16, height: 16 }} /> Esporta Prima Nota
                 </CardTitle>
               </CardHeader>
               <CardContent style={{ padding: 16 }}>
@@ -745,14 +745,14 @@ export default function Admin() {
                     onClick={() => window.open(`${api.defaults.baseURL}/api/exports/prima-nota-cassa?anno=${anno}`, '_blank')}
                     style={{ width: '100%' }}
                   >
-                    <Download className="w-4 h-4 mr-2" /> Prima Nota Cassa
+                    <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Prima Nota Cassa
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={() => window.open(`${api.defaults.baseURL}/api/exports/prima-nota-banca?anno=${anno}`, '_blank')}
                     style={{ width: '100%' }}
                   >
-                    <Download className="w-4 h-4 mr-2" /> Prima Nota Banca
+                    <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Prima Nota Banca
                   </Button>
                 </div>
               </CardContent>
@@ -761,7 +761,7 @@ export default function Admin() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText className="w-4 h-4" /> Documentazione API
+                  <FileText style={{ width: 16, height: 16 }} /> Documentazione API
                 </CardTitle>
               </CardHeader>
               <CardContent style={{ padding: 16 }}>
@@ -773,7 +773,7 @@ export default function Admin() {
                   onClick={() => window.open(`${api.defaults.baseURL}/docs`, '_blank')}
                   style={{ width: '100%' }}
                 >
-                  <FileText className="w-4 h-4 mr-2" /> Apri Swagger Docs
+                  <FileText style={{ width: 16, height: 16, marginRight: 8 }} /> Apri Swagger Docs
                 </Button>
               </CardContent>
             </Card>
