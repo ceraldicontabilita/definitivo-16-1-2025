@@ -601,25 +601,23 @@ export default function ControlloMensile() {
                 onClick={() => {
                   if (meseSelezionato > 1) {
                     setMeseSelezionato(meseSelezionato - 1);
-                  } else {
-                    // Vai a Dicembre dell'anno precedente
-                    setAnno(anno - 1);
-                    setMeseSelezionato(12);
                   }
+                  // Non cambia anno - è globale
                 }}
+                disabled={meseSelezionato <= 1}
                 style={{
                   padding: '8px 14px',
-                  background: '#3b82f6',
+                  background: meseSelezionato > 1 ? '#3b82f6' : '#94a3b8',
                   color: 'white',
                   border: 'none',
                   borderRadius: 8,
-                  cursor: 'pointer',
+                  cursor: meseSelezionato > 1 ? 'pointer' : 'not-allowed',
                   fontWeight: 'bold',
                   fontSize: 14
                 }}
                 data-testid="prev-month-btn"
               >
-                ◀ {meseSelezionato > 1 ? monthNames[meseSelezionato - 2] : 'Dic ' + (anno - 1)}
+                ◀ {meseSelezionato > 1 ? monthNames[meseSelezionato - 2] : 'Gen'}
               </button>
               
               <span style={{ 
@@ -638,25 +636,23 @@ export default function ControlloMensile() {
                 onClick={() => {
                   if (meseSelezionato < 12) {
                     setMeseSelezionato(meseSelezionato + 1);
-                  } else {
-                    // Vai a Gennaio dell'anno successivo
-                    setAnno(anno + 1);
-                    setMeseSelezionato(1);
                   }
+                  // Non cambia anno - è globale
                 }}
+                disabled={meseSelezionato >= 12}
                 style={{
                   padding: '8px 14px',
-                  background: '#3b82f6',
+                  background: meseSelezionato < 12 ? '#3b82f6' : '#94a3b8',
                   color: 'white',
                   border: 'none',
                   borderRadius: 8,
-                  cursor: 'pointer',
+                  cursor: meseSelezionato < 12 ? 'pointer' : 'not-allowed',
                   fontWeight: 'bold',
                   fontSize: 14
                 }}
                 data-testid="next-month-btn"
               >
-                {meseSelezionato < 12 ? monthNames[meseSelezionato] : 'Gen ' + (anno + 1)} ▶
+                {meseSelezionato < 12 ? monthNames[meseSelezionato] : 'Dic'} ▶
               </button>
             </div>
             
