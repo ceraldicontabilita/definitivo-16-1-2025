@@ -137,9 +137,13 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
   - Fatture senza corrispondenza in estratto conto → reset a status="imported", pagato=false
   - Campo `bonifica_applicata` per tracciare fatture corrette
 - ✅ **CREATO DOCUMENTO LOGICHE APPLICAZIONE**
-  - `/app/memory/LOGICHE_APPLICAZIONE.md` con tutte le regole di business
+  - `/app/memory/LOGICHE_APPLICAZIONE_COMPLETO.md` con tutte le regole di business
   - Flussi import dettagliati per ogni tipo di file
   - Regole fondamentali pagamenti documentate
+- ✅ **TUTTO IL CODICE RESO CASE-INSENSITIVE**
+  - Ricerche fatture per numero (regex con $options: "i")
+  - Confronti metodo pagamento (.lower())
+  - Match fornitori (.upper())
 - ✅ **REGOLA D'ORO IMPLEMENTATA:**
   ```
   Se NON trovo in estratto conto → NON posso mettere "Bonifico"
