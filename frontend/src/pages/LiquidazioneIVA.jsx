@@ -328,7 +328,7 @@ export default function LiquidazioneIVA() {
           <p style={{ fontSize: 14, color: '#64748b', marginBottom: 16 }}>
             Inserisci i valori calcolati dal tuo commercialista per verificare eventuali discrepanze.
           </p>
-          <div className="filter-bar">
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>
                 IVA Debito Commercialista (€)
