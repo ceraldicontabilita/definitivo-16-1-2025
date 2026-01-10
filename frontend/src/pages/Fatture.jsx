@@ -789,7 +789,7 @@ export default function Fatture() {
                   <td style={{ padding: 8, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {inv.supplier_name || inv.fornitore?.denominazione || "-"}
                     {inv.supplier_vat && (
-                      <div className="small" style={{ color: "#666" }}>
+                      <div style={{ fontSize: 12, color: "#6b7280" }}>
                         P.IVA: {inv.supplier_vat}
                       </div>
                     )}
