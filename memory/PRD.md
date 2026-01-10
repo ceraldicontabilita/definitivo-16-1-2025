@@ -221,6 +221,53 @@ Sistema di filtro anno centralizzato per l'intera applicazione.
 
 ---
 
+## Logica Corrispettivi (Aggiornata 2025-01-10)
+
+### ⚠️ IMPORTANTE - Nuova Logica dal 2026
+
+**ELIMINATO:** Import corrispettivi da Excel (non più supportato)
+
+### Flusso Operativo
+
+```
+1. INSERIMENTO MANUALE
+   └─→ Prima Nota → Chiusure Giornaliere → Corrispettivo
+   └─→ Inserisci importo LORDO del giorno
+   └─→ Viene salvato in prima_nota_cassa (categoria: "Corrispettivi")
+
+2. CARICAMENTO XML (dal Registratore Telematico)
+   └─→ POST /api/prima-nota/import-corrispettivi-xml
+   └─→ SE esiste già corrispettivo per quella data:
+       └─→ AGGIORNA solo dettagli IVA (imponibile, imposta, dettaglio_iva)
+       └─→ NON modifica l'importo inserito manualmente
+   └─→ SE NON esiste corrispettivo:
+       └─→ CREA nuovo movimento da XML (fallback)
+```
+
+### Struttura Dati
+```json
+{
+  "id": "uuid",
+  "data": "2026-01-10",
+  "tipo": "entrata",
+  "importo": 500.00,           // LORDO inserito manualmente
+  "categoria": "Corrispettivi",
+  "pagato_contanti": 150.00,   // Da XML
+  "pagato_elettronico": 350.00, // Da XML
+  "imponibile": 454.55,        // Da XML
+  "imposta": 45.45,            // Da XML
+  "dettaglio_iva": [           // Da XML
+    {"aliquota": 10, "imponibile": 454.55, "imposta": 45.45}
+  ],
+  "iva_popolata": true         // Flag XML caricato
+}
+```
+
+### Dati Storici (Pre-2026)
+I dati esistenti sono **definitivi e corretti**. La correzione `fix-corrispettivi-importo` è già stata applicata per aggiungere l'IVA agli importi.
+
+---
+
 ## Vincoli Tecnici
 
 1. **Stili inline obbligatori** - No CSS esterno, solo `style={{...}}`
