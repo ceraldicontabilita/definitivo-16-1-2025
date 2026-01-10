@@ -138,10 +138,18 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 - ✅ Aggiornati messaggi informativi nel frontend Prima Nota Banca
 - ✅ **Prima Nota Banca ora visualizza l'Estratto Conto Bancario**
 - ✅ Svuotata la collection prima_nota_banca (57 movimenti)
-- ✅ Rimosso pulsante "Elimina tutti Versamenti" dalla sezione Banca
-- ✅ Rimosso endpoint DELETE /api/prima-nota/banca/delete-versamenti
+- ✅ Rimosso pulsante "Elimina tutti Versamenti" dalla sezione Banca e Cassa
+- ✅ Rimossi endpoint DELETE delete-versamenti
 - ✅ Tabella Banca in modalità sola lettura (no Modifica/Elimina)
-- ✅ Test completi: Backend 14/14 (100%), Frontend verificato
+- ✅ **RICONCILIAZIONE AUTOMATICA IMPLEMENTATA**
+  - Parser corrispettivi XML (LORDO = PagatoContanti + PagatoElettronico)
+  - Match fatture per numero fattura + importo (±0.01€)
+  - Match POS con logica calendario (Lun-Gio: +1g, Ven-Dom: somma→Lunedì)
+  - Match versamenti per data + importo esatto
+  - Match F24 per importo esatto
+  - Dubbi salvati in operazioni_da_confermare
+- ✅ Nuovo router `/api/riconciliazione-auto/` con endpoint riconcilia-estratto-conto
+- ✅ Import estratto conto ora avvia automaticamente la riconciliazione
 
 ### 2026-01-10 (Sessione 1)
 - ✅ **CENTRALIZZAZIONE IMPORT COMPLETATA**
@@ -163,10 +171,12 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 
 ### P0 - Critical
 - [x] ~~Fix logica contabile Prima Nota (versamenti solo in Cassa)~~ ✅ RISOLTO
+- [x] ~~Riconciliazione automatica estratto conto~~ ✅ IMPLEMENTATO
 
 ### P1 - High
 - [ ] Fix UX pagina /riconciliazione (bottoni percepiti come non funzionanti)
 - [ ] Completare arricchimento dati fornitori (email/PEC)
+- [ ] Aggiornare pagina /operazioni-da-confermare per mostrare match dubbi riconciliazione
 
 ### P2 - Medium
 - [ ] Implementare importazione PDF generica
