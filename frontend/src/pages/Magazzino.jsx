@@ -179,7 +179,7 @@ export default function Magazzino() {
 
       {/* Filtri */}
       {activeTab === 'catalogo' && (
-        <div className="card" style={{ marginBottom: 16 }}>
+        <div style={cardStyle}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
             <input
               type="text"
