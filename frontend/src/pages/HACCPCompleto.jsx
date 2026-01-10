@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
+import { 
+  DisinfestazioneView, 
+  SanificazioneView, 
+  TemperatureNegativeView, 
+  TemperaturePositiveView, 
+  AnomalieView, 
+  ManualeHACCPView 
+} from '../components/haccp';
 
 const TABS_MAIN = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
