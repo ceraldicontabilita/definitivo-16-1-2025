@@ -47,13 +47,15 @@ const styles = {
   td: { padding: '12px 8px', borderBottom: '1px solid #f3f4f6', fontSize: 14 },
   btnPrimary: { padding: '10px 20px', background: '#059669', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' },
   btnDanger: { padding: '10px 20px', background: '#dc2626', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' },
-  select: { padding: '8px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, minWidth: 150 }
+  select: { padding: '8px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, minWidth: 150 },
+  hint: { fontSize: 11, color: '#6b7280', marginTop: 4, fontStyle: 'italic' }
 };
 
 export default function DettaglioFattura() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [fattura, setFattura] = useState(null);
+  const [fornitore, setFornitore] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -67,12 +69,41 @@ export default function DettaglioFattura() {
     setError(null);
     try {
       const res = await api.get(`/api/fatture/${id}`);
-      setFattura(res.data);
+      const fatturaData = res.data;
+      setFattura(fatturaData);
+      
+      // Carica il fornitore per ottenere il metodo pagamento predefinito
+      const piva = fatturaData.supplier_vat || fatturaData.cedente_piva;
+      if (piva) {
+        try {
+          const fornRes = await api.get(`/api/suppliers?partita_iva=${piva}`);
+          const suppliers = fornRes.data?.suppliers || fornRes.data || [];
+          if (suppliers.length > 0) {
+            setFornitore(suppliers[0]);
+            
+            // Se la fattura non ha metodo pagamento, usa quello del fornitore
+            if (!fatturaData.metodo_pagamento && suppliers[0].metodo_pagamento) {
+              await updateMetodoPagamentoSilent(suppliers[0].metodo_pagamento);
+              setFattura(prev => ({ ...prev, metodo_pagamento: suppliers[0].metodo_pagamento }));
+            }
+          }
+        } catch (e) {
+          console.log('Fornitore non trovato:', e);
+        }
+      }
     } catch (err) {
       console.error('Errore caricamento fattura:', err);
       setError(err.response?.data?.message || 'Fattura non trovata');
     }
     setLoading(false);
+  }
+
+  async function updateMetodoPagamentoSilent(metodo) {
+    try {
+      await api.put(`/api/fatture/${id}`, { metodo_pagamento: metodo });
+    } catch (err) {
+      console.error('Errore auto-update metodo:', err);
+    }
   }
 
   async function updateMetodoPagamento(metodo) {
