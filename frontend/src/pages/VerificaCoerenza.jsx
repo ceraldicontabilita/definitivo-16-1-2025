@@ -164,7 +164,7 @@ export default function VerificaCoerenza() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Receipt className="h-4 w-4 text-blue-600" />
+                  <Receipt style={{ height: 16, width: 16, color: '#2563eb' }} />
                   IVA Annuale {anno}
                 </CardTitle>
               </CardHeader>
