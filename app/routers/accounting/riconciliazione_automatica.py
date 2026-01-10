@@ -83,16 +83,23 @@ def match_numero_fattura_descrizione(numero_fattura: str, descrizione: str) -> b
     desc_upper = descrizione.upper()
     num_clean = numero_fattura.strip().upper()
     
-    # Rimuovi prefissi comuni (FT, FAT, etc.)
-    num_clean = re.sub(r'^(FT|FAT|FATT|INV|N\.?|NR\.?)\s*', '', num_clean)
+    # Rimuovi prefissi comuni (FT, FAT, etc.) e separatori
+    num_clean = re.sub(r'^(FT|FAT|FATT|INV|N\.?|NR\.?)[\s\-/]*', '', num_clean)
+    # Rimuovi anno e separatori (es. 2024/001234 -> 001234)
+    num_clean = re.sub(r'^\d{4}[\s\-/]+', '', num_clean)
     
     # Cerca il numero nella descrizione
-    if num_clean in desc_upper:
+    if num_clean and num_clean in desc_upper:
         return True
     
     # Cerca anche senza zeri iniziali
     num_no_zeros = num_clean.lstrip('0')
-    if num_no_zeros and num_no_zeros in desc_upper:
+    if num_no_zeros and len(num_no_zeros) >= 3 and num_no_zeros in desc_upper:
+        return True
+    
+    # Estrai solo numeri dal numero fattura originale
+    solo_numeri = re.sub(r'[^\d]', '', numero_fattura)
+    if solo_numeri and len(solo_numeri) >= 4 and solo_numeri in desc_upper:
         return True
     
     return False
