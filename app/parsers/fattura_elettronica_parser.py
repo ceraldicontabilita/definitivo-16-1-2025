@@ -218,6 +218,36 @@ def parse_fattura_xml(xml_content: str) -> Dict[str, Any]:
             except ValueError:
                 pass
         
+        # Calcola somma righe per verifica coerenza
+        somma_righe = 0
+        for linea in linee:
+            try:
+                somma_righe += float(linea.get("prezzo_totale", 0))
+            except ValueError:
+                pass
+        
+        # Verifica coerenza totali
+        totale_calcolato = round(imponibile_totale + iva_totale, 2)
+        differenza_totali = abs(total_amount - totale_calcolato)
+        totali_coerenti = differenza_totali < 0.05  # Tolleranza 5 centesimi
+        
+        # Estrai allegati (PDF in base64)
+        allegati = []
+        for allegato in find_all_elements(body, 'Allegati'):
+            nome_attachment = get_text(allegato, 'NomeAttachment')
+            formato = get_text(allegato, 'FormatoAttachment')
+            attachment_data = get_text(allegato, 'Attachment')
+            descrizione_allegato = get_text(allegato, 'DescrizioneAttachment')
+            
+            if attachment_data:
+                allegati.append({
+                    "nome": nome_attachment,
+                    "formato": formato or "PDF",
+                    "descrizione": descrizione_allegato,
+                    "base64_data": attachment_data,
+                    "size_kb": round(len(attachment_data) * 3 / 4 / 1024, 2)  # Stima dimensione
+                })
+        
         # Mappa tipo documento
         tipo_doc_map = {
             "TD01": "Fattura",
