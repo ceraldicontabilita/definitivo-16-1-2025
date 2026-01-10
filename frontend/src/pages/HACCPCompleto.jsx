@@ -131,7 +131,7 @@ export default function HACCPCompleto() {
     return true;
   });
 
-  const lottiFiltrati = lotti.filter(l => {
+  const lottiFiltrati = (lotti || []).filter(l => {
     if (searchLotti && !l.prodotto?.toLowerCase().includes(searchLotti.toLowerCase()) && !l.numero_lotto?.toLowerCase().includes(searchLotti.toLowerCase())) return false;
     return true;
   });
