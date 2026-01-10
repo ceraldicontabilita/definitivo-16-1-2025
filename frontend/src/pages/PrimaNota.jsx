@@ -811,7 +811,7 @@ function PrimaNotaDesktop() {
               <strong style={{ color: '#1e40af' }}>Informazioni</strong>
             </div>
             <p style={{ margin: 0, fontSize: 13, color: '#1e40af' }}>
-              La Prima Nota Banca contiene: <strong>DARE</strong> (entrate) = incassi POS + versamenti dalla cassa; <strong>AVERE</strong> (uscite) = pagamenti fornitori tramite bonifico.
+              La Prima Nota Banca contiene: <strong>DARE</strong> (entrate) = incassi clienti via bonifico; <strong>AVERE</strong> (uscite) = pagamenti fornitori tramite bonifico/assegno. I versamenti da cassa andranno qui dopo la riconciliazione con l'estratto conto.
             </p>
           </div>
 
