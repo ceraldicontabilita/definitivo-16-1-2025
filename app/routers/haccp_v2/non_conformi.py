@@ -245,7 +245,8 @@ async def registra_non_conformita(data: NonConformitaCreate) -> Dict[str, Any]:
     await db["non_conformita_haccp"].insert_one(non_conformita)
     
     # Rimuovi _id prima di restituire
-    del non_conformita["_id"] if "_id" in non_conformita else None
+    if "_id" in non_conformita:
+        del non_conformita["_id"]
     
     return {
         "success": True,
