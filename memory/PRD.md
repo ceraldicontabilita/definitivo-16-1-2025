@@ -129,6 +129,24 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 
 ## Changelog
 
+### 2026-01-10 (Sessione 3 - BONIFICA P0)
+- ✅ **BONIFICA CRITICA FATTURE COMPLETATA**
+  - Corrette 1319 fatture con metodo pagamento errato
+  - Endpoint `/api/riconciliazione-auto/correggi-metodi-pagamento` migliorato
+  - Ora cattura tutti i metodi bancari (bonifico, banca, sepa, assegno) case-insensitive
+  - Fatture senza corrispondenza in estratto conto → reset a status="imported", pagato=false
+  - Campo `bonifica_applicata` per tracciare fatture corrette
+- ✅ **CREATO DOCUMENTO LOGICHE APPLICAZIONE**
+  - `/app/memory/LOGICHE_APPLICAZIONE.md` con tutte le regole di business
+  - Flussi import dettagliati per ogni tipo di file
+  - Regole fondamentali pagamenti documentate
+- ✅ **REGOLA D'ORO IMPLEMENTATA:**
+  ```
+  Se NON trovo in estratto conto → NON posso mettere "Bonifico"
+  Se il fornitore ha metodo "Cassa" → devo rispettarlo
+  Solo se TROVO in estratto conto → posso mettere Bonifico/Assegno
+  ```
+
 ### 2026-01-10 (Sessione 2)
 - ✅ **FIX LOGICA CONTABILE PRIMA NOTA**
 - ✅ Creato documento `/app/memory/ragioneria_applicata.md` con principi contabili
