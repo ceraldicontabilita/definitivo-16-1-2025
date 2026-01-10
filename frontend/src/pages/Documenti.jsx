@@ -397,7 +397,7 @@ export default function Documenti() {
                   borderColor: 'rgba(255,255,255,0.3)'
                 }}
               >
-                <Filter className="h-4 w-4 mr-2" />
+                <Filter style={{ height: 16, width: 16, marginRight: 8 }} />
                 Impostazioni
               </Button>
               <Button
