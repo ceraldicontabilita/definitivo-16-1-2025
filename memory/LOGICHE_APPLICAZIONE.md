@@ -1,5 +1,95 @@
 # 📋 LOGICHE APPLICAZIONE - Documento Completo
 
+## 🆕 AGGIORNAMENTO GENNAIO 2026 - MATCH TRIPLO
+
+### Nuova Logica Riconciliazione (Sistema a Punteggio)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    SISTEMA MATCH A PUNTEGGIO (SCORE)                         │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CRITERI:                                                                    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ 1. Importo esatto (±0.05€)              →  +10 punti               │    │
+│  │ 2. Nome fornitore nella descrizione EC  →  +5 punti                │    │
+│  │ 3. Numero fattura nella descrizione EC  →  +5 punti                │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  DECISIONE:                                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Score >= 15  →  RICONCILIA AUTOMATICO (match sicuro)               │    │
+│  │ Score 10-14  →  RICONCILIA se unica fattura, altrimenti CONFERMA   │    │
+│  │ Score = 10   →  OPERAZIONE DA CONFERMARE (solo importo)            │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  File: /app/app/routers/accounting/riconciliazione_automatica.py            │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Funzioni di Match
+
+```python
+# Match fornitore nella descrizione
+def match_fornitore_descrizione(fornitore: str, descrizione: str) -> bool:
+    # Rimuove forme giuridiche (SRL, SPA, etc.)
+    # Cerca parole significative (>3 caratteri)
+    # Match se almeno 50% parole trovate
+
+# Match numero fattura nella descrizione  
+def match_numero_fattura_descrizione(numero_fattura: str, descrizione: str) -> bool:
+    # Rimuove prefissi (FT, FAT, etc.)
+    # Rimuove anno e separatori
+    # Cerca numero pulito nella descrizione
+```
+
+---
+
+## 🍰 LOGICA RICETTARIO DINAMICO
+
+### Normalizzazione a 1kg
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    NORMALIZZAZIONE RICETTE A 1KG                             │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  FORMULA:  fattore = 1000 / grammi_ingrediente_base                          │
+│                                                                              │
+│  ESEMPIO:                                                                    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ Ricetta originale:        →   Ricetta normalizzata:                 │    │
+│  │ - Farina: 300g            →   Farina: 1000g (×3.33)                 │    │
+│  │ - Zucchero: 150g          →   Zucchero: 500g (×3.33)                │    │
+│  │ - Uova: 3                 →   Uova: 10 (×3.33)                      │    │
+│  │ - Burro: 100g             →   Burro: 333g (×3.33)                   │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                              │
+│  INGREDIENTI BASE (in ordine di priorità):                                   │
+│  farina, mandorle, nocciole, ricotta, patate, riso, zucchero                │
+│                                                                              │
+│  File: /app/app/routers/haccp_v2/ricette_web_search.py                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Ricerca AI con Claude
+
+```
+Endpoint: POST /api/haccp-v2/ricette-web/cerca
+Body: { "query": "cornetti sfogliati", "categoria": "dolci" }
+
+Categorie disponibili:
+- dolci (cornetti, brioche, crostate, cannoli, cassata, etc.)
+- rosticceria_napoletana (calzone, casatiello, danubio, graffa, etc.)
+- rosticceria_siciliana (arancine, cartocciate, iris, sfincione, etc.)
+- contorni (parmigiana, caponata, carciofi, patate, etc.)
+- basi (besciamella, crema diplomatica, pasta brisée, etc.)
+
+Risposta AI → Parse JSON → Normalizzazione 1kg → Salvataggio DB
+```
+
+---
+
 ## ⚠️ REGOLE FONDAMENTALI PAGAMENTI (DA RISPETTARE SEMPRE)
 
 ```
