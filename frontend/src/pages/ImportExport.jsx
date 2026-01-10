@@ -24,6 +24,7 @@ export default function ImportExport() {
   const f24FileRef = useRef(null);
   const pagheFileRef = useRef(null);
   const estrattoContoFileRef = useRef(null);
+  const bonificiFileRef = useRef(null);
   
   // Fatture XML refs - separati per tipo
   const xmlSingleRef = useRef(null);
