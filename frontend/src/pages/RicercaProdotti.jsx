@@ -251,7 +251,7 @@ export default function RicercaProdotti() {
                   >
                     <div>
                       <strong>{s.nome?.substring(0, 50)}</strong>
-                      <div className="small" style={{ color: "#666" }}>
+                      <div style={smallStyle}>
                         {s.categoria} | {s.best_supplier}
                       </div>
                     </div>
