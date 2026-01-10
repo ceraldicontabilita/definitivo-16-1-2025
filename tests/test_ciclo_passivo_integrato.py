@@ -14,7 +14,7 @@ import requests
 import os
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://invoice-flow-64.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://xml-to-label.preview.emergentagent.com').rstrip('/')
 
 # Sample XML invoice for testing
 SAMPLE_XML_INVOICE = """<?xml version="1.0" encoding="UTF-8"?>

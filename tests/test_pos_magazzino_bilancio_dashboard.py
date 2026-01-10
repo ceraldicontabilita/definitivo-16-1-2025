@@ -11,7 +11,7 @@ import os
 from datetime import date, datetime
 
 # Use the public URL from frontend/.env
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://invoice-flow-64.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://xml-to-label.preview.emergentagent.com').rstrip('/')
 
 
 class TestPOSAccredito:
