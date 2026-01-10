@@ -490,7 +490,7 @@ export default function RicercaProdotti() {
             ))}
             
             {products.length > 100 && (
-              <div className="small" style={{ textAlign: "center", padding: 20 }}>
+              <div style={{ ...smallStyle, textAlign: "center", padding: 20 }}>
                 Mostrati 100 di {products.length} prodotti. Usa la ricerca per trovare altri prodotti.
               </div>
             )}
