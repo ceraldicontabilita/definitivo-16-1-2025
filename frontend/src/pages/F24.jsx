@@ -1,135 +1,26 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../api";
-import { ChevronDown, ChevronRight, Trash2, Edit, Upload, FileArchive, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { ChevronDown, ChevronRight, Trash2, Edit, Eye, X } from "lucide-react";
 import { formatEuro } from "../lib/utils";
 
 export default function F24() {
-  const [file, setFile] = useState(null);
-  const [out, setOut] = useState(null);
-  const [err, setErr] = useState("");
   const [f24List, setF24List] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
-  const [overwriteMode, setOverwriteMode] = useState(false);
   const [editingF24, setEditingF24] = useState(null);
-  
-  // Stati per upload ZIP massivo
-  const [zipFile, setZipFile] = useState(null);
-  const [zipUploading, setZipUploading] = useState(false);
-  const [zipProgress, setZipProgress] = useState(0);
-  const [zipResult, setZipResult] = useState(null);
-  const [f24Documents, setF24Documents] = useState([]);
-  const zipInputRef = useRef(null);
-  
-  // Stati per upload multiplo PDF
-  const [multipleUploading, setMultipleUploading] = useState(false);
-  const [multipleProgress, setMultipleProgress] = useState(0);
-  const [multipleResult, setMultipleResult] = useState(null);
+  const [viewingPdf, setViewingPdf] = useState(null);
 
   useEffect(() => {
     loadF24();
     loadAlerts();
     loadDashboard();
-    loadF24Documents();
   }, []);
-  
-  async function loadF24Documents() {
-    try {
-      const res = await api.get("/api/f24/documents");
-      setF24Documents(res.data || []);
-    } catch (e) {
-      console.error("Error loading F24 documents:", e);
-    }
-  }
-  
-  async function handleMultiplePdfUpload(files) {
-    setMultipleUploading(true);
-    setMultipleProgress(0);
-    setMultipleResult(null);
-    setErr("");
-    
-    try {
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append("files", file);
-      });
-      
-      // Simula progresso
-      const progressInterval = setInterval(() => {
-        setMultipleProgress(prev => Math.min(prev + 10, 90));
-      }, 100);
-      
-      const res = await api.post("/api/f24/upload-multiple", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      
-      clearInterval(progressInterval);
-      setMultipleProgress(100);
-      setMultipleResult(res.data);
-      loadF24Documents();
-      
-    } catch (e) {
-      setErr("Upload PDF fallito: " + (e.response?.data?.detail || e.message));
-    } finally {
-      setMultipleUploading(false);
-    }
-  }
-  
-  async function handleZipUpload() {
-    if (!zipFile) return;
-    
-    setZipUploading(true);
-    setZipProgress(0);
-    setZipResult(null);
-    setErr("");
-    
-    try {
-      const formData = new FormData();
-      formData.append("file", zipFile);
-      
-      // Simula progresso durante upload
-      const progressInterval = setInterval(() => {
-        setZipProgress(prev => Math.min(prev + 5, 90));
-      }, 100);
-      
-      const res = await api.post("/api/f24/upload-zip", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 50) / progressEvent.total);
-          setZipProgress(percentCompleted);
-        }
-      });
-      
-      clearInterval(progressInterval);
-      setZipProgress(100);
-      setZipResult(res.data);
-      setZipFile(null);
-      if (zipInputRef.current) zipInputRef.current.value = "";
-      loadF24Documents();
-      
-    } catch (e) {
-      setErr("Upload ZIP fallito: " + (e.response?.data?.detail || e.message));
-    } finally {
-      setZipUploading(false);
-    }
-  }
-  
-  async function handleDeleteDocument(docId) {
-    if (!window.confirm("Eliminare questo documento F24?")) return;
-    try {
-      await api.delete(`/api/f24/documents/${docId}`);
-      loadF24Documents();
-    } catch (e) {
-      alert("Errore: " + (e.response?.data?.detail || e.message));
-    }
-  }
 
   async function loadF24() {
     try {
       setLoading(true);
-      // Load from both old and new endpoints
       const [oldRes, newRes] = await Promise.all([
         api.get("/api/f24").catch(() => ({ data: [] })),
         api.get("/api/f24-public/models").catch(() => ({ data: { f24s: [] } }))
@@ -138,7 +29,6 @@ export default function F24() {
       const oldList = Array.isArray(oldRes.data) ? oldRes.data : oldRes.data?.items || [];
       const newList = newRes.data?.f24s || [];
       
-      // Combine and dedupe by id
       const combined = [...oldList, ...newList.map(f => ({
         ...f,
         tipo: "F24 Contributi",
@@ -171,33 +61,6 @@ export default function F24() {
       setDashboard(r.data);
     } catch (e) {
       console.error("Error loading dashboard:", e);
-    }
-  }
-
-  async function onUpload() {
-    setErr("");
-    setOut(null);
-    if (!file) return setErr("Seleziona un file PDF.");
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      // Use overwrite endpoint if mode is enabled
-      const endpoint = overwriteMode 
-        ? `/api/f24-public/upload-overwrite?overwrite=true`
-        : "/api/f24-public/upload";
-      
-      const res = await api.post(endpoint, formData);
-      setOut(res.data);
-      setFile(null);
-      // Reset file input
-      const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) fileInput.value = "";
-      loadF24();
-      loadAlerts();
-      loadDashboard();
-    } catch (e) {
-      setErr("Upload fallito. " + (e.response?.data?.detail || e.message));
     }
   }
 
@@ -235,6 +98,16 @@ export default function F24() {
     }
   }
 
+  async function handleViewPdf(f24) {
+    try {
+      // Prova a recuperare il PDF originale
+      const pdfUrl = `${api.defaults.baseURL}/api/f24-public/pdf/${f24.id}`;
+      setViewingPdf({ url: pdfUrl, name: f24.filename || `F24_${f24.data_scadenza || 'sconosciuto'}.pdf`, f24 });
+    } catch (e) {
+      alert("Impossibile visualizzare il PDF: " + e.message);
+    }
+  }
+
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'critical': return '#d32f2f';
@@ -256,124 +129,142 @@ export default function F24() {
   };
 
   const toggleRowExpand = (id) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Check if an F24 has tributi details
-  const hasTributi = (f24) => {
-    return (f24.tributi_erario?.length > 0) ||
-           (f24.tributi_inps?.length > 0) ||
-           (f24.tributi_regioni?.length > 0) ||
-           (f24.tributi_imu?.length > 0);
+  const hasTributi = (f) => {
+    return f.tributi_erario?.length > 0 || f.tributi_inps?.length > 0 || 
+           f.tributi_regioni?.length > 0 || f.tributi_imu?.length > 0;
   };
 
-  // Render tributi details table
-  const renderTributiDetails = (f24) => {
-    const allTributi = [];
+  const renderTributiDetails = (f) => {
+    const sections = [];
     
-    (f24.tributi_erario || []).forEach(t => allTributi.push({ ...t, sezione: 'ERARIO' }));
-    (f24.tributi_inps || []).forEach(t => allTributi.push({ ...t, sezione: 'INPS' }));
-    (f24.tributi_regioni || []).forEach(t => allTributi.push({ ...t, sezione: 'REGIONI' }));
-    (f24.tributi_imu || []).forEach(t => allTributi.push({ ...t, sezione: 'IMU/TASI' }));
-
-    if (allTributi.length === 0) return null;
-
-    return (
-      <div style={{ 
-        background: '#f8fafc', 
-        padding: 15, 
-        borderRadius: 8, 
-        margin: '10px 0',
-        border: '1px solid #e2e8f0'
-      }}>
-        <h4 style={{ margin: '0 0 12px 0', fontSize: 14, color: '#475569' }}>
-          📋 Dettaglio Codici Tributo ({allTributi.length})
-        </h4>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: '#e2e8f0' }}>
-              <th style={{ padding: '8px 10px', textAlign: 'left', borderRadius: '4px 0 0 0' }}>Sezione</th>
-              <th style={{ padding: '8px 10px', textAlign: 'left' }}>Codice</th>
-              <th style={{ padding: '8px 10px', textAlign: 'left' }}>Descrizione</th>
-              <th style={{ padding: '8px 10px', textAlign: 'center' }}>Periodo</th>
-              <th style={{ padding: '8px 10px', textAlign: 'right' }}>Debito</th>
-              <th style={{ padding: '8px 10px', textAlign: 'right', borderRadius: '0 4px 0 0' }}>Credito</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allTributi.map((t, idx) => (
-              <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                <td style={{ padding: '8px 10px' }}>
-                  <span style={{
-                    padding: '2px 8px',
-                    borderRadius: 4,
-                    fontSize: 11,
-                    fontWeight: 'bold',
-                    background: t.sezione === 'ERARIO' ? '#dbeafe' :
-                               t.sezione === 'INPS' ? '#dcfce7' :
-                               t.sezione === 'REGIONI' ? '#fef3c7' : '#f3e8ff',
-                    color: t.sezione === 'ERARIO' ? '#1e40af' :
-                           t.sezione === 'INPS' ? '#166534' :
-                           t.sezione === 'REGIONI' ? '#92400e' : '#7c3aed'
-                  }}>
-                    {t.sezione}
-                  </span>
-                </td>
-                <td style={{ padding: '8px 10px', fontFamily: 'monospace', fontWeight: 'bold' }}>
-                  {t.codice || t.causale || '-'}
-                </td>
-                <td style={{ padding: '8px 10px', color: '#64748b' }}>
-                  {t.tipo || (t.sezione === 'INPS' ? 'Contributi INPS' : `Tributo ${t.codice}`)}
-                </td>
-                <td style={{ padding: '8px 10px', textAlign: 'center', fontFamily: 'monospace' }}>
-                  {t.mese_riferimento || t.mese || ''}/{t.anno || ''}
-                </td>
-                <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: t.debito > 0 ? '#dc2626' : '#64748b' }}>
-                  {t.debito > 0 ? formatEuro(t.debito) : '-'}
-                </td>
-                <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: t.credito > 0 ? '#16a34a' : '#64748b' }}>
-                  {t.credito > 0 ? formatEuro(t.credito) : '-'}
-                </td>
+    if (f.tributi_erario?.length > 0) {
+      sections.push(
+        <div key="erario" style={{ marginBottom: 15 }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#1e40af', fontSize: 13 }}>📋 ERARIO</h4>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#dbeafe' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Codice</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Periodo</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Credito</th>
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr style={{ background: '#f1f5f9', fontWeight: 'bold' }}>
-              <td colSpan={4} style={{ padding: '10px', textAlign: 'right' }}>TOTALI:</td>
-              <td style={{ padding: '10px', textAlign: 'right', color: '#dc2626' }}>
-                {formatEuro(allTributi.reduce((sum, t) => sum + (t.debito || 0), 0))}
-              </td>
-              <td style={{ padding: '10px', textAlign: 'right', color: '#16a34a' }}>
-                {formatEuro(allTributi.reduce((sum, t) => sum + (t.credito || 0), 0))}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    );
+            </thead>
+            <tbody>
+              {f.tributi_erario.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6 }}>{t.codice_tributo}</td>
+                  <td style={{ padding: 6 }}>{t.riferimento || t.anno_riferimento || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_debito || t.importo || 0)}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_credito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    if (f.tributi_inps?.length > 0) {
+      sections.push(
+        <div key="inps" style={{ marginBottom: 15 }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#166534', fontSize: 13 }}>🏛️ INPS</h4>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#dcfce7' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Sede/Causale</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Matricola</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Periodo</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Credito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f.tributi_inps.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6 }}>{t.codice_sede}/{t.causale_contributo}</td>
+                  <td style={{ padding: 6 }}>{t.matricola || '-'}</td>
+                  <td style={{ padding: 6 }}>{t.periodo_da || '-'} - {t.periodo_a || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_debito || t.importo || 0)}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_credito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    if (f.tributi_regioni?.length > 0) {
+      sections.push(
+        <div key="regioni" style={{ marginBottom: 15 }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#92400e', fontSize: 13 }}>🗺️ REGIONI/ENTI LOCALI</h4>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#fef3c7' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Codice</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Ente</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Credito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f.tributi_regioni.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6 }}>{t.codice_tributo || t.codice}</td>
+                  <td style={{ padding: 6 }}>{t.codice_ente || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_debito || t.importo || 0)}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_credito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    return <div style={{ padding: 10 }}>{sections}</div>;
   };
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
-      <h1 data-testid="f24-title" style={{ marginBottom: 20, fontSize: 'clamp(20px, 5vw, 28px)' }}>📋 F24 / Tributi</h1>
-
-      {/* Dashboard Stats */}
-      {dashboard && (
-        <div 
-          data-testid="f24-dashboard"
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: 'clamp(8px, 2vw, 15px)', 
-            marginBottom: 25 
+    <div style={{ padding: "clamp(12px, 3vw, 20px)" }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: "clamp(20px, 5vw, 28px)" }}>📋 Modelli F24</h1>
+          <p style={{ color: "#666", margin: "8px 0 0 0" }}>
+            Visualizzazione e gestione modelli F24
+          </p>
+        </div>
+        <button 
+          onClick={() => { loadF24(); loadAlerts(); loadDashboard(); }}
+          data-testid="refresh-f24-btn"
+          style={{
+            padding: '10px 20px',
+            background: '#f5f5f5',
+            color: '#333',
+            border: '1px solid #ddd',
+            borderRadius: 8,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
           }}
         >
+          🔄 Aggiorna
+        </button>
+      </div>
+
+      {/* Dashboard */}
+      {dashboard && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 15, marginBottom: 25 }}>
           <div style={{ background: '#e3f2fd', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #2196f3' }}>
             <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>📊 Totale F24</div>
-            <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#2196f3' }}>{dashboard.totale_f24}</div>
+            <div style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: 'bold', color: '#2196f3' }}>{dashboard.totale || 0}</div>
+            <div style={{ fontSize: 'clamp(9px, 2vw, 11px)', color: '#666' }}>{formatEuro(dashboard.importo_totale)}</div>
           </div>
           <div style={{ background: '#e8f5e9', padding: 'clamp(10px, 3vw, 15px)', borderRadius: 8, borderLeft: '4px solid #4caf50' }}>
             <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#666' }}>✅ Pagati</div>
@@ -476,396 +367,17 @@ export default function F24() {
         </div>
       )}
 
-      {/* Upload Section */}
-      <div style={{ background: 'white', borderRadius: 8, padding: 20, marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0 }}>📤 Carica PDF F24</h3>
-        <p style={{ color: '#666', fontSize: 14, marginBottom: 15 }}>
-          Carica i modelli F24 in formato PDF per l'estrazione automatica dei dati.
-        </p>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 15 }}>
-          <input 
-            type="file" 
-            accept=".pdf" 
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            data-testid="f24-file-input"
-            style={{ padding: 8 }}
-          />
-          <button 
-            onClick={onUpload}
-            data-testid="upload-f24-btn"
-            style={{
-              padding: '10px 20px',
-              background: '#2196f3',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6
-            }}
-          >
-            <Upload size={16} /> Carica PDF F24
-          </button>
-          <button 
-            onClick={() => { loadF24(); loadAlerts(); loadDashboard(); }}
-            data-testid="refresh-f24-btn"
-            style={{
-              padding: '10px 20px',
-              background: '#f5f5f5',
-              color: '#333',
-              border: '1px solid #ddd',
-              borderRadius: 4,
-              cursor: 'pointer'
-            }}
-          >
-            🔄 Aggiorna
-          </button>
-        </div>
-        
-        {/* Overwrite option */}
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#666' }}>
-          <input
-            type="checkbox"
-            checked={overwriteMode}
-            onChange={(e) => setOverwriteMode(e.target.checked)}
-            data-testid="overwrite-checkbox"
-          />
-          <span>Sovrascrivi F24 esistenti con stessa scadenza/importo</span>
-        </label>
-        
-        {err && <div style={{ marginTop: 10, color: '#c00', fontSize: 14 }}>{err}</div>}
-      </div>
-      
-      {/* Upload ZIP Massivo */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-        borderRadius: 12, 
-        padding: 24, 
-        marginBottom: 20,
-        color: 'white'
-      }}>
-        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <FileArchive size={24} /> Upload Massivo ZIP F24
-        </h3>
-        <p style={{ opacity: 0.9, fontSize: 14, marginBottom: 20 }}>
-          Carica un file ZIP contenente più PDF F24. Il sistema rileva automaticamente i duplicati tramite hash SHA256.
-        </p>
-        
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input 
-            ref={zipInputRef}
-            type="file" 
-            accept=".zip" 
-            onChange={(e) => setZipFile(e.target.files?.[0] || null)}
-            data-testid="f24-zip-input"
-            style={{ 
-              padding: 10, 
-              background: 'rgba(255,255,255,0.2)', 
-              borderRadius: 8,
-              border: '2px dashed rgba(255,255,255,0.5)',
-              color: 'white'
-            }}
-          />
-          <button 
-            onClick={handleZipUpload}
-            disabled={!zipFile || zipUploading}
-            data-testid="upload-zip-btn"
-            style={{
-              padding: '12px 24px',
-              background: zipFile && !zipUploading ? 'white' : 'rgba(255,255,255,0.3)',
-              color: zipFile && !zipUploading ? '#764ba2' : 'rgba(255,255,255,0.7)',
-              border: 'none',
-              borderRadius: 8,
-              cursor: zipFile && !zipUploading ? 'pointer' : 'not-allowed',
-              fontWeight: 'bold',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8
-            }}
-          >
-            <Upload size={18} /> 
-            {zipUploading ? 'Elaborazione...' : 'Carica ZIP'}
-          </button>
-        </div>
-        
-        {/* Progress Bar */}
-        {zipUploading && (
-          <div style={{ marginTop: 20 }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              marginBottom: 8,
-              fontSize: 14
-            }}>
-              <span>Elaborazione in corso...</span>
-              <span>{zipProgress}%</span>
-            </div>
-            <div style={{ 
-              background: 'rgba(255,255,255,0.2)', 
-              borderRadius: 10, 
-              height: 12,
-              overflow: 'hidden'
-            }}>
-              <div style={{ 
-                width: `${zipProgress}%`, 
-                height: '100%', 
-                background: 'white',
-                borderRadius: 10,
-                transition: 'width 0.3s ease'
-              }} />
-            </div>
-          </div>
-        )}
-        
-        {/* Risultato Upload */}
-        {zipResult && (
-          <div style={{ 
-            marginTop: 20, 
-            background: 'rgba(255,255,255,0.95)', 
-            borderRadius: 8, 
-            padding: 16,
-            color: '#333'
-          }}>
-            <h4 style={{ margin: '0 0 12px 0', color: '#764ba2' }}>📊 Risultato Upload</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 15 }}>
-              <div style={{ textAlign: 'center', padding: 10, background: '#f0f7ff', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2196f3' }}>{zipResult.total}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Totale PDF</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: 10, background: '#e8f5e9', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#4caf50' }}>{zipResult.imported}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Importati</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: 10, background: '#fff3e0', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ff9800' }}>{zipResult.duplicates}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Duplicati</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: 10, background: '#ffebee', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f44336' }}>{zipResult.errors}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Errori</div>
-              </div>
-            </div>
-            
-            {zipResult.details?.length > 0 && (
-              <details style={{ marginTop: 10 }}>
-                <summary style={{ cursor: 'pointer', color: '#666', fontSize: 13 }}>
-                  Mostra dettagli ({zipResult.details.length} file)
-                </summary>
-                <div style={{ maxHeight: 200, overflow: 'auto', marginTop: 10 }}>
-                  {zipResult.details.map((d, i) => (
-                    <div key={i} style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 8, 
-                      padding: '6px 0',
-                      borderBottom: '1px solid #eee',
-                      fontSize: 13
-                    }}>
-                      {d.status === 'imported' && <CheckCircle size={16} color="#4caf50" />}
-                      {d.status === 'duplicate' && <Clock size={16} color="#ff9800" />}
-                      {d.status === 'error' && <AlertCircle size={16} color="#f44336" />}
-                      <span style={{ flex: 1 }}>{d.file}</span>
-                      <span style={{ 
-                        fontSize: 11, 
-                        padding: '2px 8px', 
-                        borderRadius: 4,
-                        background: d.status === 'imported' ? '#e8f5e9' : 
-                                   d.status === 'duplicate' ? '#fff3e0' : '#ffebee',
-                        color: d.status === 'imported' ? '#2e7d32' : 
-                               d.status === 'duplicate' ? '#e65100' : '#c62828'
-                      }}>
-                        {d.status === 'imported' ? 'Importato' : 
-                         d.status === 'duplicate' ? 'Duplicato' : 'Errore'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Upload Multiplo PDF F24 */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-        borderRadius: 12, 
-        padding: 24, 
-        marginBottom: 20,
-        color: 'white'
-      }}>
-        <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Upload size={24} /> Upload Multiplo PDF F24
-        </h3>
-        <p style={{ opacity: 0.9, fontSize: 14, marginBottom: 20 }}>
-          Seleziona più file PDF F24 da caricare contemporaneamente. Controllo duplicati automatico.
-        </p>
-        
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input 
-            type="file" 
-            accept=".pdf"
-            multiple
-            onChange={(e) => {
-              const files = Array.from(e.target.files || []);
-              if (files.length > 0) {
-                handleMultiplePdfUpload(files);
-              }
-            }}
-            data-testid="f24-multiple-pdf-input"
-            style={{ 
-              padding: 10, 
-              background: 'rgba(255,255,255,0.2)', 
-              borderRadius: 8,
-              border: '2px dashed rgba(255,255,255,0.5)',
-              color: 'white'
-            }}
-          />
-        </div>
-        
-        {/* Progress per upload multiplo */}
-        {multipleUploading && (
-          <div style={{ marginTop: 20 }}>
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              marginBottom: 8,
-              fontSize: 14
-            }}>
-              <span>Caricamento PDF in corso...</span>
-              <span>{multipleProgress}%</span>
-            </div>
-            <div style={{ 
-              background: 'rgba(255,255,255,0.2)', 
-              borderRadius: 10, 
-              height: 12,
-              overflow: 'hidden'
-            }}>
-              <div style={{ 
-                width: `${multipleProgress}%`, 
-                height: '100%', 
-                background: 'white',
-                borderRadius: 10,
-                transition: 'width 0.3s ease'
-              }} />
-            </div>
-          </div>
-        )}
-        
-        {/* Risultato Upload Multiplo */}
-        {multipleResult && (
-          <div style={{ 
-            marginTop: 20, 
-            background: 'rgba(255,255,255,0.95)', 
-            borderRadius: 8, 
-            padding: 16,
-            color: '#333'
-          }}>
-            <h4 style={{ margin: '0 0 12px 0', color: '#059669' }}>📊 Risultato Upload PDF</h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 15 }}>
-              <div style={{ textAlign: 'center', padding: 10, background: '#f0f7ff', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#2196f3' }}>{multipleResult.total}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Totale PDF</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: 10, background: '#e8f5e9', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#4caf50' }}>{multipleResult.imported}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Importati</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: 10, background: '#fff3e0', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#ff9800' }}>{multipleResult.duplicates}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Duplicati</div>
-              </div>
-              <div style={{ textAlign: 'center', padding: 10, background: '#ffebee', borderRadius: 6 }}>
-                <div style={{ fontSize: 24, fontWeight: 'bold', color: '#f44336' }}>{multipleResult.errors}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>Errori</div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* Documenti F24 Caricati */}
-      {f24Documents.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 8, padding: 20, marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ marginTop: 0 }}>📁 Documenti F24 Caricati ({f24Documents.length})</h3>
-          <div style={{ maxHeight: 300, overflow: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: '#f5f5f5' }}>
-                  <th style={{ padding: 10, textAlign: 'left' }}>File</th>
-                  <th style={{ padding: 10, textAlign: 'center' }}>Stato</th>
-                  <th style={{ padding: 10, textAlign: 'right' }}>Dimensione</th>
-                  <th style={{ padding: 10, textAlign: 'center' }}>Data</th>
-                  <th style={{ padding: 10, textAlign: 'center' }}>Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {f24Documents.map(doc => (
-                  <tr key={doc.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: 10 }}>
-                      <div style={{ fontWeight: 500 }}>{doc.original_filename}</div>
-                      <div style={{ fontSize: 11, color: '#999' }}>da: {doc.imported_from_zip}</div>
-                    </td>
-                    <td style={{ padding: 10, textAlign: 'center' }}>
-                      <span style={{
-                        padding: '3px 10px',
-                        borderRadius: 12,
-                        fontSize: 11,
-                        background: doc.status === 'processed' ? '#e8f5e9' : '#fff3e0',
-                        color: doc.status === 'processed' ? '#2e7d32' : '#e65100'
-                      }}>
-                        {doc.status === 'processed' ? 'Elaborato' : 'In attesa'}
-                      </span>
-                    </td>
-                    <td style={{ padding: 10, textAlign: 'right', color: '#666' }}>
-                      {(doc.file_size / 1024).toFixed(1)} KB
-                    </td>
-                    <td style={{ padding: 10, textAlign: 'center', color: '#666' }}>
-                      {new Date(doc.created_at).toLocaleDateString('it-IT')}
-                    </td>
-                    <td style={{ padding: 10, textAlign: 'center' }}>
-                      <button
-                        onClick={() => handleDeleteDocument(doc.id)}
-                        style={{ 
-                          padding: '4px 8px', 
-                          background: '#ffebee', 
-                          border: 'none', 
-                          borderRadius: 4, 
-                          cursor: 'pointer',
-                          color: '#c62828'
-                        }}
-                        title="Elimina"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Upload Response */}
-      {out && (
-        <div style={{ background: '#e8f5e9', borderRadius: 8, padding: 20, marginBottom: 20 }}>
-          <h3 style={{ marginTop: 0 }}>✅ Risposta Upload</h3>
-          <pre style={{ background: '#f5f5f5', padding: 10, borderRadius: 8, overflow: 'auto' }}>
-            {JSON.stringify(out, null, 2)}
-          </pre>
-        </div>
-      )}
-
       {/* F24 List */}
       <div style={{ background: 'white', borderRadius: 8, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <h3 style={{ marginTop: 0 }}>📋 Modelli F24 Registrati ({f24List.length})</h3>
+        <p style={{ color: '#666', fontSize: 13, marginBottom: 15 }}>
+          Per importare nuovi F24, usa la sezione <a href="/import-export" style={{ color: '#3b82f6' }}>Import/Export</a>
+        </p>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Caricamento...</div>
         ) : f24List.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
-            Nessun modello F24 registrato. Carica un file PDF per iniziare.
+            Nessun modello F24 registrato. Usa Import/Export per caricare i PDF.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -981,6 +493,26 @@ export default function F24() {
                       </td>
                       <td style={{ padding: 12, textAlign: "center" }}>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                          {/* Visualizza PDF */}
+                          <button
+                            onClick={() => handleViewPdf(f)}
+                            style={{
+                              padding: '6px 10px',
+                              background: '#8b5cf6',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 4,
+                              cursor: 'pointer',
+                              fontSize: 11,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4
+                            }}
+                            data-testid={`view-pdf-${f.id}`}
+                            title="Visualizza PDF"
+                          >
+                            <Eye size={12} /> PDF
+                          </button>
                           {(f.status !== 'paid' && !f.pagato) && (
                             <button
                               onClick={() => handleMarkAsPaid(f.id)}
@@ -1014,7 +546,7 @@ export default function F24() {
                             }}
                             data-testid={`edit-f24-${f.id}`}
                           >
-                            <Edit size={12} /> Modifica
+                            <Edit size={12} />
                           </button>
                           <button
                             onClick={() => handleDeleteF24(f.id)}
@@ -1032,12 +564,11 @@ export default function F24() {
                             }}
                             data-testid={`delete-f24-${f.id}`}
                           >
-                            <Trash2 size={12} /> Elimina
+                            <Trash2 size={12} />
                           </button>
                         </div>
                       </td>
                     </tr>
-                    {/* Expanded row for tributi details */}
                     {expandedRows[f.id || i] && hasTributi(f) && (
                       <tr>
                         <td colSpan={7} style={{ padding: '0 12px 12px 12px', background: '#fafafa' }}>
@@ -1052,6 +583,69 @@ export default function F24() {
           </div>
         )}
       </div>
+      
+      {/* PDF Viewer Modal */}
+      {viewingPdf && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => setViewingPdf(null)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: 8,
+              width: '90%',
+              height: '90%',
+              maxWidth: 1200,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ 
+              padding: '12px 20px', 
+              borderBottom: '1px solid #eee', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center' 
+            }}>
+              <h3 style={{ margin: 0 }}>📄 {viewingPdf.name}</h3>
+              <button
+                onClick={() => setViewingPdf(null)}
+                style={{
+                  padding: '8px',
+                  background: '#f5f5f5',
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ flex: 1, padding: 10 }}>
+              <iframe 
+                src={viewingPdf.url}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  border: 'none',
+                  borderRadius: 4
+                }}
+                title="PDF Viewer"
+              />
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Edit F24 Modal */}
       {editingF24 && (
