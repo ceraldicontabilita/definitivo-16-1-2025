@@ -158,6 +158,10 @@ CERALDI GROUP S.R.L.;08/01/2026;08/01/2026;05034 - BANCO BPM S.P.A.;5462 - 03406
 - ✅ Template riscritti (corrispettivi.xlsx, pos.xlsx, versamenti.csv, estratto_conto.csv)
 - ✅ Card Import Fatture XML ridisegnata in stile uniforme con le altre
 - ✅ Fix rilevamento duplicati fatture XML (HTTP 409 + "già presente")
+- ✅ F24 e Buste Paga: aggiunto supporto Upload Massivo ZIP e Upload Multiplo PDF
+- ✅ Pagina /f24: rimosso tutte le sezioni di upload (ora solo visualizzazione)
+- ✅ Pagina /f24: aggiunto pulsante "PDF" per visualizzare il documento originale
+- ✅ Backend: endpoint GET /api/f24-public/pdf/{f24_id} per servire PDF originali
 - ✅ Frontend aggiornato con descrizioni corrette dei formati
 
 ### 2026-01-09
