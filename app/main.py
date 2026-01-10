@@ -199,6 +199,7 @@ app.include_router(contabilita_avanzata.router, prefix="/api/contabilita", tags=
 app.include_router(regole_categorizzazione.router, prefix="/api/regole", tags=["Regole Categorizzazione"])
 app.include_router(iva_calcolo.router, prefix="/api/iva", tags=["IVA Calcolo"])
 app.include_router(liquidazione_iva.router, prefix="/api", tags=["Liquidazione IVA"])
+app.include_router(riconciliazione_automatica.router, prefix="/api/riconciliazione-auto", tags=["Riconciliazione Automatica"])
 
 # --- Bank Module ---
 app.include_router(bank_main.router, prefix="/api/bank", tags=["Bank"])
