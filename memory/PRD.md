@@ -1,562 +1,121 @@
-# ERP Contabilità - Product Requirements Document
+# PRD - Azienda in Cloud ERP
 
-## Overview
-Sistema ERP completo per la gestione contabile di piccole/medie imprese italiane. Include gestione fatture, prima nota, riconciliazione bancaria, IVA, F24, HACCP e report.
+## Descrizione Progetto
+Sistema ERP completo per Ceraldi Group S.R.L. con moduli per contabilità, fatturazione, magazzino e HACCP.
 
-## NUOVE FUNZIONALITÀ (2026-01-10) ✅ COMPLETATO
+## Requisiti Principali Completati
 
-### 1. Associazione Bonifici ↔ Prima Nota Salari
-- **Dropdown associazione**: Nella tabella bonifici, colonna "Associa a Salario" con menu a tendina
-- **Ricerca automatica**: Mostra operazioni compatibili da Prima Nota Salari (importo ±10%, data ±30gg)
-- **Score compatibilità**: Calcola percentuale match (importo, data, nome causale)
-- **Endpoints**:
-  - `GET /api/archivio-bonifici/operazioni-salari/{bonifico_id}` - Cerca operazioni compatibili
-  - `POST /api/archivio-bonifici/associa-salario` - Associa bonifico a operazione
-  - `DELETE /api/archivio-bonifici/disassocia-salario/{bonifico_id}` - Rimuovi associazione
+### 1. Sistema HACCP Completo
+- Temperature positive/negative
+- Sanificazione e disinfestazione  
+- Anomalie e chiusure
+- Gestione lotti e materie prime
+- Ricettario dinamico collegato a fatture XML
+- Gestione non conformità
+- Libro allergeni stampabile
 
-### 2. Libro degli Allergeni (Reg. UE 1169/2011)
-- **14 allergeni obbligatori UE** rilevati automaticamente dagli ingredienti
-- **Pagina frontend**: `/libro-allergeni` con tabella ingredienti/allergeni stampabile
-- **Funzionalità PDF**: Stampa libro da esporre nel locale
-- **Modificabile**: Aggiungi/rimuovi voci manuali
-- **Statistiche**: 86 ingredienti, 30 con allergeni, 6 tipi rilevati
-- **Endpoints**:
-  - `GET /api/haccp-v2/allergeni/elenco` - Lista 14 allergeni UE
-  - `GET /api/haccp-v2/allergeni/libro` - Genera libro completo
-  - `POST /api/haccp-v2/allergeni/libro/voce` - Aggiungi voce manuale
-  - `GET /api/haccp-v2/allergeni/ricetta/{id}` - Allergeni per etichetta
+### 2. Modulo Contabilità
+- Prima nota con categorizzazione automatica
+- Prima nota salari
+- Piano dei conti e bilancio
+- Gestione IVA e liquidazioni
+- Riconciliazione bancaria
+- Gestione bonifici con associazione salari
 
-### 3. Allergeni nelle Etichette
-- **Box allergeni evidenziato** nell'etichetta lotto (sfondo giallo, testo rosso)
-- **Formato**: "⚠️ CONTIENE: GLUTINE, LATTE, UOVA"
-- **Rilevamento automatico** dal nome ingrediente
+### 3. Gestione Documenti
+- Import fatture XML
+- Ciclo passivo integrato
+- Archivio documenti email
+- Export PDF/Excel
 
----
-
-## MODULO HACCP AVANZATO E RICETTARIO DINAMICO ✅ COMPLETATO
-
-### Ricettario Dinamico XML-Driven
-- **Collegamento ingredienti a fatture XML**: Ogni ingrediente può essere tracciato alla fattura di origine
-- **Aggiornamento automatico**: Costi e lotti aggiornati all'importazione fatture (Hook in ciclo_passivo_integrato.py)
-- **Regola rotazione 30gg**: Dati scadono solo se presente fattura più recente
-- **Tracciabilità completa**: Fattura → Lotto → Ingrediente → Ricetta
-
-### Integrazione Automatica Import XML
-All'importazione di una fattura XML tramite `/api/ciclo-passivo/import-integrato`:
-1. Parse XML e creazione fattura
-2. Carico magazzino + Lotti HACCP
-3. Scrittura Prima Nota
-4. Creazione scadenza pagamento
-5. Riconciliazione automatica
-6. **NUOVO: Aggiornamento automatico ricettario** - Aggiorna costi/lotti nelle ricette
-
-### Endpoints Ricettario (`/api/haccp-v2/ricettario/`)
-| Endpoint | Metodo | Descrizione |
-|----------|--------|-------------|
-| `/` | GET | Lista ricette con food cost |
-| `/{id}` | GET | Dettaglio con tracciabilità ingredienti |
-| `/aggiorna-da-fattura` | POST | Aggiorna ricette da fattura XML |
-| `/verifica-rotazione` | POST | Verifica regola 30gg |
-| `/tracciabilita/{id}` | GET | Report tracciabilità completo |
-| `/ingredienti-non-tracciati` | GET | Lista ingredienti senza fattura |
-
-### Schede HACCP Non Conformità
-- **Registro prodotti non conformi**: Scaduti, danneggiati, temperatura fuori range
-- **Firma digitale operatore**: Timestamp + ID operatore su ogni registrazione
-- **Gravità e azioni correttive**: Smaltimento, reso, declassamento
-- **Statistiche mensili/annuali**
-
-### Endpoints Non Conformità (`/api/haccp-v2/non-conformi/`)
-| Endpoint | Metodo | Descrizione |
-|----------|--------|-------------|
-| `/` | GET/POST | Lista/Registra non conformità |
-| `/motivi-azioni` | GET | Motivi e azioni disponibili |
-| `/scheda-mensile/{anno}/{mese}` | GET | Scheda per registro HACCP |
-| `/{id}` | GET/PUT/DELETE | Dettaglio/Aggiorna/Elimina |
-| `/statistiche/{anno}` | GET | Statistiche annuali |
-
-### Frontend JSX (Stili Inline) - Tutte le pagine HACCP
-- `/app/frontend/src/pages/HACCPNonConformita.jsx` - Registro non conformità
-- `/app/frontend/src/pages/RicettarioDinamico.jsx` - Ricettario con tracciabilità XML
-- `/app/frontend/src/pages/HACCPTemperature.jsx` - Monitoraggio Frigoriferi e Congelatori
-- `/app/frontend/src/pages/HACCPSanificazione.jsx` - Registro Sanificazione
-
-### Route Frontend HACCP
-- `/haccp-v2/non-conformita` - Registro Non Conformità
-- `/ricettario-dinamico` o `/haccp-v2/ricettario` - Ricettario Dinamico
-- `/haccp-v2/temperature` - Monitoraggio Temperature (Frigo/Congelatori)
-- `/haccp-v2/sanificazione` - Registro Sanificazione
-
-### Menu Sidebar HACCP (App.jsx)
-Menu espandibile con 6 voci:
-- 📊 Dashboard HACCP
-- 📖 Ricettario Dinamico
-- 🌡️ Temperature
-- 🧹 Sanificazione
-- ⚠️ Non Conformità
-- 📋 Registro Lotti
-
-### Test Report (iteration_47.json)
-- Backend: 17/17 test passati (100%)
-- Frontend: 4/4 pagine verificate (100%)
-- Test file: `/app/tests/test_haccp_v2_iteration47.py`
+### 4. Magazzino
+- Gestione prodotti e lotti
+- Tracciabilità completa
+- Dizionario articoli
 
 ---
 
-## WORKFLOW "DALL'XML ALL'ETICHETTA" (2026-01-10) ✅ COMPLETATO
+## CHANGELOG - Dicembre 2025
 
-### Descrizione Completa
-Sistema completamente integrato per la gestione del ciclo passivo aziendale con tracciabilità HACCP avanzata.
+### 10 Gennaio 2026 - Ricerca Web Ricette + Normalizzazione 1kg
 
-### 1. Parser XML Intelligente
-- **Estrazione automatica lotto fornitore**: Pattern supportati: LOTTO:, L., BATCH:, LOT:, N.LOTTO:
-- **Estrazione automatica scadenza**: Pattern supportati: SCAD:, EXP:, TMC:, BB:, BEST BEFORE:
-- File: `/app/app/parsers/fattura_elettronica_parser.py`
+**Nuova Funzionalità Implementata:**
 
-### 2. Automazione Magazzino e HACCP
-Ogni riga XML genera automaticamente:
-- **Movimento carico**: Incremento giacenza prodotto
-- **Lotto HACCP completo** con:
-  - `lotto_interno`: ID univoco generato (formato: YYYYMMDD-FORN-NNN-XXXX)
-  - `lotto_fornitore`: Estratto da XML o "Da inserire manualmente"
-  - `data_scadenza`: Estratta da XML o calcolata +30gg
-  - Tracciabilità completa: fattura_id, fornitore, prodotto
+1. **Ricerca Web Ricette con AI (Claude Sonnet 4.5)**
+   - Cerca ricette di dolci, rosticceria napoletana e siciliana
+   - Genera ricette complete con ingredienti, quantità e procedimento
+   - Categorie supportate: dolci, rosticceria_napoletana, rosticceria_siciliana
+   
+2. **Normalizzazione Automatica a 1kg**
+   - Tutte le ricette vengono normalizzate a 1kg dell'ingrediente base
+   - Ingrediente base identificato automaticamente (farina, mandorle, ricotta, etc.)
+   - Fattore di moltiplicazione calcolato: `1000 / grammi_ingrediente_base`
+   - **TUTTI gli ingredienti** moltiplicati per lo stesso fattore
+   - Esempio: ricetta con 300g farina → fattore x3.33 → tutti ingredienti x3.33
 
-### 3. Componente Stampa Etichette 80mm
-File: `/app/frontend/src/components/EtichettaLotto.jsx`
-- Layout ottimizzato per stampanti termiche 80mm
-- CSS: `@media print { @page { size: 80mm auto; margin: 0; } }`
-- Contenuto etichetta:
-  - Nome Prodotto (grassetto)
-  - Lotto Interno + Lotto Fornitore
-  - Fornitore + N. Fattura
-  - **Scadenza evidenziata** (box nero)
-  - **QR Code** (punta alla fattura nell'ERP)
-- Bottone 🏷️ in tabella Archivio Fatture
+3. **Normalizzazione Ricette Esistenti**
+   - Endpoint per normalizzare tutte le ricette nel database
+   - 59 ricette normalizzate su 95 totali
+   - Statistiche visibili in UI
 
-### 4. Logica FEFO per Scarico Produzione
-- **First Expired, First Out**: Suggerisce sempre il lotto con scadenza più vicina
-- Endpoint: `GET /api/ciclo-passivo/lotti/suggerimento-fefo/{prodotto}`
-- Endpoint: `POST /api/ciclo-passivo/scarico-produzione-fefo`
-- Genera automaticamente **rettifica Prima Nota** (Dare: COSTI_PRODUZIONE, Avere: MAGAZZINO)
+4. **Miglioramento Ricette con AI**
+   - Completa ricette incomplete (ingredienti mancanti, quantità assenti)
+   - Aggiunge procedimento se mancante
 
-### 5. Endpoints Backend (`/api/ciclo-passivo/`)
-| Endpoint | Metodo | Descrizione |
-|----------|--------|-------------|
-| `/import-integrato` | POST | Import XML con workflow completo |
-| `/lotti` | GET | Lista lotti con filtri e statistiche |
-| `/lotti/fattura/{id}` | GET | Lotti di una fattura specifica |
-| `/lotto/{id}` | GET | Dettaglio singolo lotto |
-| `/lotto/{id}` | PUT | Aggiorna lotto (fornitore, scadenza) |
-| `/lotto/{id}/segna-etichetta-stampata` | POST | Flag stampa etichetta |
-| `/lotti/suggerimento-fefo/{prodotto}` | GET | Suggerimenti FEFO |
-| `/scarico-produzione-fefo` | POST | Scarico FEFO + Prima Nota |
-| `/etichetta/{id}` | GET | Dati per stampa etichetta con QR |
-| `/dashboard-riconciliazione` | GET | Dashboard statistiche |
+**File Creati/Modificati:**
+- `/app/app/routers/haccp_v2/ricette_web_search.py` (NUOVO)
+- `/app/app/routers/haccp_v2/__init__.py` (aggiornato)
+- `/app/app/main.py` (aggiornato)
+- `/app/frontend/src/pages/RicettarioDinamico.jsx` (aggiornato completamente)
 
-### Test
-- `/app/tests/test_iteration_44.json` - Ciclo passivo base (11 test)
-- `/app/tests/test_iteration_45_lotti_etichette.py` - Lotti/FEFO/Etichette (14 test)
+**API Endpoints:**
+- `POST /api/haccp-v2/ricette-web/cerca` - Cerca ricetta con AI
+- `POST /api/haccp-v2/ricette-web/importa` - Importa ricetta nel database
+- `POST /api/haccp-v2/ricette-web/normalizza-esistenti` - Normalizza tutte le ricette
+- `POST /api/haccp-v2/ricette-web/migliora` - Migliora ricetta con AI
+- `GET /api/haccp-v2/ricette-web/suggerimenti` - Suggerimenti per categoria
+- `GET /api/haccp-v2/ricette-web/statistiche-normalizzazione` - Stats normalizzazione
+
+**Tecnologie:**
+- Claude Sonnet 4.5 via Emergent LLM Key
+- emergentintegrations library
 
 ---
 
-## NUOVO SISTEMA FATTURE RICEVUTE (2026-01-10)
+## ROADMAP
 
-### Architettura Stabile
-Il sistema è stato ristrutturato per gestire SOLO fatture passive (ricevute dai fornitori) con:
+### P0 - Alta Priorità
+- [x] Ricerca web ricette con normalizzazione 1kg
+- [ ] Refactoring responsive dell'applicazione (in pausa)
 
-**Collections MongoDB:**
-- `fornitori` - Anagrafica fornitori (chiave: partita_iva)
-- `fatture_ricevute` - Fatture passive
-- `dettaglio_righe_fatture` - Righe dettaglio di ogni fattura
-- `allegati_fatture` - PDF allegati decodificati da base64
+### P1 - Media Priorità
+- [ ] Responsive: Dashboard principale
+- [ ] Responsive: ArchivioBonifici.jsx
+- [ ] Responsive: Pagine HACCP
+- [ ] Responsive: Altre pagine ERP
 
-**Logica di Import XML (Standard FatturaPA):**
-1. **Anagrafica**: Estrazione da `<CedentePrestatore>`. Se P.IVA non esiste → crea fornitore
-2. **Testata**: Estrazione da `<DatiGeneraliDocumento>` (Data, Numero, ImportoTotale)
-3. **Righe**: Cicla su `<DettaglioLinee>` e salva in collection separata
-4. **Allegati**: Decodifica PDF da `<Allegati>` base64
-
-**Controlli:**
-- ✅ Duplicati: P.IVA + Numero Documento
-- ✅ Coerenza totali: Somma righe + IVA vs Totale Documento
-- ✅ Stato "anomala" se totali non corrispondono
-
-**Endpoints:**
-- `POST /api/fatture-ricevute/import-xml` - Singolo XML
-- `POST /api/fatture-ricevute/import-xml-multipli` - Multipli XML
-- `POST /api/fatture-ricevute/import-zip` - ZIP (anche annidati)
-- `GET /api/fatture-ricevute/archivio` - Lista con filtri
-- `GET /api/fatture-ricevute/fattura/{id}` - Dettaglio con righe
-- `GET /api/fatture-ricevute/fattura/{id}/pdf/{allegato_id}` - Download PDF
-
-**Frontend:**
-- Pagina `/fatture-ricevute` - Archivio Fatture con filtri Anno/Mese/Fornitore/Stato
+### P2 - Bassa Priorità
+- [ ] Miglioramenti UX generali
+- [ ] Ottimizzazione performance
+- [ ] Test automatizzati
 
 ---
 
-## Design System
+## Architettura Tecnica
 
-**REGOLA FONDAMENTALE**: Tutte le pagine devono usare **STILI INLINE JAVASCRIPT** (`style={{ }}`), MAI Tailwind CSS.
+### Backend
+- FastAPI (Python)
+- MongoDB
+- emergentintegrations per AI
 
-Riferimento completo: `/app/memory/DESIGN_SYSTEM.md`
+### Frontend
+- React
+- Stili JavaScript inline (no CSS esterno)
+- Hook useResponsive per design adattivo
 
-### Stile Standard
-```jsx
-// Header pagina
-<div style={{ 
-  padding: '15px 20px',
-  background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
-  borderRadius: 12,
-  color: 'white'
-}}>
-
-// Card
-<div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-
-// Button
-<button style={{ padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>
-```
-
-### Icone
-- Usare **EMOJI**, non lucide-react
-- Esempi: 📒 📊 💰 📅 ✏️ 🗑️ ➕ 🔄 ✅ ❌ ⚠️
-
-### Pagine con Stile Corretto - TUTTE CONVERTITE ✅ (2026-01-10)
-**CONVERSIONE COMPLETATA AL 100%:**
-- [x] Dashboard.jsx ✅
-- [x] IVA.jsx ✅
-- [x] Fatture.jsx ✅
-- [x] LiquidazioneIVA.jsx ✅
-- [x] PrimaNota.jsx ✅
-- [x] PrimaNotaCassa.jsx ✅
-- [x] PrimaNotaBanca.jsx ✅
-- [x] HACCPCompleto.jsx ✅
-- [x] HACCP.jsx ✅
-- [x] Corrispettivi.jsx ✅
-- [x] Assegni.jsx ✅
-- [x] ArchivioFattureRicevute.jsx ✅
-- [x] Fornitori.jsx ✅
-- [x] Magazzino.jsx ✅
-- [x] MetodiPagamento.jsx ✅
-- [x] Export.jsx ✅
-- [x] Ordini.jsx ✅
-- [x] ContabilitaAvanzata.jsx ✅ (route: /contabilita)
-- [x] GestioneCespiti.jsx ✅ (route: /cespiti)
-- [x] Cedolini.jsx ✅ (route: /cedolini)
-- [x] Finanziaria.jsx ✅
-- [x] Admin.jsx ✅
-- [x] RicercaProdotti.jsx ✅
-- [x] Pianificazione.jsx ✅
-- [x] OrdiniFornitori.jsx ✅
-- [x] Documenti.jsx ✅
-- [x] VerificaCoerenza.jsx ✅
-- [x] PrevisioniAcquisti.jsx ✅
-- [x] + altre pagine minori ✅
-
-**Verifica finale (iteration_46.json):** Tutte le pagine testate funzionano correttamente con stili inline.
-
----
-
-## Pulizia Codice Morto (2026-01-10) ✅
-
-**File/cartelle rimossi:**
-- `/app/frontend/src/components/haccp/` - Componenti HACCP non più utilizzati (sostituiti da HACCPCompleto.jsx)
-- `/app/app/main_backup.py` - File backup non utilizzato
-- `/app/app/main_refactored.py` - File refactoring non utilizzato
-
-**File mantenuti:**
-- `/app/app/routers/invoices/fatture_upload.py` - Attivamente utilizzato in main.py
-
----
-
-## Architettura Import Centralizzato
-
-**PRINCIPIO FONDAMENTALE**: Tutti gli import sono centralizzati in `/import-export`. Le altre pagine mostrano solo i dati e rimandano a Import/Export per il caricamento.
-
-### Pagina Import Dati (`/import-export`)
-
-| Tipo | Formato | Descrizione |
-|------|---------|-------------|
-| **Fatture XML** | XML singolo, XML multipli, ZIP | 3 pulsanti separati: Carica XML Singolo, Upload XML Multipli, Upload ZIP Massivo |
-| **Versamenti** | CSV | Formato banca con 10 colonne |
-| **Incassi POS** | XLSX | DATA, CONTO, IMPORTO |
-| **Corrispettivi** | XLSX | Export registratore cassa telematico |
-| **Estratto Conto** | CSV | Formato banca con 10 colonne |
-| **F24 Contributi** | PDF/ZIP | PDF singoli, multipli o ZIP massivo |
-| **Buste Paga** | PDF/ZIP | PDF singoli, multipli o ZIP massivo |
-| **Archivio Bonifici** | PDF/ZIP | PDF o ZIP con parsing automatico |
-
-### Pagine Solo Visualizzazione (senza upload)
-
-- `/fatture` - Solo visualizzazione fatture + link a Import
-- `/f24` - Solo visualizzazione F24 + link a Import
-- `/archivio-bonifici` - Solo visualizzazione bonifici + link a Import
-
----
-
-## Parser DEFINITIVI - Formati File Banca
-
-### 1. CORRISPETTIVI (XLSX)
-**Intestazioni ESATTE**:
-```
-Id invio | Matricola dispositivo | Data e ora rilevazione | Data e ora trasmissione | Ammontare delle vendite (totale in euro) | Imponibile vendite (totale in euro) | Imposta vendite (totale in euro) | Periodo di inattivita' da | Periodo di inattivita' a
-```
-**Endpoint**: `POST /api/prima-nota-auto/import-corrispettivi`
-
-### 2. POS (XLSX)
-**Intestazioni ESATTE**:
-```
-DATA | CONTO | IMPORTO
-```
-**Endpoint**: `POST /api/prima-nota-auto/import-pos`
-
-### 3. VERSAMENTI (CSV ;)
-**Intestazioni ESATTE**:
-```
-Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descrizione;Categoria/sottocategoria;Hashtag
-```
-**Endpoint**: `POST /api/prima-nota-auto/import-versamenti`
-
-### 4. ESTRATTO CONTO (CSV ;)
-**Intestazioni**: Identiche ai versamenti
-**Endpoint**: `POST /api/estratto-conto-movimenti/import`
-
----
-
-## Logica Contabile Prima Nota
-
-**SACRA - NON MODIFICARE SENZA RICHIESTA ESPLICITA**
-
-### CASSA (prima_nota_cassa)
-| Tipo | Categoria | Descrizione |
-|------|-----------|-------------|
-| DARE (Entrate) | Corrispettivi | Incassi giornalieri da vendite al dettaglio |
-| DARE (Entrate) | Incasso cliente | Pagamenti in contanti |
-| AVERE (Uscite) | POS | Trasferimento incassi elettronici verso banca |
-| AVERE (Uscite) | Versamento | Deposito contanti sul c/c bancario |
-| AVERE (Uscite) | Pagamento fornitore | Fatture pagate in contanti |
-
-### BANCA (prima_nota_banca)
-| Tipo | Categoria | Descrizione |
-|------|-----------|-------------|
-| DARE (Entrate) | Incasso cliente | Bonifici in entrata da clienti |
-| AVERE (Uscite) | Pagamento fornitore | Bonifici/assegni a fornitori |
-| AVERE (Uscite) | F24 | Pagamento tributi |
-
-### REGOLA FONDAMENTALE VERSAMENTI
-- I **VERSAMENTI** importati da CSV sono registrati **SOLO** in `prima_nota_cassa` come tipo="uscita"
-- La corrispondente entrata in Banca arriverà dalla **riconciliazione con l'estratto conto**
-- Questo evita duplicazioni e rispetta la partita doppia
-
----
-
-## Architecture
-
-### Backend (FastAPI + MongoDB)
-```
-/app/app/
-├── routers/
-│   ├── accounting/
-│   │   ├── prima_nota.py
-│   │   └── prima_nota_automation.py    # Parser corrispettivi, POS, versamenti
-│   ├── bank/
-│   │   └── estratto_conto.py           # Parser estratto conto CSV
-│   ├── f24/
-│   │   └── f24_public.py               # Upload F24 + endpoint PDF
-│   ├── invoices/
-│   │   └── fatture_upload.py
-│   └── import_templates.py             # Template DEFINITIVI
-├── database.py
-└── main.py
-```
-
-### Frontend (React + TailwindCSS + Shadcn/UI)
-```
-/app/frontend/src/
-├── pages/
-│   ├── ImportExport.jsx      # CENTRALE - Tutti gli import
-│   ├── Fatture.jsx           # Solo visualizzazione
-│   ├── F24.jsx               # Solo visualizzazione + viewer PDF
-│   ├── ArchivioBonifici.jsx  # Solo visualizzazione
-│   ├── PrimaNota.jsx
-│   └── ...
-└── App.jsx
-```
-
-### Key Collections (MongoDB)
-- `prima_nota_cassa` - Movimenti cassa (Corrispettivi, POS, Versamenti come uscita)
-- `prima_nota_banca` - Movimenti banca (Incassi clienti, Pagamenti fornitori)
-- `estratto_conto_movimenti` - Movimenti estratto conto
-- `invoices` - Fatture XML
-- `f24_models` - Modelli F24 con PDF (base64)
-- `bank_transfers` - Bonifici bancari
-
----
-
-## Changelog
-
-### 2026-01-10 (Sessione 5 - MODULO HACCP COMPLETO)
-- ✅ **MODULO HACCP COMPLETAMENTE IMPLEMENTATO**
-  - Endpoint `POST /api/haccp-v2/lotti/genera-da-ricetta/{nome}` per generare lotti da ricette
-  - Calcolo automatico allergeni dagli ingredienti
-  - Numero lotto formato: `PROD-001-5pz-10012026`
-- ✅ **6 SEZIONI HACCP FRONTEND IMPLEMENTATE**
-  - `DisinfestazioneView.jsx` - Registro pest control con ANTHIRAT CONTROL S.R.L.
-  - `SanificazioneView.jsx` - Attrezzature + Apparecchi refrigeranti
-  - `TemperatureNegativeView.jsx` - Congelatori 1-12, range -22°C/-18°C
-  - `TemperaturePositiveView.jsx` - Frigoriferi 1-12, range 0°C/+4°C
-  - `AnomalieView.jsx` - Registro attrezzature in disuso/non conformità
-  - `ManualeHACCPView.jsx` - 21 sezioni con PDF + condivisione WhatsApp
-- ✅ **INTEGRAZIONE TAB HACCP**
-  - Tutti i tab HACCP funzionanti all'interno di HACCPCompleto.jsx
-  - Toggle tra sezioni HACCP senza ricaricare la pagina
-
-### 2026-01-10 (Sessione 4 - FIX HACCP V2)
-- ✅ **MODULO HACCP V2 COMPLETAMENTE FUNZIONANTE**
-  - Corretto `NameError` in `/app/app/routers/haccp_v2/ricette.py`
-  - Sostituito `db` globale con `Database.get_db()` (pattern consistente con gli altri router)
-  - Aggiornato modello Pydantic `Ingrediente` per supportare oggetti {nome, quantita, unita, prodotto_id}
-  - Frontend aggiornato per gestire ingredienti come oggetti (`typeof ing === 'object' ? ing.nome : ing`)
-- ✅ **TEST AUTOMATICI PASSATI (12/12)**
-  - Ricette: GET lista, ingredienti come oggetti, filtro ricerca, POST create, DELETE
-  - Lotti: GET con items/total, POST create, DELETE
-  - Materie Prime: GET lista, POST create, DELETE
-  - File test: `/app/tests/test_iteration_43_haccp_v2.py`
-- ✅ **ENDPOINT HACCP V2 FUNZIONANTI**
-  - `GET /api/haccp-v2/ricette` → Array di 95 ricette
-  - `GET /api/haccp-v2/lotti` → {items: [], total: 0}
-  - `GET /api/haccp-v2/materie-prime` → []
-  - `POST/DELETE` per tutte le entità
-
-### 2026-01-10 (Sessione 3 - BONIFICA P0)
-- ✅ **BONIFICA CRITICA FATTURE COMPLETATA**
-  - Corrette 1319 fatture con metodo pagamento errato
-  - Endpoint `/api/riconciliazione-auto/correggi-metodi-pagamento` migliorato
-  - Ora cattura tutti i metodi bancari (bonifico, banca, sepa, assegno) case-insensitive
-  - Fatture senza corrispondenza in estratto conto → reset a status="imported", pagato=false
-  - Campo `bonifica_applicata` per tracciare fatture corrette
-- ✅ **CREATO DOCUMENTO LOGICHE APPLICAZIONE**
-  - `/app/memory/LOGICHE_APPLICAZIONE_COMPLETO.md` con tutte le regole di business
-  - Flussi import dettagliati per ogni tipo di file
-  - Regole fondamentali pagamenti documentate
-- ✅ **TUTTO IL CODICE RESO CASE-INSENSITIVE**
-  - Ricerche fatture per numero (regex con $options: "i")
-  - Confronti metodo pagamento (.lower())
-  - Match fornitori (.upper())
-- ✅ **REGOLA D'ORO IMPLEMENTATA:**
-  ```
-  Se NON trovo in estratto conto → NON posso mettere "Bonifico"
-  Se il fornitore ha metodo "Cassa" → devo rispettarlo
-  Solo se TROVO in estratto conto → posso mettere Bonifico/Assegno
-  ```
-
-### 2026-01-10 (Sessione 2)
-- ✅ **FIX LOGICA CONTABILE PRIMA NOTA**
-- ✅ Creato documento `/app/memory/ragioneria_applicata.md` con principi contabili
-- ✅ Versamenti ora registrati SOLO in prima_nota_cassa come tipo="uscita"
-- ✅ Eliminati 66 versamenti errati dalla Prima Nota Banca
-- ✅ Fix routing FastAPI: endpoint parametrici ora dopo quelli specifici
-- ✅ Aggiornati messaggi informativi nel frontend Prima Nota Banca
-- ✅ **Prima Nota Banca ora visualizza l'Estratto Conto Bancario**
-- ✅ Svuotata la collection prima_nota_banca (57 movimenti)
-- ✅ Rimosso pulsante "Elimina tutti Versamenti" dalla sezione Banca e Cassa
-- ✅ Rimossi endpoint DELETE delete-versamenti
-- ✅ Tabella Banca in modalità sola lettura (no Modifica/Elimina)
-- ✅ **RICONCILIAZIONE AUTOMATICA IMPLEMENTATA**
-  - Parser corrispettivi XML (LORDO = PagatoContanti + PagatoElettronico)
-  - Match fatture per numero fattura + importo (±0.01€)
-  - Match POS con logica calendario (Lun-Gio: +1g, Ven-Dom: somma→Lunedì)
-  - Match versamenti per data + importo esatto
-  - Match F24 per importo esatto
-  - Dubbi salvati in operazioni_da_confermare
-- ✅ Nuovo router `/api/riconciliazione-auto/` con endpoint riconcilia-estratto-conto
-- ✅ Import estratto conto ora avvia automaticamente la riconciliazione
-- ✅ **UNIFORMAZIONE STILE UI**
-  - Creato `/app/frontend/src/styles/common.css` con stile comune
-  - Riscritta pagina `/operazioni-da-confermare` con nuovo stile
-  - Riscritta pagina `/riconciliazione` con nuovo stile
-  - Entrambe le pagine ora usano lo stesso design system
-- ✅ **MIGLIORAMENTI OPERAZIONI DA CONFERMARE**
-  - Descrizione completa leggibile (non troncata)
-  - Commissioni bancarie (€1, €0.75, €1.10, etc.) nascoste automaticamente
-  - Bottone "Scarta Commissioni" per eliminarle in batch
-  - Solo fatture con importo ESATTO mostrate nel dropdown
-  - Righe più compatte per maggiore visibilità
-  - **Dropdown fatture ora mostra: DATA | N.FATTURA | FORNITORE | IMPORTO**
-  - **Fatture ordinate per data (più recente prima)**
-- ✅ **MIGLIORAMENTI PRIMA NOTA BANCA**
-  - Descrizione completa leggibile su più righe
-  - Tabella più compatta
-- ✅ **MIGLIORAMENTI PARSING RICONCILIAZIONE**
-  - Estrazione numero fattura migliorata (più pattern)
-  - Estrazione nome fornitore dalla descrizione
-  - Se più fatture stesso importo ma fornitore identificabile → match automatico
-  - Riconciliati automaticamente: 145 fatture (era 142)
-
-### 2026-01-10 (Sessione 5 - MODULO HACCP COMPLETO + DESIGN SYSTEM)
-- ✅ **MODULO HACCP COMPLETAMENTE IMPLEMENTATO**
-  - Endpoint `POST /api/haccp-v2/lotti/genera-da-ricetta/{nome}` per generare lotti
-  - 6 sezioni frontend: Disinfestazione, Sanificazione, Temp. Negative/Positive, Anomalie, Manuale
-  - Stile Tailwind + lucide-react come app di riferimento
-- ✅ **DESIGN SYSTEM CREATO** - `/app/memory/DESIGN_SYSTEM.md`
-  - Primary: emerald-500
-  - Card: `bg-white rounded-xl shadow-sm border border-gray-100`
-  - Icone: solo lucide-react, MAI emoji
-- ✅ **PAGINE AGGIORNATE CON NUOVO STILE**
-  - Corrispettivi.jsx ✅
-  - Assegni.jsx ✅
-  - HACCPCompleto.jsx ✅
-
-### 2026-01-10 (Sessione 1)
-- ✅ **CENTRALIZZAZIONE IMPORT COMPLETATA**
-- ✅ Tutte le 8 card con stile uniforme (3 pulsanti: Singolo, Multipli, ZIP Massivo)
-- ✅ Descrizioni uniformi: "[TIPO] singoli/multipli, ZIP, ZIP annidati. Duplicati ignorati automaticamente"
-- ✅ Rimossi tutti gli export dalla pagina Import/Export
-- ✅ Import Fatture XML, Versamenti, POS, Corrispettivi, Estratto Conto, F24, Buste Paga, Bonifici
-- ✅ Rimosso upload da `/fatture`, `/f24`, `/archivio-bonifici` - solo visualizzazione + link Import
-- ✅ Parser DEFINITIVI con intestazioni esatte dai file banca
-- ✅ Fix rilevamento duplicati (HTTP 409 + "già presente")
-
-### 2026-01-09
-- ✅ Logica contabile Prima Nota finalizzata
-- ✅ UI RiconciliazioneF24 e RegoleCategorizzazione ridisegnate
-
----
-
-## Backlog
-
-### P0 - Critical
-- [x] ~~Fix logica contabile Prima Nota (versamenti solo in Cassa)~~ ✅ RISOLTO
-- [x] ~~Riconciliazione automatica estratto conto~~ ✅ IMPLEMENTATO
-- [x] ~~Bonifica fatture con metodo pagamento errato~~ ✅ COMPLETATO (1319 fatture corrette)
-- [x] ~~Fix backend modulo HACCP V2~~ ✅ COMPLETATO (12 test passati)
-- [x] ~~Implementare UI sezioni HACCP~~ ✅ COMPLETATO (6 sezioni)
-
-### P1 - High
-- [x] ~~Uniformità stilistica UI~~ ✅ completata per pagine critiche
-- [x] ~~Testare logica di business HACCP~~ ✅ Genera Lotto funzionante
-- [ ] Verificare integrazione Fatture XML → HACCP (tracciabilità automatica)
-- [ ] Testare Stampa Etichette Lotto (funzionalità stampa browser)
-- [ ] Re-importazione dati POS e Versamenti per Prima Nota Cassa
-- [ ] Migliorare intelligenza riconciliazione automatica
-
-### P2 - Medium
-- [ ] Fix UX pagina /riconciliazione (bottoni percepiti come non funzionanti)
-- [ ] Completare arricchimento dati fornitori (email/PEC)
-- [ ] Implementare importazione PDF generica
-- [ ] Parser PDF per Cespiti
-- [ ] Completare uniformità stilistica UI (~30 pagine rimanenti)
-
-### P3 - Low
-- [ ] Consolidare logica calcolo IVA
-- [ ] Bug ricerca /archivio-bonifici
-
----
-
-## Critical Notes
-
-1. **Import centralizzato** - TUTTI gli import vanno in `/import-export`
-2. **Parser DEFINITIVI** - Usare SOLO le intestazioni documentate
-3. **Logica contabile Prima Nota** - Non modificare senza richiesta esplicita
-4. **Coerenza UI** - Seguire stile Shadcn/UI delle pagine ridisegnate
+### Database Collections
+- `ricette` - Ricettario con normalizzazione
+- `lotti_materie_prime` - Tracciabilità ingredienti
+- `fatture_ricevute` - Fatture XML importate
+- `prima_nota_salari` - Operazioni salari
+- `archivio_bonifici` - Bonifici bancari
