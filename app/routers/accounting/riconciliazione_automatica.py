@@ -317,7 +317,42 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                             ],
                             "motivo_dubbio": f"Trovate {len(fatture_esatte)} fatture con stesso importo esatto"
                         }
-                        results["dubbi"] += 1
+                        
+                        # Se abbiamo estratto il nome fornitore, proviamo a filtrare
+                        if supplier_name and len(fatture_ordinate) > 1:
+                            fatture_fornitore = [
+                                f for f in fatture_ordinate 
+                                if supplier_name.upper() in (f.get("cedente_denominazione") or f.get("supplier_name") or "").upper()
+                            ]
+                            if len(fatture_fornitore) == 1:
+                                # Trovata UNA fattura con quel fornitore!
+                                fattura = fatture_fornitore[0]
+                                match_found = True
+                                match_type = "fattura"
+                                confidence = "alto"
+                                match_details = {
+                                    "fattura_id": str(fattura.get("_id", fattura.get("id"))),
+                                    "numero_fattura": fattura.get("numero_fattura") or fattura.get("invoice_number"),
+                                    "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
+                                    "importo_fattura": fattura.get("importo_totale") or fattura.get("total_amount")
+                                }
+                                results["riconciliati_fatture"] += 1
+                            elif len(fatture_fornitore) > 1:
+                                # Riduco le candidate a quelle del fornitore
+                                match_details["fatture_candidate"] = [
+                                    {
+                                        "id": str(f.get("_id", f.get("id"))),
+                                        "numero": f.get("numero_fattura") or f.get("invoice_number"),
+                                        "fornitore": f.get("cedente_denominazione") or f.get("supplier_name"),
+                                        "importo": f.get("importo_totale") or f.get("total_amount"),
+                                        "data": f.get("data") or f.get("invoice_date") or f.get("data_fattura")
+                                    }
+                                    for f in fatture_fornitore[:10]
+                                ]
+                                match_details["motivo_dubbio"] = f"Trovate {len(fatture_fornitore)} fatture di {supplier_name}"
+                        
+                        if not match_found:
+                            results["dubbi"] += 1
                     # Se nessuna fattura con importo esatto -> non creare operazione da confermare
             
             # ===== 2. CERCA ASSEGNI (per uscite) =====
