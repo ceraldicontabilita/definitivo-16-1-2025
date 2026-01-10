@@ -209,7 +209,6 @@ const router = createBrowserRouter([
       { path: "operazioni-da-confermare", element: <LazyPage><OperazioniDaConfermare /></LazyPage> },
       { path: "riconciliazione", element: <LazyPage><Riconciliazione /></LazyPage> },
       { path: "estratto-conto", element: <LazyPage><EstrattoContoImport /></LazyPage> },
-      { path: "estratto-conto-movimenti", element: <LazyPage><EstrattoConto /></LazyPage> },
       { path: "magazzino", element: <LazyPage><Magazzino /></LazyPage> },
       { path: "ricerca-prodotti", element: <LazyPage><RicercaProdotti /></LazyPage> },
       { path: "haccp", element: <LazyPage><HACCPDashboard /></LazyPage> },
