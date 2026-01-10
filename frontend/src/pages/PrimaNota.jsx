@@ -991,17 +991,17 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-              <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Data</th>
-              <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Tipo</th>
-              <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Categoria</th>
-              <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Descrizione</th>
-              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>DARE</th>
-              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>AVERE</th>
-              <th style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>Saldo</th>
-              {!readOnly && <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Azioni</th>}
+              <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: 600, fontSize: 11 }}>Data</th>
+              <th style={{ padding: '8px 8px', textAlign: 'center', fontWeight: 600, fontSize: 11, width: 40 }}>T</th>
+              <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: 600, fontSize: 11 }}>Cat.</th>
+              <th style={{ padding: '8px 8px', textAlign: 'left', fontWeight: 600, fontSize: 11 }}>Descrizione</th>
+              <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, fontSize: 11 }}>DARE</th>
+              <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, fontSize: 11 }}>AVERE</th>
+              <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, fontSize: 11 }}>Saldo</th>
+              {!readOnly && <th style={{ padding: '8px 8px', textAlign: 'center', fontWeight: 600, fontSize: 11 }}>Azioni</th>}
             </tr>
           </thead>
           <tbody>
