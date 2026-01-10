@@ -112,7 +112,8 @@ from app.routers.warehouse import (
 
 # --- Invoices Module ---
 from app.routers.invoices import (
-    invoices_main, invoices_emesse, invoices_export, fatture_upload, corrispettivi
+    invoices_main, invoices_emesse, invoices_export, fatture_upload, corrispettivi,
+    fatture_ricevute
 )
 
 # --- Employees Module ---
