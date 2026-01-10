@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
+import { useAnnoGlobale } from '../contexts/AnnoContext';
 
 const MESI_IT = ["GENNAIO", "FEBBRAIO", "MARZO", "APRILE", "MAGGIO", "GIUGNO",
                 "LUGLIO", "AGOSTO", "SETTEMBRE", "OTTOBRE", "NOVEMBRE", "DICEMBRE"];
@@ -22,7 +23,7 @@ const giorniNelMese = (mese, anno) => new Date(anno, mese, 0).getDate();
 
 export default function HACCPSanificazioniV2() {
   const [mese, setMese] = useState(new Date().getMonth() + 1);
-  const [anno, setAnno] = useState(new Date().getFullYear());
+  const { anno } = useAnnoGlobale(); // Anno dal contesto globale
   const [scheda, setScheda] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('attrezzature'); // 'attrezzature' o 'apparecchi'
