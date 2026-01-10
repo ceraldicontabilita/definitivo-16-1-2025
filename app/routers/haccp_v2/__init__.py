@@ -29,6 +29,7 @@ from .ricette import router as ricette_router
 from .ricettario_dinamico import router as ricettario_dinamico_router
 from .non_conformi import router as non_conformi_router
 from .fornitori import router as fornitori_router
+from .libro_allergeni import router as libro_allergeni_router
 
 __all__ = [
     'temperature_positive_router',
@@ -43,5 +44,6 @@ __all__ = [
     'ricette_router',
     'ricettario_dinamico_router',
     'non_conformi_router',
-    'fornitori_router'
+    'fornitori_router',
+    'libro_allergeni_router'
 ]
