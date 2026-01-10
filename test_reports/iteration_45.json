@@ -1,0 +1,109 @@
+{
+  "summary": "Iteration 45 - Lotti Avanzati, FEFO e Etichette Testing Complete. Backend: 14/14 tests passed (100%). Frontend: All components verified working. Fixed 2 minor issues in backend endpoints for backward compatibility with existing data.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_iteration_45_lotti_etichette.py",
+    "/app/test_reports/pytest/pytest_iteration_45.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All new Lotti endpoints are correctly implemented and working",
+    "FEFO logic correctly orders lotti by data_scadenza ascending",
+    "EtichettaLotto component uses inline JavaScript styles as required",
+    "QR code generation using qrcode.react is working correctly",
+    "Parser functions estrai_lotto_fornitore and estrai_scadenza_prodotto support multiple patterns"
+  ],
+  "updated_files": [
+    "/app/app/routers/ciclo_passivo_integrato.py",
+    "/app/tests/test_iteration_45_lotti_etichette.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (all components verified)"
+  },
+  "test_credentials": {},
+  "seed_data_creation": "Used existing TEST_CICLOPASSIVO test data from iteration 44",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 45 tested the new 'Dall'XML all'Etichetta' workflow. Key endpoints: GET /api/ciclo-passivo/lotti (with filters and stats), GET /api/ciclo-passivo/lotti/fattura/{id}, GET /api/ciclo-passivo/lotto/{id}, PUT /api/ciclo-passivo/lotto/{id}, POST /api/ciclo-passivo/lotto/{id}/segna-etichetta-stampata, GET /api/ciclo-passivo/lotti/suggerimento-fefo/{prodotto}, POST /api/ciclo-passivo/scarico-produzione-fefo, GET /api/ciclo-passivo/etichetta/{id}. Frontend: EtichettaLotto.jsx component with 80mm label preview and QR code. Etichette button visible in /fatture-ricevute table (use ?anno=2025 to see test data).",
+  "verified_features": {
+    "GET_lotti_list": {
+      "status": "WORKING",
+      "description": "GET /api/ciclo-passivo/lotti returns lotti with filters and statistiche (totale, disponibili, esauriti, da_completare, in_scadenza_7gg)"
+    },
+    "GET_lotti_fattura": {
+      "status": "WORKING",
+      "description": "GET /api/ciclo-passivo/lotti/fattura/{id} returns all lotti for a specific fattura. Fixed to support both fattura_id and fattura_riferimento fields."
+    },
+    "GET_lotto_dettaglio": {
+      "status": "WORKING",
+      "description": "GET /api/ciclo-passivo/lotto/{id} returns single lotto details"
+    },
+    "PUT_lotto_update": {
+      "status": "WORKING",
+      "description": "PUT /api/ciclo-passivo/lotto/{id} updates lotto_fornitore, data_scadenza, note, etichetta_stampata"
+    },
+    "POST_segna_etichetta_stampata": {
+      "status": "WORKING",
+      "description": "POST /api/ciclo-passivo/lotto/{id}/segna-etichetta-stampata sets etichetta_stampata=true and data_stampa_etichetta"
+    },
+    "GET_suggerimento_fefo": {
+      "status": "WORKING",
+      "description": "GET /api/ciclo-passivo/lotti/suggerimento-fefo/{prodotto} returns FEFO suggestions ordered by data_scadenza ascending"
+    },
+    "POST_scarico_produzione_fefo": {
+      "status": "WORKING",
+      "description": "POST /api/ciclo-passivo/scarico-produzione-fefo performs FEFO-based stock reduction with Prima Nota generation"
+    },
+    "GET_etichetta": {
+      "status": "WORKING",
+      "description": "GET /api/ciclo-passivo/etichetta/{id} returns label data with QR code URL. Fixed to use fallback fields for backward compatibility."
+    },
+    "frontend_etichette_button": {
+      "status": "WORKING",
+      "description": "🏷️ button visible in /fatture-ricevute table AZIONI column"
+    },
+    "frontend_etichetta_modal": {
+      "status": "WORKING",
+      "description": "EtichettaLotto modal opens with 80mm label preview, QR code, and Stampa button"
+    },
+    "frontend_qr_code": {
+      "status": "WORKING",
+      "description": "QR code generated using qrcode.react library, points to /fatture-ricevute?fattura={id}"
+    },
+    "parser_estrai_lotto": {
+      "status": "WORKING",
+      "description": "estrai_lotto_fornitore() extracts lotto from patterns: LOTTO:, L., BATCH:, LOT:, etc."
+    },
+    "parser_estrai_scadenza": {
+      "status": "WORKING",
+      "description": "estrai_scadenza_prodotto() extracts expiry date from patterns: SCAD:, EXP:, TMC:, BB:, etc."
+    }
+  },
+  "fixes_applied": [
+    {
+      "file": "/app/app/routers/ciclo_passivo_integrato.py",
+      "issue": "get_lotti_fattura endpoint only searched by fattura_id, but existing lotti have fattura_riferimento",
+      "fix": "Added $or query to search by both fattura_id and fattura_riferimento (first 8 chars of UUID)"
+    },
+    {
+      "file": "/app/app/routers/ciclo_passivo_integrato.py",
+      "issue": "get_dati_etichetta endpoint returned empty fields for lotti with different field names",
+      "fix": "Added fallback fields: lotto_interno || numero_lotto, fattura_numero || fattura_riferimento, fattura_data || data_produzione, quantita_iniziale || quantita"
+    }
+  ],
+  "screenshots": [
+    ".screenshots/ciclo_passivo_page.png",
+    ".screenshots/fatture_ricevute_2025_url.png",
+    ".screenshots/etichette_modal.png",
+    ".screenshots/etichetta_modal_detail.png"
+  ]
+}
