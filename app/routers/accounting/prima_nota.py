@@ -753,7 +753,7 @@ async def registra_pagamento_fattura(
         await db[COLLECTION_PRIMA_NOTA_BANCA].insert_one(movimento_banca)
         risultato["banca"] = movimento_banca["id"]
         
-    elif metodo_pagamento == "misto":
+    elif metodo_pagamento.lower() == "misto":
         # Diviso tra cassa e banca
         if importo_cassa > 0:
             movimento_cassa = {
