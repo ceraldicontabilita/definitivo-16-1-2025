@@ -1,204 +1,514 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
-import { formatEuro, formatDateIT } from '../lib/utils';
-import { useAnnoGlobale } from '../contexts/AnnoContext';
-import { RefreshCw, Mail, Check, CreditCard, Banknote, FileCheck, Trash2 } from 'lucide-react';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { formatEuro } from '../lib/utils';
+
+// Stile comune per tutte le pagine
+const pageStyle = {
+  container: {
+    padding: '24px',
+    maxWidth: '1400px',
+    margin: '0 auto',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  },
+  header: {
+    marginBottom: '24px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    gap: '16px'
+  },
+  title: {
+    margin: 0,
+    fontSize: '28px',
+    fontWeight: 'bold',
+    color: '#1e293b',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  subtitle: {
+    margin: '4px 0 0 0',
+    color: '#64748b',
+    fontSize: '14px'
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+    marginBottom: '24px'
+  },
+  statCard: (color) => ({
+    background: `linear-gradient(135deg, ${color}15, ${color}08)`,
+    borderRadius: '12px',
+    padding: '20px',
+    border: `1px solid ${color}30`
+  }),
+  statValue: (color) => ({
+    fontSize: '32px',
+    fontWeight: 'bold',
+    color: color,
+    margin: 0
+  }),
+  statLabel: {
+    fontSize: '13px',
+    color: '#64748b',
+    marginTop: '4px'
+  },
+  card: {
+    background: 'white',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  cardHeader: {
+    padding: '16px 20px',
+    borderBottom: '1px solid #e2e8f0',
+    background: '#f8fafc',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  cardTitle: {
+    margin: 0,
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#1e293b'
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontSize: '14px'
+  },
+  th: {
+    padding: '12px 16px',
+    textAlign: 'left',
+    fontWeight: '600',
+    color: '#475569',
+    borderBottom: '2px solid #e2e8f0',
+    background: '#f8fafc'
+  },
+  td: {
+    padding: '12px 16px',
+    borderBottom: '1px solid #f1f5f9',
+    color: '#334155'
+  },
+  badge: (color) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '4px 10px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+    background: `${color}15`,
+    color: color
+  }),
+  button: (variant = 'primary') => ({
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '500',
+    fontSize: '13px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'all 0.2s',
+    ...(variant === 'primary' ? {
+      background: '#3b82f6',
+      color: 'white'
+    } : variant === 'success' ? {
+      background: '#10b981',
+      color: 'white'
+    } : variant === 'danger' ? {
+      background: '#ef4444',
+      color: 'white'
+    } : {
+      background: '#f1f5f9',
+      color: '#475569',
+      border: '1px solid #e2e8f0'
+    })
+  }),
+  emptyState: {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: '#64748b'
+  },
+  filterBar: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+    alignItems: 'center'
+  },
+  select: {
+    padding: '8px 12px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    fontSize: '14px',
+    background: 'white',
+    minWidth: '150px'
+  },
+  input: {
+    padding: '8px 12px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    fontSize: '14px',
+    minWidth: '200px'
+  }
+};
 
 export default function OperazioniDaConfermare() {
-  const { anno: annoGlobale } = useAnnoGlobale();
   const [operazioni, setOperazioni] = useState([]);
   const [stats, setStats] = useState(null);
-  const [statsPerAnno, setStatsPerAnno] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [confirmingId, setConfirmingId] = useState(null);
-  const [assegnoModal, setAssegnoModal] = useState({ open: false, operazioneId: null });
-  const [numeroAssegno, setNumeroAssegno] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [filtroTipo, setFiltroTipo] = useState('tutti');
+  const [filtroConfidence, setFiltroConfidence] = useState('tutti');
+  const [searchText, setSearchText] = useState('');
+  const [processing, setProcessing] = useState(null);
 
-  useEffect(() => { loadData(); }, [annoGlobale]);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/api/operazioni-da-confermare/lista?anno=${annoGlobale}`);
-      setOperazioni(res.data.operazioni || []);
-      setStats(res.data.stats);
-      setStatsPerAnno(res.data.stats_per_anno || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  };
-
-  const handleSyncEmail = async () => {
-    // Verifica lock email prima
-    try {
-      const lockRes = await api.get('/api/system/lock-status');
-      if (lockRes.data.email_locked) {
-        alert(`⚠️ Operazione non disponibile\n\nC'è già un'operazione email in corso: ${lockRes.data.operation}\n\nAttendere il completamento.`);
-        return;
-      }
+      // Carica operazioni da riconciliazione automatica
+      const [opsRes, statsRes] = await Promise.all([
+        api.get('/api/riconciliazione-auto/operazioni-dubbi?limit=500'),
+        api.get('/api/riconciliazione-auto/stats-riconciliazione')
+      ]);
+      
+      setOperazioni(opsRes.data.operazioni || []);
+      setStats(statsRes.data);
     } catch (e) {
-      console.error('Errore check lock:', e);
+      console.error('Errore caricamento:', e);
+    } finally {
+      setLoading(false);
     }
-    
-    setSyncing(true);
-    try {
-      const res = await api.post('/api/operazioni-da-confermare/sync-email?giorni=30');
-      alert(`✅ Sincronizzazione: ${res.data.stats.new_invoices} nuove fatture`);
-      loadData();
-    } catch (e) { 
-      const detail = e.response?.data?.detail || e.message;
-      if (e.response?.status === 423) {
-        alert(`⚠️ Operazione bloccata\n\n${detail}`);
-      } else {
-        alert(`❌ ${detail}`);
-      }
-    } finally { setSyncing(false); }
   };
 
-  const handleConferma = async (id, metodo, numAss = null) => {
-    setConfirmingId(id);
+  const handleConferma = async (operazione, azione, fatturaId = null) => {
+    setProcessing(operazione.id);
     try {
-      let url = `/api/operazioni-da-confermare/${id}/conferma?metodo=${metodo}`;
-      if (numAss) url += `&numero_assegno=${encodeURIComponent(numAss)}`;
+      let url = `/api/riconciliazione-auto/conferma-operazione/${operazione.id}?azione=${azione}`;
+      if (fatturaId) url += `&fattura_id=${fatturaId}`;
+      
       await api.post(url);
       loadData();
-      setAssegnoModal({ open: false, operazioneId: null });
-      setNumeroAssegno('');
-    } catch (e) { alert(`❌ ${e.response?.data?.detail || e.message}`); } finally { setConfirmingId(null); }
+    } catch (e) {
+      alert(`Errore: ${e.response?.data?.detail || e.message}`);
+    } finally {
+      setProcessing(null);
+    }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Eliminare?')) return;
-    try { await api.delete(`/api/operazioni-da-confermare/${id}`); loadData(); } catch (e) { alert('Errore'); }
+  const eseguiRiconciliazioneAutomatica = async () => {
+    setProcessing('auto');
+    try {
+      const res = await api.post('/api/riconciliazione-auto/riconcilia-estratto-conto');
+      alert(`✅ Riconciliazione completata!\n\n` +
+        `Riconciliati: ${res.data.totale_riconciliati}\n` +
+        `- Fatture: ${res.data.riconciliati_fatture}\n` +
+        `- POS: ${res.data.riconciliati_pos}\n` +
+        `- Versamenti: ${res.data.riconciliati_versamenti}\n` +
+        `- F24: ${res.data.riconciliati_f24}\n\n` +
+        `Da confermare: ${res.data.dubbi}`
+      );
+      loadData();
+    } catch (e) {
+      alert(`Errore: ${e.response?.data?.detail || e.message}`);
+    } finally {
+      setProcessing(null);
+    }
   };
 
-  const fmt = (v) => formatEuro(v) || '-';
+  // Filtri
+  const operazioniFiltrate = operazioni.filter(op => {
+    if (filtroTipo !== 'tutti' && op.match_type !== filtroTipo) return false;
+    if (filtroConfidence !== 'tutti' && op.confidence !== filtroConfidence) return false;
+    if (searchText) {
+      const search = searchText.toLowerCase();
+      const desc = (op.descrizione || '').toLowerCase();
+      return desc.includes(search);
+    }
+    return true;
+  });
+
+  const getMatchTypeLabel = (type) => {
+    const labels = {
+      'fattura_dubbio': 'Fattura (dubbio)',
+      'fatture_multiple': 'Più fatture',
+      'pos_dubbio': 'POS',
+      'versamento_dubbio': 'Versamento',
+      'f24_dubbio': 'F24'
+    };
+    return labels[type] || type || '-';
+  };
+
+  const getConfidenceColor = (conf) => {
+    return conf === 'alto' ? '#10b981' : conf === 'medio' ? '#f59e0b' : '#ef4444';
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('it-IT');
+    } catch { return dateStr; }
+  };
 
   return (
-    <div className="p-3 space-y-3" data-testid="operazioni-page">
+    <div style={pageStyle.container} data-testid="operazioni-da-confermare-page">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold text-slate-800">📋 Operazioni da Confermare</h1>
-          <span className="px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs font-bold">{annoGlobale}</span>
+      <div style={pageStyle.header}>
+        <div>
+          <h1 style={pageStyle.title}>
+            <span>📋</span> Operazioni da Confermare
+          </h1>
+          <p style={pageStyle.subtitle}>
+            Match dubbi dalla riconciliazione automatica • Conferma o rifiuta le corrispondenze
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={loadData} disabled={loading} variant="outline" size="sm" className="h-7 text-xs">
-            <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />Aggiorna
-          </Button>
-          <Button onClick={handleSyncEmail} disabled={syncing} size="sm" className="h-7 text-xs bg-purple-600">
-            <Mail className={`w-3 h-3 mr-1 ${syncing ? 'animate-spin' : ''}`} />{syncing ? 'Sync...' : 'Email'}
-          </Button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            style={pageStyle.button('outline')} 
+            onClick={loadData}
+            disabled={loading}
+          >
+            🔄 Aggiorna
+          </button>
+          <button 
+            style={pageStyle.button('primary')} 
+            onClick={eseguiRiconciliazioneAutomatica}
+            disabled={processing === 'auto'}
+          >
+            {processing === 'auto' ? '⏳ Elaborazione...' : '⚡ Riconcilia Automatico'}
+          </button>
         </div>
       </div>
 
-      {/* Stats per anno */}
-      {statsPerAnno.length > 0 && (
-        <div className="flex items-center gap-2 p-2 bg-blue-50 rounded border border-blue-200 text-xs flex-wrap">
-          <span className="font-bold text-blue-700">Per anno:</span>
-          {statsPerAnno.map(s => (
-            <span key={s.anno} className={`px-2 py-0.5 rounded-full ${s.anno === annoGlobale ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700'}`}>
-              {s.anno}: {s.da_confermare}/{s.totale}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Stats cards */}
+      {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-4 gap-2">
-          <div className="bg-amber-50 p-2 rounded text-center"><p className="text-xs text-amber-600">Da Conf.</p><p className="text-xl font-bold text-amber-800">{stats.da_confermare}</p></div>
-          <div className="bg-green-50 p-2 rounded text-center"><p className="text-xs text-green-600">Conf.</p><p className="text-xl font-bold text-green-800">{stats.confermate}</p></div>
-          <div className="bg-red-50 p-2 rounded text-center"><p className="text-xs text-red-600">Tot. €</p><p className="text-lg font-bold text-red-800">{fmt(stats.totale_importo_da_confermare)}</p></div>
-          <div className="bg-slate-50 p-2 rounded text-center"><p className="text-xs text-slate-600">Totale</p><p className="text-xl font-bold">{stats.totale}</p></div>
-        </div>
-      )}
-
-      {/* Modal assegno */}
-      {assegnoModal.open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setAssegnoModal({ open: false, operazioneId: null })}>
-          <div className="bg-white p-4 rounded-lg shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold mb-3 text-sm">Numero Assegno</h3>
-            <Input value={numeroAssegno} onChange={(e) => setNumeroAssegno(e.target.value)} placeholder="Es: 123456" className="h-8 text-sm mb-3" />
-            <div className="flex gap-2">
-              <Button onClick={() => handleConferma(assegnoModal.operazioneId, 'assegno', numeroAssegno)} size="sm" className="flex-1 h-8 text-xs">Conferma</Button>
-              <Button onClick={() => setAssegnoModal({ open: false, operazioneId: null })} variant="outline" size="sm" className="h-8 text-xs">Annulla</Button>
-            </div>
+        <div style={pageStyle.statsGrid}>
+          <div style={pageStyle.statCard('#f59e0b')}>
+            <p style={pageStyle.statValue('#f59e0b')}>{stats.operazioni_da_confermare || operazioni.length}</p>
+            <p style={pageStyle.statLabel}>Da Confermare</p>
+          </div>
+          <div style={pageStyle.statCard('#3b82f6')}>
+            <p style={pageStyle.statValue('#3b82f6')}>{stats.estratto_conto?.riconciliati || 0}</p>
+            <p style={pageStyle.statLabel}>Riconciliati EC</p>
+          </div>
+          <div style={pageStyle.statCard('#10b981')}>
+            <p style={pageStyle.statValue('#10b981')}>{stats.fatture_riconciliate_auto || 0}</p>
+            <p style={pageStyle.statLabel}>Fatture Auto</p>
+          </div>
+          <div style={pageStyle.statCard('#8b5cf6')}>
+            <p style={pageStyle.statValue('#8b5cf6')}>
+              {stats.estratto_conto?.percentuale || 0}%
+            </p>
+            <p style={pageStyle.statLabel}>% Riconciliato</p>
           </div>
         </div>
       )}
 
-      {/* Lista */}
-      <Card className="shadow-sm">
-        <CardContent className="p-2">
-          {loading ? <div className="text-center py-4 text-xs text-slate-500">Caricamento...</div>
-          : operazioni.length === 0 ? <div className="text-center py-4 text-xs text-slate-500">Nessuna operazione</div>
-          : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-100">
-                  <tr>
-                    <th className="px-2 py-1 text-left">Fornitore</th>
-                    <th className="px-2 py-1 text-left">N. Fatt.</th>
-                    <th className="px-2 py-1 text-center">Data</th>
-                    <th className="px-2 py-1 text-right">Importo</th>
-                    <th className="px-2 py-1 text-center">Suggerito</th>
-                    <th className="px-2 py-1 text-center">Azioni</th>
+      {/* Filtri */}
+      <div style={pageStyle.filterBar}>
+        <select 
+          style={pageStyle.select}
+          value={filtroTipo}
+          onChange={(e) => setFiltroTipo(e.target.value)}
+        >
+          <option value="tutti">Tutti i tipi</option>
+          <option value="fattura_dubbio">Fattura (dubbio)</option>
+          <option value="fatture_multiple">Più fatture</option>
+          <option value="pos_dubbio">POS</option>
+          <option value="versamento_dubbio">Versamento</option>
+        </select>
+        
+        <select 
+          style={pageStyle.select}
+          value={filtroConfidence}
+          onChange={(e) => setFiltroConfidence(e.target.value)}
+        >
+          <option value="tutti">Tutte le confidenze</option>
+          <option value="medio">Medio</option>
+          <option value="basso">Basso</option>
+        </select>
+        
+        <input
+          type="text"
+          style={pageStyle.input}
+          placeholder="🔍 Cerca nella descrizione..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+        
+        <span style={{ color: '#64748b', fontSize: '13px' }}>
+          {operazioniFiltrate.length} di {operazioni.length} operazioni
+        </span>
+      </div>
+
+      {/* Tabella Operazioni */}
+      <div style={pageStyle.card}>
+        <div style={pageStyle.cardHeader}>
+          <h2 style={pageStyle.cardTitle}>Operazioni in Attesa</h2>
+        </div>
+        
+        {loading ? (
+          <div style={pageStyle.emptyState}>
+            <p>⏳ Caricamento operazioni...</p>
+          </div>
+        ) : operazioniFiltrate.length === 0 ? (
+          <div style={pageStyle.emptyState}>
+            <p style={{ fontSize: '48px', marginBottom: '16px' }}>✅</p>
+            <p style={{ fontSize: '18px', fontWeight: '600', color: '#334155' }}>
+              Nessuna operazione da confermare
+            </p>
+            <p>Tutte le riconciliazioni sono state elaborate</p>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={pageStyle.table}>
+              <thead>
+                <tr>
+                  <th style={pageStyle.th}>Data</th>
+                  <th style={pageStyle.th}>Descrizione</th>
+                  <th style={{ ...pageStyle.th, textAlign: 'right' }}>Importo</th>
+                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Tipo Match</th>
+                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Confidenza</th>
+                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Dettagli</th>
+                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                {operazioniFiltrate.slice(0, 100).map((op) => (
+                  <tr 
+                    key={op.id} 
+                    style={{ 
+                      background: processing === op.id ? '#f0f9ff' : 'white',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = processing === op.id ? '#f0f9ff' : 'white'}
+                  >
+                    <td style={pageStyle.td}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>
+                        {formatDate(op.data)}
+                      </span>
+                    </td>
+                    <td style={{ ...pageStyle.td, maxWidth: '300px' }}>
+                      <div style={{ 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        whiteSpace: 'nowrap' 
+                      }} title={op.descrizione}>
+                        {op.descrizione || '-'}
+                      </div>
+                    </td>
+                    <td style={{ ...pageStyle.td, textAlign: 'right', fontWeight: '600' }}>
+                      <span style={{ color: op.tipo_movimento === 'uscita' ? '#dc2626' : '#16a34a' }}>
+                        {op.tipo_movimento === 'uscita' ? '-' : '+'}{formatEuro(op.importo)}
+                      </span>
+                    </td>
+                    <td style={{ ...pageStyle.td, textAlign: 'center' }}>
+                      <span style={pageStyle.badge('#6366f1')}>
+                        {getMatchTypeLabel(op.match_type)}
+                      </span>
+                    </td>
+                    <td style={{ ...pageStyle.td, textAlign: 'center' }}>
+                      <span style={pageStyle.badge(getConfidenceColor(op.confidence))}>
+                        {op.confidence || '-'}
+                      </span>
+                    </td>
+                    <td style={{ ...pageStyle.td, textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
+                      {op.dettagli?.motivo_dubbio || '-'}
+                    </td>
+                    <td style={{ ...pageStyle.td, textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                        {/* Se ci sono fatture candidate, mostra dropdown */}
+                        {op.dettagli?.fatture_candidate?.length > 0 ? (
+                          <select
+                            style={{ ...pageStyle.select, minWidth: '120px', fontSize: '12px' }}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                handleConferma(op, 'conferma', e.target.value);
+                              }
+                            }}
+                            disabled={processing === op.id}
+                          >
+                            <option value="">Seleziona fattura</option>
+                            {op.dettagli.fatture_candidate.map((f, i) => (
+                              <option key={i} value={f.id}>
+                                {f.numero} - {f.fornitore?.slice(0, 20)} (€{f.importo})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <button
+                            style={{ ...pageStyle.button('success'), padding: '6px 12px' }}
+                            onClick={() => handleConferma(op, 'conferma')}
+                            disabled={processing === op.id}
+                            title="Conferma"
+                          >
+                            ✓
+                          </button>
+                        )}
+                        <button
+                          style={{ ...pageStyle.button('outline'), padding: '6px 12px' }}
+                          onClick={() => handleConferma(op, 'ignora')}
+                          disabled={processing === op.id}
+                          title="Ignora"
+                        >
+                          ⏭️
+                        </button>
+                        <button
+                          style={{ ...pageStyle.button('danger'), padding: '6px 12px' }}
+                          onClick={() => handleConferma(op, 'rifiuta')}
+                          disabled={processing === op.id}
+                          title="Rifiuta"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {operazioni.filter(o => o.stato !== 'confermato').slice(0, 50).map((op) => (
-                    <tr key={op.id} className="border-b hover:bg-slate-50">
-                      <td className="px-2 py-1.5 font-medium truncate max-w-[150px]" title={op.fornitore}>{op.fornitore}</td>
-                      <td className="px-2 py-1.5 text-slate-600">{op.numero_fattura}</td>
-                      <td className="px-2 py-1.5 text-center">{formatDateIT(op.data_documento)}</td>
-                      <td className="px-2 py-1.5 text-right font-semibold">{fmt(op.importo)}</td>
-                      <td className="px-2 py-1.5 text-center">
-                        {op.metodo_pagamento_suggerito ? (
-                          <span className={`px-1.5 py-0.5 rounded text-xs ${
-                            op.metodo_pagamento_suggerito === 'assegno' ? 'bg-amber-100 text-amber-700' :
-                            op.metodo_pagamento_suggerito === 'banca' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                          }`}>
-                            {op.metodo_pagamento_suggerito}
-                            {op.numero_assegno_suggerito && ` #${op.numero_assegno_suggerito}`}
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td className="px-2 py-1.5 text-center">
-                        <div className="flex gap-1 justify-center">
-                          <button onClick={() => handleConferma(op.id, 'cassa')} disabled={confirmingId === op.id}
-                            className="p-1 bg-green-100 hover:bg-green-200 rounded" title="Cassa">
-                            <Banknote className="w-3 h-3 text-green-700" />
-                          </button>
-                          <button onClick={() => handleConferma(op.id, 'banca')} disabled={confirmingId === op.id}
-                            className="p-1 bg-blue-100 hover:bg-blue-200 rounded" title="Banca">
-                            <CreditCard className="w-3 h-3 text-blue-700" />
-                          </button>
-                          <button onClick={() => setAssegnoModal({ open: true, operazioneId: op.id })} disabled={confirmingId === op.id}
-                            className="p-1 bg-amber-100 hover:bg-amber-200 rounded" title="Assegno">
-                            <FileCheck className="w-3 h-3 text-amber-700" />
-                          </button>
-                          <button onClick={() => handleDelete(op.id)}
-                            className="p-1 bg-red-100 hover:bg-red-200 rounded" title="Elimina">
-                            <Trash2 className="w-3 h-3 text-red-700" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {operazioni.filter(o => o.stato !== 'confermato').length > 50 && (
-                <div className="text-center py-2 text-xs text-slate-500">
-                  Mostrate 50 di {operazioni.filter(o => o.stato !== 'confermato').length} operazioni
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </tbody>
+            </table>
+            
+            {operazioniFiltrate.length > 100 && (
+              <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px', borderTop: '1px solid #e2e8f0' }}>
+                Mostrate 100 di {operazioniFiltrate.length} operazioni
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Info Box */}
+      <div style={{ 
+        marginTop: '24px', 
+        padding: '16px 20px', 
+        background: '#eff6ff', 
+        border: '1px solid #3b82f6', 
+        borderRadius: '12px' 
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '20px' }}>ℹ️</span>
+          <strong style={{ color: '#1e40af' }}>Come funziona la riconciliazione</strong>
+        </div>
+        <p style={{ margin: 0, fontSize: '13px', color: '#1e40af' }}>
+          Quando importi l'estratto conto, il sistema cerca automaticamente corrispondenze con:
+          <strong> Fatture</strong> (per numero e importo),
+          <strong> POS</strong> (logica calendario),
+          <strong> Versamenti</strong> (data + importo),
+          <strong> F24</strong> (importo esatto).
+          I match sicuri vengono riconciliati automaticamente, quelli dubbi appaiono qui per conferma manuale.
+        </p>
+      </div>
     </div>
   );
 }
