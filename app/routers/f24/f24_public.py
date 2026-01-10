@@ -127,6 +127,34 @@ async def upload_f24_pdf(
     }
 
 
+@router.get("/pdf/{f24_id}")
+async def get_f24_pdf(f24_id: str):
+    """Restituisce il PDF originale dell'F24."""
+    db = Database.get_db()
+    
+    f24 = await db["f24_models"].find_one({"id": f24_id})
+    
+    if not f24:
+        raise HTTPException(status_code=404, detail="F24 non trovato")
+    
+    pdf_data = f24.get("pdf_data")
+    if not pdf_data:
+        raise HTTPException(status_code=404, detail="PDF non disponibile per questo F24")
+    
+    # Decode base64 to bytes
+    pdf_bytes = base64.b64decode(pdf_data)
+    
+    filename = f24.get("filename", f"F24_{f24_id}.pdf")
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"'
+        }
+    )
+
+
 @router.put("/models/{f24_id}/pagato")
 async def mark_f24_pagato(f24_id: str) -> Dict[str, str]:
     """Segna un F24 come pagato."""
