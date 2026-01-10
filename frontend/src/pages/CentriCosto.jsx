@@ -120,7 +120,7 @@ export default function CentriCosto() {
           }}
           data-testid="assign-cdc-btn"
         >
-          <RefreshCw size={16} className={assigning ? 'animate-spin' : ''} />
+          <RefreshCw size={16} style={assigning ? { animation: 'spin 1s linear infinite' } : {}} />
           {assigning ? 'Assegnazione...' : `Assegna CDC Fatture ${anno}`}
         </button>
       </div>
