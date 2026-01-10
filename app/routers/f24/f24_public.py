@@ -91,6 +91,7 @@ async def upload_f24_pdf(
         "saldo_finale": parsed.get("saldo_finale", 0),
         "pagato": False,
         "filename": file.filename,
+        "pdf_data": base64.b64encode(pdf_bytes).decode('utf-8'),  # Store PDF as base64
         "source": "pdf_upload",
         "created_at": datetime.utcnow().isoformat()
     }
@@ -103,12 +104,7 @@ async def upload_f24_pdf(
     })
     
     if existing:
-        return {
-            "success": False,
-            "error": "F24 già presente nel sistema",
-            "existing_id": existing.get("id"),
-            "filename": file.filename
-        }
+        raise HTTPException(status_code=409, detail="F24 già presente nel sistema")
     
     # Insert into database
     await db["f24_models"].insert_one(f24_record)
