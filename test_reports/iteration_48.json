@@ -1,0 +1,174 @@
+{
+  "summary": "Iteration 48 - Complete regression testing of ERP italiano. All new HACCP features (Allergeni, Bonifici Associazione, Ricettario, Non Conformità, Temperature, Sanificazione) working correctly. Backend: 18/18 tests passed. Frontend: All 8 pages verified working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/haccp-v2/temperature-positive/frigoriferi", "issue": "Endpoint does not exist - correct endpoint is /api/haccp-v2/temperature-positive/schede/{anno}"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/dashboard", "issues": ["Route /dashboard returns 404 - main dashboard is at root URL /"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/tests/test_iteration_48.py",
+    "/app/test_reports/pytest/pytest_iteration_48.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All HACCP pages use inline JavaScript styles as specified",
+    "Libro Allergeni shows 86 ingredients with 30 containing allergens and 14 EU allergens",
+    "Archivio Bonifici has 'Associa a Salario' column with '+ Associa' buttons",
+    "Ricettario Dinamico shows 90 recipes with food cost and tracciabilità",
+    "HACCP sidebar submenu has 7 items: Dashboard HACCP, Ricettario Dinamico, Libro Allergeni, Temperature, Sanificazione, Non Conformità, Registro Lotti",
+    "Temperature page has Frigoriferi/Congelatori switch working correctly",
+    "Non Conformità modal has Operatore and Motivo selectors"
+  ],
+  "updated_files": [
+    "/app/tests/test_iteration_48.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "100% (8 pages verified)"
+  },
+  "test_credentials": {},
+  "seed_data_creation": "None - used existing data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 48 tested all new HACCP features. IMPORTANT: Main dashboard is at root URL '/' not '/dashboard'. Backend routers are at /app/app/routers/haccp_v2/. All HACCP pages verified: /libro-allergeni (86 ingredients, 30 with allergens), /archivio-bonifici (Associa a Salario column), /ricettario-dinamico (90 recipes), /haccp-v2/temperature (Frigoriferi/Congelatori switch), /haccp-v2/sanificazione, /haccp-v2/non-conformita. Prima Nota at /prima-nota working. HACCP sidebar has 7 submenu items.",
+  "verified_features": {
+    "libro_allergeni": {
+      "route": "/libro-allergeni",
+      "status": "WORKING",
+      "features_verified": [
+        "86 total ingredients displayed",
+        "30 ingredients with allergens",
+        "14 EU allergens with badges (Glutine, Latte, Uova, etc.)",
+        "Aggiungi Voce button present",
+        "Stampa PDF button present",
+        "Search/filter functionality"
+      ]
+    },
+    "archivio_bonifici": {
+      "route": "/archivio-bonifici",
+      "status": "WORKING",
+      "features_verified": [
+        "Bonifici table with 5 entries",
+        "Associa a Salario column present",
+        "+ Associa buttons in each row",
+        "Export XLSX/CSV buttons",
+        "Riconciliazione section"
+      ]
+    },
+    "ricettario_dinamico": {
+      "route": "/ricettario-dinamico",
+      "status": "WORKING",
+      "features_verified": [
+        "90 recipes displayed",
+        "Food cost per recipe",
+        "Category filter",
+        "Search functionality",
+        "Recipe detail with tracciabilità"
+      ]
+    },
+    "haccp_temperature": {
+      "route": "/haccp-v2/temperature",
+      "status": "WORKING",
+      "features_verified": [
+        "Frigoriferi/Congelatori switch buttons",
+        "Temperature calendar grid",
+        "Frigorifero selector",
+        "Registra Temperatura button",
+        "Statistics (Conformi, Anomalie, Media)"
+      ]
+    },
+    "haccp_sanificazione": {
+      "route": "/haccp-v2/sanificazione",
+      "status": "WORKING",
+      "features_verified": [
+        "Statistics cards (Conformi, Non Conformi, Totale)",
+        "Month navigation",
+        "Registro Interventi section",
+        "Attrezzature Monitorate section",
+        "Registra Sanificazione button"
+      ]
+    },
+    "haccp_non_conformita": {
+      "route": "/haccp-v2/non-conformita",
+      "status": "WORKING",
+      "features_verified": [
+        "Statistics cards (Aperti, In Gestione, Chiusi, Totale)",
+        "Segnala Non Conformità button",
+        "Modal with Prodotto, Operatore, Motivo, Azione selectors",
+        "Month navigation",
+        "State filter"
+      ]
+    },
+    "haccp_sidebar_menu": {
+      "status": "WORKING",
+      "submenu_items": [
+        "Dashboard HACCP",
+        "Ricettario Dinamico",
+        "Libro Allergeni",
+        "Temperature",
+        "Sanificazione",
+        "Non Conformità",
+        "Registro Lotti"
+      ],
+      "total_items": 7
+    },
+    "regression_dashboard": {
+      "route": "/",
+      "status": "WORKING",
+      "features_verified": [
+        "Dashboard 2026 header",
+        "Prossime Scadenze section",
+        "Bilancio Istantaneo 2026",
+        "Backend connesso indicator"
+      ]
+    },
+    "regression_prima_nota": {
+      "route": "/prima-nota",
+      "status": "WORKING",
+      "features_verified": [
+        "Prima Nota Cassa section",
+        "Prima Nota Banca section",
+        "Chiusure Giornaliere forms",
+        "Month filter tabs"
+      ]
+    }
+  },
+  "backend_tests_summary": {
+    "total_tests": 18,
+    "passed": 18,
+    "failed": 0,
+    "test_classes": [
+      "TestAllergeniAPI (3 tests) - elenco, libro, rileva",
+      "TestBonificiAssociazioneAPI (2 tests) - transfers, operazioni-salari",
+      "TestRicettarioAPI (2 tests) - ricettario, dettaglio",
+      "TestNonConformitaAPI (2 tests) - motivi-azioni, list",
+      "TestTemperatureAPI (2 tests) - schede, scheda singola",
+      "TestSanificazioneAPI (2 tests) - attrezzature, scheda",
+      "TestRegressionDashboard (2 tests) - health, stats",
+      "TestRegressionFatture (1 test) - lotti",
+      "TestRegressionPrimaNota (2 tests) - cassa, banca"
+    ]
+  },
+  "screenshots": [
+    ".screenshots/libro_allergeni.png",
+    ".screenshots/archivio_bonifici.png",
+    ".screenshots/ricettario_dinamico.png",
+    ".screenshots/ricettario_dettaglio.png",
+    ".screenshots/haccp_temperature.png",
+    ".screenshots/haccp_congelatori.png",
+    ".screenshots/haccp_sanificazione.png",
+    ".screenshots/haccp_non_conformita.png",
+    ".screenshots/haccp_nc_modal.png",
+    ".screenshots/home.png",
+    ".screenshots/prima_nota.png",
+    ".screenshots/haccp_sidebar.png"
+  ]
+}
