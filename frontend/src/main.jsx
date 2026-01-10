@@ -164,7 +164,6 @@ const UtileObiettivo = lazy(() => import("./pages/UtileObiettivo.jsx"));
 // Import/Export
 const ImportExport = lazy(() => import("./pages/ImportExport.jsx"));
 const EstrattoContoImport = lazy(() => import("./pages/EstrattoContoImport.jsx"));
-const EstrattoConto = lazy(() => import("./pages/EstrattoConto.jsx"));
 const ArchivioBonifici = lazy(() => import("./pages/ArchivioBonifici.jsx"));
 const Documenti = lazy(() => import("./pages/Documenti.jsx"));
 
