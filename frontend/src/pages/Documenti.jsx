@@ -513,7 +513,7 @@ export default function Documenti() {
                       }}
                     />
                     <Button onClick={addCustomKeyword} variant="outline" size="sm" disabled={!nuovaParolaChiave.trim()}>
-                      <Plus className="h-4 w-4 mr-1" /> Aggiungi
+                      <Plus style={{ height: 16, width: 16, marginRight: 4 }} /> Aggiungi
                     </Button>
                   </div>
                   <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
