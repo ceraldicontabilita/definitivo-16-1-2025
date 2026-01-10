@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { formatEuro } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
 import { 
   Calculator, 
   Download, 
@@ -93,33 +90,36 @@ export default function LiquidazioneIVA() {
   };
 
   return (
-    <div className="space-y-6 p-6" data-testid="liquidazione-iva-page">
+    <div className="page-container" data-testid="liquidazione-iva-page">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📊 Liquidazione IVA</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="page-title">
+            <Calculator size={28} />
+            Liquidazione IVA
+          </h1>
+          <p className="page-subtitle">
             Calcolo preciso IVA mensile per confronto con commercialista
           </p>
         </div>
       </div>
 
       {/* Filtri */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Calculator size={18} />
             Parametri Calcolo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          </h3>
+        </div>
+        <div className="card-content">
+          <div className="filter-bar">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Anno</label>
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>Anno</label>
               <select
                 value={anno}
                 onChange={(e) => setAnno(parseInt(e.target.value))}
-                className="w-full p-2 border rounded-md"
+                className="form-select"
                 data-testid="select-anno"
               >
                 {[2023, 2024, 2025, 2026].map(a => (
@@ -129,11 +129,11 @@ export default function LiquidazioneIVA() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mese</label>
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>Mese</label>
               <select
                 value={mese}
                 onChange={(e) => setMese(parseInt(e.target.value))}
-                className="w-full p-2 border rounded-md"
+                className="form-select"
                 data-testid="select-mese"
               >
                 {MESI.slice(1).map((m, i) => (
@@ -143,352 +143,362 @@ export default function LiquidazioneIVA() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>
                 Credito Precedente (€)
               </label>
-              <Input
+              <input
                 type="number"
                 value={creditoPrecedente}
                 onChange={(e) => setCreditoPrecedente(parseFloat(e.target.value) || 0)}
                 placeholder="0.00"
+                className="form-input"
+                style={{ width: 150 }}
                 data-testid="input-credito-precedente"
               />
             </div>
             
-            <div className="flex items-end gap-2">
-              <Button 
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+              <button 
                 onClick={calcolaLiquidazione} 
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="btn btn-primary"
                 data-testid="btn-calcola"
               >
-                {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Calculator className="h-4 w-4 mr-2" />}
+                {loading ? <RefreshCw size={16} className="loading-spinner" /> : <Calculator size={16} />}
                 Calcola
-              </Button>
-              <Button 
+              </button>
+              <button 
                 onClick={scaricaPDF} 
-                variant="outline"
                 disabled={!result}
+                className="btn btn-outline"
                 data-testid="btn-pdf"
               >
-                <Download className="h-4 w-4" />
-              </Button>
+                <Download size={16} />
+              </button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Risultato Liquidazione */}
       {result && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="stats-grid" style={{ marginBottom: 20 }}>
           {/* Card IVA Debito */}
-          <Card className="border-l-4 border-l-red-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">IVA a Debito</p>
-                  <p className="text-2xl font-bold text-red-600" data-testid="iva-debito">
-                    {formatEuro(result.iva_debito)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {result.statistiche?.corrispettivi_count || 0} corrispettivi
-                  </p>
-                </div>
-                <TrendingUp className="h-10 w-10 text-red-200" />
+          <div className="stat-card red">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>IVA a Debito</p>
+                <p className="stat-value red" data-testid="iva-debito">
+                  {formatEuro(result.iva_debito)}
+                </p>
+                <p className="stat-label">
+                  {result.statistiche?.corrispettivi_count || 0} corrispettivi
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <TrendingUp size={32} style={{ color: '#fca5a5' }} />
+            </div>
+          </div>
 
           {/* Card IVA Credito */}
-          <Card className="border-l-4 border-l-green-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">IVA a Credito</p>
-                  <p className="text-2xl font-bold text-green-600" data-testid="iva-credito">
-                    {formatEuro(result.iva_credito)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {result.statistiche?.fatture_incluse || 0} fatture 
-                    {result.statistiche?.note_credito > 0 && ` (${result.statistiche.note_credito} NC)`}
-                  </p>
-                </div>
-                <TrendingDown className="h-10 w-10 text-green-200" />
+          <div className="stat-card green">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>IVA a Credito</p>
+                <p className="stat-value green" data-testid="iva-credito">
+                  {formatEuro(result.iva_credito)}
+                </p>
+                <p className="stat-label">
+                  {result.statistiche?.fatture_incluse || 0} fatture 
+                  {result.statistiche?.note_credito > 0 && ` (${result.statistiche.note_credito} NC)`}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <TrendingDown size={32} style={{ color: '#86efac' }} />
+            </div>
+          </div>
 
           {/* Card Saldo */}
-          <Card className={`border-l-4 ${result.iva_da_versare > 0 ? 'border-l-orange-500 bg-orange-50' : 'border-l-blue-500 bg-blue-50'}`}>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    {result.iva_da_versare > 0 ? 'IVA da Versare' : 'Credito da Riportare'}
-                  </p>
-                  <p className={`text-2xl font-bold ${result.iva_da_versare > 0 ? 'text-orange-600' : 'text-blue-600'}`} data-testid="saldo-iva">
-                    {formatEuro(result.iva_da_versare > 0 ? result.iva_da_versare : result.credito_da_riportare)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">{result.stato}</p>
-                </div>
-                <FileText className={`h-10 w-10 ${result.iva_da_versare > 0 ? 'text-orange-200' : 'text-blue-200'}`} />
+          <div className="stat-card" style={{
+            background: result.iva_da_versare > 0 
+              ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.04))'
+              : 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04))',
+            border: result.iva_da_versare > 0 
+              ? '1px solid rgba(245, 158, 11, 0.2)'
+              : '1px solid rgba(59, 130, 246, 0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>
+                  {result.iva_da_versare > 0 ? 'IVA da Versare' : 'Credito da Riportare'}
+                </p>
+                <p className="stat-value" style={{ color: result.iva_da_versare > 0 ? '#f59e0b' : '#3b82f6' }} data-testid="saldo-iva">
+                  {formatEuro(result.iva_da_versare > 0 ? result.iva_da_versare : result.credito_da_riportare)}
+                </p>
+                <p className="stat-label">{result.stato}</p>
               </div>
-            </CardContent>
-          </Card>
+              <FileText size={32} style={{ color: result.iva_da_versare > 0 ? '#fcd34d' : '#93c5fd' }} />
+            </div>
+          </div>
         </div>
       )}
 
       {/* Dettaglio per Aliquota */}
       {result && (
-        <Card>
-          <CardHeader 
-            className="cursor-pointer hover:bg-gray-50"
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div 
+            className="card-header" 
+            style={{ cursor: 'pointer' }}
             onClick={() => setShowDettaglio(!showDettaglio)}
           >
-            <CardTitle className="flex items-center justify-between text-lg">
-              <span>📋 Dettaglio per Aliquota IVA</span>
-              {showDettaglio ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-            </CardTitle>
-          </CardHeader>
+            <h3 className="card-title">📋 Dettaglio per Aliquota IVA</h3>
+            {showDettaglio ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
           {showDettaglio && (
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card-content">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                 {/* IVA Debito per Aliquota */}
                 <div>
-                  <h4 className="font-semibold text-red-700 mb-3">📈 IVA a Debito (Corrispettivi)</h4>
+                  <h4 style={{ color: '#dc2626', marginBottom: 12 }}>📈 IVA a Debito (Corrispettivi)</h4>
                   {Object.keys(result.sales_detail || {}).length > 0 ? (
-                    <table className="w-full text-sm">
-                      <thead className="bg-red-50">
-                        <tr>
-                          <th className="text-left p-2">Aliquota</th>
-                          <th className="text-right p-2">Imponibile</th>
-                          <th className="text-right p-2">IVA</th>
+                    <table className="data-table">
+                      <thead>
+                        <tr style={{ background: '#fef2f2' }}>
+                          <th>Aliquota</th>
+                          <th style={{ textAlign: 'right' }}>Imponibile</th>
+                          <th style={{ textAlign: 'right' }}>IVA</th>
                         </tr>
                       </thead>
                       <tbody>
                         {Object.entries(result.sales_detail).map(([aliq, val]) => (
-                          <tr key={aliq} className="border-b">
-                            <td className="p-2">{aliq}%</td>
-                            <td className="text-right p-2">{formatEuro(val.imponibile)}</td>
-                            <td className="text-right p-2">{formatEuro(val.iva)}</td>
+                          <tr key={aliq}>
+                            <td>{aliq}%</td>
+                            <td style={{ textAlign: 'right' }}>{formatEuro(val.imponibile)}</td>
+                            <td style={{ textAlign: 'right' }}>{formatEuro(val.iva)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   ) : (
-                    <p className="text-gray-500 text-sm">Nessun corrispettivo nel periodo</p>
+                    <p style={{ color: '#64748b', fontSize: 14 }}>Nessun corrispettivo nel periodo</p>
                   )}
                 </div>
 
                 {/* IVA Credito per Aliquota */}
                 <div>
-                  <h4 className="font-semibold text-green-700 mb-3">📉 IVA a Credito (Acquisti)</h4>
+                  <h4 style={{ color: '#16a34a', marginBottom: 12 }}>📉 IVA a Credito (Acquisti)</h4>
                   {Object.keys(result.purchase_detail || {}).length > 0 ? (
-                    <table className="w-full text-sm">
-                      <thead className="bg-green-50">
-                        <tr>
-                          <th className="text-left p-2">Aliquota</th>
-                          <th className="text-right p-2">Imponibile</th>
-                          <th className="text-right p-2">IVA</th>
+                    <table className="data-table">
+                      <thead>
+                        <tr style={{ background: '#f0fdf4' }}>
+                          <th>Aliquota</th>
+                          <th style={{ textAlign: 'right' }}>Imponibile</th>
+                          <th style={{ textAlign: 'right' }}>IVA</th>
                         </tr>
                       </thead>
                       <tbody>
                         {Object.entries(result.purchase_detail).map(([aliq, val]) => (
-                          <tr key={aliq} className="border-b">
-                            <td className="p-2">{aliq}%</td>
-                            <td className="text-right p-2">{formatEuro(val.imponibile)}</td>
-                            <td className="text-right p-2">{formatEuro(val.iva)}</td>
+                          <tr key={aliq}>
+                            <td>{aliq}%</td>
+                            <td style={{ textAlign: 'right' }}>{formatEuro(val.imponibile)}</td>
+                            <td style={{ textAlign: 'right' }}>{formatEuro(val.iva)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   ) : (
-                    <p className="text-gray-500 text-sm">Nessuna fattura nel periodo</p>
+                    <p style={{ color: '#64748b', fontSize: 14 }}>Nessuna fattura nel periodo</p>
                   )}
                 </div>
               </div>
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
       )}
 
       {/* Sezione Confronto con Commercialista */}
-      <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
-        <CardHeader>
-          <CardTitle className="text-lg text-purple-800">🔍 Confronto con Commercialista</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
+      <div className="card" style={{ marginBottom: 20, background: 'linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%)' }}>
+        <div className="card-header" style={{ background: 'transparent', borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }}>
+          <h3 className="card-title" style={{ color: '#6d28d9' }}>🔍 Confronto con Commercialista</h3>
+        </div>
+        <div className="card-content">
+          <p style={{ fontSize: 14, color: '#64748b', marginBottom: 16 }}>
             Inserisci i valori calcolati dal tuo commercialista per verificare eventuali discrepanze.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="filter-bar">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>
                 IVA Debito Commercialista (€)
               </label>
-              <Input
+              <input
                 type="number"
                 step="0.01"
                 value={confronto.debito}
                 onChange={(e) => setConfronto({ ...confronto, debito: e.target.value })}
                 placeholder="0.00"
+                className="form-input"
+                style={{ width: 180 }}
                 data-testid="input-confronto-debito"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>
                 IVA Credito Commercialista (€)
               </label>
-              <Input
+              <input
                 type="number"
                 step="0.01"
                 value={confronto.credito}
                 onChange={(e) => setConfronto({ ...confronto, credito: e.target.value })}
                 placeholder="0.00"
+                className="form-input"
+                style={{ width: 180 }}
                 data-testid="input-confronto-credito"
               />
             </div>
-            <div className="flex items-end">
-              <Button 
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button 
                 onClick={eseguiConfronto}
                 disabled={!confronto.debito || !confronto.credito}
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="btn"
+                style={{ background: '#7c3aed', color: 'white' }}
                 data-testid="btn-confronta"
               >
                 Confronta
-              </Button>
+              </button>
             </div>
           </div>
 
           {/* Risultato Confronto */}
           {confrontoResult && (
-            <div className={`mt-4 p-4 rounded-lg ${confrontoResult.esito?.coincide ? 'bg-green-100 border border-green-300' : 'bg-yellow-100 border border-yellow-300'}`}>
-              <div className="flex items-center gap-2 mb-3">
+            <div style={{
+              marginTop: 16,
+              padding: 16,
+              borderRadius: 8,
+              background: confrontoResult.esito?.coincide ? '#f0fdf4' : '#fefce8',
+              border: confrontoResult.esito?.coincide ? '1px solid #86efac' : '1px solid #fde047'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 {confrontoResult.esito?.coincide ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <CheckCircle size={20} style={{ color: '#16a34a' }} />
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  <AlertCircle size={20} style={{ color: '#ca8a04' }} />
                 )}
-                <span className="font-semibold">
+                <span style={{ fontWeight: 600 }}>
                   {confrontoResult.esito?.note}
                 </span>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 <div>
-                  <p className="text-gray-500">Differenza Debito</p>
-                  <p className={`font-bold ${Math.abs(confrontoResult.differenze?.iva_debito) > 1 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p style={{ fontSize: 13, color: '#64748b' }}>Differenza Debito</p>
+                  <p style={{ fontWeight: 700, color: Math.abs(confrontoResult.differenze?.iva_debito) > 1 ? '#dc2626' : '#16a34a' }}>
                     {formatEuro(confrontoResult.differenze?.iva_debito || 0)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Differenza Credito</p>
-                  <p className={`font-bold ${Math.abs(confrontoResult.differenze?.iva_credito) > 1 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p style={{ fontSize: 13, color: '#64748b' }}>Differenza Credito</p>
+                  <p style={{ fontWeight: 700, color: Math.abs(confrontoResult.differenze?.iva_credito) > 1 ? '#dc2626' : '#16a34a' }}>
                     {formatEuro(confrontoResult.differenze?.iva_credito || 0)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Differenza Saldo</p>
-                  <p className={`font-bold ${Math.abs(confrontoResult.differenze?.saldo) > 1 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p style={{ fontSize: 13, color: '#64748b' }}>Differenza Saldo</p>
+                  <p style={{ fontWeight: 700, color: Math.abs(confrontoResult.differenze?.saldo) > 1 ? '#dc2626' : '#16a34a' }}>
                     {formatEuro(confrontoResult.differenze?.saldo || 0)}
                   </p>
                 </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Riepilogo Annuale */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">📅 Riepilogo Annuale {anno}</CardTitle>
-          <Button onClick={caricaRiepilogoAnnuale} variant="outline" size="sm" data-testid="btn-riepilogo-annuale">
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <h3 className="card-title">📅 Riepilogo Annuale {anno}</h3>
+          <button onClick={caricaRiepilogoAnnuale} className="btn btn-outline btn-sm" data-testid="btn-riepilogo-annuale">
+            <RefreshCw size={14} className={loading ? 'loading-spinner' : ''} />
             Carica
-          </Button>
-        </CardHeader>
+          </button>
+        </div>
         {riepilogoAnnuale && (
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="text-left p-2">Mese</th>
-                    <th className="text-right p-2">IVA Debito</th>
-                    <th className="text-right p-2">IVA Credito</th>
-                    <th className="text-right p-2">Da Versare</th>
-                    <th className="text-right p-2">Credito</th>
-                    <th className="text-center p-2">Stato</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {riepilogoAnnuale.mensile?.map((m) => (
-                    <tr key={m.mese} className="border-b hover:bg-gray-50">
-                      <td className="p-2 font-medium">{m.mese_nome}</td>
-                      <td className="text-right p-2 text-red-600">{formatEuro(m.iva_debito || 0)}</td>
-                      <td className="text-right p-2 text-green-600">{formatEuro(m.iva_credito || 0)}</td>
-                      <td className="text-right p-2 text-orange-600 font-semibold">
-                        {m.iva_da_versare > 0 ? formatEuro(m.iva_da_versare) : '-'}
-                      </td>
-                      <td className="text-right p-2 text-blue-600">
-                        {m.credito_da_riportare > 0 ? formatEuro(m.credito_da_riportare) : '-'}
-                      </td>
-                      <td className="text-center p-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          m.stato === 'Da versare' ? 'bg-orange-100 text-orange-700' :
-                          m.stato === 'A credito' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {m.stato}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-gray-200 font-bold">
-                  <tr>
-                    <td className="p-2">TOTALE ANNO</td>
-                    <td className="text-right p-2 text-red-700">
-                      {formatEuro(riepilogoAnnuale.totali?.iva_debito_totale || 0)}
+          <div className="card-content" style={{ padding: 0, overflow: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Mese</th>
+                  <th style={{ textAlign: 'right' }}>IVA Debito</th>
+                  <th style={{ textAlign: 'right' }}>IVA Credito</th>
+                  <th style={{ textAlign: 'right' }}>Da Versare</th>
+                  <th style={{ textAlign: 'right' }}>Credito</th>
+                  <th style={{ textAlign: 'center' }}>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                {riepilogoAnnuale.mensile?.map((m) => (
+                  <tr key={m.mese}>
+                    <td style={{ fontWeight: 500 }}>{m.mese_nome}</td>
+                    <td style={{ textAlign: 'right', color: '#dc2626' }}>{formatEuro(m.iva_debito || 0)}</td>
+                    <td style={{ textAlign: 'right', color: '#16a34a' }}>{formatEuro(m.iva_credito || 0)}</td>
+                    <td style={{ textAlign: 'right', color: '#f59e0b', fontWeight: 600 }}>
+                      {m.iva_da_versare > 0 ? formatEuro(m.iva_da_versare) : '-'}
                     </td>
-                    <td className="text-right p-2 text-green-700">
-                      {formatEuro(riepilogoAnnuale.totali?.iva_credito_totale || 0)}
+                    <td style={{ textAlign: 'right', color: '#3b82f6' }}>
+                      {m.credito_da_riportare > 0 ? formatEuro(m.credito_da_riportare) : '-'}
                     </td>
-                    <td className="text-right p-2 text-orange-700">
-                      {formatEuro(riepilogoAnnuale.totali?.iva_versata_totale || 0)}
-                    </td>
-                    <td className="text-right p-2 text-blue-700">
-                      {formatEuro(riepilogoAnnuale.totali?.credito_finale || 0)}
-                    </td>
-                    <td className="text-center p-2">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        riepilogoAnnuale.totali?.saldo_annuale > 0 ? 'bg-orange-200 text-orange-800' : 'bg-blue-200 text-blue-800'
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={`badge ${
+                        m.stato === 'Da versare' ? 'amber' :
+                        m.stato === 'A credito' ? 'blue' : 'gray'
                       }`}>
-                        {riepilogoAnnuale.totali?.saldo_annuale > 0 ? 'Da Versare' : 'A Credito'}
+                        {m.stato}
                       </span>
                     </td>
                   </tr>
-                </tfoot>
-              </table>
-            </div>
-          </CardContent>
+                ))}
+              </tbody>
+              <tfoot style={{ background: '#e2e8f0', fontWeight: 700 }}>
+                <tr>
+                  <td style={{ padding: 12 }}>TOTALE ANNO</td>
+                  <td style={{ textAlign: 'right', padding: 12, color: '#b91c1c' }}>
+                    {formatEuro(riepilogoAnnuale.totali?.iva_debito_totale || 0)}
+                  </td>
+                  <td style={{ textAlign: 'right', padding: 12, color: '#15803d' }}>
+                    {formatEuro(riepilogoAnnuale.totali?.iva_credito_totale || 0)}
+                  </td>
+                  <td style={{ textAlign: 'right', padding: 12, color: '#b45309' }}>
+                    {formatEuro(riepilogoAnnuale.totali?.iva_versata_totale || 0)}
+                  </td>
+                  <td style={{ textAlign: 'right', padding: 12, color: '#1d4ed8' }}>
+                    {formatEuro(riepilogoAnnuale.totali?.credito_finale || 0)}
+                  </td>
+                  <td style={{ textAlign: 'center', padding: 12 }}>
+                    <span className={`badge ${
+                      riepilogoAnnuale.totali?.saldo_annuale > 0 ? 'amber' : 'blue'
+                    }`}>
+                      {riepilogoAnnuale.totali?.saldo_annuale > 0 ? 'Da Versare' : 'A Credito'}
+                    </span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         )}
-      </Card>
+      </div>
 
       {/* Note informative */}
-      <Card className="bg-gray-50">
-        <CardContent className="pt-6">
-          <h4 className="font-semibold text-gray-700 mb-2">ℹ️ Note sul calcolo</h4>
-          <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
-            <li><strong>IVA a Debito</strong>: calcolata dalla somma dell'IVA sui corrispettivi del periodo</li>
-            <li><strong>IVA a Credito</strong>: calcolata dalla somma dell'IVA sulle fatture d'acquisto ricevute nel periodo</li>
-            <li><strong>Deroghe temporali</strong>: applicate regola 15 giorni e 12 giorni per fatture mese precedente</li>
-            <li><strong>Note di Credito</strong> (TD04, TD08): sottratte dal totale IVA credito</li>
-            <li>Regime IVA: <strong>Ordinario per competenza</strong></li>
-          </ul>
-        </CardContent>
-      </Card>
+      <div className="info-box">
+        <h4 className="info-box-title">
+          ℹ️ Note sul calcolo
+        </h4>
+        <ul className="info-box-content" style={{ paddingLeft: 20, lineHeight: 1.8 }}>
+          <li><strong>IVA a Debito</strong>: calcolata dalla somma dell'IVA sui corrispettivi del periodo</li>
+          <li><strong>IVA a Credito</strong>: calcolata dalla somma dell'IVA sulle fatture d'acquisto ricevute nel periodo</li>
+          <li><strong>Deroghe temporali</strong>: applicate regola 15 giorni e 12 giorni per fatture mese precedente</li>
+          <li><strong>Note di Credito</strong> (TD04, TD08): sottratte dal totale IVA credito</li>
+          <li>Regime IVA: <strong>Ordinario per competenza</strong></li>
+        </ul>
+      </div>
     </div>
   );
 }
