@@ -1008,6 +1008,44 @@ async def get_fattura(invoice_id: str) -> Dict[str, Any]:
     return invoice
 
 
+@router.put("/{invoice_id}")
+async def update_fattura(invoice_id: str, data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    """
+    Aggiorna una fattura.
+    Campi aggiornabili: metodo_pagamento, pagato, status, data_pagamento, numeri_assegni, note
+    """
+    db = Database.get_db()
+    
+    # Campi aggiornabili
+    allowed_fields = [
+        "metodo_pagamento", "pagato", "paid", "status", "data_pagamento",
+        "numeri_assegni", "note", "in_banca", "categoria_contabile", "centro_costo"
+    ]
+    
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Nessun campo valido da aggiornare")
+    
+    # Sincronizza pagato e paid
+    if "pagato" in update_data:
+        update_data["paid"] = update_data["pagato"]
+    elif "paid" in update_data:
+        update_data["pagato"] = update_data["paid"]
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db[Collections.INVOICES].update_one(
+        {"id": invoice_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Fattura non trovata")
+    
+    return {"success": True, "message": "Fattura aggiornata", "updated_fields": list(update_data.keys())}
+
+
 @router.put("/{invoice_id}/metodo-pagamento")
 async def update_metodo_pagamento(invoice_id: str, data: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     """Aggiorna il metodo di pagamento di una fattura."""
