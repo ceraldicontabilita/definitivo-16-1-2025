@@ -502,112 +502,93 @@ export default function ImportExport() {
       {/* Import Section */}
       {activeTab === "import" && (
         <>
-          {/* Fatture XML/ZIP Import Card - Main Feature */}
-          <div style={{ 
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", 
-            borderRadius: 16, 
-            padding: 25,
-            marginBottom: 25,
-            color: "white"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 15, marginBottom: 15 }}>
-              <span style={{ fontSize: 40 }}>📄</span>
-              <div>
-                <div style={{ fontWeight: "bold", fontSize: 20 }}>Import Fatture XML</div>
-                <div style={{ fontSize: 13, opacity: 0.9 }}>
-                  Importa file XML singoli, multipli o ZIP contenenti XML (anche ZIP annidati)
-                </div>
-              </div>
-            </div>
-            
-            <div style={{ 
-              background: "rgba(255,255,255,0.15)", 
-              borderRadius: 12, 
-              padding: 15,
-              marginBottom: 15
-            }}>
-              <div style={{ marginBottom: 10, fontSize: 13 }}>
-                <strong>Formati supportati:</strong>
-                <ul style={{ margin: "5px 0 0 20px", paddingLeft: 0 }}>
-                  <li>File XML singoli o multipli</li>
-                  <li>File ZIP contenenti XML</li>
-                  <li>ZIP multipli contenenti XML</li>
-                  <li>ZIP annidati (ZIP dentro ZIP)</li>
-                </ul>
-              </div>
-              <div style={{ fontSize: 12, opacity: 0.9 }}>
-                ⚠️ I duplicati vengono rilevati automaticamente e ignorati
-              </div>
-            </div>
-
-            <input
-              type="file"
-              ref={fattureXmlRef}
-              accept=".xml,.zip"
-              multiple
-              style={{ 
-                width: "100%", 
-                padding: 12, 
-                border: "2px dashed rgba(255,255,255,0.5)",
-                borderRadius: 8,
-                marginBottom: 15,
-                background: "rgba(255,255,255,0.1)",
-                color: "white"
-              }}
-              data-testid="import-fatture-xml-file"
-            />
-            
-            {/* Progress Bar */}
-            {uploadProgress.active && (
-              <div style={{ marginBottom: 15 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 13 }}>
-                  <span>{uploadProgress.filename}</span>
-                  <span>{uploadProgress.current} / {uploadProgress.total} ({progressPercent}%)</span>
-                </div>
-                <div style={{ 
-                  height: 10, 
-                  background: "rgba(255,255,255,0.2)", 
-                  borderRadius: 5,
-                  overflow: "hidden"
-                }}>
-                  <div style={{
-                    height: "100%",
-                    width: `${progressPercent}%`,
-                    background: "#4ade80",
-                    transition: "width 0.3s ease",
-                    borderRadius: 5
-                  }} />
-                </div>
-                <div style={{ display: "flex", gap: 20, marginTop: 8, fontSize: 12 }}>
-                  <span>✅ Importate: {uploadProgress.imported}</span>
-                  <span>⚠️ Duplicati: {uploadProgress.duplicates}</span>
-                  <span>❌ Errori: {uploadProgress.errors.length}</span>
-                </div>
-              </div>
-            )}
-            
-            <button
-              onClick={handleFattureXmlImport}
-              disabled={loading}
-              style={{
-                width: "100%",
-                padding: "14px 20px",
-                background: loading ? "rgba(255,255,255,0.3)" : "white",
-                color: loading ? "white" : "#764ba2",
-                border: "none",
-                borderRadius: 8,
-                fontWeight: "bold",
-                fontSize: 16,
-                cursor: loading ? "wait" : "pointer"
-              }}
-              data-testid="import-fatture-xml-btn"
-            >
-              {loading ? "⏳ Importazione in corso..." : "📥 Importa Fatture XML/ZIP"}
-            </button>
-          </div>
-
-          {/* Other Imports Grid */}
+          {/* Other Imports Grid - including Fatture XML */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            
+            {/* Fatture XML/ZIP Import Card - Same style as others */}
+            <div 
+              style={{ 
+                background: "white", 
+                borderRadius: 12, 
+                padding: 20,
+                border: "1px solid #e5e7eb",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <span style={{ fontSize: 28 }}>📄</span>
+                <div>
+                  <div style={{ fontWeight: "bold", fontSize: 16 }}>Import Fatture XML</div>
+                  <div style={{ fontSize: 12, color: "#666" }}>
+                    XML singoli/multipli, ZIP, ZIP annidati. I duplicati vengono ignorati automaticamente
+                  </div>
+                </div>
+              </div>
+
+              <input
+                type="file"
+                ref={fattureXmlRef}
+                accept=".xml,.zip"
+                multiple
+                style={{ 
+                  width: "100%", 
+                  padding: 10, 
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 6,
+                  marginBottom: 10,
+                  fontSize: 13
+                }}
+                data-testid="import-fatture-xml-file"
+              />
+              
+              {/* Progress Bar */}
+              {uploadProgress.active && (
+                <div style={{ marginBottom: 10, background: "#f8fafc", borderRadius: 8, padding: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 12, color: "#666" }}>
+                    <span>{uploadProgress.filename}</span>
+                    <span>{uploadProgress.current} / {uploadProgress.total} ({progressPercent}%)</span>
+                  </div>
+                  <div style={{ 
+                    height: 8, 
+                    background: "#e5e7eb", 
+                    borderRadius: 4,
+                    overflow: "hidden"
+                  }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${progressPercent}%`,
+                      background: "#3b82f6",
+                      transition: "width 0.3s ease",
+                      borderRadius: 4
+                    }} />
+                  </div>
+                  <div style={{ display: "flex", gap: 15, marginTop: 6, fontSize: 11 }}>
+                    <span style={{ color: "#16a34a" }}>✅ {uploadProgress.imported}</span>
+                    <span style={{ color: "#ca8a04" }}>⚠️ {uploadProgress.duplicates}</span>
+                    <span style={{ color: "#dc2626" }}>❌ {uploadProgress.errors.length}</span>
+                  </div>
+                </div>
+              )}
+              
+              <button
+                onClick={handleFattureXmlImport}
+                disabled={loading}
+                style={{
+                  width: "100%",
+                  padding: "10px 16px",
+                  background: loading ? "#9ca3af" : "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  fontWeight: 500,
+                  fontSize: 14,
+                  cursor: loading ? "wait" : "pointer"
+                }}
+                data-testid="import-fatture-xml-btn"
+              >
+                {loading ? "⏳ Importazione..." : "📥 Importa"}
+              </button>
+            </div>
             {imports.map((imp) => (
               <div 
                 key={imp.id} 
