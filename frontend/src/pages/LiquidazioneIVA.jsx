@@ -90,91 +90,96 @@ export default function LiquidazioneIVA() {
   };
 
   return (
-    <div className="page-container" data-testid="liquidazione-iva-page">
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }} data-testid="liquidazione-iva-page">
       {/* Header */}
-      <div className="page-header">
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 20,
+        padding: '15px 20px',
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)',
+        borderRadius: 12,
+        color: 'white'
+      }}>
         <div>
-          <h1 className="page-title">
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 10 }}>
             <Calculator size={28} />
             Liquidazione IVA
           </h1>
-          <p className="page-subtitle">
+          <p style={{ margin: '4px 0 0 0', fontSize: 13, opacity: 0.9 }}>
             Calcolo preciso IVA mensile per confronto con commercialista
           </p>
         </div>
       </div>
 
       {/* Filtri */}
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="card-header">
-          <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Calculator size={18} />
-            Parametri Calcolo
-          </h3>
-        </div>
-        <div className="card-content">
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>Anno</label>
-              <select
-                value={anno}
-                onChange={(e) => setAnno(parseInt(e.target.value))}
-                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, minWidth: 100 }}
-                data-testid="select-anno"
-              >
-                {[2023, 2024, 2025, 2026].map(a => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>Mese</label>
-              <select
-                value={mese}
-                onChange={(e) => setMese(parseInt(e.target.value))}
-                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, minWidth: 150 }}
-                data-testid="select-mese"
-              >
-                {MESI.slice(1).map((m, i) => (
-                  <option key={i + 1} value={i + 1}>{m}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500 }}>
-                Credito Precedente (€)
-              </label>
-              <input
-                type="number"
-                value={creditoPrecedente}
-                onChange={(e) => setCreditoPrecedente(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
-                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, width: 150 }}
-                data-testid="input-credito-precedente"
-              />
-            </div>
-            
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button 
-                onClick={calcolaLiquidazione} 
-                disabled={loading}
-                className="btn btn-primary"
-                data-testid="btn-calcola"
-              >
-                {loading ? <RefreshCw size={16} className="loading-spinner" /> : <Calculator size={16} />}
-                Calcola
-              </button>
-              <button 
-                onClick={scaricaPDF} 
-                disabled={!result}
-                className="btn btn-outline"
-                data-testid="btn-pdf"
-              >
-                <Download size={16} />
-              </button>
-            </div>
+      <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: 16, fontWeight: 'bold', color: '#1e3a5f', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Calculator size={18} />
+          Parametri Calcolo
+        </h3>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500, color: '#6b7280' }}>Anno</label>
+            <select
+              value={anno}
+              onChange={(e) => setAnno(parseInt(e.target.value))}
+              style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, minWidth: 100, background: 'white' }}
+              data-testid="select-anno"
+            >
+              {[2023, 2024, 2025, 2026].map(a => (
+                <option key={a} value={a}>{a}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500, color: '#6b7280' }}>Mese</label>
+            <select
+              value={mese}
+              onChange={(e) => setMese(parseInt(e.target.value))}
+              style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, minWidth: 150, background: 'white' }}
+              data-testid="select-mese"
+            >
+              {MESI.slice(1).map((m, i) => (
+                <option key={i + 1} value={i + 1}>{m}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', fontSize: 13, marginBottom: 4, fontWeight: 500, color: '#6b7280' }}>
+              Credito Precedente (€)
+            </label>
+            <input
+              type="number"
+              value={creditoPrecedente}
+              onChange={(e) => setCreditoPrecedente(parseFloat(e.target.value) || 0)}
+              placeholder="0.00"
+              style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, width: 150 }}
+              data-testid="input-credito-precedente"
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button 
+              onClick={calcolaLiquidazione} 
+              disabled={loading}
+              style={{ padding: '10px 20px', background: '#4caf50', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}
+              data-testid="btn-calcola"
+            >
+              {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Calculator size={16} />}
+              Calcola
+            </button>
+            <button 
+              onClick={scaricaPDF} 
+              disabled={!result}
+              style={{ padding: '10px 16px', background: result ? '#e5e7eb' : '#f3f4f6', color: result ? '#374151' : '#9ca3af', border: 'none', borderRadius: 8, cursor: result ? 'pointer' : 'not-allowed', fontWeight: '600', fontSize: 14 }}
+              data-testid="btn-pdf"
+            >
+              <Download size={16} />
+            </button>
           </div>
         </div>
       </div>
