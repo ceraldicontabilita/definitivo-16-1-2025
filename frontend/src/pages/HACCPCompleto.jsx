@@ -40,6 +40,12 @@ export default function HACCPCompleto() {
     if (path.includes('materie')) return 'materie';
     if (path.includes('ricette')) return 'ricette';
     if (path.includes('lotti')) return 'lotti';
+    if (path.includes('disinfestazione')) return 'disinfestazione';
+    if (path.includes('sanificazione')) return 'sanificazione';
+    if (path.includes('temp-neg')) return 'temp-neg';
+    if (path.includes('temp-pos')) return 'temp-pos';
+    if (path.includes('anomalie')) return 'anomalie';
+    if (path.includes('manuale')) return 'manuale';
     return 'ricette'; // default
   };
   
