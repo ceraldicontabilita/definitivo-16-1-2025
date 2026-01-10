@@ -388,10 +388,15 @@ export default function OperazioniDaConfermare() {
               </thead>
               <tbody>
                 {operazioniFiltrate.slice(0, 200).map((op) => {
-                  // Filtra solo fatture con importo ESATTO (±0.02€)
-                  const fattureEsatte = (op.dettagli?.fatture_candidate || []).filter(f => 
-                    Math.abs(f.importo - op.importo) <= 0.02
-                  );
+                  // Filtra solo fatture con importo ESATTO (±0.05€) e ordina per data
+                  const fattureEsatte = (op.dettagli?.fatture_candidate || [])
+                    .filter(f => Math.abs(f.importo - op.importo) <= 0.05)
+                    .sort((a, b) => {
+                      // Ordina per data fattura (più recente prima)
+                      const dateA = a.data ? new Date(a.data) : new Date(0);
+                      const dateB = b.data ? new Date(b.data) : new Date(0);
+                      return dateB - dateA;
+                    });
                   
                   return (
                     <tr 
@@ -421,10 +426,10 @@ export default function OperazioniDaConfermare() {
                           {op.confidence === 'basso' ? '⚠️' : '❓'}
                         </span>
                       </td>
-                      <td style={styles.td}>
+                      <td style={{ ...styles.td, minWidth: '280px' }}>
                         {fattureEsatte.length > 0 ? (
                           <select
-                            style={{ ...styles.select, width: '100%', fontSize: '11px' }}
+                            style={{ ...styles.select, width: '100%', fontSize: '10px', padding: '4px 6px' }}
                             onChange={(e) => {
                               if (e.target.value) {
                                 handleConferma(op, 'conferma', e.target.value);
@@ -432,16 +437,20 @@ export default function OperazioniDaConfermare() {
                             }}
                             disabled={processing === op.id}
                           >
-                            <option value="">-- {fattureEsatte.length} fattura/e --</option>
-                            {fattureEsatte.map((f, i) => (
-                              <option key={i} value={f.id}>
-                                {f.numero} | {(f.fornitore || '').slice(0, 25)} | €{f.importo}
-                              </option>
-                            ))}
+                            <option value="">-- Seleziona ({fattureEsatte.length}) --</option>
+                            {fattureEsatte.map((f, i) => {
+                              const dataFatt = f.data ? new Date(f.data).toLocaleDateString('it-IT') : '??/??/????';
+                              const fornitore = (f.fornitore || '').slice(0, 20);
+                              return (
+                                <option key={i} value={f.id}>
+                                  {dataFatt} | N.{f.numero} | {fornitore} | €{f.importo?.toFixed(2)}
+                                </option>
+                              );
+                            })}
                           </select>
                         ) : (
-                          <span style={{ color: '#94a3b8', fontSize: '11px' }}>
-                            Nessuna fattura con importo esatto
+                          <span style={{ color: '#94a3b8', fontSize: '10px' }}>
+                            Nessuna fattura esatta
                           </span>
                         )}
                       </td>
