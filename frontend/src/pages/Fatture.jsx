@@ -499,12 +499,6 @@ export default function Fatture() {
             )}
           </div>
         )}
-        
-        {uploading && (
-          <div className="small" style={{ marginTop: 10, color: "#1565c0" }}>
-            ⏳ Elaborazione in corso...
-          </div>
-        )}
       </div>
 
       {/* Risultato Upload */}
