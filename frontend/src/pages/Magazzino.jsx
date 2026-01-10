@@ -325,7 +325,7 @@ export default function Magazzino() {
         
         <div style={{ padding: 20 }}>
           {loading ? (
-            <div className="small">Caricamento...</div>
+            <div style={{ fontSize: 14, color: '#6b7280', padding: 40, textAlign: 'center' }}>⏳ Caricamento...</div>
           ) : activeTab === 'catalogo' ? (
             // Catalogo Prodotti da Fatture
             filteredProducts.length === 0 ? (
