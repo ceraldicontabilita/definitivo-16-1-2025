@@ -1,158 +1,168 @@
 <analysis>**original_problem_statement:**
-L'utente ha avviato la sessione con una serie di richieste volte a standardizzare e centralizzare le funzionalità di importazione/esportazione e correggere i parser di dati. Durante la sessione, le richieste si sono evolute per includere:
+L'utente ha richiesto una serie di interventi complessi per trasformare l'applicazione in un sistema di contabilità più robusto e automatizzato. Le richieste principali sono:
 
-1.  **(P0) Aggiornamento del parser dell'Estratto Conto:** L'utente ha fornito un nuovo file  con intestazioni specifiche, richiedendo di aggiornare il parser backend e il template scaricabile per corrispondere esattamente a questo nuovo formato.
-2.  **(P0) Unificazione e Standardizzazione della Pagina di Importazione:**
-    *   Rendere la card di Import Fatture XML visivamente coerente con le altre.
-    *   Centralizzare TUTTE le funzionalità di importazione (Fatture XML, F24, Buste Paga, Bonifici) nella pagina , rimuovendole da altre pagine come , ,  e la defunta .
-    *   Eliminare completamente tutte le funzionalità di Export dal codice e dall'interfaccia.
-    *   Applicare un layout a 3 pulsanti (Carica Singolo, Upload Multipli, Upload ZIP) a TUTTE le card di importazione nella pagina  per la massima coerenza grafica.
-3.  **(P0) Correzione Logica Contabile della Prima Nota (DI NUOVO):** L'utente ha nuovamente segnalato che la logica della Prima Nota è errata. In particolare, i versamenti appaiono in Prima Nota Banca mentre dovrebbero essere registrati esclusivamente come un'uscita in Prima Nota Cassa. La sezione Banca dovrebbe servire solo per la riconciliazione con l'estratto conto, non per visualizzare movimenti primari.
-4.  **(P1) Eliminazione Pagina :** L'utente ha chiesto di eliminare completamente la pagina, la sua rotta e il link nel menu di navigazione.
-5.  **(P2) Apprendimento Principi Contabili:** L'utente ha fornito 4 PDF di ragioneria e ha chiesto all'agente di imparare da essi per applicare la logica corretta e di scrivere un nuovo documento PRD chiamato  con le nozioni apprese.
+1.  **(P0) Correzione Logica Contabile Fondamentale:** L'utente ha segnalato ripetutamente che la logica per la gestione della Prima Nota e dei pagamenti delle fatture era errata. Questo si è evoluto in una richiesta critica di implementare un sistema di pagamento che rispetti le seguenti regole:
+    *   Una fattura può essere contrassegnata come pagata tramite Bonifico o Assegno **SOLO SE** viene trovata una transazione corrispondente nell'estratto conto bancario.
+    *   Se una fattura non viene trovata nell'estratto conto, il suo stato di pagamento deve rispettare il metodo predefinito del fornitore (es. Cassa) o rimanere Non pagata.
+    *   Il sistema non deve inventare metodi di pagamento.
+
+2.  **(P0) Implementazione di un Sistema di Riconciliazione Automatica:** L'utente ha chiesto di creare un motore che, dopo l'importazione dell'estratto conto, tenti di abbinare automaticamente ogni movimento bancario a:
+    *   Fatture XML (in base a numero fattura, P.IVA e importo esatto).
+    *   Pagamenti F24.
+    *   Incassi POS (con una logica temporale specifica per gli accrediti).
+    *   Versamenti di contanti.
+
+3.  **(P1) Gestione delle Eccezioni di Riconciliazione:** I movimenti che non possono essere riconciliati con certezza (es. più fatture con lo stesso importo) devono essere presentati all'utente in una nuova pagina, , per una decisione manuale.
+
+4.  **(P1) Uniformità dell'Interfaccia Utente:** L'utente ha richiesto esplicitamente che **TUTTE** le pagine dell'applicazione adottino uno stile grafico e un layout coerenti per dare un aspetto professionale e unitario.
+
+5.  **(P2) Correzione Calcolo Lordo Corrispettivi:** L'importo dei corrispettivi in Prima Nota Cassa deve essere il **LORDO**, calcolato sommando  e  dai file CSV o XML.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'agente ha eseguito una massiccia opera di centralizzazione e refactoring dell'interfaccia utente.
-1.  **Pagina di Importazione Centralizzata:** La pagina  è ora l'unico punto per l'upload di dati. Contiene 8 card (Fatture XML, Versamenti, POS, Corrispettivi, Estratto Conto, F24, Buste Paga, Bonifici).
-2.  **UI Import Uniforme:** Tutte le card nella pagina  hanno un design coerente con tre pulsanti di upload (Singolo, Multipli, ZIP) e una descrizione standardizzata del formato accettato.
-3.  **Parser Aggiornati:** I parser per l'estratto conto, corrispettivi, POS e versamenti sono stati riscritti per corrispondere esattamente alle intestazioni dei file forniti dall'utente. I template scaricabili sono stati aggiornati di conseguenza.
-4.  **Pagine Pulite:** Le sezioni di upload sono state rimosse con successo dalle pagine ,  e . Queste pagine ora contengono un link che reindirizza a .
-5.  **Pagina Eliminata:** La pagina , la sua rotta e il link di navigazione sono stati eliminati.
-6.  **Visualizzatore PDF:** È stata implementata la funzionalità per visualizzare i PDF degli F24 direttamente dalla tabella nella pagina .
-7.  **Analisi Documenti Contabili:** L'agente ha analizzato i 4 PDF di ragioneria forniti, preparandosi a correggere la logica della Prima Nota.
+L'agente ha lavorato intensamente sulle richieste dell'utente, con i seguenti risultati:
+1.  **Motore di Riconciliazione Automatica (In costruzione):** È stato creato un nuovo router () che si attiva dopo l'import dell'estratto conto. La logica è stata iterata più volte: inizialmente cercava importi simili (causando errori), ora cerca importi esatti (±0.02€) e tenta di estrarre il numero di fattura e il fornitore dalla descrizione del movimento bancario.
+2.  **Pagina Operazioni da Confermare:** La pagina  è stata creata da zero. Ora mostra i movimenti dubbi, permette di filtrare le commissioni, e presenta un menu a tendina per selezionare la fattura corretta quando ci sono più candidati, mostrando data, numero e fornitore per aiutare la scelta.
+3.  **Correzione Prima Nota:**
+    *   **Sezione Banca:** È stata trasformata in una vista di sola lettura dell'estratto conto importato, come richiesto.
+    *   **Sezione Cassa:** È stato rimosso il pulsante Elimina tutti i versamenti.
+4.  **Parser Corrispettivi XML:** È stato aggiunto un nuovo endpoint () per gestire l'importazione di corrispettivi in formato XML.
+5.  **Uniformità UI (Iniziata):** È stato creato un file CSS comune () e applicato con successo alle pagine  e , che ora condividono lo stesso stile.
+6.  **Errore Critico Introdotto:** Nel tentativo di implementare la riconciliazione, l'agente ha erroneamente contrassegnato un gran numero di fatture come pagate via Bonifico senza averle effettivamente trovate nell'estratto conto, scatenando la frustrazione dell'utente.
 
 **Last working item**:
-- **Last item agent was working**: L'agente aveva appena completato l'analisi dei 4 PDF sui principi di contabilità forniti dall'utente. L'obiettivo era comprendere a fondo la logica della partita doppia, il funzionamento dei conti Cassa e Banca, e la registrazione dei versamenti per poter finalmente correggere in modo definitivo il bug della Prima Nota. Il passo successivo sarebbe stato creare il file  e poi modificare il codice backend.
+- **Last item agent was working**: L'agente stava correggendo un errore logico critico segnalato dall'utente. L'agente aveva appena sovrascritto il file  con una logica completamente nuova. La nuova logica mira a risolvere il problema fondamentale: le fatture possono essere contrassegnate come pagate tramite banca **solo** se una transazione corrispondente viene trovata nell'estratto conto; altrimenti, si deve rispettare il metodo di pagamento predefinito del fornitore. L'agente stava per riavviare il backend per applicare la correzione e poi ripulire i dati errati esistenti.
 - **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?**: both. Sarà necessario modificare la logica backend in  e  e poi verificare che il frontend in  mostri i dati correttamente (versamenti solo come uscita in Cassa, Banca vuota o usata per riconciliazione).
+- **Which testing method agent to use?**: both. La correzione richiede una modifica sostanziale della logica di backend e una verifica approfondita sul frontend (pagine  e ) per assicurarsi che lo stato e il metodo di pagamento delle fatture siano ora corretti.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P0) La logica contabile della Prima Nota è errata.**
-- **Issue 2: (P1) I bottoni sulla pagina  non sono chiari o non funzionano come atteso dall'utente.**
-- **Issue 3: (P2) Migliorare l'affidabilità della ricerca P.IVA.**
-- **Issue 4: (P3) Consolidare la logica di calcolo dell'IVA.**
-- **Issue 5: (P3) Investigare bug ricerca in .**
+- **Issue 1: (P0) Logica di pagamento e stato delle fatture fondamentalmente errata.**
+- **Issue 2: (P1) Mancanza di uniformità stilistica nell'intera applicazione.**
+- **Issue 3: (P2) Percentuale di riconciliazione automatica ancora bassa.**
+- **Issue 4: (P3) Dati di POS e Versamenti assenti dalla Prima Nota Cassa.**
 
 **Issues Detail:**
 - **Issue 1:**
-  - **Attempted fixes:** In fork precedenti, la logica è stata modificata più volte. In questa sessione, l'agente stava per applicare una nuova correzione basata su un'analisi più approfondita dei principi contabili forniti dall'utente.
+  - **Attempted fixes:** L'agente ha prima tentato di risolvere il problema creando un endpoint per pagare in massa le fatture di un anno. Questo ha peggiorato la situazione, contrassegnando erroneamente le fatture come pagate via Bonifico. Dopo la segnalazione dell'utente, l'agente ha riconosciuto l'errore e ha riscritto completamente la logica nel file .
   - **Next debug checklist:**
-    1.  Creare il file  con i concetti appresi.
-    2.  Esaminare , in particolare la funzione .
-    3.  Assicurarsi che i versamenti vengano inseriti solo nella collection  con .
-    4.  Esaminare  per assicurarsi che nessun endpoint scriva versamenti in .
-    5.  Verificare che  legga e visualizzi i dati correttamente, mostrando i versamenti solo nella Cassa.
-  - **Why fix this issue and what will be achieved with the fix?**: Questa è una richiesta fondamentale dell'utente. La corretta tenuta contabile è lo scopo principale dell'applicazione. Risolvere questo ripristinerà la fiducia dell'utente e la funzionalità core del prodotto.
+    1.  Riavviare il servizio backend per caricare la nuova logica di riconciliazione.
+    2.  Creare ed eseguire uno script/endpoint di bonifica per correggere tutte le fatture nel database che sono state erroneamente contrassegnate. La logica deve essere: Per ogni fattura, se è Bonifico o Assegno E è Pagata, MA non è stata riconciliata automaticamente, allora reimposta al default del fornitore e a Importata.
+    3.  Eseguire nuovamente il processo di riconciliazione completo sui dati puliti.
+    4.  Verificare manualmente nella pagina  che le fatture ora riflettano lo stato e il metodo di pagamento corretti.
+  - **Why fix this issue and what will be achieved with the fix?**: È il bug più critico dell'applicazione, mina la fiducia dell'utente e rende inaffidabile la funzione contabile principale. Risolverlo è la priorità assoluta.
   - **Status**: IN PROGRESS
   - **Is recurring issue?**: Y
   - **Should Test frontend/backend/both after fix?**: both
   - **Blocked on other issue**: None
 
 - **Issue 2:**
-  - **Attempted fixes**: L'agente precedente ha verificato che i bottoni sono tecnicamente funzionanti, ma non ha affrontato il problema di UX.
-  - **Next debug checklist**: Analizzare  e aggiungere feedback visivi chiari (es.  di , messaggi di stato, loader) quando un'azione viene eseguita, anche se non produce risultati visibili immediati (es. Nessuna fattura trovata per la riconciliazione).
-  - **Why fix this issue and what will be achieved with the fix?**: Migliora l'usabilità e la percezione di reattività dell'applicazione, risolvendo una frustrazione dell'utente.
-  - **Status**: NOT STARTED
-  - **Is recurring issue?**: Y
+  - **Attempted fixes**: Creato un file  e riscritte le pagine  e  per usarlo.
+  - **Next debug checklist**:
+    1.  Ottenere la lista di tutte le pagine in .
+    2.  Procedere pagina per pagina, importando  e refattorizzando il JSX per adottare il layout e le classi standard.
+  - **Why fix this issue and what will be achieved with the fix?**: Soddisfa una richiesta esplicita dell'utente per un'esperienza utente coerente e professionale.
+  - **Status**: IN PROGRESS
+  - **Is recurring issue?**: N
   - **Should Test frontend/backend/both after fix?**: frontend
   - **Blocked on other issue**: None
 
 **In progress Task List**:
-Nessuno.
+- **Task 1: (P1) Completare l'uniformità stilistica dell'interfaccia utente.**
+  - **Where to resume:** L'agente ha refattorizzato 2 pagine su ~64. Deve continuare il processo per le pagine rimanenti, partendo da quelle più importanti come , , .
+  - **What will be achieved with this?**: Un'applicazione dall'aspetto coeso e professionale, come richiesto dall'utente.
+  - **Status**: IN PROGRESS
+  - **Should Test frontend/backend/both after fix?**: frontend
+  - **Blocked on something**: None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks**:
-    *   **(P0) Creare il documento **: Sintetizzare le nozioni contabili apprese dai PDF in un nuovo file di memoria, come richiesto dall'utente.
-    *   **(P2) Completare l'arricchimento dati fornitori**: Continuare la ricerca online per le email e PEC mancanti per i restanti fornitori.
+    *   **(P1) Re-importazione Dati Mancanti**: Re-importare i file dei POS e dei Versamenti per popolare la Prima Nota Cassa, un passo necessario per aumentare l'efficacia della riconciliazione automatica.
+    *   **(P1) Migliorare l'Intelligenza della Riconciliazione**: Implementare le regole avanzate proposte:
+        *   Categorizzazione automatica delle spese (utenze, stipendi, affitti, commissioni bancarie).
+        *   Migliorare il match basato sul nome del fornitore + importo con tolleranza (es. ±5%).
+        *   Identificare pagamenti ricorrenti.
 *   **Future Tasks**:
-    *   **(P2) Implementare importazione PDF generica**: Aggiungere una card per l'importazione di PDF generici (non strutturati) nella pagina .
-    *   **(P2) Parser PDF per Cespiti**: Preparare il modulo Cespiti per leggere i dati da un file PDF di bilancio.
-    *   **(P3) Semplificazione Previsioni Acquisti**: Aggregare i prodotti per tipologia.
+    *   **(P2) Bug ricerca **.
+    *   **(P2) Consolidare la logica di calcolo dell'IVA**.
+    *   **(P2) Implementare importazione PDF generica**.
+    *   **(P2) Parser PDF per Cespiti**.
 
 **Completed work in this session**
-- **Centralizzazione Totale degli Import**: Tutte le funzioni di upload sono state consolidate nella pagina  e rimosse da , , .
-- **Refactoring UI Import/Export**: La pagina  è stata completamente ridisegnata con un layout a card uniforme, ognuna dotata di 3 pulsanti (Singolo, Multiplo, ZIP).
-- **Eliminazione Funzionalità Export**: Tutto il codice e gli elementi UI relativi all'esportazione di dati sono stati rimossi.
-- **Eliminazione Pagina **: La pagina, la rotta e il link di navigazione sono stati completamente rimossi dal progetto.
-- **Aggiornamento Parser**: I parser per , , , e  sono stati aggiornati per corrispondere ai file reali forniti dall'utente.
-- **Fix Gestione Duplicati XML**: Corretto il frontend per mostrare un messaggio Duplicato (invece di Errore) quando si carica una fattura XML già esistente.
-- **Implementazione Visualizzatore PDF F24**: Gli utenti possono ora visualizzare il PDF di un F24 direttamente dalla tabella nella pagina .
-- **Analisi Documenti Contabili**: Analizzati 4 PDF di ragioneria per preparare la correzione della logica della Prima Nota.
+- **Sviluppo Motore di Riconciliazione Automatica:** Creato da zero il sistema backend che tenta di abbinare i movimenti bancari con fatture, F24, POS e versamenti.
+- **Creazione Pagina Operazioni da Confermare:** Implementata una nuova pagina e UI per la gestione manuale dei movimenti dubbi.
+- **Miglioramento UX Riconciliazione:** L'interfaccia per la conferma manuale è stata resa più informativa, mostrando data, numero, fornitore e importo delle fatture candidate e rendendo le righe più compatte.
+- **Trasformazione della Prima Nota Banca:** La sezione Banca della Prima Nota ora funge da visualizzatore di sola lettura dell'estratto conto.
+- **Logica di Esclusione Commissioni:** Il sistema di riconciliazione ora ignora automaticamente le comuni commissioni bancarie, riducendo il rumore nelle operazioni da confermare.
+- **Inizio Standardizzazione UI:** Creato un CSS comune e applicato alle pagine  e .
+- **Pulizia Codice:** Rimossi vari endpoint e pulsanti non più necessari o richiesti dall'utente (es. Elimina tutti i versamenti).
 
 **Earlier issues found/mentioned but not fixed**
-- **Bug sulla pagina **: L'utente percepisce i bottoni come non funzionanti a causa della mancanza di feedback visivo.
-- **Bug ricerca **: Problema noto da un fork precedente, non affrontato.
+- **Consolidamento logica IVA**: Un problema tecnico noto da fork precedenti, non ancora affrontato.
+- **Bug ricerca **: Un altro problema ereditato e non risolto.
 - **Affidabilità ricerca P.IVA**: Non affrontato.
-- **Consolidamento logica IVA**: Non affrontato.
 
 **Known issue recurrence from previous fork**
-- **Logica Contabile Prima Nota**: Questo è un problema ricorrente che è stato oggetto di molteplici tentativi di correzione in fork precedenti e in questa sessione.
+- **Logica Contabile (Pagamenti/Fatture)**: Questo è il problema più grave e ricorrente. L'agente continua a fare errori nell'implementazione dei principi contabili fondamentali, in particolare su come e quando lo stato di una fattura debba essere aggiornato. L'ultima iterazione di questo problema è stata la marcatura errata di massa delle fatture come pagate.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI, MongoDB.
-- **Frontend**: React, shadcn/ui.
-- **File Parsing**:  per CSV/XLSX,  per la generazione di template Excel,  (implicito negli upload F24).
-- **Architettura**: Forte spinta alla centralizzazione della logica di business (tutti gli import in un unico posto) e alla standardizzazione della UI per migliorare l'esperienza utente.
+- Backend: FastAPI, MongoDB
+- Frontend: React, Shadcn UI
+- Logica Core: Sviluppo di un motore di riconciliazione complesso con regole di matching, gestione delle eccezioni e interazione con l'utente (human-in-the-loop). Parsing di stringhe per estrarre dati strutturati (numeri fattura, fornitori) da descrizioni non strutturate.
 
 **key DB schema**
-- **estratto_conto_movimenti**: Schema aggiornato per includere: , , , , .
-- **f24_models**: Schema aggiornato per includere  per memorizzare il file PDF caricato.
-- **prima_nota_cassa / prima_nota_banca**: La logica che popola queste collection è il problema principale da risolvere. La regola richiesta è:  ->  (uscita).  non deve contenere versamenti.
-
-**changes in tech stack**
-Nessuna.
+- : .
+- : I campi  ('Importata', 'Pagata') e  ('Bonifico', 'Cassa', 'Assegno') sono al centro del bug critico attuale.
+- : Il campo  è diventato cruciale per la nuova logica di pagamento corretta.
 
 **All files of reference**
--  (Nuovo centro nevralgico per l'upload)
--  (Contiene i parser per Prima Nota)
--  (Contiene la logica core della Prima Nota)
--  (Pagina da verificare dopo la correzione della logica)
--  (Contiene il parser per l'estratto conto)
+- 
+- 
+- 
 - 
 - 
 - 
 
 **Areas that need refactoring**:
-- La logica di calcolo dell'IVA è ancora duplicata in  e .
+- L'endpoint  è stato creato per un'azione una tantum e dovrebbe essere rimosso per evitare usi impropri futuri.
+- La logica di aggiornamento dello stato delle fatture, una volta corretta, dovrebbe essere centralizzata e resa più robusta per prevenire future regressioni.
 
 **key api endpoints**
-- : Endpoint per l'importazione dell'estratto conto CSV.
-- : Endpoint per i dati di Prima Nota.
-- , , : Endpoint per l'importazione delle fatture.
-- , , : Endpoint per importazione F24.
-- : Nuovo endpoint per servire i file PDF degli F24.
-- Tutti gli endpoint  sono stati rimossi.
+- : Esegue il motore di riconciliazione automatica.
+- : Recupera i movimenti da confermare per il frontend.
+- : Endpoint per pulire i dati della riconciliazione prima di una nuova esecuzione.
+- : Nuovo endpoint per l'import di corrispettivi XML.
 
 **Critical Info for New Agent**
-- **La logica della Prima Nota è la priorità assoluta (P0)**. L'utente è stato molto chiaro: i versamenti sono un'uscita dalla Cassa e NON devono apparire nel modulo Banca. Usa le conoscenze apprese dai PDF per implementare questa logica in modo corretto e definitivo. Non procedere con altri task finché questo non è risolto e verificato.
-- **Centralizzazione e Coerenza UI sono sacre**: L'utente ha richiesto esplicitamente che tutte le funzionalità di importazione risiedano nella pagina  e che l'interfaccia sia uniforme. Non reintrodurre funzionalità di upload in altre pagine.
-- **Crea il file **: Prima di modificare il codice, formalizza quanto appreso dai PDF nel file . Questo dimostra all'utente che le sue istruzioni sono state comprese.
-- **Il problema su  è UX**: Il problema non è tecnico ma di feedback all'utente. Concentrati sull'aggiungere messaggi chiari (toast, loader, messaggi di stato) per comunicare cosa sta facendo l'applicazione.
+- **PRIORITÀ ASSOLUTA (P0): CORREGGERE IL BUG DEI PAGAMENTI.** L'utente è estremamente frustrato perché l'agente ha marcato erroneamente centinaia di fatture come pagate via Bonifico. La tua prima azione deve essere applicare la nuova logica in , creare uno script per ripulire i dati corrotti nel database e verificare che il sistema funzioni correttamente. Non procedere con nient'altro finché questo non è risolto.
+- **LA REGOLA D'ORO DEI PAGAMENTI:** Una fattura è pagata tramite banca (Bonifico/Assegno) **SOLO SE** c'è una corrispondenza esatta e riconciliata nell'estratto conto. In tutti gli altri casi, lo stato deve essere Non pagata o il metodo predefinito del fornitore (es. Cassa). Interiorizza questa regola.
+- **LA FIDUCIA DELL'UTENTE È AI MINIMI:** A causa dei ripetuti errori sulla logica contabile, devi essere estremamente cauto, trasparente e preciso. Spiega cosa stai per fare e perché prima di agire. Verifica sempre il tuo lavoro rispetto alle richieste esplicite dell'utente.
+- **UI UNIFICATION È UN TASK IMPORTANTE:** Sebbene non sia un bug critico, l'uniformità dell'interfaccia è una richiesta di alto livello dell'utente. Una volta risolto il bug P0, dedicare del tempo a questo migliorerà notevolmente la percezione dell'applicazione.
 
 **documents and test reports created in this job**
+- 
 -  (aggiornato più volte)
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Richiesta**: Centralizzare l'import delle fatture XML in , rimuovere gli import da , e rimuovere tutti gli export. (FATTO)
-2.  **Richiesta**: Rimuovere le sezioni di upload residue che causavano errori in . (FATTO)
-3.  **Richiesta**: Centralizzare anche l'import dei bonifici PDF in , rimuovendolo da . (FATTO)
-4.  **Richiesta**: Pulire la UI di  e  dopo la rimozione degli upload. (FATTO)
-5.  **Richiesta**: Applicare lo stile della card Fatture XML (con 3 pulsanti) a TUTTE le card in . (FATTO)
-6.  **Richiesta**: Rendere tutte le card di  funzionali con i 3 pulsanti, anche quelle per file batch. (FATTO)
-7.  **Richiesta**: Eliminare i bottoni di import/export dalla pagina . (FATTO)
-8.  **Richiesta**: Eliminare completamente la pagina . (FATTO)
-9.  **BUG CRITICO / RICHIESTA**: La logica della Prima Nota è ancora sbagliata. I versamenti sono in Banca e non dovrebbero esserci. Devono essere solo un'uscita dalla Cassa. Ha fornito 4 PDF di ragioneria da cui imparare. (IN CORSO - ANALISI COMPLETATA)
-10. **Richiesta**: Scrivere ciò che si è imparato in un nuovo PRD chiamato . (PENDING)
+1.  **User:** Critica la pagina  per essere vuota e non avere uno stile coerente con il resto dell'app. Chiede di applicare uno stile uniforme a tutte le pagine.
+2.  **User:** Fornisce feedback dettagliato sull'UX di : vuole leggere l'intera descrizione, scartare automaticamente le commissioni e vedere solo fatture con importo esatto come candidate.
+3.  **User:** Segnala il bug principale: il sistema di associazione fatture è impreciso. Per un movimento di TIMAS, mostra candidati con importi totalmente diversi.
+4.  **User:** Si lamenta della mancanza di proattività dell'agente (dovresti essere tu a propormi le soluzioni) e chiede di cercare best practice ERP per migliorare il sistema.
+5.  **User:** Approva il piano di correzione proposto dall'agente e chiede di aggiungere la data e ordinare le fatture candidate nel menu a tendina per facilitare l'associazione.
+6.  **User:** Chiede di pagare (saldare) tutte le fatture XML dell'anno 2024.
+7.  **User:** Chiede di saldare anche tutte le fatture del 2023.
+8.  **User:** **(MESSAGGIO CRITICO)** Esplode di frustrazione, segnalando il bug logico fondamentale: l'agente ha segnato una fattura come Bonifico quando il fornitore ha Cassa come metodo, e senza trovarla nell'estratto conto. Accusa l'agente di dimenticare la logica ad ogni fork e chiede di correggere tutto e di non doverlo ripetere più.
+9.  **User:** Vuole sapere perché una fattura Timas da 1304 appare con un importo di 854 euro nelle operazioni da confermare.
+10. **User:** Fornisce file XML di corrispettivo per chiarire la struttura e i calcoli.
 
 **Project Health Check:**
-- **Broken**: La logica contabile fondamentale della Prima Nota non rispecchia le aspettative dell'utente, rendendo una funzione core dell'app inaffidabile. La pagina  ha un'esperienza utente rotta.
+- **Broken**: La logica di core business relativa allo stato di pagamento delle fatture è corrotta. Ha portato alla modifica errata di dati di produzione, rendendo il sistema inaffidabile.
 - **Mocked**: Nessuno.
 
 **3rd Party Integrations**
@@ -161,15 +171,15 @@ Nessuna.
 - : Parsing fatture .
 
 **Testing status**
-- **Testing agent used after significant changes**: NO
+- **Testing agent used after significant changes**: YES (ma prima dell'introduzione del bug critico finale)
 - **Troubleshoot agent used after agent stuck in loop**: NO
 - **Test files created**: Nessuno
-- **Known regressions**: Nessuna.
+- **Known regressions**: La marcatura dello stato e del metodo di pagamento delle fatture è una grave regressione.
 
 **Credentials to test flow:**
-Nessuna credenziale necessaria per l'ambiente di sviluppo.
+Nessuna credenziale specifica richiesta; l'ambiente utilizza un database remoto condiviso.
 
 **What agent forgot to execute**
-- Risolvere i problemi a lungo termine ereditati dai fork precedenti (ricerca P.IVA, consolidamento IVA, bug ricerca ).
-- Completare l'arricchimento dei dati dei fornitori.
-- Risolvere il problema di UX sulla pagina  (sebbene non esplicitamente dimenticato, è rimasto non risolto).</analysis>
+- L'agente ha dimenticato la regola fondamentale più volte ribadita dall'utente: il collegamento indissolubile tra un movimento nell'estratto conto e la marcatura di una fattura come pagata tramite banca. Ha agito in modo indipendente, causando corruzione dei dati.
+- Non ha applicato uno stile uniforme a tutte le pagine come richiesto, concentrandosi solo su un paio.
+- Non ha ancora re-importato i dati di POS e Versamenti, che sono necessari per una riconciliazione completa.</analysis>

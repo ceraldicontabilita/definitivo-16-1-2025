@@ -74,9 +74,9 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://invoice-central-9.preview.emergentagent.com/controllo-mensile",
-    "Prima Nota": "https://invoice-central-9.preview.emergentagent.com/prima-nota",
-    "Commercialista": "https://invoice-central-9.preview.emergentagent.com/commercialista"
+    "Controllo Mensile": "https://autopay-2.preview.emergentagent.com/controllo-mensile",
+    "Prima Nota": "https://autopay-2.preview.emergentagent.com/prima-nota",
+    "Commercialista": "https://autopay-2.preview.emergentagent.com/commercialista"
   },
   "controllo_mensile_2025_data": {
     "pagato_non_riscosso": {

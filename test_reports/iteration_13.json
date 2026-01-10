@@ -65,8 +65,8 @@
     }
   },
   "urls_tested": {
-    "Controllo Mensile": "https://invoice-central-9.preview.emergentagent.com/controllo-mensile",
-    "IVA": "https://invoice-central-9.preview.emergentagent.com/iva"
+    "Controllo Mensile": "https://autopay-2.preview.emergentagent.com/controllo-mensile",
+    "IVA": "https://autopay-2.preview.emergentagent.com/iva"
   },
   "quarterly_iva_data_2025": {
     "Q1_Gen_Feb_Mar": {
