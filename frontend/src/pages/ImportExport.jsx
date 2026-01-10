@@ -592,9 +592,10 @@ export default function ImportExport() {
       icon: "📋", 
       ref: f24FileRef, 
       handler: handleImportF24,
-      accept: ".pdf",
-      desc: "Importa modello F24 da PDF (INPS, IRPEF, tributi regionali)",
-      templateUrl: null // F24 è un PDF, non serve template
+      accept: ".pdf,.zip",
+      multiple: true,
+      desc: "PDF singoli, multipli o ZIP. Duplicati ignorati automaticamente",
+      templateUrl: null
     },
     { 
       id: "paghe", 
@@ -602,9 +603,10 @@ export default function ImportExport() {
       icon: "💰", 
       ref: pagheFileRef, 
       handler: handleImportPaghe,
-      accept: ".pdf",
-      desc: "Importa buste paga PDF e inserisce netto in Prima Nota Salari",
-      templateUrl: null // Buste paga è un PDF, non serve template
+      accept: ".pdf,.zip",
+      multiple: true,
+      desc: "PDF singoli, multipli o ZIP. Netto inserito in Prima Nota Salari",
+      templateUrl: null
     }
   ];
 
