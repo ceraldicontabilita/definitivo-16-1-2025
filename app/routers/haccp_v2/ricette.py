@@ -8,14 +8,9 @@ from datetime import datetime, timezone
 import uuid
 import re
 
+from app.database import Database
+
 router = APIRouter(prefix="/ricette", tags=["Ricette"])
-
-# MongoDB connection
-db = None
-
-def set_database(database):
-    global db
-    db = database
 
 # Funzione per pulire nomi ingredienti
 pulisci_nome_ingrediente = None
