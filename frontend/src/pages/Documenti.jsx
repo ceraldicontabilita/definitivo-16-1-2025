@@ -348,25 +348,25 @@ export default function Documenti() {
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 24 }}>
           <Card>
-            <CardContent className="pt-4">
+            <CardContent style={{ paddingTop: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e293b' }}>{stats.totale}</div>
               <div style={{ fontSize: 13, color: '#64748b' }}>Documenti Totali</div>
             </CardContent>
           </Card>
           <Card style={{ background: '#dbeafe' }}>
-            <CardContent className="pt-4">
+            <CardContent style={{ paddingTop: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e40af' }}>{stats.nuovi}</div>
               <div style={{ fontSize: 13, color: '#1e40af' }}>Da Processare</div>
             </CardContent>
           </Card>
           <Card style={{ background: '#dcfce7' }}>
-            <CardContent className="pt-4">
+            <CardContent style={{ paddingTop: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#166534' }}>{stats.processati}</div>
               <div style={{ fontSize: 13, color: '#166534' }}>Processati</div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-4">
+            <CardContent style={{ paddingTop: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#7c3aed' }}>{stats.spazio_disco_mb} MB</div>
               <div style={{ fontSize: 13, color: '#64748b' }}>Spazio Usato</div>
             </CardContent>
