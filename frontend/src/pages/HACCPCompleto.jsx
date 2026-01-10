@@ -6,10 +6,10 @@ import {
   AlertTriangle, AlertCircle, CheckCircle, Calendar, FileText,
   BarChart3, Download, Printer, X, Edit, Save, RefreshCw,
   Building2, Check, Bug, Sparkles, Thermometer, Snowflake,
-  ChevronLeft, ChevronRight, FileUp, Refrigerator
+  ChevronLeft, ChevronRight, FileUp
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = api.defaults.baseURL || '';
 
 const MESI_IT = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
                 "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
