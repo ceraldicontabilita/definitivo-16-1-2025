@@ -250,7 +250,6 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                 
                 # Prima cerca fattura per numero fattura nella descrizione
                 if num_fattura:
-                if num_fattura:
                     fattura = await db[Collections.INVOICES].find_one({
                         "$or": [
                             {"numero_fattura": num_fattura},
