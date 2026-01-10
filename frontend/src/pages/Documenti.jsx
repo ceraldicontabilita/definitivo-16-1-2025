@@ -577,7 +577,7 @@ export default function Documenti() {
                               fontSize: 11
                             }}
                           >
-                            <X className="h-3 w-3" />
+                            <X style={{ height: 12, width: 12 }} />
                           </button>
                         </div>
                       ))}
