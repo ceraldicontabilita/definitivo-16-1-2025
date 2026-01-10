@@ -20,10 +20,6 @@ export default function EstrattoConto() {
   const [selectedFornitore, setSelectedFornitore] = useState('');
   const [selectedTipo, setSelectedTipo] = useState('');
   
-  // Import
-  const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState(null);
-  
   // Pagination
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
@@ -81,7 +77,7 @@ export default function EstrattoConto() {
   const loadCategorie = async () => {
     try {
       const res = await api.get('/api/estratto-conto-movimenti/categorie');
-      setCategorie(res.data || []);
+      setCategorie(res.data.categorie || []);
     } catch (error) {
       console.error('Errore caricamento categorie:', error);
     }
@@ -90,85 +86,9 @@ export default function EstrattoConto() {
   const loadFornitori = async () => {
     try {
       const res = await api.get('/api/estratto-conto-movimenti/fornitori');
-      setFornitori(res.data || []);
+      setFornitori(res.data.fornitori || []);
     } catch (error) {
       console.error('Errore caricamento fornitori:', error);
-    }
-  };
-
-  const handleImport = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      setImporting(true);
-      setImportResult(null);
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const res = await api.post('/api/estratto-conto-movimenti/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      setImportResult(res.data);
-      loadMovimenti();
-      loadRiepilogo();
-      loadCategorie();
-      loadFornitori();
-    } catch (error) {
-      setImportResult({ error: true, message: error.response?.data?.detail || error.message });
-    } finally {
-      setImporting(false);
-      e.target.value = '';
-    }
-  };
-
-  const handleClear = async () => {
-    if (!window.confirm(`Eliminare tutti i movimenti del ${selectedYear}?`)) return;
-    
-    try {
-      await api.delete(`/api/estratto-conto-movimenti/clear?anno=${selectedYear}`);
-      loadMovimenti();
-      loadRiepilogo();
-    } catch (error) {
-      alert('Errore: ' + (error.response?.data?.detail || error.message));
-    }
-  };
-
-  const handleExportExcel = async () => {
-    try {
-      const params = new URLSearchParams();
-      params.append('anno', selectedYear);
-      if (selectedMonth) params.append('mese', selectedMonth);
-      if (selectedCategoria) params.append('categoria', selectedCategoria);
-      if (selectedFornitore) params.append('fornitore', selectedFornitore);
-      if (selectedTipo) params.append('tipo', selectedTipo);
-      
-      const response = await api.get(`/api/estratto-conto-movimenti/export-excel?${params}`, {
-        responseType: 'blob'
-      });
-      
-      // Crea link per download
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      
-      // Costruisci nome file
-      let filename = `estratto_conto_${selectedYear}`;
-      if (selectedMonth) {
-        const mesiNomi = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
-        filename += `_${mesiNomi[selectedMonth - 1]}`;
-      }
-      filename += '.xlsx';
-      
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      alert('Errore export: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -181,13 +101,47 @@ export default function EstrattoConto() {
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)' }}>
-          📑 Estratto Conto
-        </h1>
-        <p style={{ color: '#666', margin: '8px 0 0 0' }}>
-          Tutti i movimenti bancari importati con dettagli strutturati
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 15 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)' }}>
+            📑 Estratto Conto
+          </h1>
+          <p style={{ color: '#666', margin: '8px 0 0 0' }}>
+            Visualizzazione movimenti bancari importati
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a 
+            href="/import-export"
+            style={{ 
+              padding: "10px 20px",
+              background: "#3b82f6",
+              color: "white",
+              fontWeight: "bold",
+              borderRadius: 8,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            📥 Importa Dati
+          </a>
+          <button
+            onClick={() => { setOffset(0); loadMovimenti(); loadRiepilogo(); }}
+            style={{
+              padding: '10px 20px',
+              background: '#f5f5f5',
+              color: '#333',
+              border: '1px solid #ddd',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            🔄 Aggiorna
+          </button>
+        </div>
       </div>
 
       {/* Riepilogo Cards */}
@@ -249,110 +203,6 @@ export default function EstrattoConto() {
         </div>
       )}
 
-      {/* Actions Bar */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 10, 
-        marginBottom: 20, 
-        flexWrap: 'wrap',
-        alignItems: 'center'
-      }}>
-        <label style={{
-          padding: '10px 20px',
-          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-          color: 'white',
-          border: 'none',
-          borderRadius: 8,
-          cursor: importing ? 'wait' : 'pointer',
-          opacity: importing ? 0.7 : 1,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          fontWeight: 'bold'
-        }}>
-          {importing ? '⏳ Importando...' : '📥 Importa Estratto Conto (CSV/Excel)'}
-          <input
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            onChange={handleImport}
-            disabled={importing}
-            style={{ display: 'none' }}
-          />
-        </label>
-        
-        <button
-          onClick={handleClear}
-          style={{
-            padding: '10px 20px',
-            background: 'linear-gradient(135deg, #ef4444, #b91c1c)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          🗑️ Elimina Anno
-        </button>
-        
-        <button
-          onClick={handleExportExcel}
-          disabled={movimenti.length === 0}
-          style={{
-            padding: '10px 20px',
-            background: movimenti.length === 0 
-              ? '#d1d5db' 
-              : 'linear-gradient(135deg, #10b981, #059669)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 8,
-            cursor: movimenti.length === 0 ? 'not-allowed' : 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          📊 Esporta Excel
-        </button>
-        
-        <button
-          onClick={() => { setOffset(0); loadMovimenti(); loadRiepilogo(); }}
-          style={{
-            padding: '10px 20px',
-            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-            color: 'white',
-            border: 'none',
-            borderRadius: 8,
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          🔄 Aggiorna
-        </button>
-      </div>
-
-      {/* Import Result */}
-      {importResult && (
-        <div style={{
-          padding: 16,
-          marginBottom: 20,
-          borderRadius: 12,
-          background: importResult.error ? '#fef2f2' : '#f0fdf4',
-          border: `1px solid ${importResult.error ? '#fecaca' : '#bbf7d0'}`
-        }}>
-          {importResult.error ? (
-            <p style={{ margin: 0, color: '#dc2626' }}>❌ {importResult.message}</p>
-          ) : (
-            <>
-              <p style={{ margin: 0, fontWeight: 'bold', color: '#166534' }}>✅ {importResult.message}</p>
-              <p style={{ margin: '8px 0 0 0', fontSize: 14, color: '#15803d' }}>
-                Trovati: {importResult.movimenti_trovati} | 
-                Inseriti: {importResult.inseriti} | 
-                Duplicati saltati: {importResult.duplicati_saltati}
-              </p>
-            </>
-          )}
-        </div>
-      )}
-
       {/* Filtri */}
       <div style={{ 
         display: 'flex', 
@@ -369,7 +219,7 @@ export default function EstrattoConto() {
           onChange={(e) => { setSelectedYear(parseInt(e.target.value)); setOffset(0); }}
           style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', width: 100 }}
         >
-          {[2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map(y => (
+          {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map(y => (
             <option key={y} value={y}>{y}</option>
           ))}
         </select>
@@ -401,28 +251,27 @@ export default function EstrattoConto() {
           onChange={(e) => { setSelectedTipo(e.target.value); setOffset(0); }}
           style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', width: 120 }}
         >
-          <option value="">Tutti i tipi</option>
-          <option value="entrata">↑ Entrate</option>
-          <option value="uscita">↓ Uscite</option>
+          <option value="">Tutti</option>
+          <option value="entrata">Entrate</option>
+          <option value="uscita">Uscite</option>
         </select>
         
-        <input
-          type="text"
-          placeholder="🔍 Cerca fornitore..."
-          value={selectedFornitore}
-          onChange={(e) => { setSelectedFornitore(e.target.value); setOffset(0); }}
-          style={{ padding: 10, borderRadius: 6, border: '1px solid #e2e8f0', width: 180 }}
-        />
+        <span style={{ fontSize: 13, color: '#666' }}>
+          {total} movimenti trovati
+        </span>
       </div>
 
-      {/* Tabella */}
+      {/* Tabella Movimenti */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
-          Caricamento...
+        <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
+          ⏳ Caricamento movimenti...
         </div>
       ) : movimenti.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
-          Nessun movimento trovato. Importa un estratto conto per iniziare.
+        <div style={{ textAlign: 'center', padding: 40, color: '#666', background: '#f8fafc', borderRadius: 12 }}>
+          <p style={{ fontSize: 18, marginBottom: 10 }}>📭 Nessun movimento trovato</p>
+          <p style={{ fontSize: 14 }}>
+            <a href="/import-export" style={{ color: '#3b82f6' }}>Vai a Import Dati</a> per caricare l'estratto conto
+          </p>
         </div>
       ) : (
         <>
@@ -430,59 +279,61 @@ export default function EstrattoConto() {
             background: 'white', 
             borderRadius: 12, 
             overflow: 'hidden',
-            border: '1px solid #e2e8f0'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
           }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#f9fafb' }}>
-                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 90 }}>Data</th>
-                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 180 }}>Fornitore</th>
-                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 100 }}>Importo</th>
-                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 150 }}>Num. Fattura</th>
-                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0', width: 90 }}>Data Pag.</th>
-                    <th style={{ padding: 12, textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Categoria</th>
+                  <tr style={{ background: '#f1f5f9' }}>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 600 }}>Data</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 600 }}>Descrizione</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: 600 }}>Categoria</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'right', fontWeight: 600 }}>Importo</th>
+                    <th style={{ padding: '12px 10px', textAlign: 'center', fontWeight: 600 }}>Tipo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {movimenti.map((mov, idx) => (
-                    <tr key={mov.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: 12, textAlign: 'center' }}>
+                  {movimenti.map((mov, i) => (
+                    <tr 
+                      key={mov.id || i} 
+                      style={{ 
+                        borderBottom: '1px solid #f1f5f9',
+                        background: i % 2 === 0 ? 'white' : '#fafafa'
+                      }}
+                    >
+                      <td style={{ padding: '10px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                         {formatData(mov.data)}
                       </td>
-                      <td style={{ padding: 12, textAlign: 'center', fontWeight: 500 }}>
-                        {mov.fornitore || '-'}
+                      <td style={{ padding: '10px', maxWidth: 350 }}>
+                        <div style={{ fontWeight: 500 }}>{mov.fornitore || '-'}</div>
+                        <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>
+                          {mov.descrizione_originale?.substring(0, 80)}
+                          {mov.descrizione_originale?.length > 80 ? '...' : ''}
+                        </div>
+                      </td>
+                      <td style={{ padding: '10px', fontSize: 12, color: '#666' }}>
+                        {mov.categoria || '-'}
                       </td>
                       <td style={{ 
-                        padding: 12, 
-                        textAlign: 'center', 
+                        padding: '10px', 
+                        textAlign: 'right', 
                         fontWeight: 'bold',
-                        color: mov.importo >= 0 ? '#16a34a' : '#dc2626'
+                        fontFamily: 'monospace',
+                        color: mov.tipo === 'entrata' ? '#16a34a' : '#dc2626'
                       }}>
-                        {formatEuro(Math.abs(mov.importo))}
-                        <span style={{ fontSize: 10, marginLeft: 4 }}>
-                          {mov.importo >= 0 ? '↑' : '↓'}
+                        {mov.tipo === 'entrata' ? '+' : '-'}{formatEuro(Math.abs(mov.importo))}
+                      </td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                        <span style={{
+                          padding: '4px 10px',
+                          borderRadius: 20,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: mov.tipo === 'entrata' ? '#dcfce7' : '#fee2e2',
+                          color: mov.tipo === 'entrata' ? '#166534' : '#991b1b'
+                        }}>
+                          {mov.tipo === 'entrata' ? '⬆ Entrata' : '⬇ Uscita'}
                         </span>
-                      </td>
-                      <td style={{ padding: 12, textAlign: 'center', fontSize: 12, color: '#6b7280' }}>
-                        {mov.numero_fattura ? (
-                          <span style={{ 
-                            background: '#e0f2fe', 
-                            padding: '2px 8px', 
-                            borderRadius: 4,
-                            color: '#0369a1'
-                          }}>
-                            {mov.numero_fattura.length > 30 ? mov.numero_fattura.substring(0, 30) + '...' : mov.numero_fattura}
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td style={{ padding: 12, textAlign: 'center', fontSize: 12 }}>
-                        {formatData(mov.data_pagamento)}
-                      </td>
-                      <td style={{ padding: 12, textAlign: 'center', fontSize: 12, color: '#6b7280' }}>
-                        {mov.categoria ? (
-                          mov.categoria.length > 35 ? mov.categoria.substring(0, 35) + '...' : mov.categoria
-                        ) : '-'}
                       </td>
                     </tr>
                   ))}
@@ -492,18 +343,16 @@ export default function EstrattoConto() {
           </div>
 
           {/* Pagination */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginTop: 20,
-            padding: '10px 0'
-          }}>
-            <span style={{ color: '#6b7280' }}>
-              Mostrando {offset + 1}-{Math.min(offset + limit, total)} di {total} movimenti
-            </span>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
+          {total > limit && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              gap: 15, 
+              marginTop: 20,
+              flexWrap: 'wrap'
+            }}>
+              <button 
                 onClick={() => setOffset(Math.max(0, offset - limit))}
                 disabled={offset === 0}
                 style={{
@@ -517,7 +366,12 @@ export default function EstrattoConto() {
               >
                 ← Precedenti
               </button>
-              <button
+              
+              <span style={{ fontSize: 13, color: '#666' }}>
+                {offset + 1} - {Math.min(offset + limit, total)} di {total}
+              </span>
+              
+              <button 
                 onClick={() => setOffset(offset + limit)}
                 disabled={offset + limit >= total}
                 style={{
@@ -532,7 +386,7 @@ export default function EstrattoConto() {
                 Successivi →
               </button>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
