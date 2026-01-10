@@ -408,7 +408,7 @@ export default function RicercaProdotti() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div style={{ flex: 1 }}>
                     <strong>{p.nome?.substring(0, 60)}</strong>
-                    <div className="small" style={{ color: "#666", marginTop: 3 }}>
+                    <div style={{ ...smallStyle, marginTop: 3 }}>
                       Categoria: <span style={{ 
                         background: "#e3f2fd", 
                         padding: "2px 8px", 
