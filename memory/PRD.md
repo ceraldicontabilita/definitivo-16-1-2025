@@ -155,15 +155,22 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
   - Riscritta pagina `/operazioni-da-confermare` con nuovo stile
   - Riscritta pagina `/riconciliazione` con nuovo stile
   - Entrambe le pagine ora usano lo stesso design system
-- ✅ **MIGLIORAMENTI UX OPERAZIONI DA CONFERMARE**
+- ✅ **MIGLIORAMENTI OPERAZIONI DA CONFERMARE**
   - Descrizione completa leggibile (non troncata)
   - Commissioni bancarie (€1, €0.75, €1.10, etc.) nascoste automaticamente
   - Bottone "Scarta Commissioni" per eliminarle in batch
   - Solo fatture con importo ESATTO mostrate nel dropdown
   - Righe più compatte per maggiore visibilità
+  - **Dropdown fatture ora mostra: DATA | N.FATTURA | FORNITORE | IMPORTO**
+  - **Fatture ordinate per data (più recente prima)**
 - ✅ **MIGLIORAMENTI PRIMA NOTA BANCA**
   - Descrizione completa leggibile su più righe
   - Tabella più compatta
+- ✅ **MIGLIORAMENTI PARSING RICONCILIAZIONE**
+  - Estrazione numero fattura migliorata (più pattern)
+  - Estrazione nome fornitore dalla descrizione
+  - Se più fatture stesso importo ma fornitore identificabile → match automatico
+  - Riconciliati automaticamente: 145 fatture (era 142)
 
 ### 2026-01-10 (Sessione 1)
 - ✅ **CENTRALIZZAZIONE IMPORT COMPLETATA**
