@@ -1091,3 +1091,395 @@ async def get_tracciabilita_lotto(lotto_id: str):
             "quantita_residua": lotto.get("quantita", 0)
         }
     }
+
+
+
+# ==================== GESTIONE LOTTI AVANZATA ====================
+
+@router.get("/lotti")
+async def get_lotti(
+    stato: Optional[str] = Query(None),
+    fornitore: Optional[str] = Query(None),
+    prodotto: Optional[str] = Query(None),
+    fattura_id: Optional[str] = Query(None),
+    scadenza_entro_giorni: Optional[int] = Query(None),
+    da_inserire_manualmente: Optional[bool] = Query(None),
+    limit: int = Query(default=100, le=500),
+    skip: int = Query(default=0)
+):
+    """
+    Lista lotti con filtri avanzati.
+    Supporta filtro per scadenza imminente (FEFO).
+    """
+    db = Database.get_db()
+    
+    query = {}
+    
+    if stato:
+        query["stato"] = stato
+    
+    if fornitore:
+        query["fornitore"] = {"$regex": fornitore, "$options": "i"}
+    
+    if prodotto:
+        query["prodotto"] = {"$regex": prodotto, "$options": "i"}
+    
+    if fattura_id:
+        query["fattura_id"] = fattura_id
+    
+    if da_inserire_manualmente is not None:
+        query["lotto_da_inserire_manualmente"] = da_inserire_manualmente
+    
+    # Filtro scadenza imminente
+    if scadenza_entro_giorni:
+        data_limite = (datetime.now() + timedelta(days=scadenza_entro_giorni)).strftime("%Y-%m-%d")
+        query["data_scadenza"] = {"$lte": data_limite}
+        query["stato"] = "disponibile"
+    
+    # Query con ordinamento FEFO (First Expired First Out)
+    cursor = db[COL_LOTTI].find(query, {"_id": 0})
+    cursor = cursor.sort("data_scadenza", 1).skip(skip).limit(limit)  # Ordina per scadenza crescente
+    lotti = await cursor.to_list(limit)
+    
+    totale = await db[COL_LOTTI].count_documents(query)
+    
+    # Calcola statistiche
+    stats = {
+        "totale": totale,
+        "disponibili": await db[COL_LOTTI].count_documents({"stato": "disponibile"}),
+        "esauriti": await db[COL_LOTTI].count_documents({"esaurito": True}),
+        "da_completare": await db[COL_LOTTI].count_documents({"lotto_da_inserire_manualmente": True}),
+    }
+    
+    # Lotti in scadenza (prossimi 7 giorni)
+    data_7gg = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+    stats["in_scadenza_7gg"] = await db[COL_LOTTI].count_documents({
+        "stato": "disponibile",
+        "data_scadenza": {"$lte": data_7gg}
+    })
+    
+    return {
+        "items": lotti,
+        "total": totale,
+        "statistiche": stats
+    }
+
+
+@router.get("/lotti/fattura/{fattura_id}")
+async def get_lotti_fattura(fattura_id: str):
+    """
+    Restituisce tutti i lotti generati da una specifica fattura.
+    Utile per la stampa etichette.
+    """
+    db = Database.get_db()
+    
+    lotti = await db[COL_LOTTI].find(
+        {"fattura_id": fattura_id},
+        {"_id": 0}
+    ).sort("numero_linea_fattura", 1).to_list(1000)
+    
+    # Recupera anche i dati della fattura
+    fattura = await db[COL_FATTURE].find_one(
+        {"id": fattura_id},
+        {"_id": 0, "id": 1, "numero_documento": 1, "data_documento": 1, "fornitore_ragione_sociale": 1}
+    )
+    
+    return {
+        "fattura": fattura,
+        "lotti": lotti,
+        "totale_lotti": len(lotti)
+    }
+
+
+@router.get("/lotto/{lotto_id}")
+async def get_lotto_dettaglio(lotto_id: str):
+    """
+    Dettaglio singolo lotto con tutti i dati per stampa etichetta.
+    """
+    db = Database.get_db()
+    
+    lotto = await db[COL_LOTTI].find_one({"id": lotto_id}, {"_id": 0})
+    if not lotto:
+        raise HTTPException(status_code=404, detail="Lotto non trovato")
+    
+    return lotto
+
+
+@router.put("/lotto/{lotto_id}")
+async def aggiorna_lotto(lotto_id: str, dati: Dict[str, Any]):
+    """
+    Aggiorna dati lotto (es. inserimento manuale lotto fornitore).
+    """
+    db = Database.get_db()
+    
+    lotto = await db[COL_LOTTI].find_one({"id": lotto_id})
+    if not lotto:
+        raise HTTPException(status_code=404, detail="Lotto non trovato")
+    
+    # Campi aggiornabili
+    campi_permessi = ["lotto_fornitore", "data_scadenza", "note", "etichetta_stampata"]
+    update_data = {k: v for k, v in dati.items() if k in campi_permessi}
+    
+    if "lotto_fornitore" in update_data and update_data["lotto_fornitore"]:
+        update_data["lotto_da_inserire_manualmente"] = False
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db[COL_LOTTI].update_one(
+        {"id": lotto_id},
+        {"$set": update_data}
+    )
+    
+    return {"success": True, "updated": list(update_data.keys())}
+
+
+@router.post("/lotto/{lotto_id}/segna-etichetta-stampata")
+async def segna_etichetta_stampata(lotto_id: str):
+    """
+    Segna che l'etichetta del lotto è stata stampata.
+    """
+    db = Database.get_db()
+    
+    result = await db[COL_LOTTI].update_one(
+        {"id": lotto_id},
+        {"$set": {
+            "etichetta_stampata": True,
+            "data_stampa_etichetta": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Lotto non trovato")
+    
+    return {"success": True}
+
+
+# ==================== SCARICO PRODUZIONE CON FEFO ====================
+
+@router.get("/lotti/suggerimento-fefo/{prodotto_ricerca}")
+async def suggerimento_fefo(prodotto_ricerca: str, quantita_necessaria: float = Query(default=1)):
+    """
+    Suggerisce quali lotti utilizzare per lo scarico seguendo la logica FEFO.
+    First Expired First Out: usa prima i lotti con scadenza più vicina.
+    """
+    db = Database.get_db()
+    
+    # Cerca lotti disponibili per il prodotto, ordinati per scadenza crescente
+    lotti = await db[COL_LOTTI].find(
+        {
+            "prodotto": {"$regex": prodotto_ricerca, "$options": "i"},
+            "stato": "disponibile",
+            "quantita_disponibile": {"$gt": 0}
+        },
+        {"_id": 0}
+    ).sort("data_scadenza", 1).to_list(50)
+    
+    if not lotti:
+        return {
+            "trovati": False,
+            "message": f"Nessun lotto disponibile per '{prodotto_ricerca}'",
+            "suggerimenti": []
+        }
+    
+    # Calcola quale combinazione di lotti usare
+    suggerimenti = []
+    quantita_rimanente = quantita_necessaria
+    
+    for lotto in lotti:
+        if quantita_rimanente <= 0:
+            break
+        
+        qta_disponibile = lotto.get("quantita_disponibile", 0)
+        qta_da_usare = min(qta_disponibile, quantita_rimanente)
+        
+        suggerimenti.append({
+            "lotto_id": lotto["id"],
+            "lotto_interno": lotto.get("lotto_interno"),
+            "lotto_fornitore": lotto.get("lotto_fornitore"),
+            "prodotto": lotto.get("prodotto"),
+            "scadenza": lotto.get("data_scadenza"),
+            "disponibile": qta_disponibile,
+            "da_usare": qta_da_usare,
+            "priorita": "ALTA" if lotto.get("data_scadenza", "9999") < (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d") else "NORMALE"
+        })
+        
+        quantita_rimanente -= qta_da_usare
+    
+    return {
+        "trovati": True,
+        "prodotto_cercato": prodotto_ricerca,
+        "quantita_richiesta": quantita_necessaria,
+        "quantita_coperta": quantita_necessaria - quantita_rimanente,
+        "quantita_mancante": max(0, quantita_rimanente),
+        "suggerimenti": suggerimenti
+    }
+
+
+@router.post("/scarico-produzione-fefo")
+async def scarico_produzione_fefo(
+    prodotto_ricerca: str = Query(...),
+    quantita: float = Query(..., gt=0),
+    motivo: str = Query(default="Produzione"),
+    genera_rettifica_prima_nota: bool = Query(default=True)
+):
+    """
+    Scarico materie prime con logica FEFO automatica.
+    Genera rettifica magazzino collegata a Prima Nota se richiesto.
+    """
+    db = Database.get_db()
+    
+    # Ottieni suggerimenti FEFO
+    fefo = await suggerimento_fefo(prodotto_ricerca, quantita)
+    
+    if not fefo["trovati"]:
+        raise HTTPException(status_code=404, detail=f"Nessun lotto disponibile per '{prodotto_ricerca}'")
+    
+    if fefo["quantita_mancante"] > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Quantità insufficiente: disponibili {fefo['quantita_coperta']}, richiesti {quantita}"
+        )
+    
+    # Esegui scarichi
+    scarichi_effettuati = []
+    valore_totale_scarico = 0
+    
+    for sugg in fefo["suggerimenti"]:
+        lotto_id = sugg["lotto_id"]
+        qta_scarico = sugg["da_usare"]
+        
+        # Recupera lotto
+        lotto = await db[COL_LOTTI].find_one({"id": lotto_id}, {"_id": 0})
+        if not lotto:
+            continue
+        
+        prezzo_unitario = lotto.get("prezzo_unitario", 0)
+        valore_scarico = qta_scarico * prezzo_unitario
+        valore_totale_scarico += valore_scarico
+        
+        # Aggiorna quantità lotto
+        nuova_qta = lotto.get("quantita_disponibile", 0) - qta_scarico
+        nuovo_stato = "esaurito" if nuova_qta <= 0 else "disponibile"
+        
+        await db[COL_LOTTI].update_one(
+            {"id": lotto_id},
+            {
+                "$set": {
+                    "quantita_disponibile": max(0, nuova_qta),
+                    "stato": nuovo_stato,
+                    "esaurito": nuova_qta <= 0,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                },
+                "$inc": {"quantita_scaricata": qta_scarico}
+            }
+        )
+        
+        # Crea movimento scarico
+        movimento = {
+            "id": str(uuid.uuid4()),
+            "tipo": "scarico",
+            "prodotto_id": lotto.get("prodotto_id"),
+            "prodotto_descrizione": lotto.get("prodotto"),
+            "quantita": -qta_scarico,
+            "prezzo_unitario": prezzo_unitario,
+            "valore_totale": valore_scarico,
+            "lotto_id": lotto_id,
+            "lotto_interno": lotto.get("lotto_interno"),
+            "lotto_fornitore": lotto.get("lotto_fornitore"),
+            "motivo": motivo,
+            "metodo_scarico": "FEFO",
+            "data_movimento": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db[COL_MOVIMENTI_MAG].insert_one(movimento)
+        
+        # Aggiorna giacenza prodotto in magazzino
+        if lotto.get("prodotto_id"):
+            await db[COL_MAGAZZINO].update_one(
+                {"id": lotto.get("prodotto_id")},
+                {
+                    "$inc": {"giacenza": -qta_scarico},
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+                }
+            )
+        
+        scarichi_effettuati.append({
+            "lotto_id": lotto_id,
+            "lotto_interno": lotto.get("lotto_interno"),
+            "quantita_scaricata": qta_scarico,
+            "valore": valore_scarico
+        })
+    
+    # Genera rettifica Prima Nota se richiesto
+    prima_nota_id = None
+    if genera_rettifica_prima_nota and valore_totale_scarico > 0:
+        rettifica = {
+            "id": str(uuid.uuid4()),
+            "tipo": "rettifica_magazzino",
+            "data_registrazione": datetime.now(timezone.utc).isoformat(),
+            "descrizione": f"Scarico produzione FEFO - {motivo}",
+            "movimenti": [
+                {
+                    "conto": "COSTI_PRODUZIONE",
+                    "descrizione": f"Materie prime per {motivo}",
+                    "dare": valore_totale_scarico,
+                    "avere": 0
+                },
+                {
+                    "conto": "MAGAZZINO",
+                    "descrizione": f"Rettifica giacenza",
+                    "dare": 0,
+                    "avere": valore_totale_scarico
+                }
+            ],
+            "totale": valore_totale_scarico,
+            "stato": "registrata",
+            "source": "scarico_fefo",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db[COL_PRIMA_NOTA].insert_one(rettifica)
+        prima_nota_id = rettifica["id"]
+    
+    return {
+        "success": True,
+        "prodotto": prodotto_ricerca,
+        "quantita_totale_scaricata": quantita,
+        "valore_totale": round(valore_totale_scarico, 2),
+        "lotti_utilizzati": len(scarichi_effettuati),
+        "dettaglio_scarichi": scarichi_effettuati,
+        "prima_nota_id": prima_nota_id
+    }
+
+
+# ==================== ENDPOINT PER DATI ETICHETTA ====================
+
+@router.get("/etichetta/{lotto_id}")
+async def get_dati_etichetta(lotto_id: str):
+    """
+    Restituisce tutti i dati necessari per stampare l'etichetta di un lotto.
+    Include URL per QR code che punta alla fattura nell'ERP.
+    """
+    db = Database.get_db()
+    
+    lotto = await db[COL_LOTTI].find_one({"id": lotto_id}, {"_id": 0})
+    if not lotto:
+        raise HTTPException(status_code=404, detail="Lotto non trovato")
+    
+    # URL per QR code (punta alla fattura nell'ERP)
+    fattura_url = f"/fatture-ricevute?fattura={lotto.get('fattura_id', '')}"
+    
+    return {
+        "lotto": lotto,
+        "etichetta": {
+            "nome_prodotto": lotto.get("prodotto", ""),
+            "lotto_interno": lotto.get("lotto_interno", ""),
+            "lotto_fornitore": lotto.get("lotto_fornitore") or "N/D",
+            "fornitore": lotto.get("fornitore", ""),
+            "data_scadenza": lotto.get("data_scadenza", ""),
+            "fattura_numero": lotto.get("fattura_numero", ""),
+            "fattura_data": lotto.get("fattura_data", ""),
+            "quantita": f"{lotto.get('quantita_iniziale', 0)} {lotto.get('unita_misura', 'pz')}",
+            "qr_data": fattura_url
+        }
+    }
