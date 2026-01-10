@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api";
 import { formatDateIT, formatEuro } from "../lib/utils";
-import { UploadProgressBar } from "../components/UploadProgressBar";
 import { useAnnoGlobale } from "../contexts/AnnoContext";
 import InvoiceXMLViewer from "../components/InvoiceXMLViewer";
 
@@ -13,17 +12,11 @@ export default function Fatture() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0, phase: "" });
-  const [uploadResult, setUploadResult] = useState(null);
   const [viewingInvoice, setViewingInvoice] = useState(null);
   const [err, setErr] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [updatingPayment, setUpdatingPayment] = useState(null);
   const [payingInvoice, setPayingInvoice] = useState(null);
-  const fileInputRef = useRef(null);
-  const bulkFileInputRef = useRef(null);
-  const zipFileInputRef = useRef(null);
   
   // Anno selezionato viene dal context globale
   const [_availableYears, setAvailableYears] = useState([currentYear]);
