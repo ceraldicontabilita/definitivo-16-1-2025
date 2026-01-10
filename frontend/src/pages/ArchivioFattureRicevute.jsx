@@ -30,6 +30,7 @@ const selectStyle = { padding: '10px 12px', borderRadius: 8, border: '2px solid 
 export default function ArchivioFatture() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { anno } = useAnnoGlobale(); // Usa anno globale dalla sidebar
   
   const [fatture, setFatture] = useState([]);
   const [fornitori, setFornitori] = useState([]);
@@ -38,9 +39,7 @@ export default function ArchivioFatture() {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   
-  // Filtri
-  const currentYear = new Date().getFullYear();
-  const [anno, setAnno] = useState(searchParams.get('anno') || currentYear.toString());
+  // Filtri (anno viene dal contesto globale)
   const [mese, setMese] = useState(searchParams.get('mese') || '');
   const [fornitore, setFornitore] = useState(searchParams.get('fornitore') || '');
   const [stato, setStato] = useState(searchParams.get('stato') || '');
@@ -49,9 +48,6 @@ export default function ArchivioFatture() {
   // Modal stampa etichette
   const [showEtichette, setShowEtichette] = useState(false);
   const [selectedFatturaId, setSelectedFatturaId] = useState(null);
-  
-  // Genera anni per select (ultimi 5 anni)
-  const anni = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   const fetchFatture = useCallback(async () => {
     setLoading(true);
