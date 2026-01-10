@@ -228,53 +228,115 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
             
             # === 1. CERCA FATTURE (per USCITE) ===
             if tipo == "uscita" and not match_found:
-                num_fattura = extract_invoice_number(descrizione)
+                num_fattura_ec = extract_invoice_number(descrizione)
                 num_assegno = extract_assegno_number(descrizione)
-                supplier_name = extract_supplier_name(descrizione)
+                supplier_name_ec = extract_supplier_name(descrizione)
                 
-                # Cerca fattura per numero + importo ESATTO (case-insensitive)
-                if num_fattura:
-                    fattura = await db[Collections.INVOICES].find_one({
-                        "$and": [
-                            {"$or": [
-                                {"numero_fattura": {"$regex": f"^{num_fattura}$", "$options": "i"}},
-                                {"invoice_number": {"$regex": f"^{num_fattura}$", "$options": "i"}},
-                                {"numero_fattura": {"$regex": f".*{num_fattura}.*", "$options": "i"}},
-                                {"invoice_number": {"$regex": f".*{num_fattura}.*", "$options": "i"}}
-                            ]},
-                            {"$or": [
-                                {"importo_totale": {"$gte": importo - 0.05, "$lte": importo + 0.05}},
-                                {"total_amount": {"$gte": importo - 0.05, "$lte": importo + 0.05}}
-                            ]},
-                            {"pagato": {"$ne": True}}
-                        ]
-                    })
+                # NUOVO: Cerca fattura con match TRIPLO (importo + fornitore + numero fattura)
+                # Priorità: match completo > match parziale > match solo importo
+                
+                fatture_candidate = await db[Collections.INVOICES].find({
+                    "$or": [
+                        {"importo_totale": {"$gte": importo - 0.05, "$lte": importo + 0.05}},
+                        {"total_amount": {"$gte": importo - 0.05, "$lte": importo + 0.05}}
+                    ],
+                    "pagato": {"$ne": True}
+                }).to_list(50)
+                
+                # Calcola score per ogni fattura
+                fatture_scored = []
+                for f in fatture_candidate:
+                    score = 0
+                    fornitore_fatt = f.get("cedente_denominazione") or f.get("supplier_name") or ""
+                    numero_fatt = f.get("numero_fattura") or f.get("invoice_number") or ""
                     
-                    if fattura:
+                    # Score 1: Importo esatto (già filtrato, ma confermiamo)
+                    imp_fatt = f.get("importo_totale") or f.get("total_amount") or 0
+                    if abs(imp_fatt - importo) <= 0.05:
+                        score += 10
+                    
+                    # Score 2: Match fornitore nella descrizione EC
+                    if match_fornitore_descrizione(fornitore_fatt, descrizione):
+                        score += 5
+                    
+                    # Score 3: Match numero fattura nella descrizione EC
+                    if match_numero_fattura_descrizione(numero_fatt, descrizione):
+                        score += 5
+                    
+                    # Score 4: Numero fattura estratto da EC corrisponde
+                    if num_fattura_ec and numero_fatt:
+                        num_fatt_clean = re.sub(r'^(FT|FAT|FATT|INV|N\.?|NR\.?)\s*', '', numero_fatt.upper())
+                        if num_fattura_ec in num_fatt_clean or num_fatt_clean in num_fattura_ec:
+                            score += 5
+                    
+                    fatture_scored.append((f, score))
+                
+                # Ordina per score decrescente
+                fatture_scored.sort(key=lambda x: x[1], reverse=True)
+                
+                # Se c'è una fattura con score >= 15 (importo + fornitore + numero) → match sicuro
+                if fatture_scored and fatture_scored[0][1] >= 15:
+                    fattura = fatture_scored[0][0]
+                    match_found = True
+                    match_type = "fattura_match_completo"
+                    
+                    metodo_pagamento = "Bonifico"
+                    if num_assegno:
+                        metodo_pagamento = f"Assegno N.{num_assegno}"
+                        await db[COLLECTION_ASSEGNI].update_one(
+                            {"numero": num_assegno},
+                            {"$set": {
+                                "numero": num_assegno,
+                                "importo": importo,
+                                "data_emissione": data_ec,
+                                "fattura_id": str(fattura.get("_id", fattura.get("id"))),
+                                "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
+                                "stato": "incassato",
+                                "updated_at": now
+                            }},
+                            upsert=True
+                        )
+                        results["riconciliati_assegni"] += 1
+                    
+                    await db[Collections.INVOICES].update_one(
+                        {"_id": fattura["_id"]},
+                        {"$set": {
+                            "pagato": True,
+                            "paid": True,
+                            "metodo_pagamento": metodo_pagamento,
+                            "in_banca": True,
+                            "data_pagamento": data_ec,
+                            "riconciliato_con_ec": mov_id,
+                            "riconciliato_automaticamente": True,
+                            "match_score": fatture_scored[0][1],
+                            "updated_at": now
+                        }}
+                    )
+                    
+                    match_details = {
+                        "fattura_id": str(fattura.get("_id")),
+                        "numero_fattura": fattura.get("numero_fattura") or fattura.get("invoice_number"),
+                        "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
+                        "metodo_pagamento": metodo_pagamento,
+                        "match_score": fatture_scored[0][1],
+                        "match_type": "importo+fornitore+numero"
+                    }
+                    results["riconciliati_fatture"] += 1
+                
+                # Se score >= 10 ma < 15 (solo importo + un altro criterio) → match con confidenza media
+                elif fatture_scored and fatture_scored[0][1] >= 10 and fatture_scored[0][1] < 15:
+                    # Se c'è una sola fattura con questo score → riconcilia
+                    fatture_buone = [f for f, s in fatture_scored if s >= 10]
+                    
+                    if len(fatture_buone) == 1:
+                        fattura = fatture_buone[0]
                         match_found = True
-                        match_type = "fattura_bonifico" if not num_assegno else f"fattura_assegno_{num_assegno}"
+                        match_type = "fattura_match_parziale"
                         
-                        # Determina metodo pagamento
                         metodo_pagamento = "Bonifico"
                         if num_assegno:
                             metodo_pagamento = f"Assegno N.{num_assegno}"
-                            # Registra assegno
-                            await db[COLLECTION_ASSEGNI].update_one(
-                                {"numero": num_assegno},
-                                {"$set": {
-                                    "numero": num_assegno,
-                                    "importo": importo,
-                                    "data_emissione": data_ec,
-                                    "fattura_id": str(fattura.get("_id", fattura.get("id"))),
-                                    "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
-                                    "stato": "incassato",
-                                    "updated_at": now
-                                }},
-                                upsert=True
-                            )
-                            results["riconciliati_assegni"] += 1
                         
-                        # AGGIORNA FATTURA - TROVATA IN BANCA!
                         await db[Collections.INVOICES].update_one(
                             {"_id": fattura["_id"]},
                             {"$set": {
@@ -285,6 +347,7 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                                 "data_pagamento": data_ec,
                                 "riconciliato_con_ec": mov_id,
                                 "riconciliato_automaticamente": True,
+                                "match_score": fatture_scored[0][1],
                                 "updated_at": now
                             }}
                         )
@@ -293,65 +356,14 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                             "fattura_id": str(fattura.get("_id")),
                             "numero_fattura": fattura.get("numero_fattura") or fattura.get("invoice_number"),
                             "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
-                            "metodo_pagamento": metodo_pagamento
+                            "metodo_pagamento": metodo_pagamento,
+                            "match_score": fatture_scored[0][1]
                         }
                         results["riconciliati_fatture"] += 1
-                
-                # Se non trovata per numero, cerca per importo ESATTO
-                if not match_found:
-                    fatture_esatte = await db[Collections.INVOICES].find({
-                        "$or": [
-                            {"importo_totale": {"$gte": importo - 0.05, "$lte": importo + 0.05}},
-                            {"total_amount": {"$gte": importo - 0.05, "$lte": importo + 0.05}}
-                        ],
-                        "pagato": {"$ne": True}
-                    }).to_list(20)
-                    
-                    # Filtra per fornitore se abbiamo il nome
-                    if supplier_name and len(fatture_esatte) > 1:
-                        fatture_fornitore = [
-                            f for f in fatture_esatte
-                            if supplier_name.upper() in (f.get("cedente_denominazione") or f.get("supplier_name") or "").upper()
-                        ]
-                        if fatture_fornitore:
-                            fatture_esatte = fatture_fornitore
-                    
-                    if len(fatture_esatte) == 1:
-                        # UNA sola fattura con importo esatto → riconcilia
-                        fattura = fatture_esatte[0]
-                        match_found = True
-                        match_type = "fattura_bonifico"
-                        
-                        metodo_pagamento = "Bonifico"
-                        if num_assegno:
-                            metodo_pagamento = f"Assegno N.{num_assegno}"
-                        
-                        await db[Collections.INVOICES].update_one(
-                            {"_id": fattura["_id"]},
-                            {"$set": {
-                                "pagato": True,
-                                "paid": True,
-                                "metodo_pagamento": metodo_pagamento,
-                                "in_banca": True,
-                                "data_pagamento": data_ec,
-                                "riconciliato_con_ec": mov_id,
-                                "riconciliato_automaticamente": True,
-                                "updated_at": now
-                            }}
-                        )
-                        
-                        match_details = {
-                            "fattura_id": str(fattura.get("_id")),
-                            "numero_fattura": fattura.get("numero_fattura") or fattura.get("invoice_number"),
-                            "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
-                            "metodo_pagamento": metodo_pagamento
-                        }
-                        results["riconciliati_fatture"] += 1
-                        
-                    elif len(fatture_esatte) > 1:
-                        # Più fatture → operazione da confermare
+                    else:
+                        # Più fatture con score simile → operazione da confermare
                         fatture_ordinate = sorted(
-                            fatture_esatte,
+                            [f for f, s in fatture_scored if s >= 10],
                             key=lambda f: f.get("data", f.get("invoice_date", "1900-01-01")),
                             reverse=True
                         )
@@ -373,11 +385,88 @@ async def riconcilia_estratto_conto() -> Dict[str, Any]:
                                         "numero": f.get("numero_fattura") or f.get("invoice_number"),
                                         "fornitore": f.get("cedente_denominazione") or f.get("supplier_name"),
                                         "importo": f.get("importo_totale") or f.get("total_amount"),
+                                        "data": f.get("data") or f.get("invoice_date"),
+                                        "score": next((s for ff, s in fatture_scored if ff == f), 0)
+                                    }
+                                    for f in fatture_ordinate[:10]
+                                ],
+                                "motivo_dubbio": f"Trovate {len(fatture_ordinate)} fatture con match parziale"
+                            },
+                            "stato": "da_confermare",
+                            "created_at": now
+                        }
+                        
+                        await db[COLLECTION_OPERAZIONI_DA_CONFERMARE].insert_one(operazione)
+                        results["dubbi"] += 1
+                
+                # Se solo importo esatto (score = 10) e UNA sola fattura → riconcilia
+                elif fatture_scored and fatture_scored[0][1] == 10:
+                    fatture_esatte = [f for f, s in fatture_scored if s == 10]
+                    
+                    if len(fatture_esatte) == 1:
+                        fattura = fatture_esatte[0]
+                        match_found = True
+                        match_type = "fattura_solo_importo"
+                        
+                        metodo_pagamento = "Bonifico"
+                        if num_assegno:
+                            metodo_pagamento = f"Assegno N.{num_assegno}"
+                        
+                        await db[Collections.INVOICES].update_one(
+                            {"_id": fattura["_id"]},
+                            {"$set": {
+                                "pagato": True,
+                                "paid": True,
+                                "metodo_pagamento": metodo_pagamento,
+                                "in_banca": True,
+                                "data_pagamento": data_ec,
+                                "riconciliato_con_ec": mov_id,
+                                "riconciliato_automaticamente": True,
+                                "match_score": 10,
+                                "updated_at": now
+                            }}
+                        )
+                        
+                        match_details = {
+                            "fattura_id": str(fattura.get("_id")),
+                            "numero_fattura": fattura.get("numero_fattura") or fattura.get("invoice_number"),
+                            "fornitore": fattura.get("cedente_denominazione") or fattura.get("supplier_name"),
+                            "metodo_pagamento": metodo_pagamento,
+                            "match_score": 10,
+                            "match_type": "solo_importo"
+                        }
+                        results["riconciliati_fatture"] += 1
+                        
+                    elif len(fatture_esatte) > 1:
+                        # Più fatture solo con importo → operazione da confermare (bassa confidenza)
+                        fatture_ordinate = sorted(
+                            fatture_esatte,
+                            key=lambda f: f.get("data", f.get("invoice_date", "1900-01-01")),
+                            reverse=True
+                        )
+                        
+                        operazione = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "riconciliazione_dubbio",
+                            "movimento_ec_id": mov_id,
+                            "data": data_ec,
+                            "importo": importo,
+                            "descrizione": descrizione,
+                            "tipo_movimento": tipo,
+                            "match_type": "fatture_multiple",
+                            "confidence": "basso",
+                            "dettagli": {
+                                "fatture_candidate": [
+                                    {
+                                        "id": str(f.get("_id", f.get("id"))),
+                                        "numero": f.get("numero_fattura") or f.get("invoice_number"),
+                                        "fornitore": f.get("cedente_denominazione") or f.get("supplier_name"),
+                                        "importo": f.get("importo_totale") or f.get("total_amount"),
                                         "data": f.get("data") or f.get("invoice_date")
                                     }
                                     for f in fatture_ordinate[:10]
                                 ],
-                                "motivo_dubbio": f"Trovate {len(fatture_esatte)} fatture con stesso importo"
+                                "motivo_dubbio": f"Trovate {len(fatture_esatte)} fatture con stesso importo (match solo importo)"
                             },
                             "stato": "da_confermare",
                             "created_at": now
