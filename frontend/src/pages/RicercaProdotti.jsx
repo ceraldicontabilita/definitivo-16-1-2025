@@ -243,9 +243,11 @@ export default function RicercaProdotti() {
                       borderBottom: "1px solid #eee",
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center"
+                      alignItems: "center",
+                      transition: "background 0.2s"
                     }}
-                    className="hover-bg"
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
                   >
                     <div>
                       <strong>{s.nome?.substring(0, 50)}</strong>
