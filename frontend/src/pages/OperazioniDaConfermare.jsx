@@ -2,161 +2,161 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { formatEuro } from '../lib/utils';
 
-// Stile comune per tutte le pagine
-const pageStyle = {
+// Stile compatto
+const styles = {
   container: {
-    padding: '24px',
-    maxWidth: '1400px',
+    padding: '16px',
+    maxWidth: '1600px',
     margin: '0 auto',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
   header: {
-    marginBottom: '24px',
+    marginBottom: '16px',
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '16px'
+    gap: '12px'
   },
   title: {
     margin: 0,
-    fontSize: '28px',
+    fontSize: '22px',
     fontWeight: 'bold',
     color: '#1e293b',
     display: 'flex',
     alignItems: 'center',
-    gap: '12px'
+    gap: '8px'
   },
-  subtitle: {
-    margin: '4px 0 0 0',
-    color: '#64748b',
-    fontSize: '14px'
+  statsRow: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '16px',
+    flexWrap: 'wrap'
   },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '16px',
-    marginBottom: '24px'
-  },
-  statCard: (color) => ({
-    background: `linear-gradient(135deg, ${color}15, ${color}08)`,
-    borderRadius: '12px',
-    padding: '20px',
-    border: `1px solid ${color}30`
+  statBadge: (color) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '8px',
+    background: `${color}10`,
+    border: `1px solid ${color}30`,
+    fontSize: '13px'
   }),
   statValue: (color) => ({
-    fontSize: '32px',
     fontWeight: 'bold',
-    color: color,
-    margin: 0
+    color: color
   }),
-  statLabel: {
-    fontSize: '13px',
-    color: '#64748b',
-    marginTop: '4px'
-  },
   card: {
     background: 'white',
-    borderRadius: '12px',
+    borderRadius: '8px',
     border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-  },
-  cardHeader: {
-    padding: '16px 20px',
-    borderBottom: '1px solid #e2e8f0',
-    background: '#f8fafc',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  cardTitle: {
-    margin: 0,
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#1e293b'
+    overflow: 'hidden'
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
-    fontSize: '14px'
+    fontSize: '12px'
   },
   th: {
-    padding: '12px 16px',
+    padding: '8px 10px',
     textAlign: 'left',
     fontWeight: '600',
     color: '#475569',
     borderBottom: '2px solid #e2e8f0',
-    background: '#f8fafc'
+    background: '#f8fafc',
+    whiteSpace: 'nowrap'
   },
   td: {
-    padding: '12px 16px',
+    padding: '6px 10px',
     borderBottom: '1px solid #f1f5f9',
-    color: '#334155'
+    color: '#334155',
+    verticalAlign: 'top'
+  },
+  descCell: {
+    padding: '6px 10px',
+    borderBottom: '1px solid #f1f5f9',
+    color: '#334155',
+    maxWidth: '400px',
+    wordBreak: 'break-word',
+    whiteSpace: 'pre-wrap',
+    fontSize: '11px',
+    lineHeight: '1.3'
   },
   badge: (color) => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '4px 10px',
-    borderRadius: '20px',
-    fontSize: '12px',
+    display: 'inline-block',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '10px',
     fontWeight: '600',
     background: `${color}15`,
     color: color
   }),
-  button: (variant = 'primary') => ({
-    padding: '8px 16px',
-    borderRadius: '8px',
+  btn: {
+    padding: '4px 8px',
+    borderRadius: '4px',
     border: 'none',
     cursor: 'pointer',
-    fontWeight: '500',
-    fontSize: '13px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    transition: 'all 0.2s',
-    ...(variant === 'primary' ? {
-      background: '#3b82f6',
-      color: 'white'
-    } : variant === 'success' ? {
-      background: '#10b981',
-      color: 'white'
-    } : variant === 'danger' ? {
-      background: '#ef4444',
-      color: 'white'
-    } : {
-      background: '#f1f5f9',
-      color: '#475569',
-      border: '1px solid #e2e8f0'
-    })
-  }),
-  emptyState: {
-    textAlign: 'center',
-    padding: '60px 20px',
-    color: '#64748b'
+    fontSize: '11px',
+    fontWeight: '500'
+  },
+  btnSuccess: {
+    background: '#10b981',
+    color: 'white'
+  },
+  btnDanger: {
+    background: '#ef4444',
+    color: 'white'
+  },
+  btnOutline: {
+    background: '#f1f5f9',
+    color: '#475569',
+    border: '1px solid #e2e8f0'
   },
   filterBar: {
     display: 'flex',
-    gap: '12px',
-    marginBottom: '20px',
+    gap: '8px',
+    marginBottom: '12px',
     flexWrap: 'wrap',
     alignItems: 'center'
   },
   select: {
-    padding: '8px 12px',
-    borderRadius: '8px',
+    padding: '6px 10px',
+    borderRadius: '6px',
     border: '1px solid #e2e8f0',
-    fontSize: '14px',
-    background: 'white',
-    minWidth: '150px'
+    fontSize: '12px',
+    background: 'white'
   },
   input: {
-    padding: '8px 12px',
-    borderRadius: '8px',
+    padding: '6px 10px',
+    borderRadius: '6px',
     border: '1px solid #e2e8f0',
-    fontSize: '14px',
-    minWidth: '200px'
+    fontSize: '12px',
+    width: '200px'
   }
+};
+
+// Importi commissioni da ignorare
+const IMPORTI_COMMISSIONI = [0.75, 1.00, 1.10, 1.50, 2.00, 2.50];
+const isCommissione = (descrizione, importo) => {
+  const desc = (descrizione || '').toUpperCase();
+  const impAbs = Math.abs(importo);
+  
+  // Check se è una commissione
+  if (desc.includes('COMMISSIONI') || desc.includes('COMM.') || 
+      desc.includes('SPESE') || desc.includes('CANONE') ||
+      desc.includes('BOLLO')) {
+    return true;
+  }
+  
+  // Check importi tipici commissioni
+  if (IMPORTI_COMMISSIONI.some(c => Math.abs(impAbs - c) < 0.01)) {
+    if (desc.includes('COMMISSIONI') || desc.includes('COMM') || impAbs <= 2.50) {
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 export default function OperazioniDaConfermare() {
@@ -164,9 +164,9 @@ export default function OperazioniDaConfermare() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filtroTipo, setFiltroTipo] = useState('tutti');
-  const [filtroConfidence, setFiltroConfidence] = useState('tutti');
   const [searchText, setSearchText] = useState('');
   const [processing, setProcessing] = useState(null);
+  const [mostraCommissioni, setMostraCommissioni] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -175,9 +175,8 @@ export default function OperazioniDaConfermare() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Carica operazioni da riconciliazione automatica
       const [opsRes, statsRes] = await Promise.all([
-        api.get('/api/riconciliazione-auto/operazioni-dubbi?limit=500'),
+        api.get('/api/riconciliazione-auto/operazioni-dubbi?limit=1000'),
         api.get('/api/riconciliazione-auto/stats-riconciliazione')
       ]);
       
@@ -205,16 +204,38 @@ export default function OperazioniDaConfermare() {
     }
   };
 
+  const scartaTutteCommissioni = async () => {
+    const commissioni = operazioni.filter(op => isCommissione(op.descrizione, op.importo));
+    if (commissioni.length === 0) {
+      alert('Nessuna commissione da scartare');
+      return;
+    }
+    
+    if (!window.confirm(`Scartare ${commissioni.length} commissioni automaticamente?`)) return;
+    
+    setProcessing('bulk');
+    let scartate = 0;
+    
+    for (const op of commissioni) {
+      try {
+        await api.post(`/api/riconciliazione-auto/conferma-operazione/${op.id}?azione=ignora`);
+        scartate++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    alert(`✅ Scartate ${scartate} commissioni`);
+    loadData();
+    setProcessing(null);
+  };
+
   const eseguiRiconciliazioneAutomatica = async () => {
     setProcessing('auto');
     try {
       const res = await api.post('/api/riconciliazione-auto/riconcilia-estratto-conto');
-      alert(`✅ Riconciliazione completata!\n\n` +
+      alert(`✅ Riconciliazione completata!\n` +
         `Riconciliati: ${res.data.totale_riconciliati}\n` +
-        `- Fatture: ${res.data.riconciliati_fatture}\n` +
-        `- POS: ${res.data.riconciliati_pos}\n` +
-        `- Versamenti: ${res.data.riconciliati_versamenti}\n` +
-        `- F24: ${res.data.riconciliati_f24}\n\n` +
         `Da confermare: ${res.data.dubbi}`
       );
       loadData();
@@ -225,213 +246,185 @@ export default function OperazioniDaConfermare() {
     }
   };
 
-  // Filtri
-  const operazioniFiltrate = operazioni.filter(op => {
+  // Filtra operazioni
+  let operazioniFiltrate = operazioni;
+  
+  // Nascondi commissioni di default
+  if (!mostraCommissioni) {
+    operazioniFiltrate = operazioniFiltrate.filter(op => !isCommissione(op.descrizione, op.importo));
+  }
+  
+  // Altri filtri
+  operazioniFiltrate = operazioniFiltrate.filter(op => {
     if (filtroTipo !== 'tutti' && op.match_type !== filtroTipo) return false;
-    if (filtroConfidence !== 'tutti' && op.confidence !== filtroConfidence) return false;
     if (searchText) {
       const search = searchText.toLowerCase();
-      const desc = (op.descrizione || '').toLowerCase();
-      return desc.includes(search);
+      return (op.descrizione || '').toLowerCase().includes(search);
     }
     return true;
   });
 
-  const getMatchTypeLabel = (type) => {
-    const labels = {
-      'fattura_dubbio': 'Fattura (dubbio)',
-      'fatture_multiple': 'Più fatture',
-      'pos_dubbio': 'POS',
-      'versamento_dubbio': 'Versamento',
-      'f24_dubbio': 'F24'
-    };
-    return labels[type] || type || '-';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    try {
+      return new Date(dateStr).toLocaleDateString('it-IT');
+    } catch { return dateStr; }
   };
 
   const getConfidenceColor = (conf) => {
     return conf === 'alto' ? '#10b981' : conf === 'medio' ? '#f59e0b' : '#ef4444';
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('it-IT');
-    } catch { return dateStr; }
-  };
+  // Conta commissioni nascoste
+  const commissioniNascoste = operazioni.filter(op => isCommissione(op.descrizione, op.importo)).length;
 
   return (
-    <div style={pageStyle.container} data-testid="operazioni-da-confermare-page">
-      {/* Header */}
-      <div style={pageStyle.header}>
-        <div>
-          <h1 style={pageStyle.title}>
-            <span>📋</span> Operazioni da Confermare
-          </h1>
-          <p style={pageStyle.subtitle}>
-            Match dubbi dalla riconciliazione automatica • Conferma o rifiuta le corrispondenze
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+    <div style={styles.container} data-testid="operazioni-da-confermare-page">
+      {/* Header compatto */}
+      <div style={styles.header}>
+        <h1 style={styles.title}>
+          <span>📋</span> Operazioni da Confermare
+        </h1>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button 
-            style={pageStyle.button('outline')} 
+            style={{ ...styles.btn, ...styles.btnOutline }}
             onClick={loadData}
             disabled={loading}
           >
-            🔄 Aggiorna
+            🔄
           </button>
           <button 
-            style={pageStyle.button('primary')} 
+            style={{ ...styles.btn, background: '#8b5cf6', color: 'white' }}
+            onClick={scartaTutteCommissioni}
+            disabled={processing === 'bulk'}
+          >
+            🗑️ Scarta Commissioni ({commissioniNascoste})
+          </button>
+          <button 
+            style={{ ...styles.btn, background: '#3b82f6', color: 'white' }}
             onClick={eseguiRiconciliazioneAutomatica}
             disabled={processing === 'auto'}
           >
-            {processing === 'auto' ? '⏳ Elaborazione...' : '⚡ Riconcilia Automatico'}
+            ⚡ Riconcilia Auto
           </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div style={pageStyle.statsGrid}>
-          <div style={pageStyle.statCard('#f59e0b')}>
-            <p style={pageStyle.statValue('#f59e0b')}>{stats.operazioni_da_confermare || operazioni.length}</p>
-            <p style={pageStyle.statLabel}>Da Confermare</p>
-          </div>
-          <div style={pageStyle.statCard('#3b82f6')}>
-            <p style={pageStyle.statValue('#3b82f6')}>{stats.estratto_conto?.riconciliati || 0}</p>
-            <p style={pageStyle.statLabel}>Riconciliati EC</p>
-          </div>
-          <div style={pageStyle.statCard('#10b981')}>
-            <p style={pageStyle.statValue('#10b981')}>{stats.fatture_riconciliate_auto || 0}</p>
-            <p style={pageStyle.statLabel}>Fatture Auto</p>
-          </div>
-          <div style={pageStyle.statCard('#8b5cf6')}>
-            <p style={pageStyle.statValue('#8b5cf6')}>
-              {stats.estratto_conto?.percentuale || 0}%
-            </p>
-            <p style={pageStyle.statLabel}>% Riconciliato</p>
-          </div>
+      {/* Stats compatte */}
+      <div style={styles.statsRow}>
+        <div style={styles.statBadge('#f59e0b')}>
+          <span>Da confermare:</span>
+          <span style={styles.statValue('#f59e0b')}>{operazioniFiltrate.length}</span>
         </div>
-      )}
+        <div style={styles.statBadge('#6b7280')}>
+          <span>Commissioni nascoste:</span>
+          <span style={styles.statValue('#6b7280')}>{commissioniNascoste}</span>
+        </div>
+        {stats && (
+          <>
+            <div style={styles.statBadge('#10b981')}>
+              <span>Riconciliati:</span>
+              <span style={styles.statValue('#10b981')}>{stats.estratto_conto?.riconciliati || 0}</span>
+            </div>
+            <div style={styles.statBadge('#3b82f6')}>
+              <span>%:</span>
+              <span style={styles.statValue('#3b82f6')}>{stats.estratto_conto?.percentuale || 0}%</span>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Filtri */}
-      <div style={pageStyle.filterBar}>
+      <div style={styles.filterBar}>
         <select 
-          style={pageStyle.select}
+          style={styles.select}
           value={filtroTipo}
           onChange={(e) => setFiltroTipo(e.target.value)}
         >
           <option value="tutti">Tutti i tipi</option>
-          <option value="fattura_dubbio">Fattura (dubbio)</option>
+          <option value="fattura_dubbio">Fattura dubbio</option>
           <option value="fatture_multiple">Più fatture</option>
-          <option value="pos_dubbio">POS</option>
-          <option value="versamento_dubbio">Versamento</option>
-        </select>
-        
-        <select 
-          style={pageStyle.select}
-          value={filtroConfidence}
-          onChange={(e) => setFiltroConfidence(e.target.value)}
-        >
-          <option value="tutti">Tutte le confidenze</option>
-          <option value="medio">Medio</option>
-          <option value="basso">Basso</option>
         </select>
         
         <input
           type="text"
-          style={pageStyle.input}
-          placeholder="🔍 Cerca nella descrizione..."
+          style={styles.input}
+          placeholder="🔍 Cerca..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
         />
         
-        <span style={{ color: '#64748b', fontSize: '13px' }}>
-          {operazioniFiltrate.length} di {operazioni.length} operazioni
-        </span>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={mostraCommissioni}
+            onChange={(e) => setMostraCommissioni(e.target.checked)}
+          />
+          Mostra commissioni
+        </label>
       </div>
 
-      {/* Tabella Operazioni */}
-      <div style={pageStyle.card}>
-        <div style={pageStyle.cardHeader}>
-          <h2 style={pageStyle.cardTitle}>Operazioni in Attesa</h2>
-        </div>
-        
+      {/* Tabella */}
+      <div style={styles.card}>
         {loading ? (
-          <div style={pageStyle.emptyState}>
-            <p>⏳ Caricamento operazioni...</p>
-          </div>
+          <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>⏳ Caricamento...</div>
         ) : operazioniFiltrate.length === 0 ? (
-          <div style={pageStyle.emptyState}>
-            <p style={{ fontSize: '48px', marginBottom: '16px' }}>✅</p>
-            <p style={{ fontSize: '18px', fontWeight: '600', color: '#334155' }}>
-              Nessuna operazione da confermare
-            </p>
-            <p>Tutte le riconciliazioni sono state elaborate</p>
+          <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+            ✅ Nessuna operazione da confermare
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={pageStyle.table}>
+            <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={pageStyle.th}>Data</th>
-                  <th style={pageStyle.th}>Descrizione</th>
-                  <th style={{ ...pageStyle.th, textAlign: 'right' }}>Importo</th>
-                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Tipo Match</th>
-                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Confidenza</th>
-                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Dettagli</th>
-                  <th style={{ ...pageStyle.th, textAlign: 'center' }}>Azioni</th>
+                  <th style={{ ...styles.th, width: '80px' }}>Data</th>
+                  <th style={{ ...styles.th, width: '400px' }}>Descrizione</th>
+                  <th style={{ ...styles.th, textAlign: 'right', width: '90px' }}>Importo</th>
+                  <th style={{ ...styles.th, textAlign: 'center', width: '80px' }}>Tipo</th>
+                  <th style={{ ...styles.th, textAlign: 'center', width: '60px' }}>Conf.</th>
+                  <th style={{ ...styles.th, width: '200px' }}>Fatture Corrispondenti</th>
+                  <th style={{ ...styles.th, textAlign: 'center', width: '80px' }}>Azioni</th>
                 </tr>
               </thead>
               <tbody>
-                {operazioniFiltrate.slice(0, 100).map((op) => (
-                  <tr 
-                    key={op.id} 
-                    style={{ 
-                      background: processing === op.id ? '#f0f9ff' : 'white',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = processing === op.id ? '#f0f9ff' : 'white'}
-                  >
-                    <td style={pageStyle.td}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>
-                        {formatDate(op.data)}
-                      </span>
-                    </td>
-                    <td style={{ ...pageStyle.td, maxWidth: '300px' }}>
-                      <div style={{ 
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis', 
-                        whiteSpace: 'nowrap' 
-                      }} title={op.descrizione}>
+                {operazioniFiltrate.slice(0, 200).map((op) => {
+                  // Filtra solo fatture con importo ESATTO (±0.02€)
+                  const fattureEsatte = (op.dettagli?.fatture_candidate || []).filter(f => 
+                    Math.abs(f.importo - op.importo) <= 0.02
+                  );
+                  
+                  return (
+                    <tr 
+                      key={op.id}
+                      style={{ background: processing === op.id ? '#f0f9ff' : 'white' }}
+                    >
+                      <td style={styles.td}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>
+                          {formatDate(op.data)}
+                        </span>
+                      </td>
+                      <td style={styles.descCell}>
                         {op.descrizione || '-'}
-                      </div>
-                    </td>
-                    <td style={{ ...pageStyle.td, textAlign: 'right', fontWeight: '600' }}>
-                      <span style={{ color: op.tipo_movimento === 'uscita' ? '#dc2626' : '#16a34a' }}>
-                        {op.tipo_movimento === 'uscita' ? '-' : '+'}{formatEuro(op.importo)}
-                      </span>
-                    </td>
-                    <td style={{ ...pageStyle.td, textAlign: 'center' }}>
-                      <span style={pageStyle.badge('#6366f1')}>
-                        {getMatchTypeLabel(op.match_type)}
-                      </span>
-                    </td>
-                    <td style={{ ...pageStyle.td, textAlign: 'center' }}>
-                      <span style={pageStyle.badge(getConfidenceColor(op.confidence))}>
-                        {op.confidence || '-'}
-                      </span>
-                    </td>
-                    <td style={{ ...pageStyle.td, textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
-                      {op.dettagli?.motivo_dubbio || '-'}
-                    </td>
-                    <td style={{ ...pageStyle.td, textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                        {/* Se ci sono fatture candidate, mostra dropdown */}
-                        {op.dettagli?.fatture_candidate?.length > 0 ? (
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'right', fontWeight: '600', whiteSpace: 'nowrap' }}>
+                        <span style={{ color: op.tipo_movimento === 'uscita' ? '#dc2626' : '#16a34a' }}>
+                          {op.tipo_movimento === 'uscita' ? '-' : '+'}{formatEuro(op.importo)}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <span style={styles.badge('#6366f1')}>
+                          {op.match_type === 'fatture_multiple' ? 'Multi' : 'Dubbio'}
+                        </span>
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <span style={styles.badge(getConfidenceColor(op.confidence))}>
+                          {op.confidence === 'basso' ? '⚠️' : '❓'}
+                        </span>
+                      </td>
+                      <td style={styles.td}>
+                        {fattureEsatte.length > 0 ? (
                           <select
-                            style={{ ...pageStyle.select, minWidth: '120px', fontSize: '12px' }}
+                            style={{ ...styles.select, width: '100%', fontSize: '11px' }}
                             onChange={(e) => {
                               if (e.target.value) {
                                 handleConferma(op, 'conferma', e.target.value);
@@ -439,75 +432,52 @@ export default function OperazioniDaConfermare() {
                             }}
                             disabled={processing === op.id}
                           >
-                            <option value="">Seleziona fattura</option>
-                            {op.dettagli.fatture_candidate.map((f, i) => (
+                            <option value="">-- {fattureEsatte.length} fattura/e --</option>
+                            {fattureEsatte.map((f, i) => (
                               <option key={i} value={f.id}>
-                                {f.numero} - {f.fornitore?.slice(0, 20)} (€{f.importo})
+                                {f.numero} | {(f.fornitore || '').slice(0, 25)} | €{f.importo}
                               </option>
                             ))}
                           </select>
                         ) : (
-                          <button
-                            style={{ ...pageStyle.button('success'), padding: '6px 12px' }}
-                            onClick={() => handleConferma(op, 'conferma')}
-                            disabled={processing === op.id}
-                            title="Conferma"
-                          >
-                            ✓
-                          </button>
+                          <span style={{ color: '#94a3b8', fontSize: '11px' }}>
+                            Nessuna fattura con importo esatto
+                          </span>
                         )}
-                        <button
-                          style={{ ...pageStyle.button('outline'), padding: '6px 12px' }}
-                          onClick={() => handleConferma(op, 'ignora')}
-                          disabled={processing === op.id}
-                          title="Ignora"
-                        >
-                          ⏭️
-                        </button>
-                        <button
-                          style={{ ...pageStyle.button('danger'), padding: '6px 12px' }}
-                          onClick={() => handleConferma(op, 'rifiuta')}
-                          disabled={processing === op.id}
-                          title="Rifiuta"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td style={{ ...styles.td, textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                          <button
+                            style={{ ...styles.btn, ...styles.btnOutline }}
+                            onClick={() => handleConferma(op, 'ignora')}
+                            disabled={processing === op.id}
+                            title="Ignora"
+                          >
+                            ⏭️
+                          </button>
+                          <button
+                            style={{ ...styles.btn, ...styles.btnDanger }}
+                            onClick={() => handleConferma(op, 'rifiuta')}
+                            disabled={processing === op.id}
+                            title="Scarta"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             
-            {operazioniFiltrate.length > 100 && (
-              <div style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontSize: '13px', borderTop: '1px solid #e2e8f0' }}>
-                Mostrate 100 di {operazioniFiltrate.length} operazioni
+            {operazioniFiltrate.length > 200 && (
+              <div style={{ padding: '10px', textAlign: 'center', color: '#64748b', fontSize: '11px' }}>
+                Mostrate 200 di {operazioniFiltrate.length}
               </div>
             )}
           </div>
         )}
-      </div>
-
-      {/* Info Box */}
-      <div style={{ 
-        marginTop: '24px', 
-        padding: '16px 20px', 
-        background: '#eff6ff', 
-        border: '1px solid #3b82f6', 
-        borderRadius: '12px' 
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '20px' }}>ℹ️</span>
-          <strong style={{ color: '#1e40af' }}>Come funziona la riconciliazione</strong>
-        </div>
-        <p style={{ margin: 0, fontSize: '13px', color: '#1e40af' }}>
-          Quando importi l'estratto conto, il sistema cerca automaticamente corrispondenze con:
-          <strong> Fatture</strong> (per numero e importo),
-          <strong> POS</strong> (logica calendario),
-          <strong> Versamenti</strong> (data + importo),
-          <strong> F24</strong> (importo esatto).
-          I match sicuri vengono riconciliati automaticamente, quelli dubbi appaiono qui per conferma manuale.
-        </p>
       </div>
     </div>
   );
