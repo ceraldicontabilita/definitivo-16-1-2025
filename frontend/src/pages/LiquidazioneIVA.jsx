@@ -320,11 +320,11 @@ export default function LiquidazioneIVA() {
       )}
 
       {/* Sezione Confronto con Commercialista */}
-      <div className="card" style={{ marginBottom: 20, background: 'linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%)' }}>
-        <div className="card-header" style={{ background: 'transparent', borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }}>
-          <h3 className="card-title" style={{ color: '#6d28d9' }}>🔍 Confronto con Commercialista</h3>
+      <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 'bold', color: '#6d28d9' }}>🔍 Confronto con Commercialista</h3>
         </div>
-        <div className="card-content">
+        <div style={{ marginTop: 16 }}>
           <p style={{ fontSize: 14, color: '#64748b', marginBottom: 16 }}>
             Inserisci i valori calcolati dal tuo commercialista per verificare eventuali discrepanze.
           </p>
