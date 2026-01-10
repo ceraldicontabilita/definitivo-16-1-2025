@@ -1119,152 +1119,7 @@ async def import_pos(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============== IMPORT CORRISPETTIVI ==============
-
-@router.post("/import-corrispettivi")
-async def import_corrispettivi(
-    file: UploadFile = File(..., description="File Excel con corrispettivi")
-) -> Dict[str, Any]:
-    """
-    Importa corrispettivi giornalieri da file Excel.
-    
-    FORMATO DEFINITIVO (XLSX del registratore di cassa):
-    - Id invio
-    - Matricola dispositivo
-    - Data e ora rilevazione (datetime)
-    - Data e ora trasmissione (datetime)
-    - Ammontare delle vendite (totale in euro)
-    - Imponibile vendite (totale in euro)
-    - Imposta vendite (totale in euro)
-    - Periodo di inattivita' da
-    - Periodo di inattivita' a
-    """
-    import pandas as pd
-    
-    if not file.filename.lower().endswith(('.xlsx', '.xls', '.csv')):
-        raise HTTPException(status_code=400, detail="Solo file Excel o CSV supportati")
-    
-    content = await file.read()
-    db = Database.get_db()
-    now = datetime.utcnow().isoformat()
-    
-    results = {
-        "imported": 0,
-        "skipped": 0,
-        "errors": [],
-        "corrispettivi": []
-    }
-    
-    try:
-        if file.filename.lower().endswith('.csv'):
-            for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
-                try:
-                    df = pd.read_csv(io.BytesIO(content), sep=';', encoding=encoding)
-                    break
-                except:
-                    continue
-        else:
-            df = pd.read_excel(io.BytesIO(content))
-        
-        logger.info(f"Corrispettivi - Colonne trovate: {list(df.columns)}")
-        
-        for idx, row in df.iterrows():
-            try:
-                # Data e ora rilevazione - colonna esatta
-                data_val = row.get('Data e ora rilevazione')
-                if pd.isna(data_val):
-                    results["skipped"] += 1
-                    continue
-                
-                # Se è datetime, formattalo
-                if hasattr(data_val, 'strftime'):
-                    data = data_val.strftime('%Y-%m-%d')
-                else:
-                    data = parse_italian_date(str(data_val))
-                
-                if not data:
-                    results["skipped"] += 1
-                    continue
-                
-                # Ammontare delle vendite (totale in euro) - colonna esatta
-                totale_val = row.get('Ammontare delle vendite (totale in euro)', 0)
-                if pd.isna(totale_val):
-                    totale_val = 0
-                totale = float(totale_val) if isinstance(totale_val, (int, float)) else parse_italian_amount(str(totale_val))
-                
-                # Imponibile vendite (totale in euro) - colonna esatta
-                imponibile_val = row.get('Imponibile vendite (totale in euro)', 0)
-                if pd.isna(imponibile_val):
-                    imponibile_val = 0
-                imponibile = float(imponibile_val) if isinstance(imponibile_val, (int, float)) else parse_italian_amount(str(imponibile_val))
-                
-                # Imposta vendite (totale in euro) - colonna esatta
-                imposta_val = row.get('Imposta vendite (totale in euro)', 0)
-                if pd.isna(imposta_val):
-                    imposta_val = 0
-                imposta = float(imposta_val) if isinstance(imposta_val, (int, float)) else parse_italian_amount(str(imposta_val))
-                
-                # Se totale è 0 ma abbiamo imponibile/imposta, calcolalo
-                if totale == 0 and (imponibile > 0 or imposta > 0):
-                    totale = imponibile + imposta
-                
-                # Salta righe con totale 0
-                if totale <= 0:
-                    results["skipped"] += 1
-                    continue
-                
-                # CONTROLLO DUPLICATI
-                existing_corr = await db[COLLECTION_PRIMA_NOTA_CASSA].find_one({
-                    "data": data,
-                    "categoria": "Corrispettivi"
-                })
-                
-                if existing_corr:
-                    results["skipped"] += 1
-                    results["errors"].append({"row": idx + 2, "error": f"Duplicato: corrispettivo del {data}"})
-                    continue
-                
-                # Corrispettivi = ENTRATA in cassa
-                movimento = {
-                    "id": str(uuid.uuid4()),
-                    "data": data,
-                    "tipo": "entrata",
-                    "importo": totale,
-                    "descrizione": f"Corrispettivo giornaliero del {data}",
-                    "categoria": "Corrispettivi",
-                    "source": "xlsx_import",
-                    "imponibile": imponibile,
-                    "imposta": imposta,
-                    "filename": file.filename,
-                    "created_at": now
-                }
-                
-                await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento)
-                
-                results["imported"] += 1
-                results["corrispettivi"].append({
-                    "data": data,
-                    "importo": totale,
-                    "imponibile": imponibile,
-                    "imposta": imposta
-                })
-                
-            except Exception as e:
-                results["errors"].append({"row": idx + 2, "error": str(e)})
-        
-        return {
-            "success": True,
-            "message": f"Importati {results['imported']} corrispettivi",
-            **results
-        }
-        
-    except Exception as e:
-        logger.error(f"Error importing corrispettivi: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-
-# ============== IMPORT CORRISPETTIVI XML ==============
+# ============== IMPORT CORRISPETTIVI XML (NUOVA LOGICA 2026) ==============
 
 @router.post("/import-corrispettivi-xml")
 async def import_corrispettivi_xml(
@@ -1273,13 +1128,21 @@ async def import_corrispettivi_xml(
     """
     Importa corrispettivi da file XML del registratore telematico.
     
+    NUOVA LOGICA (dal 2026):
+    1. I corrispettivi vengono inseriti MANUALMENTE in Prima Nota (importo lordo)
+    2. L'XML serve SOLO per popolare i dettagli IVA
+    
+    COMPORTAMENTO:
+    - Se esiste già un corrispettivo per quella data in Prima Nota:
+      → Aggiorna SOLO i campi IVA (dettaglio_iva, imponibile, imposta, pagato_contanti, pagato_elettronico)
+      → NON tocca l'importo già inserito manualmente
+    - Se NON esiste corrispettivo per quella data:
+      → Crea nuovo movimento da XML (come fallback)
+    
     Struttura XML:
     - DataOraRilevazione: data/ora del corrispettivo
     - DatiRT/Riepilogo: dettaglio per aliquota IVA (AliquotaIVA, Imposta, Ammontare)
     - DatiRT/Totali: PagatoContanti, PagatoElettronico
-    
-    LORDO = PagatoContanti + PagatoElettronico
-    (viene salvato anche il dettaglio IVA per calcoli fiscali)
     """
     import xml.etree.ElementTree as ET
     
@@ -1291,23 +1154,16 @@ async def import_corrispettivi_xml(
     now = datetime.utcnow().isoformat()
     
     results = {
-        "imported": 0,
+        "aggiornati": 0,
+        "creati": 0,
         "skipped": 0,
         "errors": [],
-        "corrispettivi": []
+        "dettagli": []
     }
     
     try:
         # Parse XML
         root = ET.fromstring(content)
-        
-        # Trova namespace
-        ns = {}
-        for elem in root.iter():
-            if '}' in elem.tag:
-                ns_url = elem.tag.split('}')[0] + '}'
-                ns['n1'] = ns_url.replace('{', '').replace('}', '')
-                break
         
         # Estrai DataOraRilevazione
         data_elem = root.find('.//{*}DataOraRilevazione')
@@ -1318,8 +1174,7 @@ async def import_corrispettivi_xml(
             raise HTTPException(status_code=400, detail="DataOraRilevazione non trovata nell'XML")
         
         # Parse data (formato: 2025-01-03T21:50:57+01:00)
-        data_str = data_elem.text[:10]  # Prendi solo YYYY-MM-DD
-        data = data_str
+        data = data_elem.text[:10]  # Prendi solo YYYY-MM-DD
         
         # Estrai Totali
         totali_elem = root.find('.//{*}Totali')
@@ -1338,17 +1193,7 @@ async def import_corrispettivi_xml(
             if pe_elem is not None and pe_elem.text:
                 pagato_elettronico = float(pe_elem.text)
         
-        # LORDO = somma pagamenti
-        totale_lordo = pagato_contanti + pagato_elettronico
-        
-        if totale_lordo <= 0:
-            results["skipped"] += 1
-            results["errors"].append({"error": f"Totale lordo = 0 per data {data}"})
-            return {
-                "success": False,
-                "message": "Nessun corrispettivo valido trovato",
-                **results
-            }
+        totale_xml = pagato_contanti + pagato_elettronico
         
         # Estrai dettaglio IVA dai Riepilogo
         dettaglio_iva = []
@@ -1384,40 +1229,89 @@ async def import_corrispettivi_xml(
                 totale_imponibile += ammontare
                 totale_imposta += imposta
         
-        # CONTROLLO DUPLICATI per data + importo
+        # CERCA corrispettivo esistente per quella data
         existing = await db[COLLECTION_PRIMA_NOTA_CASSA].find_one({
             "data": data,
-            "importo": {"$gte": totale_lordo - 0.01, "$lte": totale_lordo + 0.01},
             "categoria": "Corrispettivi"
         })
         
         if existing:
-            results["skipped"] += 1
-            results["errors"].append({"error": f"Duplicato: corrispettivo del {data} importo €{totale_lordo}"})
+            # AGGIORNA solo i campi IVA - NON toccare l'importo!
+            update_data = {
+                "pagato_contanti": pagato_contanti,
+                "pagato_elettronico": pagato_elettronico,
+                "imponibile": totale_imponibile,
+                "imposta": totale_imposta,
+                "dettaglio_iva": dettaglio_iva,
+                "xml_filename": file.filename,
+                "xml_imported_at": now,
+                "iva_popolata": True
+            }
+            
+            await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
+                {"id": existing["id"]},
+                {"$set": update_data}
+            )
+            
+            results["aggiornati"] += 1
+            results["dettagli"].append({
+                "data": data,
+                "azione": "AGGIORNATO",
+                "importo_mantenuto": existing.get("importo"),
+                "iva_aggiunta": totale_imposta,
+                "imponibile_aggiunto": totale_imponibile
+            })
+            
             return {
-                "success": False,
-                "message": f"Corrispettivo già presente per il {data}",
+                "success": True,
+                "message": f"Corrispettivo del {data} aggiornato con dettagli IVA",
+                "azione": "aggiornato",
                 **results
             }
         
-        # Corrispettivi = ENTRATA in cassa (LORDO)
-        movimento = {
-            "id": str(uuid.uuid4()),
-            "data": data,
-            "tipo": "entrata",
-            "importo": totale_lordo,  # LORDO
-            "descrizione": f"Corrispettivo giornaliero del {data}",
-            "categoria": "Corrispettivi",
-            "source": "xml_import",
-            "pagato_contanti": pagato_contanti,
-            "pagato_elettronico": pagato_elettronico,
-            "imponibile": totale_imponibile,
-            "imposta": totale_imposta,
-            "dettaglio_iva": dettaglio_iva,
-            "filename": file.filename,
-            "created_at": now
-        }
+        else:
+            # CREA nuovo movimento (fallback se non inserito manualmente)
+            movimento = {
+                "id": str(uuid.uuid4()),
+                "data": data,
+                "tipo": "entrata",
+                "importo": totale_xml,  # LORDO da XML
+                "descrizione": f"Corrispettivo giornaliero del {data}",
+                "categoria": "Corrispettivi",
+                "source": "xml_import",
+                "pagato_contanti": pagato_contanti,
+                "pagato_elettronico": pagato_elettronico,
+                "imponibile": totale_imponibile,
+                "imposta": totale_imposta,
+                "dettaglio_iva": dettaglio_iva,
+                "xml_filename": file.filename,
+                "iva_popolata": True,
+                "created_at": now
+            }
+            
+            await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento)
+            
+            results["creati"] += 1
+            results["dettagli"].append({
+                "data": data,
+                "azione": "CREATO",
+                "importo": totale_xml,
+                "iva": totale_imposta,
+                "imponibile": totale_imponibile
+            })
+            
+            return {
+                "success": True,
+                "message": f"Corrispettivo del {data} creato da XML (non era in Prima Nota)",
+                "azione": "creato",
+                **results
+            }
         
+    except ET.ParseError as e:
+        raise HTTPException(status_code=400, detail=f"Errore parsing XML: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error importing corrispettivi XML: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         await db[COLLECTION_PRIMA_NOTA_CASSA].insert_one(movimento)
         
         results["imported"] = 1
