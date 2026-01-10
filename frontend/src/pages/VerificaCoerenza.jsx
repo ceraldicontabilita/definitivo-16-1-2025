@@ -202,7 +202,7 @@ export default function VerificaCoerenza() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CreditCard className="h-4 w-4 text-green-600" />
+                  <CreditCard style={{ height: 16, width: 16, color: '#16a34a' }} />
                   Versamenti Cassa vs Banca
                 </CardTitle>
               </CardHeader>
