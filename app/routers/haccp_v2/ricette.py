@@ -111,10 +111,20 @@ async def pulisci_ingredienti_ricette():
         modificata = False
         
         for ing in ricetta.get("ingredienti", []):
-            ing_pulito = pulisci_nome_ingrediente(ing)
-            if ing_pulito != ing:
-                modificata = True
-            ingredienti_puliti.append(ing_pulito)
+            # Gli ingredienti possono essere oggetti o stringhe
+            if isinstance(ing, dict):
+                nome_originale = ing.get("nome", "")
+                nome_pulito = pulisci_nome_ingrediente(nome_originale)
+                if nome_pulito != nome_originale:
+                    modificata = True
+                    ing["nome"] = nome_pulito
+                ingredienti_puliti.append(ing)
+            else:
+                # Se è una stringa, puliscila direttamente
+                ing_pulito = pulisci_nome_ingrediente(str(ing))
+                if ing_pulito != str(ing):
+                    modificata = True
+                ingredienti_puliti.append(ing_pulito)
         
         if modificata:
             await db["ricette"].update_one(
