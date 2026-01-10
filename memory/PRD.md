@@ -129,6 +129,22 @@ Ragione Sociale;Data contabile;Data valuta;Banca;Rapporto;Importo;Divisa;Descriz
 
 ## Changelog
 
+### 2026-01-10 (Sessione 5 - MODULO HACCP COMPLETO)
+- ✅ **MODULO HACCP COMPLETAMENTE IMPLEMENTATO**
+  - Endpoint `POST /api/haccp-v2/lotti/genera-da-ricetta/{nome}` per generare lotti da ricette
+  - Calcolo automatico allergeni dagli ingredienti
+  - Numero lotto formato: `PROD-001-5pz-10012026`
+- ✅ **6 SEZIONI HACCP FRONTEND IMPLEMENTATE**
+  - `DisinfestazioneView.jsx` - Registro pest control con ANTHIRAT CONTROL S.R.L.
+  - `SanificazioneView.jsx` - Attrezzature + Apparecchi refrigeranti
+  - `TemperatureNegativeView.jsx` - Congelatori 1-12, range -22°C/-18°C
+  - `TemperaturePositiveView.jsx` - Frigoriferi 1-12, range 0°C/+4°C
+  - `AnomalieView.jsx` - Registro attrezzature in disuso/non conformità
+  - `ManualeHACCPView.jsx` - 21 sezioni con PDF + condivisione WhatsApp
+- ✅ **INTEGRAZIONE TAB HACCP**
+  - Tutti i tab HACCP funzionanti all'interno di HACCPCompleto.jsx
+  - Toggle tra sezioni HACCP senza ricaricare la pagina
+
 ### 2026-01-10 (Sessione 4 - FIX HACCP V2)
 - ✅ **MODULO HACCP V2 COMPLETAMENTE FUNZIONANTE**
   - Corretto `NameError` in `/app/app/routers/haccp_v2/ricette.py`
