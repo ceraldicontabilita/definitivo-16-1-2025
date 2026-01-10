@@ -483,7 +483,7 @@ export default function RicercaProdotti() {
                 
                 {selectedProduct?.id === p.id && suppliers.length === 0 && (
                   <div style={{ marginTop: 15, paddingTop: 15, borderTop: "1px solid #ddd" }}>
-                    <span className="small">Nessuno storico prezzi disponibile per questo prodotto.</span>
+                    <span style={smallStyle}>Nessuno storico prezzi disponibile per questo prodotto.</span>
                   </div>
                 )}
               </div>
