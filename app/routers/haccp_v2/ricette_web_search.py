@@ -131,7 +131,7 @@ L'ingrediente base (quello da cui calcolare le proporzioni) deve essere quello p
             api_key=api_key,
             session_id=f"ricetta-{uuid.uuid4()}",
             system_message=system_message
-        ).with_model("openai", "gpt-5.2")
+        ).with_model("anthropic", "claude-sonnet-4-5-20250929")
         
         response = await chat.send_message(UserMessage(text=user_prompt))
         
