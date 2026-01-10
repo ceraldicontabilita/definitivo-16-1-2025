@@ -103,11 +103,13 @@ export default function HACCPSanificazioniV2() {
           <p style={{ margin: '4px 0 0', color: '#666', fontSize: 13 }}>{AZIENDA}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={() => { let m = mese - 1, a = anno; if (m < 1) { m = 12; a--; } setMese(m); setAnno(a); }}
-            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer' }}>◀</button>
+          <button onClick={() => { if (mese > 1) setMese(mese - 1); }}
+            disabled={mese <= 1}
+            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, cursor: mese > 1 ? 'pointer' : 'not-allowed', opacity: mese <= 1 ? 0.5 : 1 }}>◀</button>
           <span style={{ fontWeight: 600, minWidth: 130, textAlign: 'center' }}>{MESI_IT[mese-1]} {anno}</span>
-          <button onClick={() => { let m = mese + 1, a = anno; if (m > 12) { m = 1; a++; } setMese(m); setAnno(a); }}
-            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer' }}>▶</button>
+          <button onClick={() => { if (mese < 12) setMese(mese + 1); }}
+            disabled={mese >= 12}
+            style={{ padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, cursor: mese < 12 ? 'pointer' : 'not-allowed', opacity: mese >= 12 ? 0.5 : 1 }}>▶</button>
           <button onClick={stampaScheda} style={{ padding: '8px 16px', background: '#2196f3', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
             🖨️ Stampa
           </button>
