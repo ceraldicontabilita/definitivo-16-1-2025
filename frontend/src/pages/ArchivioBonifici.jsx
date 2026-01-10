@@ -273,92 +273,49 @@ export default function ArchivioBonifici() {
 
   // Calcola totali
   const totaleImporto = transfers.reduce((sum, t) => sum + (t.importo || 0), 0);
-  const progressPct = uploadProgress.total > 0 ? Math.round((uploadProgress.processed / uploadProgress.total) * 100) : 0;
 
   return (
     <div style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 'bold', color: '#1e3a5f', marginBottom: 8 }}>
-        📂 Archivio Bonifici Bancari
-      </h1>
-      <p style={{ color: '#64748b', marginBottom: 24 }}>
-        Carica PDF o ZIP di bonifici bancari (supporta fino a 1500+ file), parsing automatico con deduplicazione.
-      </p>
-
-      {/* Upload Section */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-        borderRadius: 12,
-        padding: 24,
-        color: 'white',
-        marginBottom: 24
-      }}>
-        <h2 style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>📤 Upload Massivo PDF/ZIP</h2>
-        
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input
-            type="file"
-            multiple
-            accept=".pdf,.zip"
-            onChange={(e) => setFiles(Array.from(e.target.files || []))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div>
+          <h1 style={{ fontSize: 28, fontWeight: 'bold', color: '#1e3a5f', marginBottom: 8 }}>
+            📂 Archivio Bonifici Bancari
+          </h1>
+          <p style={{ color: '#64748b', margin: 0 }}>
+            Visualizzazione e gestione bonifici bancari
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a 
+            href="/import-export"
             style={{ 
-              padding: '8px 12px',
+              padding: "10px 20px",
+              background: "#3b82f6",
+              color: "white",
+              fontWeight: "bold",
               borderRadius: 8,
-              background: 'white',
-              color: '#1e3a5f',
-              flex: 1,
-              minWidth: 200
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
             }}
-            data-testid="bonifici-file-input"
-          />
-          
-          <button
-            onClick={handleUpload}
-            disabled={!files.length || uploading}
-            style={{
-              padding: '10px 20px',
-              borderRadius: 8,
-              background: uploading ? '#94a3b8' : '#22c55e',
-              color: 'white',
-              border: 'none',
-              cursor: uploading ? 'not-allowed' : 'pointer',
-              fontWeight: 'bold'
-            }}
-            data-testid="bonifici-upload-btn"
           >
-            {uploading ? '⏳ Elaborazione...' : '🚀 Avvia Import'}
+            📥 Importa Bonifici
+          </a>
+          <button
+            onClick={() => { loadTransfers(); loadSummary(); loadCount(); }}
+            style={{
+              padding: "10px 20px",
+              background: "#f5f5f5",
+              color: "#333",
+              border: "1px solid #ddd",
+              borderRadius: 8,
+              cursor: "pointer"
+            }}
+          >
+            🔄 Aggiorna
           </button>
         </div>
-
-        {files.length > 0 && !uploading && (
-          <div style={{ marginTop: 12, fontSize: 13, opacity: 0.9 }}>
-            📁 {files.length} file selezionati
-          </div>
-        )}
-
-        {/* Progress */}
-        {uploading && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ 
-              background: 'rgba(255,255,255,0.2)', 
-              borderRadius: 8, 
-              height: 8,
-              overflow: 'hidden'
-            }}>
-              <div style={{ 
-                background: '#22c55e', 
-                height: '100%', 
-                width: `${progressPct}%`,
-                transition: 'width 0.3s'
-              }} />
-            </div>
-            <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
-              {uploadProgress.processed}/{uploadProgress.total} file elaborati • 
-              Importati: {uploadProgress.imported} • 
-              Duplicati: {uploadProgress.duplicates || 0} • 
-              Errori: {uploadProgress.errors}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Stats Cards */}
