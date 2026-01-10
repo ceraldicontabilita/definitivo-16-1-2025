@@ -244,7 +244,7 @@ export default function VerificaCoerenza() {
             <Card>
               <CardHeader style={{ padding: '12px 16px' }}>
                 <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Building2 className="h-4 w-4 text-purple-600" />
+                  <Building2 style={{ height: 16, width: 16, color: '#9333ea' }} />
                   Prima Nota vs E/C
                 </CardTitle>
               </CardHeader>
