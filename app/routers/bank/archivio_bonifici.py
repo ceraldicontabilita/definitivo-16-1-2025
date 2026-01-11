@@ -1655,7 +1655,7 @@ async def riconcilia_bonifici_automatico(anno: Optional[int] = Query(None)) -> D
                 {"id": match.get("id")},
                 {"$set": {
                     "bonifico_pdf_id": bonifico.get("id"),
-                    "bonifico_pdf_file": bonifico.get("file_name"),
+                    "bonifico_pdf_file": bonifico.get("source_file") or bonifico.get("file_name"),
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }}
             )
