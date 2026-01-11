@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
-import { Package, Search, AlertTriangle, Check, RefreshCw, Edit2, Save, X, ChevronDown, Database, Eye } from 'lucide-react';
+import { Package, Search, AlertTriangle, Check, RefreshCw, Edit2, Save, X, ChevronDown, Database, Filter } from 'lucide-react';
 
 export default function DizionarioProdotti() {
   const { anno } = useAnnoGlobale();
@@ -12,6 +12,10 @@ export default function DizionarioProdotti() {
   const [soloSenzaPrezzo, setSoloSenzaPrezzo] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  
+  // Filtro fornitore
+  const [fornitori, setFornitori] = useState([]);
+  const [fornitoreFilter, setFornitoreFilter] = useState('');
   
   // Stato per modifica prodotto
   const [editingProdotto, setEditingProdotto] = useState(null);
@@ -25,11 +29,12 @@ export default function DizionarioProdotti() {
 
   useEffect(() => {
     loadStats();
+    loadFornitori();
   }, []);
 
   useEffect(() => {
     loadProdotti();
-  }, [search, soloSenzaPrezzo, limit, offset]);
+  }, [search, soloSenzaPrezzo, fornitoreFilter, limit, offset]);
 
   async function loadStats() {
     try {
