@@ -173,21 +173,45 @@ async def scan_fatture_per_prodotti(
                 quantita = float(linea.get("quantita", 1) or 1)
                 prezzo_unitario = float(linea.get("prezzo_unitario", 0) or 0)
                 prezzo_totale = float(linea.get("prezzo_totale", 0) or prezzo_unitario * quantita)
+                unita_misura = linea.get("unita_misura", "").upper().strip()
             except (ValueError, TypeError):
                 continue
             
-            # Parse peso dalla descrizione
+            # Parse peso dalla descrizione (dimensione confezione)
             peso_info = parse_peso_da_descrizione(descrizione)
             
             # Chiave univoca prodotto
             nome_norm = normalizza_nome_prodotto(descrizione)
             prodotto_key = f"{supplier_id}_{nome_norm}"
             
-            # Calcola prezzo al kg/l se abbiamo il peso
+            # LOGICA PREZZO AL KG CORRETTA
+            # Se unità misura è KG/LT, il prezzo unitario È GIÀ al kg/lt
             prezzo_per_kg = None
-            if peso_info["peso_grammi"] and prezzo_unitario > 0:
-                # prezzo_unitario è per 1 unità che pesa peso_grammi
+            peso_grammi_effettivo = None
+            
+            if unita_misura in ["KG", "KGM"]:
+                # Prezzo unitario è già €/kg
+                prezzo_per_kg = prezzo_unitario
+                peso_grammi_effettivo = quantita * 1000  # Quantità in grammi
+            elif unita_misura in ["LT", "LTR", "L"]:
+                # Prezzo unitario è già €/lt (equivalente a €/kg per liquidi)
+                prezzo_per_kg = prezzo_unitario
+                peso_grammi_effettivo = quantita * 1000
+            elif unita_misura in ["GR", "G"]:
+                # Prezzo per grammo, convertire a kg
+                prezzo_per_kg = prezzo_unitario * 1000
+                peso_grammi_effettivo = quantita
+            elif peso_info["peso_grammi"] and prezzo_unitario > 0:
+                # Fallback: usa peso estratto dalla descrizione
+                # prezzo_unitario è per 1 confezione che pesa peso_grammi
                 prezzo_per_kg = (prezzo_unitario / peso_info["peso_grammi"]) * 1000
+                peso_grammi_effettivo = peso_info["peso_grammi"] * quantita
+            elif unita_misura in ["NR", "PZ", "PCE", "EURO", ""]:
+                # Pezzi o altro - non possiamo calcolare prezzo al kg senza peso
+                # Proviamo comunque con peso dalla descrizione se disponibile
+                if peso_info["peso_grammi"]:
+                    prezzo_per_kg = (prezzo_unitario / peso_info["peso_grammi"]) * 1000
+                    peso_grammi_effettivo = peso_info["peso_grammi"] * quantita
             
             # Cerca prodotto esistente
             existing = await db[COLLECTION_DIZIONARIO].find_one({"prodotto_key": prodotto_key})
