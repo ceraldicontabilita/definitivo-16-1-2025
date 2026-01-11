@@ -1,0 +1,62 @@
+{
+  "summary": "Completed testing of Fatture AssoInvoice view feature. All features working correctly: endpoint returns HTML, Prima Nota Banca shows 'Vedi' buttons for movements with fattura_id, Gestione Assegni shows 'Vedi' buttons for assegni with fattura_collegata.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_fatture_assoinvoice.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_fatture_assoinvoice.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100%"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Fatture AssoInvoice view feature is fully functional. Test fattura_id: 43faf328-3d00-4930-9832-245085a1b56d. The endpoint /api/fatture-ricevute/fattura/{id}/view-assoinvoice searches both 'fatture_ricevute' and 'invoices' collections. Prima Nota Banca page shows 262 'Vedi' buttons for year 2025. Gestione Assegni page shows 134 'Vedi' buttons.",
+  "test_results": {
+    "backend_endpoint_view_assoinvoice": {
+      "status": "PASS",
+      "details": "Endpoint returns HTML with invoice data, print button, and proper styling"
+    },
+    "backend_endpoint_movimenti": {
+      "status": "PASS",
+      "details": "Returns movements with dettagli_riconciliazione.fattura_id for reconciled items"
+    },
+    "backend_endpoint_assegni": {
+      "status": "PASS",
+      "details": "Returns assegni with fattura_collegata field"
+    },
+    "frontend_prima_nota_banca": {
+      "status": "PASS",
+      "details": "Page loads correctly, shows 'Vedi' buttons (262 for year 2025), buttons have data-testid='view-fattura-btn-{index}'"
+    },
+    "frontend_gestione_assegni": {
+      "status": "PASS",
+      "details": "Page loads correctly, shows 'Vedi' buttons (134 total), buttons have data-testid='view-fattura-{assegno_id}'"
+    },
+    "vedi_button_functionality": {
+      "status": "PASS",
+      "details": "Button uses window.open() to open invoice in new window with correct URL pattern"
+    }
+  },
+  "features_verified": [
+    "Endpoint /api/fatture-ricevute/fattura/{id}/view-assoinvoice returns HTML with invoice",
+    "Prima Nota Banca page loads correctly with bank movements",
+    "Prima Nota Banca shows 'Vedi' button for movements with associated invoice",
+    "Gestione Assegni shows 'Vedi' button for assegni with linked invoice",
+    "Vedi button opens invoice in new window"
+  ]
+}
