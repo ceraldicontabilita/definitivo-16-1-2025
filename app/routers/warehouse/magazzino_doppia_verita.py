@@ -581,3 +581,188 @@ async def migra_da_warehouse_inventory() -> Dict[str, Any]:
         "aggiornati": aggiornati,
         "errori": errori
     }
+
+
+@router.post("/pulizia-fornitori-esclusi")
+async def pulizia_fornitori_esclusi(
+    dry_run: bool = Query(default=True, description="Se True, mostra solo anteprima senza rimuovere")
+) -> Dict[str, Any]:
+    """
+    Rimuove dal magazzino tutti i prodotti appartenenti a fornitori 
+    che hanno il flag esclude_magazzino=True.
+    
+    - dry_run=True: mostra anteprima dei prodotti che verrebbero rimossi
+    - dry_run=False: esegue la rimozione effettiva
+    """
+    db = Database.get_db()
+    
+    # 1. Trova tutti i fornitori con esclude_magazzino=True
+    fornitori_esclusi = []
+    
+    # Cerca in suppliers
+    async for s in db["suppliers"].find({"esclude_magazzino": True}, {"_id": 0}):
+        fornitori_esclusi.append({
+            "nome": s.get("ragione_sociale", ""),
+            "partita_iva": s.get("partita_iva", ""),
+            "id": s.get("id", "")
+        })
+    
+    # Cerca anche in fornitori
+    async for f in db["fornitori"].find({"esclude_magazzino": True}, {"_id": 0}):
+        nome = f.get("ragione_sociale", "")
+        # Evita duplicati
+        if not any(x["nome"] == nome for x in fornitori_esclusi):
+            fornitori_esclusi.append({
+                "nome": nome,
+                "partita_iva": f.get("partita_iva", ""),
+                "id": f.get("id", "")
+            })
+    
+    if not fornitori_esclusi:
+        return {
+            "message": "Nessun fornitore con esclude_magazzino=True trovato",
+            "fornitori_esclusi": 0,
+            "prodotti_trovati": 0,
+            "prodotti_rimossi": 0
+        }
+    
+    # 2. Estrai i nomi dei fornitori
+    nomi_fornitori = [f["nome"] for f in fornitori_esclusi if f["nome"]]
+    partite_iva = [f["partita_iva"] for f in fornitori_esclusi if f["partita_iva"]]
+    
+    # 3. Trova prodotti nel magazzino di questi fornitori
+    query_prodotti = {"$or": []}
+    
+    if nomi_fornitori:
+        query_prodotti["$or"].append({"ultimo_fornitore": {"$in": nomi_fornitori}})
+        query_prodotti["$or"].append({"fornitori": {"$in": nomi_fornitori}})
+        query_prodotti["$or"].append({"fornitore_principale": {"$in": nomi_fornitori}})
+        query_prodotti["$or"].append({"fornitore": {"$in": nomi_fornitori}})
+    
+    if partite_iva:
+        query_prodotti["$or"].append({"supplier_vat": {"$in": partite_iva}})
+        query_prodotti["$or"].append({"fornitore_piva": {"$in": partite_iva}})
+    
+    if not query_prodotti["$or"]:
+        return {
+            "message": "Nessun criterio di ricerca valido",
+            "fornitori_esclusi": len(fornitori_esclusi),
+            "prodotti_trovati": 0,
+            "prodotti_rimossi": 0
+        }
+    
+    # Cerca in warehouse_inventory
+    prodotti_wh = await db["warehouse_inventory"].find(
+        query_prodotti,
+        {"_id": 0, "id": 1, "nome": 1, "ultimo_fornitore": 1, "giacenza": 1}
+    ).to_list(10000)
+    
+    # Cerca in magazzino_doppia_verita
+    prodotti_dv = await db["magazzino_doppia_verita"].find(
+        query_prodotti,
+        {"_id": 0, "id": 1, "nome": 1, "fornitore_principale": 1, "giacenza_teorica": 1}
+    ).to_list(10000)
+    
+    # 4. Se dry_run, restituisci solo l'anteprima
+    if dry_run:
+        return {
+            "message": "Anteprima pulizia magazzino (dry_run=True)",
+            "fornitori_esclusi": len(fornitori_esclusi),
+            "fornitori_dettaglio": fornitori_esclusi,
+            "prodotti_warehouse_inventory": len(prodotti_wh),
+            "prodotti_doppia_verita": len(prodotti_dv),
+            "totale_prodotti": len(prodotti_wh) + len(prodotti_dv),
+            "anteprima_prodotti": [
+                {"nome": p.get("nome"), "fornitore": p.get("ultimo_fornitore") or p.get("fornitore_principale"), "giacenza": p.get("giacenza") or p.get("giacenza_teorica", 0)}
+                for p in (prodotti_wh + prodotti_dv)[:50]
+            ],
+            "dry_run": True
+        }
+    
+    # 5. Esegui la rimozione effettiva
+    risultato_wh = await db["warehouse_inventory"].delete_many(query_prodotti)
+    risultato_dv = await db["magazzino_doppia_verita"].delete_many(query_prodotti)
+    
+    totale_rimossi = risultato_wh.deleted_count + risultato_dv.deleted_count
+    
+    return {
+        "message": f"Pulizia completata: rimossi {totale_rimossi} prodotti",
+        "fornitori_esclusi": len(fornitori_esclusi),
+        "fornitori_dettaglio": fornitori_esclusi,
+        "prodotti_rimossi_warehouse_inventory": risultato_wh.deleted_count,
+        "prodotti_rimossi_doppia_verita": risultato_dv.deleted_count,
+        "totale_prodotti_rimossi": totale_rimossi,
+        "dry_run": False
+    }
+
+
+@router.get("/fornitori-esclusi")
+async def get_fornitori_esclusi_magazzino() -> Dict[str, Any]:
+    """
+    Restituisce la lista di tutti i fornitori che hanno il flag esclude_magazzino=True.
+    Mostra anche il conteggio dei prodotti presenti nel magazzino per ciascuno.
+    """
+    db = Database.get_db()
+    
+    fornitori_esclusi = []
+    
+    # Cerca in suppliers
+    async for s in db["suppliers"].find({"esclude_magazzino": True}, {"_id": 0}):
+        nome = s.get("ragione_sociale", "")
+        # Conta prodotti nel magazzino
+        count_wh = await db["warehouse_inventory"].count_documents({
+            "$or": [
+                {"ultimo_fornitore": nome},
+                {"fornitori": nome}
+            ]
+        })
+        count_dv = await db["magazzino_doppia_verita"].count_documents({
+            "$or": [
+                {"fornitore_principale": nome},
+                {"fornitore": nome}
+            ]
+        })
+        fornitori_esclusi.append({
+            "id": s.get("id"),
+            "ragione_sociale": nome,
+            "partita_iva": s.get("partita_iva", ""),
+            "prodotti_warehouse_inventory": count_wh,
+            "prodotti_doppia_verita": count_dv,
+            "source": "suppliers"
+        })
+    
+    # Cerca in fornitori
+    async for f in db["fornitori"].find({"esclude_magazzino": True}, {"_id": 0}):
+        nome = f.get("ragione_sociale", "")
+        # Evita duplicati
+        if any(x["ragione_sociale"] == nome for x in fornitori_esclusi):
+            continue
+        count_wh = await db["warehouse_inventory"].count_documents({
+            "$or": [
+                {"ultimo_fornitore": nome},
+                {"fornitori": nome}
+            ]
+        })
+        count_dv = await db["magazzino_doppia_verita"].count_documents({
+            "$or": [
+                {"fornitore_principale": nome},
+                {"fornitore": nome}
+            ]
+        })
+        fornitori_esclusi.append({
+            "id": f.get("id"),
+            "ragione_sociale": nome,
+            "partita_iva": f.get("partita_iva", ""),
+            "prodotti_warehouse_inventory": count_wh,
+            "prodotti_doppia_verita": count_dv,
+            "source": "fornitori"
+        })
+    
+    totale_prodotti = sum(f["prodotti_warehouse_inventory"] + f["prodotti_doppia_verita"] for f in fornitori_esclusi)
+    
+    return {
+        "fornitori": fornitori_esclusi,
+        "totale_fornitori": len(fornitori_esclusi),
+        "totale_prodotti_da_rimuovere": totale_prodotti
+    }
+
