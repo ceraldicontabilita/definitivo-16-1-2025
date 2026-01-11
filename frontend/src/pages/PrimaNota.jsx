@@ -967,6 +967,7 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
               <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, fontSize: 11 }}>DARE</th>
               <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, fontSize: 11 }}>AVERE</th>
               <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, fontSize: 11 }}>Saldo</th>
+              <th style={{ padding: '8px 8px', textAlign: 'center', fontWeight: 600, fontSize: 11 }}>Fattura</th>
               {!readOnly && <th style={{ padding: '8px 8px', textAlign: 'center', fontWeight: 600, fontSize: 11 }}>Azioni</th>}
             </tr>
           </thead>
@@ -1014,6 +1015,32 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
                 </td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 'bold', color: mov.saldoProgressivo >= 0 ? '#166534' : '#991b1b', fontSize: 12 }}>
                   {formatEuro(mov.saldoProgressivo)}
+                </td>
+                <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                  {mov.fattura_id ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`${process.env.REACT_APP_BACKEND_URL}/api/fatture-ricevute/fattura/${mov.fattura_id}/view-assoinvoice`, '_blank');
+                      }}
+                      style={{
+                        padding: '4px 10px',
+                        background: '#2196f3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: 10,
+                        fontWeight: 'bold'
+                      }}
+                      title="Visualizza Fattura"
+                      data-testid={`view-fattura-table-${mov.id || idx}`}
+                    >
+                      📄 Vedi
+                    </button>
+                  ) : (
+                    <span style={{ color: '#9ca3af', fontSize: 10 }}>-</span>
+                  )}
                 </td>
                 {!readOnly && (
                   <td style={{ padding: '6px 8px', textAlign: 'center', whiteSpace: 'nowrap' }}>
