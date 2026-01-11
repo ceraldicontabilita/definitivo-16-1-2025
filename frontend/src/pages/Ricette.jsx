@@ -337,21 +337,6 @@ export default function Ricette() {
     }));
   }
   
-  function selectProdottoForNew(index, prodotto) {
-    setNewRicetta(prev => ({
-      ...prev,
-      ingredienti: prev.ingredienti.map((ing, i) => i === index ? {
-        ...ing,
-        nome: prodotto.descrizione,
-        prodotto_id: prodotto.id,
-        fornitore: prodotto.fornitore_nome,
-        prezzo_kg: prodotto.prezzo_per_kg
-      } : ing)
-    }));
-    setProdottiSuggestions([]);
-    setActiveIngredientIndex(null);
-  }
-
   function removeIngrediente(index) {
     setNewRicetta(prev => ({
       ...prev,
