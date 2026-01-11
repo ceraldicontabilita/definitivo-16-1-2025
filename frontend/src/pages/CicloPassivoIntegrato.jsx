@@ -706,14 +706,16 @@ export default function CicloPassivoIntegrato() {
                       <td style={styles.td}>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           {s.fattura_id && (
-                            <button 
-                              style={{ ...styles.button('secondary'), padding: '6px 10px' }}
-                              onClick={() => window.open(`/api/fatture-ricevute/fattura/${s.fattura_id}/view-assoinvoice`, '_blank')}
+                            <a 
+                              style={{ ...styles.button('secondary'), padding: '6px 10px', textDecoration: 'none' }}
+                              href={`/api/fatture-ricevute/fattura/${s.fattura_id}/view-assoinvoice`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               data-testid={`btn-pdf-${s.id}`}
                               title="Visualizza fattura"
                             >
                               📄
-                            </button>
+                            </a>
                           )}
                           <button 
                             style={styles.button('primary')}
