@@ -1508,7 +1508,7 @@ export default function Ricette() {
             {/* Footer */}
             <div style={{ padding: '14px 24px', borderTop: '1px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: '12px', color: '#64748b' }}>
-                Puoi anche digitare manualmente il nome dell'ingrediente
+                Puoi anche digitare manualmente il nome ingrediente
               </div>
               <button
                 onClick={() => setShowProdottiModal(false)}
