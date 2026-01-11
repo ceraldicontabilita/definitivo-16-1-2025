@@ -34,15 +34,15 @@ export default function PrimaNotaBanca() {
   async function loadMovimenti() {
     try {
       setLoading(true);
-      // Carica dall'estratto conto (collezione principale per movimenti banca)
-      const r = await api.get(`/api/estratto-conto/movimenti?anno=${anno}`);
-      const data = r.data?.items || r.data || [];
+      // Carica dall'estratto conto movimenti (collezione principale per movimenti banca)
+      const r = await api.get(`/api/estratto-conto-movimenti/movimenti?anno=${anno}&limit=5000`);
+      const data = r.data?.movimenti || r.data?.items || r.data || [];
       setMovimenti(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error("Error loading movimenti banca:", e);
-      // Fallback: prova prima_nota_banca
+      // Fallback: prova estratto_conto
       try {
-        const r2 = await api.get(`/api/prima-nota/banca?anno=${anno}`);
+        const r2 = await api.get(`/api/estratto-conto?anno=${anno}`);
         setMovimenti(Array.isArray(r2.data) ? r2.data : r2.data?.items || []);
       } catch {
         setMovimenti([]);
