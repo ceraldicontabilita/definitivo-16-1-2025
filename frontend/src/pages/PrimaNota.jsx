@@ -1023,7 +1023,6 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // Usa path relativo per funzionare sia in dev che in produzione
                         window.open(`/api/fatture-ricevute/fattura/${mov.fattura_id}/view-assoinvoice`, '_blank');
                       }}
                       style={{
@@ -1040,6 +1039,27 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
                       data-testid={`view-fattura-table-${mov.id || idx}`}
                     >
                       📄 Vedi
+                    </button>
+                  ) : mov.bonifico_pdf_id ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`/api/archivio-bonifici/transfers/${mov.bonifico_pdf_id}/pdf`, '_blank');
+                      }}
+                      style={{
+                        padding: '4px 10px',
+                        background: '#9c27b0',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: 10,
+                        fontWeight: 'bold'
+                      }}
+                      title="Visualizza Bonifico PDF"
+                      data-testid={`view-bonifico-table-${mov.id || idx}`}
+                    >
+                      📎 PDF
                     </button>
                   ) : (
                     <span style={{ color: '#9ca3af', fontSize: 10 }}>-</span>
