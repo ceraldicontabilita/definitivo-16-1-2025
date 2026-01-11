@@ -810,7 +810,7 @@ async def riconcilia_stipendi_automatico(anno: Optional[int] = Query(None)) -> D
         
         if dip_trovato:
             # Aggiorna l'estratto conto
-            await db["estratto_conto_movimenti"].update_one(
+            await db["estratto_conto"].update_one(
                 {"id": bonifico.get("id")},
                 {"$set": {
                     "riconciliato_salario": True,
