@@ -91,6 +91,11 @@ def fill_contract_template(template_path: str, employee_data: Dict[str, Any]) ->
             import re
             result = re.sub(r'mansioni:\s*[…\.]+\s*inquadrato', f"mansioni: {data_values['mansione']} inquadrato", result)
         
+        # Pattern 3b: "delle seguenti mansioni:" followed by placeholders
+        elif "seguenti mansioni:" in result.lower() and "…" in result:
+            import re
+            result = re.sub(r'seguenti mansioni:\s*[…\.]+', f"seguenti mansioni: {data_values['mansione']}", result, flags=re.IGNORECASE)
+        
         # Pattern 4: "livello …….." or "livello …………"
         elif "livello" in result.lower() and "…" in result:
             import re
