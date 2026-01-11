@@ -277,9 +277,9 @@ export default function PrimaNotaBanca() {
                     </td>
                     <td style={{ padding: '12px 16px' }}>{m.fornitore || "-"}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      {m.fattura_id ? (
+                      {hasFattura(m) ? (
                         <button
-                          onClick={() => openFattura(m.fattura_id)}
+                          onClick={() => openFattura(m)}
                           style={{
                             padding: '6px 12px',
                             background: '#2196f3',
