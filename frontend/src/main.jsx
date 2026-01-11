@@ -227,6 +227,7 @@ const router = createBrowserRouter([
       // Contabilità Analitica
       { path: "centri-costo", element: <LazyPage><CentriCosto /></LazyPage> },
       { path: "ricette", element: <LazyPage><Ricette /></LazyPage> },
+      { path: "dizionario-prodotti", element: <LazyPage><DizionarioProdotti /></LazyPage> },
       { path: "registro-lotti", element: <LazyPage><RegistroLotti /></LazyPage> },
       { path: "magazzino-dv", element: <LazyPage><MagazzinoDoppiaVerita /></LazyPage> },
       { path: "utile-obiettivo", element: <LazyPage><UtileObiettivo /></LazyPage> },
