@@ -968,15 +968,10 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
             {currentWithBalance.map((mov, idx) => (
               <tr 
                 key={mov.id || idx} 
-                onClick={() => setSelectedMovimento(mov)}
                 style={{ 
                   borderBottom: '1px solid #e5e7eb', 
-                  background: idx % 2 === 0 ? 'white' : '#f9fafb',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s'
+                  background: idx % 2 === 0 ? 'white' : '#f9fafb'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#f0f9ff'}
-                onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? 'white' : '#f9fafb'}
                 data-testid={`movimento-row-${mov.id || idx}`}
               >
                 <td style={{ padding: '6px 8px', fontFamily: 'monospace', fontSize: 11 }}>{formatDate(mov.data)}</td>
