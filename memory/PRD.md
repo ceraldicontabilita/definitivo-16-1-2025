@@ -408,4 +408,14 @@ Le ricette sono ora gestite dalla pagina `/ricette` (Ricette & Food Cost) con fo
   - Match parziale importi per pagamenti a rate (±10% tolleranza)
   - Score basato su data scadenza vicina al movimento
   - Risultato test: 109 movimenti riconciliati automaticamente
+- **Semplificazione Prima Nota**:
+  - Rimosso `TransactionDetailModal` (popup al click sulla riga)
+  - Rimosse righe cliccabili dalla tabella movimenti
+  - Mantenuto solo pulsante "Vedi" nella colonna Fattura che apre AssoInvoice in nuova scheda
+  - Codice ridotto di ~250 righe (1597 → 1347)
+- **Uniformità Visualizzazione Fatture**:
+  - Pulsante "📄 Vedi" in Prima Nota apre `/api/fatture-ricevute/fattura/{id}/view-assoinvoice`
+  - Pulsante "📄 PDF" in Fatture.jsx apre la stessa vista AssoInvoice
+  - Pulsante "📄 Vedi PDF" in ArchivioFattureRicevute apre AssoInvoice
+  - Template HTML migliorato per fatture senza XML content (stile blu professionale)
 
