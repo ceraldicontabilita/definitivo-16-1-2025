@@ -112,15 +112,6 @@ export default function App() {
 
   // Carica notifiche non lette all'avvio e ogni 60 secondi
   useEffect(() => {
-    const loadNotifiche = async () => {
-      try {
-        const res = await api.get('/api/haccp-completo/notifiche?solo_non_lette=true&limit=1');
-        setNotificheNonLette(res.data.non_lette || 0);
-      } catch (e) {
-        // Silently fail
-      }
-    };
-    
     // Carica alert commercialista
     const loadAlertCommercialista = async () => {
       try {
@@ -133,11 +124,7 @@ export default function App() {
       }
     };
     
-    loadNotifiche();
     loadAlertCommercialista();
-    const interval = setInterval(loadNotifiche, 60000); // ogni 60 secondi
-    
-    return () => clearInterval(interval);
   }, []);
 
   return (
