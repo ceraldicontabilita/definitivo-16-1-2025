@@ -370,6 +370,17 @@ async def api_match_fatture_cassa() -> Dict[str, Any]:
     return result
 
 
+@router.post("/match-fatture-banca")
+async def api_match_fatture_banca() -> Dict[str, Any]:
+    """
+    Cerca corrispondenze tra fatture e estratto conto bancario.
+    Match per importo e fornitore nella descrizione.
+    """
+    db = Database.get_db()
+    result = await match_fatture_con_estratto_conto(db)
+    return result
+
+
 @router.post("/fatture-to-banca")
 async def api_fatture_to_banca() -> Dict[str, Any]:
     """
