@@ -751,7 +751,7 @@ async def riconcilia_stipendi_automatico(anno: Optional[int] = Query(None)) -> D
     
     # Cerca i bonifici "VOSTRA DISPOSIZIONE" con nome dipendente non ancora riconciliati
     query = {
-        "descrizione_originale": {"$regex": "VOSTRA DISPOSIZIONE.*FAVORE|FAVORE.*", "$options": "i"},
+        "descrizione": {"$regex": "VOSTRA DISPOSIZIONE.*FAVORE|FAVORE.*", "$options": "i"},
         "$or": [
             {"riconciliato_salario": {"$exists": False}},
             {"riconciliato_salario": False}
