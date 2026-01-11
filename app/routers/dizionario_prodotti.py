@@ -208,8 +208,8 @@ async def scan_fatture_per_prodotti(
                     "descrizione": descrizione,
                     "nome_normalizzato": nome_norm,
                     "aliases": [],  # Sinonimi (es. sugna = strutto)
-                    "fornitore_id": fattura.get("supplier_id"),
-                    "fornitore_nome": fattura.get("supplier_name"),
+                    "fornitore_id": supplier_id,
+                    "fornitore_nome": supplier_name,
                     "categoria": None,  # Da compilare manualmente
                     # Peso
                     "peso_totale": peso_info["peso_totale"],
