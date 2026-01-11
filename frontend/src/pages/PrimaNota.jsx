@@ -569,12 +569,12 @@ function PrimaNotaDesktop() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 12,
+            gap: 8,
             boxShadow: activeSection === 'banca' ? '0 4px 15px rgba(37, 99, 235, 0.4)' : 'none'
           }}
         >
-          <span style={{ fontSize: 24 }}>🏦</span>
-          PRIMA NOTA BANCA {selectedYear}
+          <span style={{ fontSize: 18 }}>🏦</span>
+          BANCA {selectedYear}
         </button>
       </div>
 
