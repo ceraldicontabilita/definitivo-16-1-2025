@@ -852,7 +852,7 @@ async def riconcilia_stipendi_automatico(anno: Optional[int] = Query(None)) -> D
             non_trovati.append({
                 "data": data,
                 "importo": importo,
-                "descrizione": bonifico.get("descrizione_originale", "")[:80]
+                "descrizione": bonifico.get("descrizione", "")[:80]
             })
     
     return {
