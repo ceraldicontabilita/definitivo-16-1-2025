@@ -1050,12 +1050,18 @@ async def view_fattura_assoinvoice(fattura_id: str):
     if not fattura:
         raise HTTPException(status_code=404, detail="Fattura non trovata")
     
+    # Carica le righe della fattura dalla collezione dettaglio_righe_fatture
+    righe_fattura = await db["dettaglio_righe_fatture"].find(
+        {"fattura_id": fattura_id},
+        {"_id": 0}
+    ).sort("numero_linea", 1).to_list(1000)
+    
     # Recupera XML content
     xml_content = fattura.get("xml_content")
     
     if not xml_content:
-        # Genera HTML alternativo con i dati della fattura
-        html_content = generate_invoice_html(fattura)
+        # Genera HTML alternativo con i dati della fattura e le righe caricate
+        html_content = generate_invoice_html(fattura, righe_fattura)
         return HTMLResponse(content=html_content, status_code=200)
     
     try:
