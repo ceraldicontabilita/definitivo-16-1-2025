@@ -355,11 +355,27 @@ export default function ArchivioFatture() {
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(f.importo_totale)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>{getStatoBadge(f)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      {f.has_pdf ? (
-                        <span style={{ color: '#16a34a', fontSize: 16 }}>📎</span>
-                      ) : (
-                        <span style={{ color: '#d1d5db' }}>-</span>
-                      )}
+                      <button
+                        onClick={() => window.open(`/api/fatture-ricevute/fattura/${f.id}/view-assoinvoice`, '_blank')}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#2196f3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontSize: 11,
+                          fontWeight: 'bold',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          margin: '0 auto'
+                        }}
+                        title="Visualizza fattura in formato AssoInvoice"
+                        data-testid={`btn-pdf-${f.id}`}
+                      >
+                        📄 Vedi PDF
+                      </button>
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
