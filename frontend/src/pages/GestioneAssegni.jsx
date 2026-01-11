@@ -594,50 +594,42 @@ export default function GestioneAssegni() {
                               />
                             </div>
                           ) : (
-                            <div style={{ fontSize: 12 }}>
-                              {assegno.fatture_collegate?.length > 0 ? (
-                                <div>
-                                  {assegno.fatture_collegate.map((fc, fcIdx) => (
-                                    <div 
-                                      key={fc.id || fcIdx} 
-                                      style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: 6,
-                                        marginBottom: fcIdx < assegno.fatture_collegate.length - 1 ? 4 : 0
-                                      }}
-                                    >
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          window.open(`${process.env.REACT_APP_BACKEND_URL}/api/fatture-ricevute/fattura/${fc.id}/view-assoinvoice`, '_blank');
-                                        }}
-                                        style={{
-                                          padding: '2px 6px',
-                                          background: '#2196f3',
-                                          color: 'white',
-                                          border: 'none',
-                                          borderRadius: 4,
-                                          cursor: 'pointer',
-                                          fontSize: 10,
-                                          fontWeight: 'bold'
-                                        }}
-                                        title="Visualizza Fattura"
-                                        data-testid={`view-fattura-${assegno.id}-${fcIdx}`}
-                                      >
-                                        📄
-                                      </button>
-                                      <span style={{ fontWeight: 500 }}>{fc.numero}</span>
-                                      {fc.data && <span style={{ color: '#666' }}>{new Date(fc.data).toLocaleDateString('it-IT')}</span>}
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <>
-                                  {assegno.numero_fattura && <span style={{ fontWeight: 500 }}>{assegno.numero_fattura}</span>}
-                                  {assegno.data_fattura && <span style={{ color: '#666', marginLeft: 6 }}>{new Date(assegno.data_fattura).toLocaleDateString('it-IT')}</span>}
-                                </>
+                            <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {/* Pulsante per visualizzare fattura se collegata */}
+                              {assegno.fattura_collegata && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/fatture-ricevute/fattura/${assegno.fattura_collegata}/view-assoinvoice`, '_blank');
+                                  }}
+                                  style={{
+                                    padding: '3px 8px',
+                                    background: '#2196f3',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: 4,
+                                    cursor: 'pointer',
+                                    fontSize: 11,
+                                    fontWeight: 'bold',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 3
+                                  }}
+                                  title="Visualizza Fattura in formato AssoInvoice"
+                                  data-testid={`view-fattura-${assegno.id}`}
+                                >
+                                  📄 Vedi
+                                </button>
                               )}
+                              <div>
+                                {assegno.numero_fattura && <span style={{ fontWeight: 500 }}>{assegno.numero_fattura}</span>}
+                                {assegno.fatture_collegate?.length > 1 && <span style={{ color: '#2196f3', marginLeft: 4 }}>({assegno.fatture_collegate.length})</span>}
+                                {assegno.data_fattura && <span style={{ color: '#666', marginLeft: 6 }}>{new Date(assegno.data_fattura).toLocaleDateString('it-IT')}</span>}
+                                {/* Mostra data dalla causale se presente */}
+                                {!assegno.data_fattura && assegno.data_emissione && (
+                                  <span style={{ color: '#666', marginLeft: 6 }}>{new Date(assegno.data_emissione).toLocaleDateString('it-IT')}</span>
+                                )}
+                              </div>
                             </div>
                           )}
                         </td>
