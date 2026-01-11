@@ -52,97 +52,108 @@ def fill_contract_template(template_path: str, employee_data: Dict[str, Any]) ->
     if not nome_completo:
         nome_completo = f"{employee_data.get('cognome', '')} {employee_data.get('nome', '')}".strip()
     
-    # All values to replace - use specific markers
+    # All values to replace
     data_values = {
-        "nome_completo": nome_completo,
-        "cognome": employee_data.get("cognome", ""),
-        "nome": employee_data.get("nome", ""),
+        "nome_completo": nome_completo or "______",
+        "cognome": employee_data.get("cognome", "______"),
+        "nome": employee_data.get("nome", "______"),
         "codice_fiscale": employee_data.get("codice_fiscale", "______"),
         "data_nascita": employee_data.get("data_nascita", "______"),
-        "luogo_nascita": employee_data.get("luogo_nascita", employee_data.get("comune_nascita", "______")),
+        "luogo_nascita": employee_data.get("luogo_nascita") or employee_data.get("comune_nascita", "______"),
         "indirizzo": employee_data.get("indirizzo", "______"),
-        "mansione": employee_data.get("mansione", employee_data.get("qualifica", "______")),
+        "mansione": employee_data.get("mansione") or employee_data.get("qualifica", "______"),
         "livello": employee_data.get("livello", "______"),
-        "qualifica": employee_data.get("qualifica", employee_data.get("mansione", "______")),
-        "stipendio_orario": str(employee_data.get("stipendio_orario", employee_data.get("salary", "______"))),
-        "data_inizio": employee_data.get("data_inizio", employee_data.get("hire_date", "______")),
+        "qualifica": employee_data.get("qualifica") or employee_data.get("mansione", "______"),
+        "stipendio_orario": str(employee_data.get("stipendio_orario") or employee_data.get("salary", "______")),
+        "data_inizio": employee_data.get("data_inizio") or employee_data.get("hire_date", "______"),
         "data_fine": employee_data.get("data_fine", "______"),
     }
     
-    def replace_in_text(text: str) -> str:
-        """Replace all employee data patterns in text."""
+    def replace_placeholders(text: str) -> str:
+        """Replace ellipsis placeholders with employee data."""
         result = text
         
-        # Specific pattern replacements for the contract template
-        patterns = [
-            # Full employee line with all details
-            (r"Lavoratore:.*?nato a.*?il.*?residente in.*?con codice fiscale.*?\.",
-             f"Lavoratore: {data_values['mansione']}, {data_values['nome_completo']}, nato a {data_values['luogo_nascita']} il {data_values['data_nascita']}, residente in {data_values['indirizzo']} con codice fiscale {data_values['codice_fiscale']}."),
-            
-            # IL Sig. line
-            (r"IL Sig\. .*?è assunto",
-             f"IL Sig. {data_values['nome_completo']} è assunto"),
-            
-            # Mansioni line
-            (r"delle seguenti mansioni:.*?inquadrato",
-             f"delle seguenti mansioni: {data_values['mansione']} inquadrato"),
-            
-            # Livello
-            (r"nel livello .*?\.",
-             f"nel livello {data_values['livello']}."),
-            
-            # Qualifica
-            (r"con qualifica .*? del Ccnl",
-             f"con qualifica {data_values['qualifica']} del Ccnl"),
-            
-            # Date decorrenza
-            (r"decorre dal .*? al.*?\.",
-             f"decorre dal {data_values['data_inizio']} al {data_values['data_fine']}."),
-        ]
+        # The template uses Unicode ellipsis character (…) repeated multiple times
+        # We need to replace these patterns specifically
         
-        import re
-        for pattern, replacement in patterns:
-            result = re.sub(pattern, replacement, result, flags=re.IGNORECASE | re.DOTALL)
+        # Pattern 1: "Lavoratore: ……………, nato a …………. il ……………………, residente in ………………………………… con codice fiscale ……………………………."
+        if "Lavoratore:" in result and "…" in result:
+            # Replace the entire line
+            result = f"Lavoratore: {data_values['mansione']}, {data_values['nome_completo']}, nato a {data_values['luogo_nascita']} il {data_values['data_nascita']}, residente in {data_values['indirizzo']} con codice fiscale {data_values['codice_fiscale']}."
         
-        # Replace remaining generic placeholders
-        generic_placeholders = [
-            ("……………", "______"),
-            ("……………..", "______"),
-            ("………………", "______"),
-            ("…………", "______"),
-            ("……………………", "______"),
-            ("…………………………………", "______"),
-            ("………………………………..", "______"),
-            ("………………………", "______"),
-            ("……..", "______"),
-            ("………", "______"),
-        ]
+        # Pattern 2: "IL Sig. ……………………………. è assunto"
+        elif "IL Sig." in result and "…" in result:
+            import re
+            result = re.sub(r'IL Sig\.\s*[…\.]+\s*è assunto', f"IL Sig. {data_values['nome_completo']} è assunto", result)
         
-        for placeholder, default in generic_placeholders:
-            if placeholder in result:
-                result = result.replace(placeholder, default)
+        # Pattern 3: "mansioni: ………………………… inquadrato"
+        elif "mansioni:" in result and "…" in result:
+            import re
+            result = re.sub(r'mansioni:\s*[…\.]+\s*inquadrato', f"mansioni: {data_values['mansione']} inquadrato", result)
+        
+        # Pattern 4: "livello …….." or "livello …………"
+        elif "livello" in result.lower() and "…" in result:
+            import re
+            result = re.sub(r'livello\s*[…\.]+', f"livello {data_values['livello']}", result, flags=re.IGNORECASE)
+        
+        # Pattern 5: "qualifica …………" 
+        elif "qualifica" in result.lower() and "…" in result:
+            import re
+            result = re.sub(r'qualifica\s*[…\.]+', f"qualifica {data_values['qualifica']}", result, flags=re.IGNORECASE)
+        
+        # Pattern 6: "euro ………………… ora" (stipendio)
+        elif "euro" in result.lower() and "ora" in result.lower() and "…" in result:
+            import re
+            result = re.sub(r'euro\s*[…\.]+\s*ora', f"euro {data_values['stipendio_orario']} ora", result, flags=re.IGNORECASE)
+        
+        # Pattern 7: "decorre dal ………… al …………"
+        elif "decorre dal" in result.lower() and "…" in result:
+            import re
+            result = re.sub(r'decorre dal\s*[…\.]+\s*al\s*[…\.]+', f"decorre dal {data_values['data_inizio']} al {data_values['data_fine']}", result, flags=re.IGNORECASE)
+        
+        # Generic fallback: replace any remaining ellipsis sequences
+        elif "…" in result:
+            import re
+            # Replace sequences of 10+ ellipsis with longer values
+            result = re.sub(r'[…]{10,}', data_values['nome_completo'], result)
+            # Replace sequences of 6-9 ellipsis with medium values
+            result = re.sub(r'[…]{6,9}', data_values['mansione'], result)
+            # Replace sequences of 3-5 ellipsis with shorter values
+            result = re.sub(r'[…]{3,5}', "______", result)
         
         return result
     
     # Process all paragraphs
     for para in doc.paragraphs:
-        full_text = para.text
-        if full_text.strip():
-            new_text = replace_in_text(full_text)
-            if new_text != full_text:
-                # Replace paragraph text preserving some formatting
-                for run in para.runs:
-                    if run.text:
-                        run.text = replace_in_text(run.text)
+        if "…" in para.text or "…" in para.text:
+            # Process the entire paragraph text
+            new_text = replace_placeholders(para.text)
+            if new_text != para.text:
+                # Clear runs and set new text
+                if para.runs:
+                    # Keep first run's formatting
+                    first_run = para.runs[0]
+                    for run in para.runs[1:]:
+                        run.text = ""
+                    first_run.text = new_text
+                else:
+                    para.text = new_text
     
     # Process tables
     for table in doc.tables:
         for row in table.rows:
             for cell in row.cells:
                 for para in cell.paragraphs:
-                    for run in para.runs:
-                        if run.text:
-                            run.text = replace_in_text(run.text)
+                    if "…" in para.text:
+                        new_text = replace_placeholders(para.text)
+                        if new_text != para.text:
+                            if para.runs:
+                                first_run = para.runs[0]
+                                for run in para.runs[1:]:
+                                    run.text = ""
+                                first_run.text = new_text
+                            else:
+                                para.text = new_text
     
     # Save to temp file
     output_path = tempfile.mktemp(suffix=".docx")
