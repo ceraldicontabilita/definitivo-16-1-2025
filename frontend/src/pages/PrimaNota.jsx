@@ -131,7 +131,9 @@ function PrimaNotaDesktop() {
         tipo: m.tipo || (m.importo >= 0 ? 'entrata' : 'uscita'),
         importo: Math.abs(m.importo || 0),
         descrizione: m.descrizione || m.descrizione_originale || '',
-        categoria: m.categoria || 'Movimento bancario'
+        categoria: m.categoria || 'Movimento bancario',
+        // Preserva fattura_id dalla risposta API (può essere nel root o in dettagli_riconciliazione)
+        fattura_id: m.fattura_id || m.dettagli_riconciliazione?.fattura_id || null
       }));
       
       setBancaData({
