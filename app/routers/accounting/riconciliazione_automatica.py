@@ -51,34 +51,68 @@ def is_commissione(desc: str, imp: float) -> bool:
     return False
 
 
-def match_fornitore_descrizione(fornitore: str, descrizione: str) -> bool:
+def match_fornitore_descrizione(fornitore: str, descrizione: str, fuzzy_threshold: int = 80) -> int:
     """
     Verifica se il nome fornitore è presente nella descrizione dell'estratto conto.
-    Cerca parole chiave del nome fornitore nella descrizione.
+    Usa fuzzy matching per gestire variazioni nel nome.
+    
+    Returns:
+        - 0: Nessun match
+        - 1: Match parziale (fuzzy)
+        - 2: Match esatto (parole esatte trovate)
     """
     if not fornitore or not descrizione:
-        return False
+        return 0
     
     desc_upper = descrizione.upper()
     fornitore_upper = fornitore.upper()
     
     # Rimuovi forme giuridiche comuni per il confronto
-    forme_giuridiche = ['S.R.L.', 'SRL', 'S.P.A.', 'SPA', 'S.A.S.', 'SAS', 'S.N.C.', 'SNC', 'DI', 'DI.']
+    forme_giuridiche = ['S.R.L.', 'SRL', 'S.P.A.', 'SPA', 'S.A.S.', 'SAS', 'S.N.C.', 'SNC', 'DI', 'DI.', 'SOCIETA', 'SOCIETÀ']
     fornitore_clean = fornitore_upper
     for fg in forme_giuridiche:
         fornitore_clean = fornitore_clean.replace(fg, '')
+    
+    # Pulisci anche la descrizione
+    desc_clean = desc_upper
+    for fg in forme_giuridiche:
+        desc_clean = desc_clean.replace(fg, '')
     
     # Estrai parole significative (>3 caratteri)
     parole_fornitore = [p.strip() for p in fornitore_clean.split() if len(p.strip()) > 3]
     
     if not parole_fornitore:
-        return False
+        return 0
     
-    # Conta quante parole del fornitore sono nella descrizione
-    matches = sum(1 for p in parole_fornitore if p in desc_upper)
+    # === 1. Match esatto: cerca parole del fornitore nella descrizione ===
+    matches_esatti = sum(1 for p in parole_fornitore if p in desc_upper)
     
     # Match se almeno il 50% delle parole o almeno 1 parola significativa
-    return matches >= max(1, len(parole_fornitore) // 2)
+    if matches_esatti >= max(1, len(parole_fornitore) // 2):
+        return 2  # Match esatto
+    
+    # === 2. Fuzzy matching (se disponibile) ===
+    if FUZZY_AVAILABLE:
+        # Estrai possibili nomi dalla descrizione (sequenze di parole maiuscole)
+        possibili_nomi = re.findall(r'[A-Z][A-Z\s\.\']{3,}(?:S\.?R\.?L\.?|S\.?P\.?A\.?)?', desc_upper)
+        
+        for possibile_nome in possibili_nomi:
+            # Calcola similarità tra il fornitore e ogni possibile nome estratto
+            score = fuzz.ratio(fornitore_clean.strip(), possibile_nome.strip())
+            if score >= fuzzy_threshold:
+                return 1  # Match fuzzy
+            
+            # Prova anche partial_ratio per match parziali (es. "CERALDI" in "CERALDI GROUP")
+            partial_score = fuzz.partial_ratio(fornitore_clean.strip(), possibile_nome.strip())
+            if partial_score >= 90:  # Soglia alta per partial
+                return 1
+            
+            # Token set ratio: gestisce parole in ordine diverso
+            token_score = fuzz.token_set_ratio(fornitore_clean.strip(), possibile_nome.strip())
+            if token_score >= fuzzy_threshold:
+                return 1
+    
+    return 0
 
 
 def match_numero_fattura_descrizione(numero_fattura: str, descrizione: str) -> bool:
