@@ -920,6 +920,15 @@ export default function Admin() {
                 
                 <div>
                   <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+                    Cerca corrispondenze tra fatture e movimenti estratto conto bancario.
+                  </p>
+                  <Button onClick={matchFattureBanca} disabled={syncLoading} variant="outline" style={{ width: '100%' }}>
+                    Match Fatture ↔ Banca
+                  </Button>
+                </div>
+                
+                <div>
+                  <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
                     Imposta le fatture senza metodo pagamento a &quot;Bonifico&quot; (banca).
                   </p>
                   <Button onClick={impostaFattureBanca} disabled={syncLoading} variant="outline" style={{ width: '100%' }}>
