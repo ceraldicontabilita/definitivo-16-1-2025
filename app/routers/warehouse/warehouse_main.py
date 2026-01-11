@@ -777,3 +777,204 @@ async def repopulate_clean(
 ) -> Dict[str, Any]:
     """Clear and repopulate warehouse."""
     return {"message": "Repopulation completed", "products_added": 0}
+
+
+
+@router.post(
+    "/pulizia-fornitori-esclusi",
+    summary="Rimuovi prodotti di fornitori con esclude_magazzino"
+)
+async def pulizia_fornitori_esclusi(
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    dry_run: bool = Query(default=True, description="Se True, mostra solo anteprima senza rimuovere")
+) -> Dict[str, Any]:
+    """
+    Rimuove dal magazzino tutti i prodotti appartenenti a fornitori 
+    che hanno il flag esclude_magazzino=True.
+    
+    - dry_run=True: mostra anteprima dei prodotti che verrebbero rimossi
+    - dry_run=False: esegue la rimozione effettiva
+    """
+    db = Database.get_db()
+    
+    try:
+        # 1. Trova tutti i fornitori con esclude_magazzino=True
+        fornitori_esclusi = []
+        
+        # Cerca in suppliers
+        suppliers_cursor = db["suppliers"].find(
+            {"esclude_magazzino": True},
+            {"_id": 0, "ragione_sociale": 1, "partita_iva": 1, "id": 1}
+        )
+        async for s in suppliers_cursor:
+            fornitori_esclusi.append({
+                "nome": s.get("ragione_sociale", ""),
+                "partita_iva": s.get("partita_iva", ""),
+                "id": s.get("id", "")
+            })
+        
+        # Cerca anche in fornitori
+        fornitori_cursor = db["fornitori"].find(
+            {"esclude_magazzino": True},
+            {"_id": 0, "ragione_sociale": 1, "partita_iva": 1, "id": 1}
+        )
+        async for f in fornitori_cursor:
+            nome = f.get("ragione_sociale", "")
+            # Evita duplicati
+            if not any(x["nome"] == nome for x in fornitori_esclusi):
+                fornitori_esclusi.append({
+                    "nome": nome,
+                    "partita_iva": f.get("partita_iva", ""),
+                    "id": f.get("id", "")
+                })
+        
+        if not fornitori_esclusi:
+            return {
+                "message": "Nessun fornitore con esclude_magazzino=True trovato",
+                "fornitori_esclusi": 0,
+                "prodotti_trovati": 0,
+                "prodotti_rimossi": 0
+            }
+        
+        # 2. Estrai i nomi dei fornitori
+        nomi_fornitori = [f["nome"] for f in fornitori_esclusi if f["nome"]]
+        partite_iva = [f["partita_iva"] for f in fornitori_esclusi if f["partita_iva"]]
+        
+        # 3. Trova prodotti nel magazzino di questi fornitori
+        query_prodotti = {"$or": []}
+        
+        if nomi_fornitori:
+            query_prodotti["$or"].append({"ultimo_fornitore": {"$in": nomi_fornitori}})
+            query_prodotti["$or"].append({"fornitori": {"$in": nomi_fornitori}})
+            query_prodotti["$or"].append({"supplier_name": {"$in": nomi_fornitori}})
+        
+        if partite_iva:
+            query_prodotti["$or"].append({"supplier_vat": {"$in": partite_iva}})
+            query_prodotti["$or"].append({"fornitore_partita_iva": {"$in": partite_iva}})
+        
+        if not query_prodotti["$or"]:
+            return {
+                "message": "Nessun criterio di ricerca valido",
+                "fornitori_esclusi": len(fornitori_esclusi),
+                "prodotti_trovati": 0,
+                "prodotti_rimossi": 0
+            }
+        
+        # Cerca in warehouse_inventory
+        prodotti_cursor = db["warehouse_inventory"].find(
+            query_prodotti,
+            {"_id": 0, "id": 1, "nome": 1, "ultimo_fornitore": 1, "giacenza": 1}
+        )
+        prodotti_da_rimuovere = await prodotti_cursor.to_list(10000)
+        
+        # Cerca anche in magazzino_doppia_verita
+        prodotti_cursor2 = db["magazzino_doppia_verita"].find(
+            query_prodotti,
+            {"_id": 0, "id": 1, "nome": 1, "fornitore": 1, "giacenza": 1}
+        )
+        prodotti_doppia_verita = await prodotti_cursor2.to_list(10000)
+        
+        # 4. Se dry_run, restituisci solo l'anteprima
+        if dry_run:
+            return {
+                "message": "Anteprima pulizia magazzino (dry_run=True)",
+                "fornitori_esclusi": len(fornitori_esclusi),
+                "fornitori_dettaglio": fornitori_esclusi,
+                "prodotti_warehouse_inventory": len(prodotti_da_rimuovere),
+                "prodotti_doppia_verita": len(prodotti_doppia_verita),
+                "totale_prodotti": len(prodotti_da_rimuovere) + len(prodotti_doppia_verita),
+                "anteprima_prodotti": [
+                    {"nome": p.get("nome"), "fornitore": p.get("ultimo_fornitore") or p.get("fornitore"), "giacenza": p.get("giacenza", 0)}
+                    for p in (prodotti_da_rimuovere + prodotti_doppia_verita)[:50]
+                ],
+                "dry_run": True
+            }
+        
+        # 5. Esegui la rimozione effettiva
+        risultato_wh = await db["warehouse_inventory"].delete_many(query_prodotti)
+        risultato_dv = await db["magazzino_doppia_verita"].delete_many(query_prodotti)
+        
+        totale_rimossi = risultato_wh.deleted_count + risultato_dv.deleted_count
+        
+        logger.info(f"Pulizia magazzino completata: rimossi {totale_rimossi} prodotti da {len(fornitori_esclusi)} fornitori esclusi")
+        
+        return {
+            "message": f"Pulizia completata: rimossi {totale_rimossi} prodotti",
+            "fornitori_esclusi": len(fornitori_esclusi),
+            "fornitori_dettaglio": fornitori_esclusi,
+            "prodotti_rimossi_warehouse_inventory": risultato_wh.deleted_count,
+            "prodotti_rimossi_doppia_verita": risultato_dv.deleted_count,
+            "totale_prodotti_rimossi": totale_rimossi,
+            "dry_run": False
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore pulizia magazzino: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get(
+    "/fornitori-esclusi-magazzino",
+    summary="Lista fornitori con esclude_magazzino"
+)
+async def get_fornitori_esclusi_magazzino(
+    current_user: Dict[str, Any] = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    Restituisce la lista di tutti i fornitori che hanno il flag esclude_magazzino=True.
+    Mostra anche il conteggio dei prodotti presenti nel magazzino per ciascuno.
+    """
+    db = Database.get_db()
+    
+    try:
+        fornitori_esclusi = []
+        
+        # Cerca in suppliers
+        async for s in db["suppliers"].find({"esclude_magazzino": True}, {"_id": 0}):
+            nome = s.get("ragione_sociale", "")
+            # Conta prodotti nel magazzino
+            count = await db["warehouse_inventory"].count_documents({
+                "$or": [
+                    {"ultimo_fornitore": nome},
+                    {"fornitori": nome}
+                ]
+            })
+            fornitori_esclusi.append({
+                "id": s.get("id"),
+                "ragione_sociale": nome,
+                "partita_iva": s.get("partita_iva", ""),
+                "prodotti_in_magazzino": count,
+                "source": "suppliers"
+            })
+        
+        # Cerca in fornitori
+        async for f in db["fornitori"].find({"esclude_magazzino": True}, {"_id": 0}):
+            nome = f.get("ragione_sociale", "")
+            # Evita duplicati
+            if any(x["ragione_sociale"] == nome for x in fornitori_esclusi):
+                continue
+            count = await db["warehouse_inventory"].count_documents({
+                "$or": [
+                    {"ultimo_fornitore": nome},
+                    {"fornitori": nome}
+                ]
+            })
+            fornitori_esclusi.append({
+                "id": f.get("id"),
+                "ragione_sociale": nome,
+                "partita_iva": f.get("partita_iva", ""),
+                "prodotti_in_magazzino": count,
+                "source": "fornitori"
+            })
+        
+        totale_prodotti = sum(f["prodotti_in_magazzino"] for f in fornitori_esclusi)
+        
+        return {
+            "fornitori": fornitori_esclusi,
+            "totale_fornitori": len(fornitori_esclusi),
+            "totale_prodotti_da_rimuovere": totale_prodotti
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore recupero fornitori esclusi: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
