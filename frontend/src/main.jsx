@@ -172,11 +172,6 @@ const LazyPage = ({ children }) => (
 );
 
 const router = createBrowserRouter([
-  // Portale HACCP standalone (login con codice 141574)
-  {
-    path: "/cucina",
-    element: <LazyPage><HACCPPortal /></LazyPage>
-  },
   // Gestione Riservata standalone (login con codice 507488)
   {
     path: "/gestione-riservata",
@@ -199,39 +194,6 @@ const router = createBrowserRouter([
       { path: "estratto-conto", element: <LazyPage><EstrattoContoImport /></LazyPage> },
       { path: "magazzino", element: <LazyPage><Magazzino /></LazyPage> },
       { path: "ricerca-prodotti", element: <LazyPage><RicercaProdotti /></LazyPage> },
-      { path: "haccp", element: <LazyPage><HACCPSection /></LazyPage> },
-      { path: "haccp/dashboard", element: <LazyPage><HACCPDashboard /></LazyPage> },
-      { path: "haccp/temperature-frigoriferi", element: <LazyPage><HACCPFrigoriferiV2 /></LazyPage> },
-      { path: "haccp/temperature-congelatori", element: <LazyPage><HACCPCongelatoriV2 /></LazyPage> },
-      { path: "haccp/sanificazioni", element: <LazyPage><HACCPSanificazioniV2 /></LazyPage> },
-      { path: "haccp/equipaggiamenti", element: <LazyPage><HACCPEquipaggiamenti /></LazyPage> },
-      { path: "haccp/scadenzario", element: <LazyPage><HACCPScadenzario /></LazyPage> },
-      { path: "haccp/analytics", element: <LazyPage><HACCPAnalytics /></LazyPage> },
-      { path: "haccp/notifiche", element: <LazyPage><HACCPNotifiche /></LazyPage> },
-      { path: "haccp/disinfestazioni", element: <LazyPage><HACCP /></LazyPage> },
-      { path: "haccp/tracciabilita", element: <LazyPage><HACCPTracciabilita /></LazyPage> },
-      { path: "haccp/oli-frittura", element: <LazyPage><HACCP /></LazyPage> },
-      { path: "haccp/non-conformita", element: <LazyPage><HACCPNonConformita /></LazyPage> },
-      // HACCP V2 - Nuovo Sistema Completo
-      { path: "haccp/ricette", element: <LazyPage><HACCPCompleto /></LazyPage> },
-      { path: "haccp/materie-prime", element: <LazyPage><HACCPCompleto /></LazyPage> },
-      { path: "haccp/lotti", element: <LazyPage><HACCPCompleto /></LazyPage> },
-      { path: "haccp-v2", element: <LazyPage><HACCPDashboardV2 /></LazyPage> },
-      { path: "haccp-v2/frigoriferi", element: <LazyPage><HACCPFrigoriferiV2 /></LazyPage> },
-      { path: "haccp-v2/congelatori", element: <LazyPage><HACCPCongelatoriV2 /></LazyPage> },
-      { path: "haccp-v2/sanificazioni", element: <LazyPage><HACCPSanificazioniV2 /></LazyPage> },
-      { path: "haccp-v2/manuale", element: <LazyPage><HACCPManualeV2 /></LazyPage> },
-      { path: "haccp-v2/disinfestazione", element: <LazyPage><HACCP /></LazyPage> },
-      { path: "haccp-v2/anomalie", element: <LazyPage><HACCP /></LazyPage> },
-      { path: "haccp-v2/lotti", element: <LazyPage><HACCPCompleto /></LazyPage> },
-      { path: "haccp-v2/materie-prime", element: <LazyPage><HACCPCompleto /></LazyPage> },
-      { path: "haccp-v2/ricette", element: <LazyPage><HACCPCompleto /></LazyPage> },
-      { path: "haccp-v2/non-conformita", element: <LazyPage><HACCPNonConformita /></LazyPage> },
-      { path: "haccp-v2/ricettario", element: <LazyPage><RicettarioDinamico /></LazyPage> },
-      { path: "haccp-v2/sanificazione", element: <LazyPage><HACCPSanificazione /></LazyPage> },
-      { path: "haccp-v2/temperature", element: <LazyPage><HACCPTemperature /></LazyPage> },
-      { path: "libro-allergeni", element: <LazyPage><LibroAllergeni /></LazyPage> },
-      { path: "ricettario-dinamico", element: <LazyPage><RicettarioDinamico /></LazyPage> },
       { path: "dipendenti", element: <LazyPage><GestioneDipendenti /></LazyPage> },
       { path: "cedolini", element: <LazyPage><Cedolini /></LazyPage> },
       { path: "f24", element: <LazyPage><F24 /></LazyPage> },
