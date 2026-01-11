@@ -597,11 +597,11 @@ export default function GestioneAssegni() {
                             <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
                               {/* Pulsante per visualizzare fattura se collegata */}
                               {assegno.fattura_collegata && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.open(`/api/fatture-ricevute/fattura/${assegno.fattura_collegata}/view-assoinvoice`, '_blank');
-                                  }}
+                                <a
+                                  href={`/api/fatture-ricevute/fattura/${assegno.fattura_collegata}/view-assoinvoice`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
                                   style={{
                                     padding: '3px 8px',
                                     background: '#2196f3',
@@ -611,15 +611,16 @@ export default function GestioneAssegni() {
                                     cursor: 'pointer',
                                     fontSize: 11,
                                     fontWeight: 'bold',
-                                    display: 'flex',
+                                    display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: 3
+                                    gap: 3,
+                                    textDecoration: 'none'
                                   }}
                                   title="Visualizza Fattura in formato AssoInvoice"
                                   data-testid={`view-fattura-${assegno.id}`}
                                 >
                                   📄 Vedi
-                                </button>
+                                </a>
                               )}
                               <div>
                                 {assegno.numero_fattura && <span style={{ fontWeight: 500 }}>{assegno.numero_fattura}</span>}
