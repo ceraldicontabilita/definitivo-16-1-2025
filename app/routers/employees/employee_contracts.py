@@ -81,10 +81,19 @@ def fill_contract_template(template_path: str, employee_data: Dict[str, Any]) ->
             # Replace the entire line
             result = f"Lavoratore: {data_values['mansione']}, {data_values['nome_completo']}, nato a {data_values['luogo_nascita']} il {data_values['data_nascita']}, residente in {data_values['indirizzo']} con codice fiscale {data_values['codice_fiscale']}."
         
-        # Pattern 2: "IL Sig. ……………………………. è assunto"
-        elif "IL Sig." in result and "…" in result:
+        # Pattern 2: "IL Sig. ……………………………. è assunto" - this line contains EVERYTHING
+        elif "IL Sig." in result and "è assunto" in result and "…" in result:
             import re
+            # Replace name
             result = re.sub(r'IL Sig\.\s*[…\.]+\s*è assunto', f"IL Sig. {data_values['nome_completo']} è assunto", result)
+            # Replace mansioni
+            result = re.sub(r'mansioni:\s*[…\.]+\s*inquadrato', f"mansioni: {data_values['mansione']} inquadrato", result, flags=re.IGNORECASE)
+            # Replace livello
+            result = re.sub(r'livello\s*[…\.]+\s*e con', f"livello {data_values['livello']} e con", result, flags=re.IGNORECASE)
+            # Replace qualifica
+            result = re.sub(r'qualifica\s*[…\.]+\s*del', f"qualifica {data_values['qualifica']} del", result, flags=re.IGNORECASE)
+            # Replace date decorrenza
+            result = re.sub(r'decorre dal\s*[…\.]+\s*al\s*[…\.]+', f"decorre dal {data_values['data_inizio']} al {data_values['data_fine']}", result, flags=re.IGNORECASE)
         
         # Pattern 3: "mansioni: ………………………… inquadrato"
         elif "mansioni:" in result and "…" in result:
