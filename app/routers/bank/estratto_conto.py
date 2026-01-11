@@ -710,3 +710,180 @@ async def export_estratto_conto_excel(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+
+# ==================== RICONCILIAZIONE STIPENDI ====================
+
+@router.post("/riconcilia-stipendi")
+async def riconcilia_stipendi_automatico(anno: Optional[int] = Query(None)) -> Dict[str, Any]:
+    """
+    Riconcilia automaticamente i bonifici stipendio con la prima nota salari.
+    Cerca i movimenti "VOSTRA DISPOSIZIONE" con nomi di dipendenti e li collega.
+    """
+    db = Database.get_db()
+    
+    # Carica tutti i dipendenti
+    dipendenti = await db["dipendenti"].find({}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1}).to_list(1000)
+    dipendenti_map = {}
+    for d in dipendenti:
+        nome_completo = f"{d.get('cognome', '')} {d.get('nome', '')}".strip().upper()
+        nome_inv = f"{d.get('nome', '')} {d.get('cognome', '')}".strip().upper()
+        if nome_completo:
+            dipendenti_map[nome_completo] = d
+        if nome_inv:
+            dipendenti_map[nome_inv] = d
+    
+    # Cerca i bonifici "VOSTRA DISPOSIZIONE" non ancora riconciliati
+    query = {
+        "descrizione": {"$regex": "VOSTRA DISPOSIZIONE|VS\\.DISP", "$options": "i"},
+        "tipo": "uscita",
+        "$or": [
+            {"riconciliato_salario": {"$exists": False}},
+            {"riconciliato_salario": False}
+        ]
+    }
+    if anno:
+        query["data"] = {"$regex": f"^{anno}"}
+    
+    bonifici = await db["estratto_conto"].find(query, {"_id": 0}).to_list(5000)
+    
+    riconciliati = 0
+    non_trovati = []
+    
+    for bonifico in bonifici:
+        desc = bonifico.get("descrizione", "").upper()
+        importo = abs(bonifico.get("importo", 0))
+        data = bonifico.get("data", "")
+        
+        # Estrai nome dopo "FAVORE"
+        nome_trovato = None
+        dip_trovato = None
+        
+        if "FAVORE" in desc:
+            idx = desc.find("FAVORE")
+            after = desc[idx + 7:].strip()
+            # Pulisci fino a separatori comuni
+            for sep in [" - ", " ADD", " NOTPROVIDE", "/"]:
+                if sep in after:
+                    after = after[:after.find(sep)].strip()
+                    break
+            
+            # Cerca il dipendente
+            after_clean = after.strip()
+            if after_clean in dipendenti_map:
+                dip_trovato = dipendenti_map[after_clean]
+                nome_trovato = after_clean
+            else:
+                # Cerca con match parziale
+                for nome, dip in dipendenti_map.items():
+                    if nome in after_clean or after_clean in nome:
+                        dip_trovato = dip
+                        nome_trovato = nome
+                        break
+        
+        if dip_trovato:
+            # Aggiorna l'estratto conto
+            await db["estratto_conto"].update_one(
+                {"id": bonifico.get("id")},
+                {"$set": {
+                    "riconciliato_salario": True,
+                    "dipendente_id": dip_trovato.get("id"),
+                    "dipendente_nome": f"{dip_trovato.get('cognome', '')} {dip_trovato.get('nome', '')}".strip(),
+                    "categoria": "Stipendi",
+                    "updated_at": datetime.utcnow().isoformat()
+                }}
+            )
+            
+            # Cerca/aggiorna prima nota salari corrispondente
+            mese_bonifico = int(data[5:7]) if len(data) >= 7 else None
+            anno_bonifico = int(data[:4]) if len(data) >= 4 else None
+            
+            if mese_bonifico and anno_bonifico:
+                pns = await db["prima_nota_salari"].find_one({
+                    "dipendente": {"$regex": dip_trovato.get("cognome", ""), "$options": "i"},
+                    "anno": anno_bonifico,
+                    "mese": mese_bonifico,
+                    "tipo": "bonifico"
+                })
+                
+                if pns:
+                    await db["prima_nota_salari"].update_one(
+                        {"id": pns.get("id")},
+                        {"$set": {
+                            "riconciliato": True,
+                            "estratto_conto_id": bonifico.get("id"),
+                            "importo_bonifico": importo,
+                            "updated_at": datetime.utcnow().isoformat()
+                        }}
+                    )
+            
+            riconciliati += 1
+        else:
+            non_trovati.append({
+                "data": data,
+                "importo": importo,
+                "descrizione": bonifico.get("descrizione", "")[:80]
+            })
+    
+    return {
+        "success": True,
+        "riconciliati": riconciliati,
+        "non_trovati_count": len(non_trovati),
+        "non_trovati_sample": non_trovati[:10],
+        "message": f"Riconciliati {riconciliati} bonifici stipendio"
+    }
+
+
+@router.get("/movimenti-stipendi")
+async def get_movimenti_stipendi(
+    anno: Optional[int] = Query(None),
+    solo_non_riconciliati: bool = Query(False)
+) -> Dict[str, Any]:
+    """
+    Restituisce i movimenti dell'estratto conto che sembrano essere stipendi.
+    """
+    db = Database.get_db()
+    
+    query = {
+        "descrizione": {"$regex": "VOSTRA DISPOSIZIONE|VS\\.DISP", "$options": "i"},
+        "tipo": "uscita"
+    }
+    
+    if anno:
+        query["data"] = {"$regex": f"^{anno}"}
+    
+    if solo_non_riconciliati:
+        query["$or"] = [
+            {"riconciliato_salario": {"$exists": False}},
+            {"riconciliato_salario": False}
+        ]
+    
+    movimenti = await db["estratto_conto"].find(query, {"_id": 0}).sort("data", -1).to_list(1000)
+    
+    # Raggruppa per dipendente se riconciliato
+    per_dipendente = {}
+    non_riconciliati = []
+    
+    for m in movimenti:
+        if m.get("riconciliato_salario") and m.get("dipendente_nome"):
+            nome = m.get("dipendente_nome")
+            if nome not in per_dipendente:
+                per_dipendente[nome] = {"count": 0, "totale": 0, "movimenti": []}
+            per_dipendente[nome]["count"] += 1
+            per_dipendente[nome]["totale"] += abs(m.get("importo", 0))
+            if len(per_dipendente[nome]["movimenti"]) < 5:
+                per_dipendente[nome]["movimenti"].append(m)
+        else:
+            non_riconciliati.append(m)
+    
+    return {
+        "totale": len(movimenti),
+        "riconciliati": len(movimenti) - len(non_riconciliati),
+        "non_riconciliati": len(non_riconciliati),
+        "per_dipendente": [
+            {"nome": k, **v} for k, v in sorted(per_dipendente.items(), key=lambda x: x[1]["totale"], reverse=True)
+        ],
+        "non_riconciliati_sample": non_riconciliati[:20]
+    }
+
