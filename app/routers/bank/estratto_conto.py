@@ -761,7 +761,7 @@ async def riconcilia_stipendi_automatico(anno: Optional[int] = Query(None)) -> D
     if anno:
         query["data"] = {"$regex": f"^{anno}"}
     
-    bonifici = await db["estratto_conto_movimenti"].find(query, {"_id": 0}).to_list(5000)
+    bonifici = await db["estratto_conto"].find(query, {"_id": 0}).to_list(5000)
     
     riconciliati = 0
     non_trovati = []
