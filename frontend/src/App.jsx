@@ -38,22 +38,6 @@ const NAV_ITEMS = [
   { to: "/ricerca-prodotti", label: "Ricerca Prodotti", icon: "🔍", short: "Ricerca" },
   { to: "/ordini-fornitori", label: "Ordini Fornitori", icon: "📝", short: "Ordini" },
   { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝", short: "Assegni" },
-  { 
-    label: "HACCP & Tracciabilità", 
-    icon: "📦", 
-    short: "HACCP",
-    hasBadge: true,
-    isSubmenu: true,
-    children: [
-      { to: "/haccp", label: "Dashboard HACCP", icon: "📊" },
-      { to: "/ricettario-dinamico", label: "Ricettario Dinamico", icon: "📖" },
-      { to: "/libro-allergeni", label: "Libro Allergeni", icon: "⚠️" },
-      { to: "/haccp-v2/temperature", label: "Temperature", icon: "🌡️" },
-      { to: "/haccp-v2/sanificazione", label: "Sanificazione", icon: "🧹" },
-      { to: "/haccp-v2/non-conformita", label: "Non Conformità", icon: "🚫" },
-      { to: "/registro-lotti", label: "Registro Lotti", icon: "📋" },
-    ]
-  },
   // Dipendenti è ora un sottomenu
   { 
     label: "Dipendenti", 
@@ -97,7 +81,7 @@ const MOBILE_NAV = [
   { to: "/", label: "Home", icon: "🏠" },
   { to: "/fatture", label: "Fatture", icon: "📄" },
   { to: "/prima-nota", label: "Prima Nota", icon: "📒" },
-  { to: "/haccp", label: "HACCP", icon: "🍽️" },
+  { to: "/magazzino", label: "Magazzino", icon: "📦" },
   { to: "/more", label: "Altro", icon: "☰", isMenu: true },
 ];
 
