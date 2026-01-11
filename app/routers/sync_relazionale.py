@@ -273,6 +273,90 @@ async def set_fatture_non_cassa_to_banca(db) -> Dict[str, Any]:
     }
 
 
+async def match_fatture_con_estratto_conto(db) -> Dict[str, Any]:
+    """
+    Cerca corrispondenze tra fatture e movimenti estratto conto bancario.
+    Match per importo e fornitore nella descrizione.
+    """
+    results = {
+        "matched": 0,
+        "not_matched": 0,
+        "already_matched": 0,
+        "details": []
+    }
+    
+    # Prendi fatture bonifico non ancora associate
+    fatture = await db["invoices"].find({
+        "$and": [
+            {"$or": [
+                {"metodo_pagamento": {"$regex": "bonifico", "$options": "i"}},
+                {"metodo_pagamento": "Bonifico"}
+            ]},
+            {"$or": [
+                {"estratto_conto_id": {"$exists": False}},
+                {"estratto_conto_id": None}
+            ]}
+        ]
+    }, {"_id": 0}).to_list(5000)
+    
+    for fattura in fatture:
+        importo = fattura.get("total_amount") or fattura.get("importo_totale") or 0
+        fornitore = (fattura.get("supplier_name") or fattura.get("cedente_denominazione") or "").upper()
+        numero = fattura.get("invoice_number") or fattura.get("numero_fattura") or ""
+        
+        if not importo or importo <= 0:
+            continue
+        
+        # Cerca in estratto conto per importo (negativo = uscita) e fornitore in descrizione
+        # Tolleranza importo: ±1€
+        movimento = await db["estratto_conto"].find_one({
+            "$and": [
+                {"tipo": "uscita"},
+                {"importo": {"$gte": importo - 1, "$lte": importo + 1}},
+                {"fattura_id": {"$exists": False}},  # Non già associato
+                {"$or": [
+                    {"descrizione": {"$regex": fornitore[:20], "$options": "i"}},
+                    {"descrizione": {"$regex": numero, "$options": "i"}}
+                ]}
+            ]
+        }, {"_id": 0})
+        
+        if movimento:
+            # Trovato! Associa
+            await db["invoices"].update_one(
+                {"id": fattura["id"]},
+                {"$set": {
+                    "estratto_conto_id": movimento.get("id"),
+                    "pagato": True,
+                    "paid": True,
+                    "data_pagamento": movimento.get("data"),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            await db["estratto_conto"].update_one(
+                {"id": movimento["id"]},
+                {"$set": {
+                    "fattura_id": fattura["id"],
+                    "riconciliato": True,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            results["matched"] += 1
+            if len(results["details"]) < 20:
+                results["details"].append({
+                    "fattura": numero,
+                    "fornitore": fornitore[:30],
+                    "importo": importo,
+                    "movimento_id": movimento.get("id")
+                })
+        else:
+            results["not_matched"] += 1
+    
+    return results
+
+
 # ==================== ENDPOINTS ====================
 
 @router.post("/match-fatture-cassa")
