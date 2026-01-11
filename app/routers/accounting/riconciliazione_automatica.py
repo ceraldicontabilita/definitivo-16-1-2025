@@ -1,11 +1,12 @@
 """
-Riconciliazione Automatica v2 - Sistema di match automatico tra estratto conto e documenti.
+Riconciliazione Automatica v3 - Sistema di match automatico tra estratto conto e documenti.
 
 REGOLE FONDAMENTALI:
 1. Se TROVO match in estratto conto banca → posso mettere "Bonifico" o "Assegno N.XXX"
 2. Se NON TROVO in estratto conto → NON posso mettere "Bonifico"
 3. Devo rispettare il metodo di pagamento del fornitore (Cassa, Bonifico, etc.)
-4. Solo match ESATTI (importo ±0.05€)
+4. Match ESATTO per importo (±0.05€) o match parziale (pagamento rate)
+5. Fuzzy matching per nome fornitore
 """
 from fastapi import APIRouter, HTTPException, Path
 from typing import Dict, Any, List, Optional
@@ -15,6 +16,13 @@ import logging
 import re
 
 from app.database import Database, Collections
+
+# Fuzzy matching per nomi fornitori
+try:
+    from rapidfuzz import fuzz
+    FUZZY_AVAILABLE = True
+except ImportError:
+    FUZZY_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
