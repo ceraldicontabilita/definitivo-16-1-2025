@@ -856,14 +856,16 @@ export default function Fatture() {
                       👁️ Vedi
                     </button>
                     {/* Pulsante per visualizzare fattura in formato AssoInvoice */}
-                    <button 
-                      onClick={() => window.open(`/api/fatture-ricevute/fattura/${inv.id}/view-assoinvoice`, '_blank')}
-                      style={{ marginRight: 5, padding: "4px 8px", borderRadius: 4, border: "1px solid #2196f3", background: "#e3f2fd", color: "#1565c0", cursor: "pointer", fontWeight: 'bold' }}
+                    <a 
+                      href={`/api/fatture-ricevute/fattura/${inv.id}/view-assoinvoice`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ marginRight: 5, padding: "4px 8px", borderRadius: 4, border: "1px solid #2196f3", background: "#e3f2fd", color: "#1565c0", cursor: "pointer", fontWeight: 'bold', textDecoration: 'none', display: 'inline-block' }}
                       title="Visualizza fattura in formato AssoInvoice"
                       data-testid={`pdf-invoice-${inv.id}`}
                     >
                       📄 PDF
-                    </button>
+                    </a>
                     {/* Mostra pulsante elimina solo per fatture create manualmente */}
                     {inv.source === "manual" && !inv.xml_content && (
                     <button 
