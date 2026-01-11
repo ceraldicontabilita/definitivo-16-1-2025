@@ -43,47 +43,97 @@ def ensure_dirs():
 def fill_contract_template(template_path: str, employee_data: Dict[str, Any]) -> str:
     """
     Fill contract template with employee data.
-    Replaces placeholders like '……………' or specific field markers.
+    Replaces specific text patterns with employee data.
     """
     doc = Document(template_path)
     
-    # Mapping of placeholders to employee fields
-    replacements = {
-        # Common patterns found in contracts
-        "……………": employee_data.get("nome_completo", ""),
-        "…………….": employee_data.get("nome_completo", ""),
-        "………………": employee_data.get("nome_completo", ""),
-        "…………": employee_data.get("luogo_nascita", ""),
-        "……………………": employee_data.get("data_nascita", ""),
-        "…………………………………": employee_data.get("indirizzo", ""),
-        "……………………………….": employee_data.get("codice_fiscale", ""),
-        "………………………": employee_data.get("mansione", ""),
-        "…….": employee_data.get("livello", ""),
-        "………": employee_data.get("qualifica", ""),
+    # Build full name
+    nome_completo = employee_data.get("nome_completo", "")
+    if not nome_completo:
+        nome_completo = f"{employee_data.get('cognome', '')} {employee_data.get('nome', '')}".strip()
+    
+    # All values to replace - use specific markers
+    data_values = {
+        "nome_completo": nome_completo,
+        "cognome": employee_data.get("cognome", ""),
+        "nome": employee_data.get("nome", ""),
+        "codice_fiscale": employee_data.get("codice_fiscale", "______"),
+        "data_nascita": employee_data.get("data_nascita", "______"),
+        "luogo_nascita": employee_data.get("luogo_nascita", employee_data.get("comune_nascita", "______")),
+        "indirizzo": employee_data.get("indirizzo", "______"),
+        "mansione": employee_data.get("mansione", employee_data.get("qualifica", "______")),
+        "livello": employee_data.get("livello", "______"),
+        "qualifica": employee_data.get("qualifica", employee_data.get("mansione", "______")),
+        "stipendio_orario": str(employee_data.get("stipendio_orario", employee_data.get("salary", "______"))),
+        "data_inizio": employee_data.get("data_inizio", employee_data.get("hire_date", "______")),
+        "data_fine": employee_data.get("data_fine", "______"),
     }
     
-    # Process paragraphs
+    def replace_in_text(text: str) -> str:
+        """Replace all employee data patterns in text."""
+        result = text
+        
+        # Specific pattern replacements for the contract template
+        patterns = [
+            # Full employee line with all details
+            (r"Lavoratore:.*?nato a.*?il.*?residente in.*?con codice fiscale.*?\.",
+             f"Lavoratore: {data_values['mansione']}, {data_values['nome_completo']}, nato a {data_values['luogo_nascita']} il {data_values['data_nascita']}, residente in {data_values['indirizzo']} con codice fiscale {data_values['codice_fiscale']}."),
+            
+            # IL Sig. line
+            (r"IL Sig\. .*?è assunto",
+             f"IL Sig. {data_values['nome_completo']} è assunto"),
+            
+            # Mansioni line
+            (r"delle seguenti mansioni:.*?inquadrato",
+             f"delle seguenti mansioni: {data_values['mansione']} inquadrato"),
+            
+            # Livello
+            (r"nel livello .*?\.",
+             f"nel livello {data_values['livello']}."),
+            
+            # Qualifica
+            (r"con qualifica .*? del Ccnl",
+             f"con qualifica {data_values['qualifica']} del Ccnl"),
+            
+            # Date decorrenza
+            (r"decorre dal .*? al.*?\.",
+             f"decorre dal {data_values['data_inizio']} al {data_values['data_fine']}."),
+        ]
+        
+        import re
+        for pattern, replacement in patterns:
+            result = re.sub(pattern, replacement, result, flags=re.IGNORECASE | re.DOTALL)
+        
+        # Replace remaining generic placeholders
+        generic_placeholders = [
+            ("……………", "______"),
+            ("……………..", "______"),
+            ("………………", "______"),
+            ("…………", "______"),
+            ("……………………", "______"),
+            ("…………………………………", "______"),
+            ("………………………………..", "______"),
+            ("………………………", "______"),
+            ("……..", "______"),
+            ("………", "______"),
+        ]
+        
+        for placeholder, default in generic_placeholders:
+            if placeholder in result:
+                result = result.replace(placeholder, default)
+        
+        return result
+    
+    # Process all paragraphs
     for para in doc.paragraphs:
-        for run in para.runs:
-            text = run.text
-            # Replace specific patterns
-            if "Lavoratore:" in text and "……" in text:
-                # Full employee line
-                run.text = text.replace(
-                    "……………, nato a …………. il ……………………, residente in ………………………………… con codice fiscale …………………………….",
-                    f"{employee_data.get('nome_completo', '______')}, nato a {employee_data.get('luogo_nascita', '______')} il {employee_data.get('data_nascita', '______')}, residente in {employee_data.get('indirizzo', '______')} con codice fiscale {employee_data.get('codice_fiscale', '______')}"
-                )
-            elif "IL Sig." in text or "Il Sig." in text:
-                # Replace name in body
-                for pattern, value in replacements.items():
-                    if pattern in text and value:
-                        text = text.replace(pattern, value, 1)
-                run.text = text
-            else:
-                # General replacement
-                for pattern, value in replacements.items():
-                    if pattern in run.text and value:
-                        run.text = run.text.replace(pattern, value, 1)
+        full_text = para.text
+        if full_text.strip():
+            new_text = replace_in_text(full_text)
+            if new_text != full_text:
+                # Replace paragraph text preserving some formatting
+                for run in para.runs:
+                    if run.text:
+                        run.text = replace_in_text(run.text)
     
     # Process tables
     for table in doc.tables:
@@ -91,9 +141,8 @@ def fill_contract_template(template_path: str, employee_data: Dict[str, Any]) ->
             for cell in row.cells:
                 for para in cell.paragraphs:
                     for run in para.runs:
-                        for pattern, value in replacements.items():
-                            if pattern in run.text and value:
-                                run.text = run.text.replace(pattern, value, 1)
+                        if run.text:
+                            run.text = replace_in_text(run.text)
     
     # Save to temp file
     output_path = tempfile.mktemp(suffix=".docx")
