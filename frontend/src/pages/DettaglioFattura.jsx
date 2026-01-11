@@ -68,8 +68,27 @@ export default function DettaglioFattura() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/api/fatture/${id}`);
-      const fatturaData = res.data;
+      // Prima prova con fatture-ricevute (collezione principale)
+      let fatturaData = null;
+      try {
+        const res = await api.get(`/api/fatture-ricevute/fattura/${id}`);
+        fatturaData = res.data.fattura || res.data;
+      } catch (e1) {
+        // Fallback: prova con invoices
+        try {
+          const res2 = await api.get(`/api/invoices/${id}`);
+          fatturaData = res2.data;
+        } catch (e2) {
+          // Ultimo tentativo: prova con fatture
+          const res3 = await api.get(`/api/fatture/${id}`);
+          fatturaData = res3.data;
+        }
+      }
+      
+      if (!fatturaData) {
+        throw new Error('Fattura non trovata');
+      }
+      
       setFattura(fatturaData);
       
       // Carica il fornitore per ottenere il metodo pagamento predefinito
