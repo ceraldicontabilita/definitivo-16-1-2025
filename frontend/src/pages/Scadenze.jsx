@@ -541,64 +541,66 @@ export default function Scadenze() {
                     </div>
                   )}
                   
-                  {/* Pulsante Visualizza Fattura per scadenze tipo FATTURA */}
+                  {/* Pulsanti Visualizza Fattura per scadenze tipo FATTURA */}
                   {(s.tipo === 'FATTURA' || s.source === 'fattura') && (s.fattura_id || s.id) && (
-                    <button
-                      onClick={async () => {
-                        setLoadingInvoice(true);
-                        try {
-                          const fattura_id = s.fattura_id || s.id;
-                          const res = await api.get(`/api/fatture/${fattura_id}`);
-                          if (res.data) {
-                            setInvoiceData(res.data);
-                            setViewingInvoice(fattura_id);
-                          } else {
-                            alert('Fattura non trovata');
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        onClick={async () => {
+                          setLoadingInvoice(true);
+                          try {
+                            const fattura_id = s.fattura_id || s.id;
+                            const res = await api.get(`/api/fatture/${fattura_id}`);
+                            if (res.data) {
+                              setInvoiceData(res.data);
+                              setViewingInvoice(fattura_id);
+                            } else {
+                              alert('Fattura non trovata');
+                            }
+                          } catch (err) {
+                            console.error('Errore caricamento fattura:', err);
+                            alert('Errore nel caricamento della fattura');
+                          } finally {
+                            setLoadingInvoice(false);
                           }
-                        } catch (err) {
-                          console.error('Errore caricamento fattura:', err);
-                          alert('Errore nel caricamento della fattura');
-                        } finally {
-                          setLoadingInvoice(false);
-                        }
-                      }}
-                      disabled={loadingInvoice}
-                      style={{
-                        padding: '6px 12px',
-                        background: loadingInvoice ? '#9ca3af' : '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 6,
-                        cursor: loadingInvoice ? 'wait' : 'pointer',
-                        fontSize: 12,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4
-                      }}
-                      title="Visualizza Fattura (Modal)"
-                      data-testid={`view-invoice-${s.fattura_id || s.id}`}
-                    >
-                      {loadingInvoice ? '⏳' : '👁️'} Dettagli
-                    </button>
-                    <button
-                      onClick={() => window.open(`/api/fatture-ricevute/fattura/${s.fattura_id || s.id}/view-assoinvoice`, '_blank')}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#10b981',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4
-                      }}
-                      title="Visualizza PDF Fattura"
-                      data-testid={`pdf-invoice-${s.fattura_id || s.id}`}
-                    >
-                      📄 PDF
-                    </button>
+                        }}
+                        disabled={loadingInvoice}
+                        style={{
+                          padding: '6px 12px',
+                          background: loadingInvoice ? '#9ca3af' : '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: loadingInvoice ? 'wait' : 'pointer',
+                          fontSize: 12,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4
+                        }}
+                        title="Visualizza Dettagli Fattura"
+                        data-testid={`view-invoice-${s.fattura_id || s.id}`}
+                      >
+                        {loadingInvoice ? '⏳' : '👁️'} Dettagli
+                      </button>
+                      <button
+                        onClick={() => window.open(`/api/fatture-ricevute/fattura/${s.fattura_id || s.id}/view-assoinvoice`, '_blank')}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#10b981',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4
+                        }}
+                        title="Visualizza PDF Fattura"
+                        data-testid={`pdf-invoice-${s.fattura_id || s.id}`}
+                      >
+                        📄 PDF
+                      </button>
+                    </div>
                   )}
                 </div>
               );
