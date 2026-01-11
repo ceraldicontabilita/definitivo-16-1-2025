@@ -1212,42 +1212,118 @@ export default function Ricette() {
                   </button>
                 </div>
                 
-                <div style={{ maxHeight: '200px', overflow: 'auto' }}>
+                <div style={{ maxHeight: '300px', overflow: 'auto' }}>
                   {(editingRicetta.ingredienti || []).map((ing, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                      <input
-                        type="text"
-                        value={ing.nome || ''}
-                        onChange={(e) => updateEditingIngrediente(idx, 'nome', e.target.value)}
-                        placeholder="Nome ingrediente"
-                        style={{ flex: 2, padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
-                      />
-                      <input
-                        type="number"
-                        value={ing.quantita || ''}
-                        onChange={(e) => updateEditingIngrediente(idx, 'quantita', e.target.value)}
-                        placeholder="Qtà"
-                        style={{ width: '70px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
-                      />
-                      <select
-                        value={ing.unita || 'g'}
-                        onChange={(e) => updateEditingIngrediente(idx, 'unita', e.target.value)}
-                        style={{ width: '60px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
-                      >
-                        <option value="g">g</option>
-                        <option value="kg">kg</option>
-                        <option value="ml">ml</option>
-                        <option value="l">l</option>
-                        <option value="pz">pz</option>
-                      </select>
-                      <button
-                        onClick={() => removeEditingIngrediente(idx)}
-                        style={{ padding: '6px', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#dc2626' }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <div key={idx} style={{ marginBottom: '12px', padding: '10px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', position: 'relative' }}>
+                        <div style={{ flex: 2, position: 'relative' }}>
+                          <input
+                            type="text"
+                            value={ing.nome || ''}
+                            onChange={(e) => {
+                              updateEditingIngrediente(idx, 'nome', e.target.value);
+                              setActiveIngredientIndex(idx);
+                              searchProdotti(e.target.value);
+                            }}
+                            onFocus={() => setActiveIngredientIndex(idx)}
+                            placeholder="🔍 Cerca prodotto..."
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                          />
+                          {/* Dropdown autocomplete */}
+                          {activeIngredientIndex === idx && prodottiSuggestions.length > 0 && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '100%',
+                              left: 0,
+                              right: 0,
+                              background: 'white',
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              zIndex: 1000,
+                              maxHeight: '200px',
+                              overflow: 'auto'
+                            }}>
+                              {prodottiSuggestions.map((prod, pIdx) => (
+                                <div
+                                  key={pIdx}
+                                  onClick={() => selectProdottoForEditing(idx, prod)}
+                                  style={{
+                                    padding: '10px 12px',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #f3f4f6',
+                                    fontSize: '12px'
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.background = '#f0f9ff'}
+                                  onMouseLeave={(e) => e.target.style.background = 'white'}
+                                >
+                                  <div style={{ fontWeight: 600, color: '#1e3a5f' }}>{prod.descrizione}</div>
+                                  <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
+                                    {prod.fornitore_nome} • {prod.prezzo_per_kg ? `€${prod.prezzo_per_kg.toFixed(2)}/kg` : 'Prezzo N/D'}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="number"
+                          value={ing.quantita || ''}
+                          onChange={(e) => updateEditingIngrediente(idx, 'quantita', e.target.value)}
+                          placeholder="Qtà"
+                          style={{ width: '70px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                        />
+                        <select
+                          value={ing.unita || 'g'}
+                          onChange={(e) => updateEditingIngrediente(idx, 'unita', e.target.value)}
+                          style={{ width: '60px', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                        >
+                          <option value="g">g</option>
+                          <option value="kg">kg</option>
+                          <option value="ml">ml</option>
+                          <option value="l">l</option>
+                          <option value="pz">pz</option>
+                        </select>
+                        <button
+                          onClick={() => removeEditingIngrediente(idx)}
+                          style={{ padding: '6px', background: '#fef2f2', border: 'none', borderRadius: '6px', cursor: 'pointer', color: '#dc2626' }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      {/* Info prodotto associato */}
+                      {ing.prodotto_id && (
+                        <div style={{ marginTop: '6px', fontSize: '11px', color: '#059669', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Check size={12} /> Associato: {ing.fornitore || 'N/D'} • {ing.prezzo_kg ? `€${ing.prezzo_kg.toFixed(2)}/kg` : ''}
+                        </div>
+                      )}
                     </div>
                   ))}
+                </div>
+                
+                {/* Calcola Food Cost */}
+                <div style={{ marginTop: '12px', padding: '12px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #fcd34d' }}>
+                  <button
+                    onClick={() => calcolaFoodCostRicetta(editingRicetta.ingredienti)}
+                    style={{ padding: '8px 16px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                  >
+                    📊 Calcola Food Cost
+                  </button>
+                  {foodCost && (
+                    <div style={{ marginTop: '10px' }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#92400e' }}>
+                        Food Cost: €{foodCost.food_cost_totale?.toFixed(2)}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#78350f' }}>
+                        Completezza: {foodCost.completezza}
+                      </div>
+                      {foodCost.ingredienti_senza_prezzo?.length > 0 && (
+                        <div style={{ fontSize: '11px', color: '#dc2626', marginTop: '4px' }}>
+                          ⚠️ {foodCost.ingredienti_senza_prezzo.length} ingredienti senza prezzo
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
