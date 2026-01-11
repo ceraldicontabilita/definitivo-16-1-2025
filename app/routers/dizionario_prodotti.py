@@ -222,12 +222,15 @@ async def scan_fatture_per_prodotti(
                     "ultimo_prezzo_unitario": prezzo_unitario,
                     "ultimo_prezzo_totale": prezzo_totale,
                     "ultima_quantita": quantita,
+                    "unita_misura_fattura": unita_misura,
                     "ultima_fattura_id": fattura.get("id"),
                     "ultima_fattura_data": fattura.get("invoice_date"),
                     "updated_at": now
                 }
-                if prezzo_per_kg and prezzo_per_kg > 0:
+                if prezzo_per_kg and prezzo_per_kg > 0 and prezzo_per_kg < 10000:  # Sanity check
                     update_data["prezzo_per_kg"] = round(prezzo_per_kg, 4)
+                if peso_grammi_effettivo:
+                    update_data["peso_grammi_effettivo"] = peso_grammi_effettivo
                 
                 await db[COLLECTION_DIZIONARIO].update_one(
                     {"prodotto_key": prodotto_key},
@@ -245,16 +248,19 @@ async def scan_fatture_per_prodotti(
                     "fornitore_id": supplier_id,
                     "fornitore_nome": supplier_name,
                     "categoria": None,  # Da compilare manualmente
-                    # Peso
+                    # Peso dalla descrizione (dimensione confezione)
                     "peso_totale": peso_info["peso_totale"],
                     "unita_peso": peso_info["unita_peso"],
                     "peso_grammi": peso_info["peso_grammi"],
+                    "peso_grammi_effettivo": peso_grammi_effettivo,
                     "peso_confermato": False,  # True quando utente conferma/corregge
+                    # Unità misura dalla fattura
+                    "unita_misura_fattura": unita_misura,
                     # Prezzi
                     "ultimo_prezzo_unitario": prezzo_unitario,
                     "ultimo_prezzo_totale": prezzo_totale,
                     "ultima_quantita": quantita,
-                    "prezzo_per_kg": round(prezzo_per_kg, 4) if prezzo_per_kg else None,
+                    "prezzo_per_kg": round(prezzo_per_kg, 4) if (prezzo_per_kg and prezzo_per_kg < 10000) else None,
                     # Riferimento fattura
                     "ultima_fattura_id": fattura.get("id"),
                     "ultima_fattura_data": fattura.get("invoice_date"),
