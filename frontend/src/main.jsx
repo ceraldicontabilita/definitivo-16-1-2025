@@ -119,32 +119,6 @@ const RicercaProdotti = lazy(() => import("./pages/RicercaProdotti.jsx"));
 const OrdiniFornitori = lazy(() => import("./pages/OrdiniFornitori.jsx"));
 const DizionarioArticoli = lazy(() => import("./pages/DizionarioArticoli.jsx"));
 
-// HACCP
-const HACCP = lazy(() => import("./pages/HACCP.jsx"));
-const HACCPSection = lazy(() => import("./pages/HACCPSection.jsx"));
-const HACCPCompleto = lazy(() => import("./pages/HACCPCompleto.jsx"));
-const HACCPDashboard = lazy(() => import("./pages/HACCPDashboard.jsx"));
-const HACCPTemperatureFrigo = lazy(() => import("./pages/HACCPTemperatureFrigo.jsx"));
-const HACCPTemperaturaCongelatori = lazy(() => import("./pages/HACCPTemperaturaCongelatori.jsx"));
-const HACCPSanificazioni = lazy(() => import("./pages/HACCPSanificazioni.jsx"));
-const HACCPEquipaggiamenti = lazy(() => import("./pages/HACCPEquipaggiamenti.jsx"));
-const HACCPScadenzario = lazy(() => import("./pages/HACCPScadenzario.jsx"));
-const HACCPAnalytics = lazy(() => import("./pages/HACCPAnalytics.jsx"));
-const HACCPNotifiche = lazy(() => import("./pages/HACCPNotifiche.jsx"));
-const HACCPTracciabilita = lazy(() => import("./pages/HACCPTracciabilita.jsx"));
-const HACCPPortal = lazy(() => import("./pages/HACCPPortal.jsx"));
-// HACCP V2 (Nuovo Sistema Completo)
-const HACCPDashboardV2 = lazy(() => import("./pages/HACCPDashboardV2.jsx"));
-const HACCPFrigoriferiV2 = lazy(() => import("./pages/HACCPFrigoriferiV2.jsx"));
-const HACCPCongelatoriV2 = lazy(() => import("./pages/HACCPCongelatoriV2.jsx"));
-const HACCPSanificazioniV2 = lazy(() => import("./pages/HACCPSanificazioniV2.jsx"));
-const HACCPManualeV2 = lazy(() => import("./pages/HACCPManualeV2.jsx"));
-const HACCPNonConformita = lazy(() => import("./pages/HACCPNonConformita.jsx"));
-const RicettarioDinamico = lazy(() => import("./pages/RicettarioDinamico.jsx"));
-const HACCPSanificazione = lazy(() => import("./pages/HACCPSanificazione.jsx"));
-const HACCPTemperature = lazy(() => import("./pages/HACCPTemperature.jsx"));
-const LibroAllergeni = lazy(() => import("./pages/LibroAllergeni.jsx"));
-
 // F24 & Tributi
 const F24 = lazy(() => import("./pages/F24.jsx"));
 const Scadenze = lazy(() => import("./pages/Scadenze.jsx"));
