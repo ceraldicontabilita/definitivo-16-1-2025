@@ -1,124 +1,138 @@
 <analysis>**original_problem_statement:**
-L'utente ha richiesto una serie di modifiche significative, cambiando radicalmente la direzione del progetto.
-1.  **Eliminazione Modulo HACCP (COMPLETATO):** A causa di insoddisfazione, l'utente ha richiesto la rimozione completa e immediata di tutte le pagine, componenti, endpoint API e logiche di backend relative al modulo HACCP (Ricettario, Libro Allergeni, Temperature, Sanificazione, ecc.).
-2.  **Semplificazione Logica Corrispettivi (COMPLETATO):** L'utente ha richiesto di eliminare l'importazione dei corrispettivi tramite file Excel. La nuova logica prevede:
-    *   Inserimento manuale in Prima Nota come fonte primaria.
-    *   L'importazione da file XML dei registratori telematici deve:
-        *   Aggiornare un corrispettivo manuale esistente (trovato per data) con i dettagli IVA.
-        *   Creare un nuovo movimento in prima nota se non esiste un corrispettivo manuale per quella data.
-3.  **Nuovo Sistema Food Cost per Ricette (IN CORSO):** L'utente ha richiesto una nuova funzionalità per il calcolo preciso del food cost nelle ricette. Questo sistema deve includere:
-    *   Un **Dizionario Prodotti** centralizzato, popolato automaticamente da tutte le righe delle fatture dei fornitori, contenente nome prodotto, peso/unità e prezzo al kg/lt (al netto dell'IVA).
-    *   Un'interfaccia nella pagina delle ricette che, durante l'aggiunta di un ingrediente, mostri un **menu a tendina con autocompletamento** per selezionare un prodotto dal dizionario.
-    *   Un sistema di calcolo automatico del costo dell'ingrediente basato sulla proporzione tra la quantità usata nella ricetta e il costo unitario del prodotto (es. 100g di un prodotto che costa 10€/kg devono essere calcolati come 1€).
-    *   Un meccanismo per evidenziare i prodotti nel dizionario a cui mancano dati essenziali (peso/unità) per permettere all'utente di inserirli manualmente.
+L'utente ha fornito una serie di richieste per migliorare la gestione del magazzino, dell'inventario e della riconciliazione dei pagamenti.
+1.  **Esclusione Fornitori dal Magazzino:** Aggiungere un'opzione per contrassegnare i fornitori i cui prodotti non devono essere caricati nel magazzino (es. ferramenta, manutenzione).
+2.  **Miglioramenti Pagina Magazzino ():**
+    *   Ordinare i prodotti in ordine alfabetico.
+    *   Filtrare i prodotti mostrati in base all'anno selezionato nel filtro globale.
+3.  **Nuova Sezione Inventario:**
+    *   Creare una pagina dove l'utente possa definire un importo target per l'inventario (netto IVA).
+    *   Permettere all'utente di aggiungere prodotti da un'interfaccia di ricerca (simile a quella delle ricette) fino al raggiungimento del valore target.
+    *   Salvare (saldare) l'inventario creato, associandolo all'anno selezionato.
+4.  **Importazione Pagamenti da File:**
+    *   L'utente ha fornito un file Excel () contenente pagamenti in contanti e ha chiesto di importarli in Prima Nota Cassa, riconciliandoli con le fatture esistenti.
+5.  **Riconciliazione Movimenti Bancari:**
+    *   L'utente ha fornito un file CSV () e ha chiesto di controllare se alcune fatture, erroneamente registrate come pagate in cassa, fossero in realtà pagate tramite banca/assegno.
+    *   Ha richiesto di associare i numeri degli assegni e di migliorare la pagina Gestione Assegni per mostrare la data della fattura e renderla cliccabile per visualizzare il PDF.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione è un ERP con moduli di contabilità e magazzino.
--   **Modulo HACCP e Ricettario:** L'intero modulo è stato **completamente eliminato** dal frontend e dal backend su richiesta esplicita dell'utente.
--   **Logica Corrispettivi:** La logica è stata semplificata. L'importazione da Excel è stata rimossa. Ora i corrispettivi vengono inseriti manualmente, e i file XML servono ad arricchire i dati con i dettagli dell'IVA o a creare nuove voci se mancanti.
--   **Filtro Anno Globale:** Un filtro anno globale, gestito tramite , è stato implementato con successo su oltre 15 pagine dell'applicazione, garantendo un'esperienza utente coerente.
--   **Logica Contabile:** È stato corretto un bug critico che causava la mancata registrazione dell'IVA nelle entrate da corrispettivi, sanando i dati pregressi per l'anno 2025. È stata creata una UI nella pagina Admin per monitorare lo stato della sincronizzazione dei dati.
--   **Dizionario Prodotti:** È stato creato il file base per il nuovo router backend () per gestire il dizionario prodotti, che servirà al nuovo sistema di food cost.
+L'agente ha completato con successo quasi tutte le richieste dell'utente.
+-   **Sistema Food Cost:** È stato implementato e perfezionato un sistema completo per il calcolo del food cost, che include un Dizionario Prodotti popolato automaticamente dalle fatture. È stata creata una pagina dedicata per la gestione del dizionario e una UI modale migliorata per la selezione degli ingredienti nelle ricette. I bug critici sul calcolo dei prezzi sono stati risolti.
+-   **Sincronizzazione Dati:** La pagina di amministrazione Sincronizzazione è stata notevolmente migliorata e ora fornisce un quadro accurato dello stato di riconciliazione tra fatture, prima nota cassa e movimenti bancari. Sono state implementate funzioni di matching automatico.
+-   **Importazione/Riconciliazione Dati:** Sono stati importati con successo ~700 pagamenti in contanti da un file Excel e sono stati riconciliati ~209 pagamenti tramite assegno dai dati dell'estratto conto.
+-   **Funzionalità Magazzino/Inventario:** Sono state implementate le richieste di esclusione fornitori dal magazzino, il filtro per anno e l'ordinamento alfabetico nella pagina . È stata creata ex-novo l'intera sezione Inventario con la funzionalità di creazione guidata basata su un importo target.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava implementando il nuovo sistema di calcolo del **Food Cost**. Aveva appena creato il router backend per il dizionario prodotti () e registrato nel . Stava modificando la pagina  per aggiungere uno stato per il dizionario, le funzioni per caricarlo e stava per integrare un componente di autocompletamento nel modal di modifica degli ingredienti per permettere la selezione da questo dizionario.
+- **Last item agent was working**: L'agente stava lavorando sulla richiesta di cross-referencing tra il file Excel dei pagamenti e il file CSV dell'estratto conto. Ha analizzato entrambi i file e ha identificato con successo **63 pagamenti** che erano stati registrati in Excel come Cassa ma che in realtà corrispondevano a pagamenti tramite assegno presenti nell'estratto conto. Il passo successivo è correggere questi dati nel database.
 - **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?**: both. Il backend (nuovo endpoint per il dizionario) necessita di test tramite . Il frontend () richiede test tramite  per verificare il nuovo componente di autocompletamento e il calcolo del costo. Al completamento, un  può verificare l'intero flusso.
+- **Which testing method agent to use?**: backend testing agent. L'agente deve scrivere ed eseguire uno script per correggere i 63 movimenti di prima nota e le relative fatture nel database. Successivamente, si dovrà usare lo  per verificare che la pagina Gestione Assegni e la pagina di Sincronizzazione riflettano le modifiche.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: (P1) Implementare la Sincronizzazione Dati Relazionale**
-  - **Description**: L'utente ha richiesto che la modifica di un dato (es. una fattura) in una sezione si rifletta automaticamente in tutte le altre sezioni. La richiesta iniziale è stata parzialmente gestita con la creazione di una pagina di monitoraggio. L'utente ha poi de-prioritizzato a P2 il task specifico di associare le fatture ai pagamenti in cassa.
-  - **Attempted fixes**: È stata creata una pagina UI in  per visualizzare lo stato della sincronizzazione e lanciare alcuni script di matching.
+- **Issue 1: (P0) Correggere i 63 pagamenti Cassa/Banca e migliorare UI Assegni**
+  - **Description**: Sulla base dell'ultima analisi, 63 pagamenti sono stati erroneamente registrati come Cassa. Devono essere corretti in Banca/Assegno e riconciliati. Successivamente, la pagina Gestione Assegni deve essere migliorata per mostrare più dettagli della fattura e un link per aprirla.
+  - **Attempted fixes**: L'agente ha identificato i 63 record problematici confrontando i file forniti.
   - **Next debug checklist**:
-    1.  Progettare e implementare update hooks o un servizio centralizzato che venga invocato alla modifica di entità chiave (Fatture, PrimaNota, Fornitori) per propagare le modifiche.
-    2.  Implementare il task di  come richiesto (attualmente priorità P2).
-  - **Why fix this issue and what will be achieved with the fix?**: Garantire la coerenza e l'integrità dei dati in tutta l'applicazione.
+    1.  Creare uno script Python per iterare sui 63 record identificati.
+    2.  Per ogni record, aggiornare il movimento in  (o spostarlo in ), aggiornare la fattura associata () cambiando  e linkando l'ID del movimento corretto.
+    3.  Modificare la pagina  per recuperare e visualizzare la data della fattura associata all'assegno.
+    4.  Implementare un modal nella pagina  che, al click, mostri i dettagli o il PDF della fattura associata (richiede un nuovo endpoint o il riutilizzo di uno esistente).
+  - **Why fix this issue and what will be achieved with the fix?**: Garantirà la corretta attribuzione dei pagamenti (cassa vs. banca), completerà la riconciliazione richiesta dall'utente e renderà la gestione degli assegni più funzionale.
   - **Status**: IN PROGRESS
+  - **Is recurring issue?**: N
   - **Should Test frontend/backend/both after fix?**: both
   - **Blocked on other issue**: None
 
 **In progress Task List**:
-- **Task 1: (P0) Completare il Sistema di Food Cost e Dizionario Prodotti**
-  - **Where to resume**:
-    1.  **Backend**: Implementare la logica in  per scandagliare la collection , estrarre tutte le righe delle fatture, e creare un dizionario di prodotti unico con nome, prezzo/kg e peso/unità.
-    2.  **Frontend**: In , completare l'integrazione del componente di autocompletamento per la selezione degli ingredienti dal dizionario.
-    3.  **Frontend**: Implementare la logica di calcolo automatico del food cost quando un ingrediente e la sua quantità vengono aggiunti/modificati.
-  - **What will be achieved with this?**: Fornirà un calcolo del food cost preciso e automatizzato, migliorerà la tracciabilità e standardizzerà i nomi degli ingredienti.
-  - **Status**: IN PROGRESS
-  - **Should Test frontend/backend/both after fix?**: both
-  - **Blocked on something**: None
+Nessuno. Il lavoro è concentrato sulla risoluzione dell'Issue 1.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P2) Completare associazione fatture a pagamenti:** Associare le fatture caricate via XML ai pagamenti in cassa (dal file excel) e marcare le restanti come da pagare tramite banca, con possibilità di modifica manuale. (Richiesta dell'utente in , poi de-prioritizzata in chat).
+    - **(P1) Pulizia Magazzino:** Aggiungere una funzione per rimuovere dal magazzino i prodotti esistenti appartenenti a fornitori che sono stati successivamente contrassegnati come Esclude Magazzino.
+    - **(P2) Migliorare match automatico pagamenti:** Sviluppare logiche di matching più sofisticate (es. per importo parziale, per nome fornitore con fuzzy matching) per ridurre il numero di pagamenti non riconciliati.
 - **Future Tasks**:
-    - **(P2) Completare Refactoring Responsive (in Pausa):** Riprendere il task di rendere l'intera applicazione mobile-friendly, attualmente sospeso su richiesta dell'utente.
+    - **(P2) Refactoring Responsive:** Riprendere il task, attualmente in pausa, di rendere l'intera applicazione mobile-friendly.
 
 **Completed work in this session**
-- **Eliminazione completa del Modulo HACCP (DONE):** Rimosse ~23 pagine frontend, i router backend (, ), le voci di menu e le chiamate API associate.
-- **Semplificazione Logica Corrispettivi (DONE):** Rimosso l'endpoint di importazione da Excel, aggiornata la logica di importazione da XML, e rimossi i relativi pulsanti dalla UI.
-- **Filtro Anno Globale (DONE):** Convertite con successo più di 15 pagine per utilizzare un contesto globale per l'anno, testato e verificato dal testing agent.
-- **Correzione Logica Entrate Corrispettivi (DONE):** Identificato e corretto un bug critico dove l'IVA non veniva inclusa nelle entrate. Creato e eseguito uno script di fix per sanare 346 movimenti nel DB.
-- **UI di Sincronizzazione Dati (DONE):** Aggiunta una nuova tab Sincronizzazione nella pagina Admin per monitorare lo stato dei dati e lanciare azioni di matching.
-- **Hint Metodo Pagamento Fornitore (DONE):** Implementato un suggerimento nella pagina Dettaglio Fattura che mostra il metodo di pagamento predefinito del fornitore.
+- **Sistema Food Cost (COMPLETATO):**
+  - Implementato e debuggato il backend per il dizionario prodotti, con calcolo corretto del prezzo/kg basato sull'unità di misura della fattura.
+  - Creata una nuova pagina () per la gestione e la modifica manuale dei prodotti e dei loro prezzi.
+  - Sostituita la UI di selezione ingredienti nelle ricette da un dropdown a un modale di ricerca più usabile, su richiesta dell'utente.
+- **Sincronizzazione Dati (COMPLETATO):**
+  - Corretta e migliorata la pagina Admin/Sincronizzazione per mostrare dati accurati su fatture e pagamenti.
+  - Implementato un nuovo pulsante per il matching automatico tra fatture e movimenti dell'estratto conto bancario, riconciliando 58 fatture.
+- **Importazione e Riconciliazione Dati (COMPLETATO):**
+  - Creato uno script per importare **700 pagamenti** in contanti da un file Excel fornito dall'utente.
+  - Creato uno script per riconciliare **~209 pagamenti tramite assegno** con le fatture corrispondenti.
+- **Nuove Funzionalità Magazzino/Inventario (COMPLETATO):**
+  - Aggiunto il flag Esclude dal Magazzino nella gestione fornitori (, ).
+  - Aggiornata la pagina  con ordinamento alfabetico e filtro per anno.
+  - Creata da zero la nuova sezione Inventario (, ) come richiesto.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 - **Backend:** FastAPI, MongoDB.
-- **Frontend:** React, stili JavaScript inline.
-- **State Management:** React Context API ().
-- **Data Integrity:** L'agente ha dovuto affrontare problemi di integrità dei dati (IVA mancante) e ha iniziato a costruire strumenti per la sincronizzazione e la coerenza (pagina Admin, dizionario prodotti).
-- **Product Dictionary:** Un nuovo concetto introdotto per centralizzare le informazioni sui prodotti acquistati, derivate direttamente dalle fatture, per calcoli di costo e tracciabilità.
+- **Frontend:** React.
+- **Data Reconciliation:** L'agente ha implementato logiche complesse e script una tantum per importare, correggere e riconciliare dati finanziari da diverse fonti (DB, Excel, CSV), migliorando significativamente l'integrità dei dati.
+- **Feature Development:** L'agente ha dimostrato la capacità di creare rapidamente nuove funzionalità complesse (Inventario) e di migliorare quelle esistenti (Dizionario, Sincronizzazione) basandosi su requisiti utente dettagliati.
+- **User-driven Refactoring:** L'agente ha modificato una funzionalità appena implementata (selezione ingredienti) in base a un feedback specifico dell'utente sull'usabilità.
 
 **key DB schema**
 - : 
 - : 
--  (Proposto): 
+- : Collezione contenente i movimenti bancari importati.
+- : 
+- : 
+- : 
+- : 
 
 **All files of reference**
--  (File principale per la nuova funzionalità di food cost)
--  (Nuovo router per la logica del dizionario prodotti)
--  (Contiene la nuova UI per la sincronizzazione)
--  (Contiene la nuova logica di importazione XML dei corrispettivi)
+-  (Logica di riconciliazione)
+-  (UI per la sincronizzazione)
+-  (Da modificare)
+-  (Logica dizionario e calcolo prezzi)
+-  (UI gestione dizionario)
+-  (Nuova UI inventario)
+-  (Nuovo backend inventario)
 
 **Critical Info for New Agent**
-- **Focalizzazione attuale:** La priorità assoluta è completare il sistema di Food Cost e Dizionario Prodotti. L'utente ha fornito requisiti dettagliati per questa funzionalità.
-- **HACCP è stato eliminato:** Non dedicare tempo a nulla che riguardi HACCP, ricette (nella sua vecchia forma), allergeni, ecc. L'utente era molto insoddisfatto e ha chiesto la rimozione totale. La pagina  è stata mantenuta ma deve essere riadattata per il nuovo sistema di food cost.
-- **Logica Corrispettivi:** La logica di importazione dei corrispettivi è stata cambiata radicalmente. L'import da Excel non esiste più. Fare riferimento alla nuova logica manuale + XML per qualsiasi lavoro futuro in quest'area.
-- **Struttura Progetto:** Il codice backend principale si trova in , non in .
+- **Priorità P0:** La priorità assoluta è agire sulla scoperta delle 63 fatture pagate erroneamente come Cassa. Devi scrivere uno script per correggerle nel database e poi passare a migliorare l'interfaccia utente come richiesto.
+- **L'utente fornisce file:** L'utente è propenso a fornire file Excel/CSV per correggere o importare dati. Sii pronto ad analizzarli e a creare script per elaborarli.
+- **Integrità dei dati:** L'integrità dei dati finanziari è la preoccupazione principale dell'utente. Ogni modifica deve essere verificata controllando la pagina di Sincronizzazione o tramite query dirette al DB.
+- **Non eliminare dati:** Quando si correggono i dati (es. Cassa -> Banca), non eliminare i vecchi movimenti, ma aggiornali o spostali per mantenere la tracciabilità.
+
+**documents and test reports created in this job**
+-  (File scaricato fornito dall'utente)
+-  (File scaricato fornito dall'utente)
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **10. Richiesta Food Cost System:** L'utente ha descritto in dettaglio il nuovo sistema di food cost per le ricette, con dizionario prodotti, menu a tendina e calcolo automatico. (IN CORSO)
-- **9. Eliminazione HACCP:** L'utente, insoddisfatto, ha ordinato di eliminare completamente tutte le pagine e le sezioni HACCP. (COMPLETATO)
-- **8. Semplificazione Corrispettivi:** L'utente ha ordinato di rimuovere l'importazione da Excel e ha definito la nuova logica (manuale + XML). (COMPLETATO)
-- **7. Spiegazione Corrispettivi:** L'utente ha chiesto una spiegazione dettagliata di come funziona la logica di inserimento dei corrispettivi. (COMPLETATO)
-- **6. Completamento Task HACCP:** L'agente ha finito di riorganizzare le pagine HACCP e chiede all'utente se desidera eliminare i file obsoleti. (SUPERSEDED)
-- **5. Riorganizzazione HACCP:** L'utente ha dato istruzioni per correggere il libro allergeni e riorganizzare le card e le pagine della sezione HACCP, de-prioritizzando il matching fatture a P2. (COMPLETATO, POI ELIMINATO)
-- **4. Completamento Task P1:** L'agente ha completato i task P1 (metodo di pagamento e UI prima nota) e chiede di passare al successivo. (COMPLETATO)
-- **3. Direttiva Task P1:** L'utente ha indicato di procedere con i task P1. (COMPLETATO)
-- **2. Completamento Task P0:** L'agente ha completato i task P0 (filtro anno e logica entrate), ha presentato un piano per i task P1 e ha chiesto quale affrontare. (COMPLETATO)
-- **1. Direttiva di continuare:** L'utente ha risposto P1.
+- **10. Richiesta correzione pagamenti Cassa/Banca:** L'utente sospetta di aver registrato pagamenti bancari come cassa, fornisce un file di estratto conto e chiede di verificare, correggere e migliorare l'UI di gestione assegni. (IN CORSO)
+- **9. Richiesta importazione pagamenti da Excel:** L'utente fornisce un file Excel con pagamenti in contanti e chiede di importarli in prima nota cassa. (COMPLETATO)
+- **8. Richieste Magazzino/Inventario/Fornitori:** L'utente chiede di escludere fornitori dal magazzino, filtrare il magazzino per anno e creare una nuova sezione Inventario. (COMPLETATO)
+- **7. Accettazione piano:** L'utente approva il piano per la sincronizzazione dati. (COMPLETATO)
+- **6. Richiesta popolamento manuale prezzi:** L'utente chiede di continuare con il popolamento manuale dei prezzi e il miglioramento del match fatture. (SUPERSEDED)
+- **5. Accettazione completamento Food Cost:** L'utente accetta il riepilogo del sistema Food Cost completato. (COMPLETATO)
+- **4. Critica sul prezzo errato:** L'utente segnala un prezzo al kg palesemente errato e chiede di correggere il parser o creare una pagina di modifica. (COMPLETATO)
+- **3. Accettazione nuovo UI ingredienti:** L'utente approva la nuova UI con modal per la selezione degli ingredienti. (COMPLETATO)
+- **2. Critica UI selezione ingredienti:** L'utente definisce scomoda la tendina a discesa per gli ingredienti e chiede un sistema diverso. (COMPLETATO)
+- **1. Accettazione piano post-handoff:** L'utente risponde continua al piano iniziale dell'agente. (COMPLETATO)
 
 **Project Health Check:**
-- **Broken**: La sincronizzazione relazionale dei dati tra i moduli è ancora incompleta.
+- **Broken:** La riconciliazione dei dati è in uno stato molto migliore, ma non ancora perfetta. Ci sono 14 assegni non riconciliati e probabilmente altre discrepanze minori.
 - **Mocked**: Nessuno.
-- **Technical Debt**: Significativo. Il modulo HACCP è stato rimosso bruscamente, potrebbero esserci riferimenti residui minori. Mancanza di test automatici.
+- **Technical Debt**: Ridotto grazie alle intense sessioni di data cleaning e riconciliazione. La mancanza di test automatici rimane un debito tecnico. Esistono prodotti nel magazzino che dovrebbero essere rimossi in base alle nuove regole sui fornitori.
 
 **3rd Party Integrations**
-- : Utilizzata in passato per chiamate LLM (Claude Sonnet 4.5), ora non più utilizzata dopo la rimozione del modulo HACCP.
-- , : Utilizzate per il parsing di file Excel.  è meno rilevante ora che l'importazione dei corrispettivi da Excel è stata rimossa.
-- : Utilizzata per la manipolazione di immagini (es. logo).
+- , : Utilizzate per leggere i file Excel e CSV forniti dall'utente per l'importazione e la riconciliazione dei dati.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES (per il filtro anno globale).
-- **Test files created**: Nessuno.
-- **Known regressions**: Nessuna nota, ma la rimozione massiva del codice HACCP potrebbe aver introdotto effetti collaterali non ancora scoperti.
+- **Testing agent used after significant changes**: NO (non in questa sessione, ma l'agente ha usato estensivamente test manuali con , script Python e ).
+- **Test files created**: Numerosi script Python una tantum per l'analisi, l'importazione e la correzione dei dati, eseguiti tramite .
+- **Known regressions**: Nessuna nota.
 
 **What agent forgot to execute**
-- Nulla. L'agente ha seguito le istruzioni dell'utente in modo sequenziale e stava lavorando sull'ultima richiesta esplicita. I task precedenti (come il P2 per il matching fatture) sono stati consapevolmente messi in backlog su indicazione dell'utente.</analysis>
+- L'agente non ha dimenticato nulla. Ha gestito una grande quantità di richieste complesse in modo sequenziale e stava lavorando attivamente sull'ultima richiesta dell'utente al momento dell'interruzione.</analysis>
