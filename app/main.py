@@ -31,20 +31,12 @@ async def lifespan(app: FastAPI):
     # Connect to database
     await Database.connect_db()
     
-    # Start HACCP scheduler
-    from app.scheduler import start_scheduler
-    start_scheduler()
-    
     logger.info("✅ Application startup complete")
     
     yield
     
     # Shutdown
     logger.info("🔄 Shutting down application...")
-    
-    # Stop scheduler
-    from app.scheduler import stop_scheduler
-    stop_scheduler()
     
     await Database.close_db()
     logger.info("✅ Application shutdown complete")
