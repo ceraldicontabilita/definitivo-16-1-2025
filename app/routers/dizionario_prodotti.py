@@ -144,26 +144,34 @@ async def scan_fatture_per_prodotti(
     now = datetime.now(timezone.utc).isoformat()
     
     for fattura in fatture:
-        for linea in fattura.get("linee", []):
+        # Supporta sia 'lines' che 'linee' per compatibilità
+        linee_fattura = fattura.get("lines", fattura.get("linee", []))
+        supplier_id = fattura.get("supplier_id", fattura.get("id", "unknown"))
+        supplier_name = fattura.get("supplier_name", "Fornitore Sconosciuto")
+        
+        for linea in linee_fattura:
             descrizione = linea.get("descrizione", "").strip()
             if not descrizione or len(descrizione) < 3:
                 continue
             
             # Salta linee non-prodotto (spese, sconti, ecc.)
-            if any(kw in descrizione.lower() for kw in ['sconto', 'trasporto', 'spese', 'imballo', 'contributo']):
+            if any(kw in descrizione.lower() for kw in ['sconto', 'trasporto', 'spese', 'imballo', 'contributo', 'canone', 'servizio', 'nolo']):
                 continue
             
-            # Estrai dati
-            quantita = float(linea.get("quantita", 1) or 1)
-            prezzo_unitario = float(linea.get("prezzo_unitario", 0) or 0)
-            prezzo_totale = float(linea.get("prezzo_totale", 0) or prezzo_unitario * quantita)
+            # Estrai dati - gestisce sia stringhe che numeri
+            try:
+                quantita = float(linea.get("quantita", 1) or 1)
+                prezzo_unitario = float(linea.get("prezzo_unitario", 0) or 0)
+                prezzo_totale = float(linea.get("prezzo_totale", 0) or prezzo_unitario * quantita)
+            except (ValueError, TypeError):
+                continue
             
             # Parse peso dalla descrizione
             peso_info = parse_peso_da_descrizione(descrizione)
             
             # Chiave univoca prodotto
             nome_norm = normalizza_nome_prodotto(descrizione)
-            prodotto_key = f"{fattura['supplier_id']}_{nome_norm}"
+            prodotto_key = f"{supplier_id}_{nome_norm}"
             
             # Calcola prezzo al kg/l se abbiamo il peso
             prezzo_per_kg = None
