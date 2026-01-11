@@ -915,17 +915,6 @@ function MovementsTable({ movimenti, tipo, loading, formatEuro, formatDate, onDe
 
   return (
     <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', border: '1px solid #e5e7eb' }}>
-      {/* Modal Dettaglio Transazione */}
-      {selectedMovimento && (
-        <TransactionDetailModal 
-          movimento={selectedMovimento} 
-          tipo={tipo}
-          formatEuro={formatEuro}
-          formatDate={formatDate}
-          onClose={() => setSelectedMovimento(null)}
-        />
-      )}
-      
       {/* Modal Modifica Movimento - solo se non readOnly */}
       {!readOnly && editingMovimento && (
         <EditMovimentoModal
