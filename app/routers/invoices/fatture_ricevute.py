@@ -593,6 +593,162 @@ async def import_fatture_zip(file: UploadFile = File(...)):
     return risultati
 
 
+# ==================== HELPER FUNCTIONS ====================
+
+def generate_invoice_html(fattura: Dict) -> str:
+    """
+    Genera HTML per la fattura dai dati strutturati quando XML non è disponibile.
+    """
+    numero = fattura.get('invoice_number') or fattura.get('numero_documento', 'N/A')
+    data = fattura.get('invoice_date') or fattura.get('data_documento', 'N/A')
+    fornitore = fattura.get('supplier_name') or fattura.get('fornitore_ragione_sociale', 'N/A')
+    piva = fattura.get('supplier_vat') or fattura.get('fornitore_partita_iva', 'N/A')
+    totale = fattura.get('total_amount') or fattura.get('importo_totale', 0)
+    imponibile = fattura.get('imponibile') or fattura.get('taxable_amount', 0)
+    iva = fattura.get('iva') or fattura.get('vat_amount', 0)
+    
+    # Formatta importi
+    def fmt_euro(val):
+        try:
+            return f"€ {float(val):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        except:
+            return "€ 0,00"
+    
+    # Righe fattura
+    linee = fattura.get('linee') or fattura.get('line_items') or []
+    righe_html = ""
+    for idx, riga in enumerate(linee, 1):
+        desc = riga.get('descrizione') or riga.get('description', '')
+        qta = riga.get('quantita') or riga.get('quantity', 1)
+        prezzo = riga.get('prezzo_unitario') or riga.get('unit_price', 0)
+        importo = riga.get('prezzo_totale') or riga.get('amount', 0)
+        aliquota = riga.get('aliquota_iva') or riga.get('vat_rate', 22)
+        
+        righe_html += f"""
+        <tr>
+            <td>{idx}</td>
+            <td>{desc}</td>
+            <td style="text-align:right">{qta}</td>
+            <td style="text-align:right">{fmt_euro(prezzo)}</td>
+            <td style="text-align:right">{aliquota}%</td>
+            <td style="text-align:right">{fmt_euro(importo)}</td>
+        </tr>"""
+    
+    if not righe_html:
+        righe_html = "<tr><td colspan='6' style='text-align:center;color:#999'>Dettaglio righe non disponibile</td></tr>"
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fattura {numero}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }}
+        .invoice-container {{ background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        .header {{ display: flex; justify-content: space-between; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #4caf50; }}
+        .invoice-title {{ font-size: 28px; font-weight: bold; color: #1a365d; }}
+        .invoice-number {{ font-size: 18px; color: #666; }}
+        .section {{ margin-bottom: 25px; }}
+        .section-title {{ font-size: 14px; font-weight: bold; color: #4caf50; margin-bottom: 10px; text-transform: uppercase; }}
+        .info-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }}
+        .info-item {{ }}
+        .info-label {{ font-size: 12px; color: #999; margin-bottom: 3px; }}
+        .info-value {{ font-size: 16px; font-weight: 500; color: #333; }}
+        table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+        th {{ background: #f8f9fa; padding: 12px 10px; text-align: left; font-size: 12px; color: #666; border-bottom: 2px solid #e5e7eb; }}
+        td {{ padding: 12px 10px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }}
+        .totals {{ margin-top: 20px; text-align: right; }}
+        .totals-row {{ display: flex; justify-content: flex-end; gap: 30px; padding: 8px 0; }}
+        .totals-label {{ color: #666; }}
+        .totals-value {{ font-weight: bold; min-width: 120px; text-align: right; }}
+        .totals-final {{ font-size: 20px; color: #4caf50; border-top: 2px solid #4caf50; padding-top: 15px; margin-top: 10px; }}
+        .print-btn {{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 1000;
+        }}
+        .print-btn:hover {{ background: #45a049; }}
+        @media print {{ .print-btn {{ display: none; }} }}
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Stampa</button>
+    
+    <div class="invoice-container">
+        <div class="header">
+            <div>
+                <div class="invoice-title">FATTURA</div>
+                <div class="invoice-number">N. {numero}</div>
+            </div>
+            <div style="text-align:right">
+                <div class="info-label">Data Documento</div>
+                <div class="info-value">{data}</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Fornitore</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Ragione Sociale</div>
+                    <div class="info-value">{fornitore}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Partita IVA</div>
+                    <div class="info-value">{piva}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Dettaglio Righe</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Descrizione</th>
+                        <th style="text-align:right">Qta</th>
+                        <th style="text-align:right">Prezzo Unit.</th>
+                        <th style="text-align:right">IVA %</th>
+                        <th style="text-align:right">Importo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {righe_html}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="totals">
+            <div class="totals-row">
+                <span class="totals-label">Imponibile:</span>
+                <span class="totals-value">{fmt_euro(imponibile)}</span>
+            </div>
+            <div class="totals-row">
+                <span class="totals-label">IVA:</span>
+                <span class="totals-value">{fmt_euro(iva)}</span>
+            </div>
+            <div class="totals-row totals-final">
+                <span class="totals-label">TOTALE DOCUMENTO:</span>
+                <span class="totals-value">{fmt_euro(totale)}</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html
+
+
 # ==================== VISUALIZZAZIONE ====================
 
 @router.get("/archivio")
