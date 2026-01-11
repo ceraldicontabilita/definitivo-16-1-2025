@@ -581,8 +581,10 @@ export default function Scadenze() {
                       >
                         {loadingInvoice ? '⏳' : '👁️'} Dettagli
                       </button>
-                      <button
-                        onClick={() => window.open(`/api/fatture-ricevute/fattura/${s.fattura_id || s.id}/view-assoinvoice`, '_blank')}
+                      <a
+                        href={`/api/fatture-ricevute/fattura/${s.fattura_id || s.id}/view-assoinvoice`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
                           padding: '6px 12px',
                           background: '#10b981',
@@ -591,15 +593,16 @@ export default function Scadenze() {
                           borderRadius: 6,
                           cursor: 'pointer',
                           fontSize: 12,
-                          display: 'flex',
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 4
+                          gap: 4,
+                          textDecoration: 'none'
                         }}
                         title="Visualizza PDF Fattura"
                         data-testid={`pdf-invoice-${s.fattura_id || s.id}`}
                       >
                         📄 PDF
-                      </button>
+                      </a>
                     </div>
                   )}
                 </div>
