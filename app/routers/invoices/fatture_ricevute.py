@@ -308,6 +308,9 @@ async def import_fattura_xml(file: UploadFile = File(...)):
         # File info
         "filename": file.filename,
         
+        # Contenuto XML originale per visualizzazione AssoInvoice
+        "xml_content": xml_content,
+        
         # Timestamp
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
