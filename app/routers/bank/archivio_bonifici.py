@@ -1693,16 +1693,36 @@ async def get_bonifico_pdf(bonifico_id: str):
     
     # Cerca il file PDF salvato
     pdf_content = bonifico.get("pdf_content")  # Base64
-    if not pdf_content:
-        raise HTTPException(status_code=404, detail="PDF non disponibile per questo bonifico")
     
-    import base64
-    try:
-        pdf_bytes = base64.b64decode(pdf_content)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Errore decodifica PDF")
+    if pdf_content:
+        # PDF salvato come base64
+        import base64
+        try:
+            pdf_bytes = base64.b64decode(pdf_content)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Errore decodifica PDF")
+    else:
+        # PDF salvato come file
+        job_id = bonifico.get("job_id")
+        source_file = bonifico.get("source_file") or bonifico.get("file_name")
+        
+        if not job_id or not source_file:
+            raise HTTPException(status_code=404, detail="PDF non disponibile per questo bonifico")
+        
+        # Costruisci il path del file
+        pdf_path = os.path.join("/app/tmp_bonifici", job_id, source_file)
+        
+        if not os.path.exists(pdf_path):
+            # Prova anche nella directory uploads
+            pdf_path = os.path.join("/app/uploads/bonifici", job_id, source_file)
+        
+        if not os.path.exists(pdf_path):
+            raise HTTPException(status_code=404, detail=f"File PDF non trovato: {source_file}")
+        
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
     
-    filename = bonifico.get("file_name", "bonifico.pdf")
+    filename = bonifico.get("source_file") or bonifico.get("file_name", "bonifico.pdf")
     
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
