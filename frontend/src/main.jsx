@@ -98,7 +98,6 @@ const DettaglioFattura = lazy(() => import("./pages/DettaglioFattura.jsx"));
 const Corrispettivi = lazy(() => import("./pages/Corrispettivi.jsx"));
 const PrimaNota = lazy(() => import("./pages/PrimaNota.jsx"));
 const PrimaNotaCassa = lazy(() => import("./pages/PrimaNotaCassa.jsx"));
-const PrimaNotaBanca = lazy(() => import("./pages/PrimaNotaBanca.jsx"));
 const OperazioniDaConfermare = lazy(() => import("./pages/OperazioniDaConfermare.jsx"));
 const IVA = lazy(() => import("./pages/IVA.jsx"));
 const LiquidazioneIVA = lazy(() => import("./pages/LiquidazioneIVA.jsx"));
