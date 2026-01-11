@@ -270,23 +270,6 @@ app.include_router(gestione_iva_speciale.router, prefix="/api/iva-speciale", tag
 app.include_router(alerts.router, prefix="/api/alerts", tags=["Alert Sistema"])
 app.include_router(import_templates.router, prefix="/api/import-templates", tags=["Import Templates"])
 
-# --- HACCP V2 System (Nuovo sistema completo) ---
-app.include_router(haccp_temp_positive, prefix="/api/haccp-v2", tags=["HACCP V2 Temperature Positive"])
-app.include_router(haccp_temp_negative, prefix="/api/haccp-v2", tags=["HACCP V2 Temperature Negative"])
-app.include_router(haccp_sanificazione, prefix="/api/haccp-v2", tags=["HACCP V2 Sanificazione"])
-app.include_router(haccp_disinfestazione, prefix="/api/haccp-v2", tags=["HACCP V2 Disinfestazione"])
-app.include_router(haccp_anomalie, prefix="/api/haccp-v2", tags=["HACCP V2 Anomalie"])
-app.include_router(haccp_chiusure, prefix="/api/haccp-v2", tags=["HACCP V2 Chiusure"])
-app.include_router(haccp_manuale, prefix="/api/haccp-v2", tags=["HACCP V2 Manuale"])
-app.include_router(haccp_lotti, prefix="/api/haccp-v2", tags=["HACCP V2 Lotti"])
-app.include_router(haccp_materie_prime, prefix="/api/haccp-v2", tags=["HACCP V2 Materie Prime"])
-app.include_router(haccp_ricette, prefix="/api/haccp-v2", tags=["HACCP V2 Ricette"])
-app.include_router(haccp_ricettario, prefix="/api/haccp-v2", tags=["HACCP V2 Ricettario Dinamico"])
-app.include_router(haccp_non_conformi, prefix="/api/haccp-v2", tags=["HACCP V2 Non Conformità"])
-app.include_router(haccp_fornitori, prefix="/api/haccp-v2", tags=["HACCP V2 Fornitori"])
-app.include_router(haccp_allergeni, prefix="/api/haccp-v2", tags=["HACCP V2 Libro Allergeni"])
-app.include_router(haccp_ricette_web, prefix="/api/haccp-v2", tags=["HACCP V2 Ricette Web Search"])
-
 # --- Sincronizzazione Relazionale ---
 app.include_router(sync_relazionale.router, prefix="/api", tags=["Sincronizzazione Relazionale"])
 
