@@ -82,12 +82,6 @@ from app.routers.f24 import (
     f24_gestione_avanzata
 )
 
-# --- HACCP Module ---
-from app.routers.haccp import (
-    haccp_main, haccp_completo, haccp_libro_unico, 
-    haccp_technical_sheets, haccp_sanifications, haccp_report_pdf, haccp_auth
-)
-
 # --- Accounting Module ---
 from app.routers.accounting import (
     accounting_main, accounting_extended, accounting_f24,
