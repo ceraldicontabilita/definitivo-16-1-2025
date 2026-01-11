@@ -49,6 +49,49 @@ export default function MagazzinoDoppiaVerita() {
     }
   }
 
+  // Carica info sui fornitori esclusi
+  async function loadFornitoriEsclusi() {
+    try {
+      const res = await api.get('/api/magazzino-dv/fornitori-esclusi');
+      setFornitoriEsclusi(res.data);
+    } catch (err) {
+      console.error('Errore caricamento fornitori esclusi:', err);
+    }
+  }
+
+  // Anteprima pulizia magazzino
+  async function anteprimaPulizia() {
+    setPuliziaInCorso(true);
+    try {
+      const res = await api.post('/api/magazzino-dv/pulizia-fornitori-esclusi?dry_run=true');
+      setFornitoriEsclusi(res.data);
+    } catch (err) {
+      console.error('Errore anteprima pulizia:', err);
+      alert('Errore durante l\'anteprima: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setPuliziaInCorso(false);
+    }
+  }
+
+  // Esegui pulizia effettiva
+  async function eseguiPulizia() {
+    if (!window.confirm(`Confermi la rimozione di ${fornitoriEsclusi?.totale_prodotti || 0} prodotti dal magazzino?`)) {
+      return;
+    }
+    setPuliziaInCorso(true);
+    try {
+      const res = await api.post('/api/magazzino-dv/pulizia-fornitori-esclusi?dry_run=false');
+      alert(`Pulizia completata! Rimossi ${res.data.totale_prodotti_rimossi} prodotti.`);
+      setFornitoriEsclusi(null);
+      loadProdotti(); // Ricarica lista prodotti
+    } catch (err) {
+      console.error('Errore pulizia:', err);
+      alert('Errore durante la pulizia: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setPuliziaInCorso(false);
+    }
+  }
+
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header */}
