@@ -1346,6 +1346,189 @@ export default function Ricette() {
           </div>
         </div>
       )}
+
+      {/* ================================================ */}
+      {/* MODAL: Selezione Prodotto dal Dizionario         */}
+      {/* ================================================ */}
+      {showProdottiModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }} onClick={() => setShowProdottiModal(false)}>
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '700px',
+              maxHeight: '80vh',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ 
+              padding: '20px 24px', 
+              borderBottom: '1px solid #e5e7eb',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+            }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Package size={22} />
+                Seleziona Prodotto dal Dizionario
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', margin: '6px 0 0 0' }}>
+                Cerca tra {dizionarioStats?.totale_prodotti?.toLocaleString() || '0'} prodotti estratti dalle fatture
+              </p>
+            </div>
+
+            {/* Barra di ricerca */}
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #e5e7eb', background: '#f8fafc' }}>
+              <div style={{ position: 'relative' }}>
+                <Search size={20} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                <input
+                  type="text"
+                  placeholder="Cerca prodotto (es. farina, zucchero, burro...)"
+                  value={prodottiSearch}
+                  onChange={(e) => searchProdottiModal(e.target.value)}
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '14px 14px 14px 46px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '10px',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                  onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                  data-testid="modal-search-prodotti"
+                />
+              </div>
+              {prodottiSearch.length > 0 && prodottiSearch.length < 2 && (
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '6px' }}>
+                  Digita almeno 2 caratteri per cercare...
+                </div>
+              )}
+            </div>
+
+            {/* Lista Risultati */}
+            <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+              {loadingProdotti ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+                  Ricerca in corso...
+                </div>
+              ) : prodottiList.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center' }}>
+                  {prodottiSearch.length >= 2 ? (
+                    <>
+                      <Package size={40} style={{ color: '#cbd5e1', marginBottom: '12px' }} />
+                      <div style={{ color: '#64748b', fontWeight: 500 }}>Nessun prodotto trovato</div>
+                      <div style={{ color: '#94a3b8', fontSize: '13px', marginTop: '4px' }}>Prova con un termine diverso</div>
+                    </>
+                  ) : (
+                    <>
+                      <Search size={40} style={{ color: '#cbd5e1', marginBottom: '12px' }} />
+                      <div style={{ color: '#64748b', fontWeight: 500 }}>Cerca un prodotto</div>
+                      <div style={{ color: '#94a3b8', fontSize: '13px', marginTop: '4px' }}>Inizia a digitare per vedere i risultati</div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <div style={{ padding: '8px 24px', background: '#f1f5f9', fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                    {prodottiList.length} RISULTATI
+                  </div>
+                  {prodottiList.map((prod, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => selectProdottoFromModal(prod)}
+                      style={{
+                        padding: '14px 24px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f9ff'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                      data-testid={`select-prodotto-${idx}`}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '14px', marginBottom: '4px' }}>
+                            {prod.descrizione}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>
+                            {prod.fornitore_nome || 'Fornitore N/D'}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          {prod.prezzo_per_kg ? (
+                            <div style={{ 
+                              padding: '4px 10px', 
+                              background: '#dcfce7', 
+                              borderRadius: '6px', 
+                              fontSize: '13px', 
+                              fontWeight: 600, 
+                              color: '#15803d' 
+                            }}>
+                              €{prod.prezzo_per_kg.toFixed(2)}/kg
+                            </div>
+                          ) : (
+                            <div style={{ 
+                              padding: '4px 10px', 
+                              background: '#fef3c7', 
+                              borderRadius: '6px', 
+                              fontSize: '12px', 
+                              color: '#92400e' 
+                            }}>
+                              Prezzo N/D
+                            </div>
+                          )}
+                          {prod.peso_grammi && (
+                            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                              {prod.peso_grammi >= 1000 ? `${(prod.peso_grammi/1000).toFixed(1)} kg` : `${prod.peso_grammi} g`}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '14px 24px', borderTop: '1px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>
+                Puoi anche digitare manualmente il nome dell'ingrediente
+              </div>
+              <button
+                onClick={() => setShowProdottiModal(false)}
+                style={{ 
+                  padding: '10px 20px', 
+                  background: '#e2e8f0', 
+                  border: 'none', 
+                  borderRadius: '8px', 
+                  cursor: 'pointer', 
+                  fontSize: '14px', 
+                  fontWeight: 500,
+                  color: '#475569'
+                }}
+              >
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
