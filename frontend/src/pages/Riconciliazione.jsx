@@ -473,13 +473,22 @@ export default function Riconciliazione() {
                           {formatEuro(f.total_amount || f.importo)}
                         </td>
                         <td style={{ ...pageStyle.td, textAlign: 'center' }}>
-                          <button
-                            style={{ ...pageStyle.button('success'), padding: '6px 12px' }}
-                            onClick={() => handleRiconciliaManuale(f)}
-                            disabled={processing}
-                          >
-                            ✓ Riconcilia
-                          </button>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                            <button
+                              style={{ ...pageStyle.button('outline'), padding: '6px 10px' }}
+                              onClick={() => window.open(`/api/fatture-ricevute/fattura/${f._id || f.id}/view-assoinvoice`, '_blank')}
+                              title="Visualizza fattura"
+                            >
+                              📄
+                            </button>
+                            <button
+                              style={{ ...pageStyle.button('success'), padding: '6px 12px' }}
+                              onClick={() => handleRiconciliaManuale(f)}
+                              disabled={processing}
+                            >
+                              ✓ Riconcilia
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
