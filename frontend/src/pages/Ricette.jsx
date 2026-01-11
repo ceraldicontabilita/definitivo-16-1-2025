@@ -41,10 +41,13 @@ export default function Ricette() {
   const [letterFilter, setLetterFilter] = useState('');
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
   
-  // Dizionario prodotti per autocomplete
-  const [prodottiSuggestions, setProdottiSuggestions] = useState([]);
-  const [searchingProdotti, setSearchingProdotti] = useState(false);
-  const [activeIngredientIndex, setActiveIngredientIndex] = useState(null);
+  // Dizionario prodotti - NUOVO SISTEMA CON MODAL
+  const [showProdottiModal, setShowProdottiModal] = useState(false);
+  const [prodottiModalTarget, setProdottiModalTarget] = useState(null); // 'new' o 'edit'
+  const [prodottiModalIndex, setProdottiModalIndex] = useState(null);
+  const [prodottiList, setProdottiList] = useState([]);
+  const [prodottiSearch, setProdottiSearch] = useState('');
+  const [loadingProdotti, setLoadingProdotti] = useState(false);
   const [foodCost, setFoodCost] = useState(null);
   const [dizionarioStats, setDizionarioStats] = useState(null);
 
