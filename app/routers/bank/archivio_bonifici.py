@@ -1897,7 +1897,6 @@ async def get_fatture_compatibili(bonifico_id: str):
     
     pipeline = [
         {"$match": match_stage},
-        {"$project": {"_id": 0}},  # Esclude _id per evitare ObjectId
         # Deduplica per numero fattura + P.IVA fornitore
         {"$group": {
             "_id": {
@@ -1907,6 +1906,7 @@ async def get_fatture_compatibili(bonifico_id: str):
             "doc": {"$first": "$$ROOT"}
         }},
         {"$replaceRoot": {"newRoot": "$doc"}},
+        {"$project": {"_id": 0}},  # Esclude _id DOPO replaceRoot
         {"$sort": {"invoice_date": -1}},
         {"$limit": 50}
     ]
