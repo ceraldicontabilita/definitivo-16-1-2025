@@ -19,6 +19,14 @@ export default function GestioneAssegni() {
   const [filterStato, _setFilterStato] = useState('');
   const [search, _setSearch] = useState('');
   
+  // NUOVI FILTRI
+  const [filterFornitore, setFilterFornitore] = useState('');
+  const [filterImportoMin, setFilterImportoMin] = useState('');
+  const [filterImportoMax, setFilterImportoMax] = useState('');
+  const [filterNumeroAssegno, setFilterNumeroAssegno] = useState('');
+  const [filterNumeroFattura, setFilterNumeroFattura] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  
   // Generate modal
   const [showGenerate, setShowGenerate] = useState(false);
   const [generateForm, setGenerateForm] = useState({ numero_primo: '', quantita: 10 });
