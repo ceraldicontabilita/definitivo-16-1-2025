@@ -224,9 +224,14 @@ export default function ArchivioBonifici() {
   // Carica operazioni salari compatibili per associazione
   const loadOperazioniCompatibili = async (bonifico_id) => {
     setLoadingOperazioni(true);
+    setDipendenteIbanMatch(null);
     try {
       const res = await api.get(`/api/archivio-bonifici/operazioni-salari/${bonifico_id}`);
       setOperazioniCompatibili(res.data.operazioni_compatibili || []);
+      // Salva info dipendente trovato per IBAN
+      if (res.data.dipendente_iban_match) {
+        setDipendenteIbanMatch(res.data.dipendente_iban_match);
+      }
     } catch (error) {
       console.error('Errore caricamento operazioni:', error);
       setOperazioniCompatibili([]);
