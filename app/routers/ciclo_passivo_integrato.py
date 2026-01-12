@@ -1095,17 +1095,20 @@ async def match_manuale(
 
 @router.post("/riconcilia-automatica-batch")
 async def riconcilia_automatica_batch(
-    dry_run: bool = Query(default=True, description="Se True, mostra solo i match senza eseguirli")
+    dry_run: bool = Query(default=True, description="Se True, mostra solo i match senza eseguirli"),
+    include_suggerimenti: bool = Query(default=False, description="Se True, include anche match a bassa confidenza")
 ):
     """
     Riesegue la riconciliazione automatica su TUTTE le scadenze aperte.
-    Usa l'algoritmo migliorato con fuzzy matching su:
-    - Campo 'fornitore' del movimento bancario
-    - Descrizione originale (SDD, bonifici)
-    - Parole chiave del nome fornitore
+    
+    L'algoritmo usa 3 livelli di confidenza:
+    - ALTA: Importo esatto (±€1) E nome fornitore confermato
+    - MEDIA: Importo esatto per importi > €100 (senza conferma nome)
+    - BASSA/SUGGERIMENTO: Importo simile (±10%), richiede verifica manuale
     
     Args:
         dry_run: Se True, mostra solo i match potenziali senza eseguirli
+        include_suggerimenti: Se True, include match a bassa confidenza (non riconciliati automaticamente)
     """
     db = Database.get_db()
     
@@ -1117,11 +1120,16 @@ async def riconcilia_automatica_batch(
     
     risultati = {
         "totale_scadenze": len(scadenze),
-        "match_trovati": 0,
+        "match_alta_confidenza": 0,
+        "match_media_confidenza": 0,
+        "suggerimenti": 0,
         "riconciliati": 0,
         "nessun_match": 0,
         "errori": 0,
-        "dettagli": [],
+        "dettagli_alta": [],
+        "dettagli_media": [],
+        "dettagli_suggerimenti": [],
+        "dettagli_nessun_match": [],
         "dry_run": dry_run
     }
     
@@ -1132,56 +1140,87 @@ async def riconcilia_automatica_batch(
         
         try:
             # Cerca match con algoritmo migliorato
-            match = await cerca_match_bancario(db, scad)
+            match = await cerca_match_bancario(db, scad, include_suggerimenti=include_suggerimenti)
             
             if match:
-                risultati["match_trovati"] += 1
+                confidence = match.get("confidence", "UNKNOWN")
                 
                 dettaglio = {
                     "scadenza_id": scadenza_id,
                     "fornitore": fornitore,
                     "importo_scadenza": importo,
+                    "data_scadenza": scad.get("data_scadenza", ""),
                     "movimento_id": match.get("id"),
                     "importo_movimento": abs(match.get("importo", 0)),
+                    "diff_importo": round(abs(importo - abs(match.get("importo", 0))), 2),
                     "descrizione": (match.get("descrizione_originale") or match.get("descrizione", ""))[:60],
                     "fornitore_movimento": match.get("fornitore", ""),
                     "match_type": match.get("match_type"),
                     "match_score": match.get("match_score"),
+                    "confidence": confidence,
                     "source": match.get("source_collection"),
                     "data_movimento": match.get("data", ""),
+                    "note": match.get("note", ""),
                     "status": "trovato"
                 }
                 
-                # Esegui riconciliazione se non in dry_run
-                if not dry_run:
-                    try:
-                        ric_result = await esegui_riconciliazione(
-                            db, scadenza_id, match.get("id"), match.get("source_collection")
-                        )
-                        if ric_result.get("success"):
-                            risultati["riconciliati"] += 1
-                            dettaglio["status"] = "riconciliato"
-                            dettaglio["riconciliazione_id"] = ric_result.get("riconciliazione_id")
-                        else:
-                            dettaglio["status"] = "errore_riconciliazione"
+                # Categorizza per confidenza
+                if confidence == "HIGH":
+                    risultati["match_alta_confidenza"] += 1
+                    risultati["dettagli_alta"].append(dettaglio)
+                    
+                    # Riconcilia automaticamente solo alta confidenza
+                    if not dry_run:
+                        try:
+                            ric_result = await esegui_riconciliazione(
+                                db, scadenza_id, match.get("id"), match.get("source_collection")
+                            )
+                            if ric_result.get("success"):
+                                risultati["riconciliati"] += 1
+                                dettaglio["status"] = "riconciliato"
+                                dettaglio["riconciliazione_id"] = ric_result.get("riconciliazione_id")
+                        except Exception as e:
+                            dettaglio["status"] = "errore"
+                            dettaglio["errore"] = str(e)
                             risultati["errori"] += 1
-                    except Exception as e:
-                        dettaglio["status"] = "errore"
-                        dettaglio["errore"] = str(e)
-                        risultati["errori"] += 1
                 
-                risultati["dettagli"].append(dettaglio)
+                elif confidence == "MEDIUM":
+                    risultati["match_media_confidenza"] += 1
+                    risultati["dettagli_media"].append(dettaglio)
+                    
+                    # Media confidenza: riconcilia solo se esplicitamente richiesto
+                    if not dry_run:
+                        try:
+                            ric_result = await esegui_riconciliazione(
+                                db, scadenza_id, match.get("id"), match.get("source_collection")
+                            )
+                            if ric_result.get("success"):
+                                risultati["riconciliati"] += 1
+                                dettaglio["status"] = "riconciliato"
+                                dettaglio["riconciliazione_id"] = ric_result.get("riconciliazione_id")
+                        except Exception as e:
+                            dettaglio["status"] = "errore"
+                            dettaglio["errore"] = str(e)
+                            risultati["errori"] += 1
+                
+                else:  # LOW / suggerimento
+                    risultati["suggerimenti"] += 1
+                    dettaglio["status"] = "suggerimento"
+                    risultati["dettagli_suggerimenti"].append(dettaglio)
+                    # I suggerimenti NON vengono mai riconciliati automaticamente
+                    
             else:
                 risultati["nessun_match"] += 1
-                risultati["dettagli"].append({
+                risultati["dettagli_nessun_match"].append({
                     "scadenza_id": scadenza_id,
                     "fornitore": fornitore,
                     "importo_scadenza": importo,
+                    "data_scadenza": scad.get("data_scadenza", ""),
                     "status": "nessun_match"
                 })
         except Exception as e:
             risultati["errori"] += 1
-            risultati["dettagli"].append({
+            risultati["dettagli_nessun_match"].append({
                 "scadenza_id": scadenza_id,
                 "fornitore": fornitore,
                 "status": "errore",
@@ -1189,8 +1228,12 @@ async def riconcilia_automatica_batch(
             })
     
     # Statistiche finali
-    risultati["percentuale_match"] = round(
-        (risultati["match_trovati"] / risultati["totale_scadenze"] * 100) if risultati["totale_scadenze"] > 0 else 0, 1
+    totale_match = risultati["match_alta_confidenza"] + risultati["match_media_confidenza"]
+    risultati["percentuale_match_automatico"] = round(
+        (totale_match / risultati["totale_scadenze"] * 100) if risultati["totale_scadenze"] > 0 else 0, 1
+    )
+    risultati["percentuale_con_suggerimenti"] = round(
+        ((totale_match + risultati["suggerimenti"]) / risultati["totale_scadenze"] * 100) if risultati["totale_scadenze"] > 0 else 0, 1
     )
     
     return risultati
