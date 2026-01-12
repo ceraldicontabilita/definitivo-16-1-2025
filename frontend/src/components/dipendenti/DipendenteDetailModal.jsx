@@ -733,6 +733,24 @@ function DipendenteBonificiTab({ bonifici, loading, onReload }) {
                       </span>
                     )}
                   </td>
+                  <td style={{ padding: 8, textAlign: 'center' }}>
+                    <button
+                      onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}/api/archivio-bonifici/transfers/${bon.id}/pdf`, '_blank')}
+                      style={{
+                        background: '#e3f2fd',
+                        color: '#1565c0',
+                        border: 'none',
+                        padding: '4px 8px',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        fontWeight: 500
+                      }}
+                      title="Visualizza PDF bonifico"
+                    >
+                      📄 PDF
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
