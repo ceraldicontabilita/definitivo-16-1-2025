@@ -201,12 +201,12 @@ export default function MagazzinoDoppiaVerita() {
             checked={soloScorteBasse}
             onChange={(e) => setSoloScorteBasse(e.target.checked)}
           />
-          <span style={{ fontSize: '14px', color: '#374151' }}>Solo scorte basse</span>
+          <span style={{ color: '#374151' }}>Scorte basse</span>
         </label>
         <button
           onClick={loadProdotti}
           style={{
-            padding: '10px 16px',
+            padding: '8px 14px',
             background: '#f3f4f6',
             border: '1px solid #e5e7eb',
             borderRadius: '8px',
@@ -214,16 +214,16 @@ export default function MagazzinoDoppiaVerita() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            fontSize: '14px'
+            fontSize: '13px'
           }}
         >
-          <RefreshCw size={16} /> Aggiorna
+          <RefreshCw size={14} /> Aggiorna
         </button>
         <button
           onClick={anteprimaPulizia}
           disabled={puliziaInCorso}
           style={{
-            padding: '10px 16px',
+            padding: '8px 14px',
             background: '#fef2f2',
             border: '1px solid #fecaca',
             borderRadius: '8px',
@@ -231,12 +231,12 @@ export default function MagazzinoDoppiaVerita() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            fontSize: '14px',
+            fontSize: '13px',
             color: '#dc2626'
           }}
           data-testid="btn-pulizia-magazzino"
         >
-          <Trash2 size={16} /> Pulizia Fornitori Esclusi
+          <Trash2 size={14} /> Pulizia
         </button>
       </div>
 
