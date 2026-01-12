@@ -1294,9 +1294,9 @@ async def get_operazioni_salari_compatibili(bonifico_id: str):
     """
     Cerca operazioni in Prima Nota Salari compatibili con il bonifico.
     Filtra per:
-    - Importo simile (±5%)
-    - Data vicina (±30 giorni)
+    - Importo simile (±10%)
     - Non già associate
+    - DEDUPLICA per dipendente+importo+anno+mese
     """
     db = Database.get_db()
     
@@ -1310,25 +1310,47 @@ async def get_operazioni_salari_compatibili(bonifico_id: str):
     causale = (bonifico.get("causale") or "").lower()
     beneficiario = ((bonifico.get("beneficiario") or {}).get("nome") or "").lower()
     
-    # Cerca in prima_nota_salari
-    query = {
-        "salario_associato": {"$ne": True}
-    }
+    # Pipeline di aggregazione con deduplicazione
+    match_stage = {"salario_associato": {"$ne": True}}
     
-    # Filtra per importo ±10% - cerca nei campi corretti: importo_busta, importo_bonifico
     if importo > 0:
-        query["$or"] = [
+        match_stage["$or"] = [
             {"importo_busta": {"$gte": importo * 0.9, "$lte": importo * 1.1}},
             {"importo_bonifico": {"$gte": importo * 0.9, "$lte": importo * 1.1}},
             {"importo": {"$gte": importo * 0.9, "$lte": importo * 1.1}},
             {"netto": {"$gte": importo * 0.9, "$lte": importo * 1.1}}
         ]
     
-    operazioni = await db.prima_nota_salari.find(query, {"_id": 0}).sort("anno", -1).to_list(100)
+    pipeline = [
+        {"$match": match_stage},
+        # Deduplica per dipendente + importo + anno + mese
+        {"$group": {
+            "_id": {
+                "dipendente": "$dipendente",
+                "importo_busta": "$importo_busta",
+                "anno": "$anno",
+                "mese": "$mese"
+            },
+            "doc": {"$first": "$$ROOT"}
+        }},
+        {"$replaceRoot": {"newRoot": "$doc"}},
+        {"$sort": {"anno": -1, "mese": -1}},
+        {"$limit": 50}
+    ]
+    
+    operazioni = await db.prima_nota_salari.aggregate(pipeline).to_list(50)
     
     # Calcola score di compatibilità
     risultati = []
+    seen_keys = set()  # Extra deduplicazione
+    
     for op in operazioni:
+        # Chiave univoca
+        key = f"{op.get('dipendente', '')}_{op.get('importo_busta', 0)}_{op.get('anno', '')}_{op.get('mese', '')}"
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        
         score = 0
         op_importo = op.get("importo_busta") or op.get("importo_bonifico") or op.get("importo") or op.get("netto", 0)
         op_data = op.get("data", "")
