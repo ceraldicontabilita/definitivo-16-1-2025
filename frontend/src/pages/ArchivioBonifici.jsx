@@ -38,7 +38,25 @@ export default function ArchivioBonifici() {
   const [fattureCompatibili, setFattureCompatibili] = useState([]);
   const [associaFatturaDropdown, setAssociaFatturaDropdown] = useState(null);
   const [loadingFatture, setLoadingFatture] = useState(false);
+  const [activeTab, setActiveTab] = useState('da_associare'); // 'da_associare' | 'associati'
   const initialized = useRef(false);
+  const dropdownRef = useRef(null);
+
+  // Chiudi dropdown quando si clicca fuori
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        // Chiudi tutti i dropdown
+        setAssociaDropdown(null);
+        setAssociaFatturaDropdown(null);
+        setOperazioniCompatibili([]);
+        setFattureCompatibili([]);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Carica dati iniziali
   useEffect(() => {
