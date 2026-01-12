@@ -361,6 +361,7 @@ async def upload_files(job_id: str, background: BackgroundTasks, files: List[Upl
     )
     
     # Avvia elaborazione in background
+    logger.info(f"Starting background processing for job {job_id} with {len(pdf_paths)} files")
     background.add_task(process_files_background, job_id, pdf_paths)
     
     return {
@@ -376,6 +377,7 @@ async def process_files_background(job_id: str, file_paths: List[Path]):
     Elabora i file PDF in background con deduplicazione avanzata.
     Supporta fino a 1500 file con gestione memoria ottimizzata.
     """
+    logger.info(f"process_files_background started for job {job_id}")
     db = Database.get_db()
     
     await db.bonifici_jobs.update_one({'id': job_id}, {'$set': {'status': 'processing'}})
