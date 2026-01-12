@@ -27,7 +27,8 @@ from app.routers.ciclo_passivo_integrato import (
     cerca_match_bancario,
     esegui_riconciliazione,
     processa_carico_magazzino,
-    COL_SCADENZIARIO
+    COL_SCADENZIARIO,
+    COL_PRIMA_NOTA_BANCA
 )
 
 logger = logging.getLogger(__name__)
