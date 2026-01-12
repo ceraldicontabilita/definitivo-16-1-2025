@@ -1480,7 +1480,6 @@ async def get_operazioni_salari_compatibili(bonifico_id: str):
     
     pipeline = [
         {"$match": match_stage},
-        {"$project": {"_id": 0}},  # Esclude _id per evitare ObjectId
         # Deduplica per dipendente + importo + anno + mese
         {"$group": {
             "_id": {
@@ -1492,6 +1491,7 @@ async def get_operazioni_salari_compatibili(bonifico_id: str):
             "doc": {"$first": "$$ROOT"}
         }},
         {"$replaceRoot": {"newRoot": "$doc"}},
+        {"$project": {"_id": 0}},  # Esclude _id DOPO replaceRoot
         {"$sort": {"anno": -1, "mese": -1}},
         {"$limit": 50}
     ]
