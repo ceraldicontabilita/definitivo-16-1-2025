@@ -1308,26 +1308,29 @@ async def get_operazioni_salari_compatibili(bonifico_id: str):
     importo = abs(bonifico.get("importo", 0))
     data_bonifico = bonifico.get("data", "")
     causale = bonifico.get("causale", "").lower()
+    beneficiario = (bonifico.get("beneficiario", {}) or {}).get("nome", "").lower()
     
     # Cerca in prima_nota_salari
     query = {
         "salario_associato": {"$ne": True}
     }
     
-    # Filtra per importo ±10%
+    # Filtra per importo ±10% - cerca nei campi corretti: importo_busta, importo_bonifico
     if importo > 0:
         query["$or"] = [
+            {"importo_busta": {"$gte": importo * 0.9, "$lte": importo * 1.1}},
+            {"importo_bonifico": {"$gte": importo * 0.9, "$lte": importo * 1.1}},
             {"importo": {"$gte": importo * 0.9, "$lte": importo * 1.1}},
             {"netto": {"$gte": importo * 0.9, "$lte": importo * 1.1}}
         ]
     
-    operazioni = await db.prima_nota_salari.find(query, {"_id": 0}).sort("data", -1).to_list(50)
+    operazioni = await db.prima_nota_salari.find(query, {"_id": 0}).sort("anno", -1).to_list(100)
     
     # Calcola score di compatibilità
     risultati = []
     for op in operazioni:
         score = 0
-        op_importo = op.get("importo") or op.get("netto", 0)
+        op_importo = op.get("importo_busta") or op.get("importo_bonifico") or op.get("importo") or op.get("netto", 0)
         op_data = op.get("data", "")
         op_desc = (op.get("descrizione", "") + " " + op.get("dipendente", "")).lower()
         
