@@ -326,7 +326,74 @@ export default function ArchivioFatture() {
             <p style={{ margin: '8px 0 0 0', fontSize: 14 }}>Usa i pulsanti "Carica XML" per importare fatture</p>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <>
+          {/* Layout Card per Mobile */}
+          <div className="mobile-cards-archivio" style={{ display: 'none' }}>
+            <style>{`
+              @media (max-width: 768px) {
+                .mobile-cards-archivio { display: block !important; }
+                .desktop-table-archivio { display: none !important; }
+              }
+            `}</style>
+            {fatture.map((f, idx) => (
+              <div 
+                key={f.id}
+                style={{
+                  background: idx % 2 === 0 ? 'white' : '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 12,
+                  padding: 16,
+                  marginBottom: 12
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', fontSize: 15 }}>{f.numero_documento}</div>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>{f.data_documento}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: 16, color: '#1e40af' }}>{formatCurrency(f.importo_totale)}</div>
+                    {getStatoBadge(f)}
+                  </div>
+                </div>
+                <div style={{ fontSize: 14, color: '#374151', marginBottom: 4 }}>
+                  {f.fornitore_ragione_sociale}
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
+                  P.IVA: {f.fornitore_partita_iva}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
+                  <span>Imponibile: {formatCurrency(f.imponibile)}</span>
+                  <span>IVA: {formatCurrency(f.iva)}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <a
+                    href={`/api/fatture-ricevute/fattura/${f.id}/view-assoinvoice`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ flex: 1, padding: '8px 12px', background: '#2196f3', color: 'white', borderRadius: 8, textDecoration: 'none', textAlign: 'center', fontSize: 13, fontWeight: 'bold' }}
+                  >
+                    📄 Vedi PDF
+                  </a>
+                  <button
+                    onClick={() => navigate(`/fatture-ricevute/${f.id}`)}
+                    style={{ padding: '8px 12px', background: '#f3f4f6', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
+                  >
+                    🔍
+                  </button>
+                  <button
+                    onClick={() => handleOpenMatch(f.id)}
+                    style={{ padding: '8px 12px', background: '#fef3c7', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
+                  >
+                    🏷️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Tabella Desktop */}
+          <div className="desktop-table-archivio" style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e5e7eb', background: '#f9fafb' }}>
