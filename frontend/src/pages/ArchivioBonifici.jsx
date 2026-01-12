@@ -38,6 +38,7 @@ export default function ArchivioBonifici() {
   const [fattureCompatibili, setFattureCompatibili] = useState([]);
   const [associaFatturaDropdown, setAssociaFatturaDropdown] = useState(null);
   const [loadingFatture, setLoadingFatture] = useState(false);
+  const [dipendenteIbanMatch, setDipendenteIbanMatch] = useState(null);
   const [activeTab, setActiveTab] = useState('da_associare'); // 'da_associare' | 'associati'
   const initialized = useRef(false);
   const dropdownRef = useRef(null);
