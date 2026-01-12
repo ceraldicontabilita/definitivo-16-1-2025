@@ -338,7 +338,77 @@ async def import_fattura_xml(file: UploadFile = File(...)):
         if allegato_id:
             allegati_salvati.append(allegato_id)
     
-    logger.info(f"✅ Fattura importata: {numero_doc} - Fornitore: {fornitore_result.get('ragione_sociale')}")
+    # ==================== INTEGRAZIONE CICLO PASSIVO ====================
+    # Prepara dati fornitore per le funzioni integrate
+    fornitore_obj = {
+        "id": fornitore_result.get("fornitore_id"),
+        "partita_iva": partita_iva,
+        "ragione_sociale": fornitore_result.get("ragione_sociale"),
+        "esclude_magazzino": False  # Default
+    }
+    
+    # Recupera flag esclude_magazzino dal DB
+    fornitore_db = await db[COL_FORNITORI].find_one({"partita_iva": partita_iva}, {"_id": 0, "esclude_magazzino": 1})
+    if fornitore_db:
+        fornitore_obj["esclude_magazzino"] = fornitore_db.get("esclude_magazzino", False)
+    
+    risultato_integrazione = {}
+    
+    # 1. CARICO MAGAZZINO (se fornitore non escluso)
+    try:
+        mag_result = await processa_carico_magazzino(
+            db, fattura_id, fornitore_obj, 
+            parsed.get("linee", []),
+            parsed.get("invoice_date", ""),
+            numero_doc
+        )
+        risultato_integrazione["magazzino"] = mag_result
+    except Exception as e:
+        logger.error(f"Errore magazzino: {e}")
+        risultato_integrazione["magazzino"] = {"error": str(e)}
+    
+    # 2. PRIMA NOTA - Scrittura contabile Dare/Avere
+    try:
+        scrittura_id = await genera_scrittura_prima_nota(db, fattura_id, fattura, fornitore_obj)
+        risultato_integrazione["prima_nota"] = {"scrittura_id": scrittura_id, "status": "ok"}
+        # Aggiorna fattura con riferimento prima nota
+        await db[COL_FATTURE_RICEVUTE].update_one(
+            {"id": fattura_id},
+            {"$set": {"prima_nota_id": scrittura_id}}
+        )
+    except Exception as e:
+        logger.error(f"Errore prima nota: {e}")
+        risultato_integrazione["prima_nota"] = {"error": str(e)}
+    
+    # 3. SCADENZIARIO - Crea scadenza pagamento
+    try:
+        scadenza_id = await crea_scadenza_pagamento(db, fattura_id, fattura, fornitore_obj)
+        risultato_integrazione["scadenziario"] = {"scadenza_id": scadenza_id, "status": "ok"}
+        
+        # 4. RICONCILIAZIONE AUTOMATICA - Cerca match con movimenti bancari
+        scadenza = await db[COL_SCADENZIARIO].find_one({"id": scadenza_id}, {"_id": 0})
+        if scadenza:
+            match = await cerca_match_bancario(db, scadenza)
+            if match:
+                ric_result = await esegui_riconciliazione(db, scadenza_id, match.get("id"))
+                risultato_integrazione["riconciliazione"] = {
+                    "automatica": True,
+                    "transazione_id": match.get("id"),
+                    **ric_result
+                }
+            else:
+                risultato_integrazione["riconciliazione"] = {"automatica": False, "message": "Nessun match bancario trovato"}
+    except Exception as e:
+        logger.error(f"Errore scadenziario/riconciliazione: {e}")
+        risultato_integrazione["scadenziario"] = {"error": str(e)}
+    
+    # Aggiorna flag integrazione completata
+    await db[COL_FATTURE_RICEVUTE].update_one(
+        {"id": fattura_id},
+        {"$set": {"integrazione_completata": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    logger.info(f"✅ Fattura importata con integrazione completa: {numero_doc} - Fornitore: {fornitore_result.get('ragione_sociale')}")
     
     return {
         "success": True,
