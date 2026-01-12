@@ -775,7 +775,110 @@ def generate_invoice_html(fattura: Dict, righe_fattura: List[Dict] = None) -> st
             </div>
         </div>"""
     
-
+    # Sezione pagamento HTML (solo se presente)
+    pagamento_html = ""
+    if mod_pagamento or iban:
+        pagamento_html = f"""
+        <div class="section">
+            <div class="section-title">Dati Pagamento</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Modalità</div>
+                    <div class="info-value">{mod_pagamento}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Scadenza</div>
+                    <div class="info-value">{data_scadenza}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">IBAN</div>
+                    <div class="info-value">{iban}</div>
+                </div>
+            </div>
+        </div>"""
+    
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fattura {numero}</title>
+    <style>
+        * {{ box-sizing: border-box; }}
+        body {{ font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; max-width: 1100px; margin: 0 auto; background: #f0f2f5; color: #333; }}
+        .invoice-container {{ background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }}
+        .header {{ display: flex; justify-content: space-between; margin-bottom: 35px; padding-bottom: 25px; border-bottom: 3px solid #2563eb; }}
+        .invoice-title {{ font-size: 32px; font-weight: 700; color: #1e3a8a; }}
+        .invoice-number {{ font-size: 20px; color: #6b7280; margin-top: 5px; }}
+        .invoice-date {{ text-align: right; background: #eff6ff; padding: 15px 20px; border-radius: 8px; }}
+        .section {{ margin-bottom: 30px; }}
+        .section-title {{ font-size: 13px; font-weight: 700; color: #2563eb; margin-bottom: 12px; text-transform: uppercase; border-left: 4px solid #2563eb; padding-left: 10px; }}
+        .info-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; background: #f8fafc; padding: 20px; border-radius: 8px; }}
+        .info-label {{ font-size: 11px; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase; }}
+        .info-value {{ font-size: 15px; font-weight: 600; color: #1f2937; }}
+        table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+        th {{ background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 14px 12px; text-align: left; font-size: 12px; text-transform: uppercase; }}
+        td {{ padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }}
+        tr:hover {{ background: #f8fafc; }}
+        .totals {{ text-align: right; margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #1e3a8a, #2563eb); border-radius: 8px; color: white; }}
+        .totals-label {{ margin-right: 20px; font-size: 14px; opacity: 0.9; }}
+        .totals-value {{ font-size: 24px; color: white; }}
+        .print-btn {{ position: fixed; top: 20px; right: 20px; padding: 12px 24px; background: linear-gradient(135deg, #2563eb, #1e40af); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; z-index: 1000; }}
+        .print-btn:hover {{ background: linear-gradient(135deg, #1e40af, #1e3a8a); }}
+        @media print {{ .print-btn {{ display: none; }} body {{ background: white; padding: 0; }} .invoice-container {{ box-shadow: none; }} }}
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Stampa</button>
+    <div class="invoice-container">
+        <div class="header">
+            <div>
+                <div class="invoice-title">FATTURA</div>
+                <div class="invoice-number">N. {numero}</div>
+            </div>
+            <div class="invoice-date">
+                <div class="info-label">Data Documento</div>
+                <div class="info-value" style="font-size: 18px;">{data}</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Cedente / Prestatore (Fornitore)</div>
+            <div class="info-grid">
+                <div class="info-item"><div class="info-label">Ragione Sociale</div><div class="info-value">{fornitore}</div></div>
+                <div class="info-item"><div class="info-label">Partita IVA</div><div class="info-value">{piva}</div></div>
+                <div class="info-item"><div class="info-label">Codice Fiscale</div><div class="info-value">{cf}</div></div>
+                <div class="info-item"><div class="info-label">Indirizzo</div><div class="info-value">{indirizzo}</div></div>
+                <div class="info-item"><div class="info-label">Città</div><div class="info-value">{cap} {comune} ({provincia})</div></div>
+            </div>
+        </div>
+        
+        {cliente_html}
+        {pagamento_html}
+        
+        <div class="section">
+            <div class="section-title">Dettaglio Righe</div>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Descrizione</th><th>Q.tà</th><th>Prezzo Unit.</th><th>IVA</th><th>Importo</th></tr>
+                </thead>
+                <tbody>
+                    {righe_html}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="totals">
+            <span class="totals-label">Imponibile: {fmt_euro(imponibile)}</span>
+            <span class="totals-label">IVA: {fmt_euro(iva)}</span>
+            <span class="totals-label">TOTALE:</span>
+            <span class="totals-value">{fmt_euro(totale)}</span>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html
 
 
 @router.post("/rielabora-integrazione")
