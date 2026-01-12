@@ -348,11 +348,6 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 
 ## 🚀 PROSSIMI TASK
 
-### P1 - Priorità Alta
-- [ ] **Migliorare parser buste paga** - Estrarre più dati dai PDF
-- [ ] **Dashboard Statistiche Riconciliazione** - Visualizzare metriche di riconciliazione
-- [ ] **UI eliminazione fattura** - Mostrare entità correlate prima di eliminare
-
 ### P2 - Priorità Media
 - [ ] Gestione Lotti Avanzata
 - [ ] Calcolo Food Cost Ricette
