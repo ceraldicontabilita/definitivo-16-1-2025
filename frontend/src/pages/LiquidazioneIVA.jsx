@@ -89,6 +89,16 @@ export default function LiquidazioneIVA() {
     );
   };
 
+  // Stile comune per le card
+  const cardStyle = {
+    background: 'white',
+    borderRadius: 12,
+    padding: 20,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    border: '1px solid #e5e7eb',
+    marginBottom: 20
+  };
+
   return (
     <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }} data-testid="liquidazione-iva-page">
       {/* Header */}
