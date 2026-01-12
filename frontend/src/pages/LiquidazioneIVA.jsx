@@ -349,8 +349,7 @@ export default function LiquidazioneIVA() {
                 value={confronto.debito}
                 onChange={(e) => setConfronto({ ...confronto, debito: e.target.value })}
                 placeholder="0.00"
-                style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14 }}
-                style={{ width: 180 }}
+                style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, width: 180 }}
                 data-testid="input-confronto-debito"
               />
             </div>
@@ -364,8 +363,7 @@ export default function LiquidazioneIVA() {
                 value={confronto.credito}
                 onChange={(e) => setConfronto({ ...confronto, credito: e.target.value })}
                 placeholder="0.00"
-                style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14 }}
-                style={{ width: 180 }}
+                style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #e5e7eb', fontSize: 14, width: 180 }}
                 data-testid="input-confronto-credito"
               />
             </div>
