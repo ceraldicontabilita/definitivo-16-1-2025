@@ -391,7 +391,8 @@ async def import_fattura_xml(file: UploadFile = File(...)):
         if scadenza:
             match = await cerca_match_bancario(db, scadenza)
             if match:
-                ric_result = await esegui_riconciliazione(db, scadenza_id, match.get("id"))
+                source_col = match.get("source_collection", "estratto_conto_movimenti")
+                ric_result = await esegui_riconciliazione(db, scadenza_id, match.get("id"), source_col)
                 risultato_integrazione["riconciliazione"] = {
                     "automatica": True,
                     "transazione_id": match.get("id"),
