@@ -105,6 +105,62 @@ def build_dedup_key(t: Dict[str, Any]) -> str:
     return 'CMP:' + hashlib.sha1(base.encode('utf-8')).hexdigest()
 
 
+def parse_filename_data(filename: str) -> Optional[Dict[str, Any]]:
+    """
+    Estrae dati dal nome del file PDF.
+    Pattern supportati:
+    - Bonifico - ricevuta per ordinante_DD-MM-YYYY_IMPORTO.pdf
+    - Contabile di filiale_DD-MM-YYYY_IMPORTO.pdf
+    - NomeFile_DD-MM-YYYY_IMPORTO_N.pdf
+    """
+    # Pattern: tipo_data_importo[_n].pdf
+    pattern = r'^(.+?)_(\d{2}-\d{2}-\d{4})(?:_(\d+[,.]?\d*))?(?:_\d+)?\.pdf$'
+    match = re.match(pattern, filename, re.IGNORECASE)
+    
+    if not match:
+        return None
+    
+    tipo, data_str, importo_str = match.groups()
+    
+    # Parsing data (DD-MM-YYYY -> YYYY-MM-DD)
+    try:
+        parts = data_str.split('-')
+        data = f"{parts[2]}-{parts[1]}-{parts[0]}"
+    except:
+        data = None
+    
+    # Parsing importo
+    importo = None
+    if importo_str:
+        try:
+            importo = float(importo_str.replace('.', '').replace(',', '.'))
+        except:
+            pass
+    
+    # Determina tipo documento
+    tipo_lower = tipo.lower()
+    causale = None
+    if 'bonifico' in tipo_lower:
+        causale = "Bonifico"
+    elif 'contabile' in tipo_lower:
+        causale = "Contabile di filiale"
+    else:
+        causale = tipo[:50]
+    
+    return {
+        'data': data,
+        'importo': importo,
+        'valuta': 'EUR',
+        'ordinante': {'nome': None, 'iban': None},
+        'beneficiario': {'nome': None, 'iban': None},
+        'causale': causale,
+        'cro_trn': None,
+        'banca': None,
+        'note': f"Importato da: {filename}",
+        'tipo_documento': tipo[:100]
+    }
+
+
 def read_pdf_text(pdf_path: Path) -> str:
     """Estrae testo da PDF."""
     try:
