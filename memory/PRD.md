@@ -1,521 +1,292 @@
 # PRD - Azienda in Cloud ERP
-
-## Panoramica
-Sistema ERP completo per **Ceraldi Group S.R.L.** - gestione contabilità, fatturazione, magazzino per attività di ristorazione/bar.
-
-**Stack Tecnologico:**
-- Backend: FastAPI (Python) + MongoDB
-- Frontend: React + Stili JavaScript inline
+## Schema Definitivo v2.0 - Gennaio 2026
 
 ---
 
-## ⚠️ REGOLE SVILUPPO OBBLIGATORIE
+## 📋 PANORAMICA
 
-### 1. Test Multi-Dispositivo
-**OGNI modifica a una pagina DEVE essere testata su:**
-- Desktop (1920x800)
-- Mobile (375x667 o simile)
-- Tablet (768x1024)
+Sistema ERP cloud-native per gestione contabilità, fatturazione e magazzino con:
+- Ciclo passivo integrato (Import XML → Magazzino → Prima Nota → Scadenziario → Riconciliazione)
+- Doppia conferma per operazioni su dati registrati
+- CASCADE DELETE/UPDATE per coerenza dati
+- UI responsive mobile-first
 
-### 2. Link e Pulsanti
-**NON usare `window.open()` per aprire link esterni.** 
-Usare SEMPRE tag `<a>` con `target="_blank"`:
-```jsx
-// ❌ NON FARE
-<button onClick={() => window.open(url, '_blank')}>Apri</button>
+---
 
-// ✅ FARE COSÌ
-<a href={url} target="_blank" rel="noopener noreferrer">Apri</a>
+## 🔗 SCHEMA RELAZIONI ENTITÀ
+
 ```
-
-### 3. Pagine Legacy
-**NON creare versioni separate per mobile/desktop.**
-- Usa CSS responsive direttamente (`gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))'`)
-- Elimina pagine legacy duplicate
-- **Pagine eliminate il 2026-01-11:**
-  - `PrimaNotaBanca.jsx`
-  - `PrimaNotaCassa.jsx`
-  - `PrimaNotaMobile.jsx`
-
-### 4. Tab/Sezioni Importanti
-Rendere i tab **sticky** (posizione fissa) su mobile per permettere navigazione veloce:
-```jsx
-position: 'sticky',
-top: 0,
-zIndex: 100,
-background: '#f9fafb'
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           SCHEMA RELAZIONI                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  FATTURA (invoices / fatture_ricevute)                                      │
+│     │                                                                       │
+│     ├──► dettaglio_righe_fatture      [1:N] Righe fattura                  │
+│     │    - fattura_id → id fattura                                         │
+│     │                                                                       │
+│     ├──► prima_nota_banca             [1:N] Movimenti contabili banca      │
+│     │    - fattura_id → id fattura                                         │
+│     │                                                                       │
+│     ├──► prima_nota_cassa             [1:N] Movimenti contabili cassa      │
+│     │    - fattura_id → id fattura                                         │
+│     │                                                                       │
+│     ├──► scadenziario_fornitori       [1:N] Scadenze pagamento             │
+│     │    - fattura_id → id fattura                                         │
+│     │                                                                       │
+│     ├──► warehouse_movements          [1:N] Movimenti magazzino            │
+│     │    - fattura_id → id fattura                                         │
+│     │                                                                       │
+│     ├──► riconciliazioni              [1:N] Match bancari                  │
+│     │    - scadenza_id → id scadenza (contiene fattura_id)                 │
+│     │                                                                       │
+│     └──► assegni                      [1:N] Assegni collegati              │
+│          - fattura_collegata → id fattura                                  │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  FORNITORE (suppliers / fornitori)                                          │
+│     │                                                                       │
+│     ├──► invoices                     [1:N] Fatture del fornitore          │
+│     │    - supplier_vat / fornitore_piva → P.IVA                           │
+│     │                                                                       │
+│     ├──► warehouse_inventory          [1:N] Prodotti del fornitore         │
+│     │    - supplier_id / fornitore_piva → ID/P.IVA                         │
+│     │                                                                       │
+│     ├──► magazzino_doppia_verita      [1:N] Giacenze prodotti              │
+│     │    - fornitore_piva → P.IVA                                          │
+│     │                                                                       │
+│     └──► warehouse_stocks             [1:N] Stock prodotti                 │
+│          - supplier_piva → P.IVA                                           │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ESTRATTO CONTO (estratto_conto_movimenti)                                  │
+│     │                                                                       │
+│     └──► riconciliazioni              [1:1] Riconciliazione con scadenza   │
+│          - fattura_id → quando riconciliato                                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Moduli Principali
+## ⚡ CASCADE OPERATIONS
 
-### 1. Contabilità
-- **Prima Nota Cassa/Banca** - Registrazione movimenti
-- **Prima Nota Salari** - Gestione paghe dipendenti
-- **Piano dei Conti** - Struttura contabile
-- **Bilancio** - Stato patrimoniale e conto economico
-- **IVA** - Calcolo, liquidazione, F24
-- **Riconciliazione Bancaria** - Match automatico estratto conto ↔ fatture
+### CASCADE DELETE - Eliminazione Fattura
 
-### 2. Fatturazione
-- **Ciclo Passivo** - Fatture fornitori (XML)
-- **Archivio Fatture** - Storico documenti
-- **Import XML** - Parsing fatture elettroniche Aruba
-- **Visualizzazione AssoInvoice** - Trasformazione XML→HTML con foglio stile XSL (NUOVO 2026-01-11)
+Quando si elimina una fattura, vengono eliminate/archiviate:
 
-### 3. Magazzino
-- **Gestione Prodotti** - Anagrafica articoli
-- **Lotti** - Tracciabilità completa
-- **Dizionario Articoli** - Mappatura codici
+| Entità | Azione | Note |
+|--------|--------|------|
+| `dettaglio_righe_fatture` | DELETE/ARCHIVE | Righe fattura |
+| `prima_nota_banca` | DELETE/ARCHIVE | Movimenti contabili |
+| `prima_nota_cassa` | DELETE/ARCHIVE | Movimenti contabili |
+| `scadenziario_fornitori` | DELETE/ARCHIVE | Scadenze pagamento |
+| `warehouse_movements` | ANNULLA | Segna come annullati, non elimina |
+| `riconciliazioni` | DELETE | Match bancari |
+| `assegni` | SGANCIA | Rimuove collegamento, non elimina |
 
-### 4. Contabilità Analitica (AGGIORNATO 2026-01-11)
-- **Ricette & Food Cost** - Ricette con calcolo automatico del costo ingredienti
-- **Dizionario Prodotti** - Catalogo prodotti estratti dalle fatture per il food cost
-- **Centri di Costo** - Allocazione costi per centro
-- **Registro Lotti** - Tracciabilità lotti produzione
+### CASCADE DELETE - Eliminazione Fornitore con "Escludi Magazzino"
 
-### 5. Gestione Email
-- **Sync Aruba** - Download notifiche fatture
-- **Parsing HTML** - Estrazione dati (fornitore, importo, data, numero)
-- **Operazioni da Confermare** - Workflow approvazione
+| Entità | Azione | Note |
+|--------|--------|------|
+| `warehouse_inventory` | DELETE | Prodotti del fornitore |
+| `magazzino_doppia_verita` | DELETE | Giacenze prodotti |
+| `warehouse_stocks` | DELETE | Stock prodotti |
+| `invoices` | SEGNA | Flag `fornitore_eliminato=true` |
 
----
+### CASCADE UPDATE - Modifica Fattura
 
-## ⭐ Sistema Food Cost (NUOVO - 2026-01-11)
+Quando si modifica una fattura, si aggiornano:
 
-### Funzionalità
-Sistema completo per il calcolo automatico del costo ingredienti nelle ricette.
-
-#### Dizionario Prodotti
-- **Scansione automatica fatture** → estrazione di tutti i prodotti acquistati
-- **Parser intelligente** per estrarre pesi dalle descrizioni (es. "KG.25", "500G", "1LT")
-- **Calcolo prezzo/kg** automatico basato su prezzo unitario e peso
-- **6,611 prodotti** estratti, ~44% con prezzo/kg calcolato
-- **Inserimento manuale peso** per prodotti senza peso rilevato
-
-#### Ricette & Food Cost
-- **Autocompletamento ingredienti** da dizionario prodotti
-- **Calcolo food cost** automatico basato su quantità e prezzo/kg
-- **Indicatore completezza** (es. "3/5 ingredienti con prezzo")
-- **Warning** per ingredienti senza prezzo nel dizionario
-
-### API Endpoints
-```
-# Dizionario Prodotti
-GET  /api/dizionario-prodotti/stats
-GET  /api/dizionario-prodotti/prodotti
-POST /api/dizionario-prodotti/prodotti/scan-fatture?anno=2026
-GET  /api/dizionario-prodotti/prodotti/search-per-ingrediente?ingrediente=farina
-PUT  /api/dizionario-prodotti/prodotti/{id}/peso
-POST /api/dizionario-prodotti/calcola-food-cost
-```
-
-### Pagine Frontend
-- `/ricette` - Ricette con calcolo food cost
-- `/dizionario-prodotti` - Gestione dizionario prodotti
+| Campo Modificato | Entità Aggiornate |
+|-----------------|-------------------|
+| `importo_totale` | prima_nota_banca, prima_nota_cassa, scadenziario_fornitori |
+| `data_documento` | prima_nota_banca, prima_nota_cassa |
+| `fornitore_*` | prima_nota_banca, scadenziario_fornitori |
 
 ---
 
-## Funzionalità Chiave Implementate
+## 🔒 DOPPIA CONFERMA
 
-### Visualizzazione Fatture AssoInvoice (NUOVO - 2026-01-11)
-Sistema per visualizzare le fatture elettroniche in formato HTML leggibile usando il foglio stile AssoInvoice.
+### Operazioni che richiedono conferma
 
-#### Endpoint
+1. **Eliminazione fattura registrata** (con Prima Nota, Scadenze, etc.)
+2. **Eliminazione fornitore con prodotti**
+3. **Annullamento movimenti magazzino**
+4. **Modifica importo fattura già in Prima Nota**
+
+### Implementazione API
+
 ```
-GET /api/fatture-ricevute/fattura/{id}/view-assoinvoice
+DELETE /api/fatture/{id}
+→ Senza force: restituisce warning + require_force: true
+→ Con force=true: esegue eliminazione
+
+GET /api/fatture/{id}/entita-correlate
+→ Mostra tutte le entità che verranno impattate
 ```
-
-#### Funzionalità
-- **Trasformazione XSL** → Se la fattura ha XML, usa il foglio stile XSL per generare HTML professionale
-- **Fallback HTML** → Se XML non disponibile, genera HTML dai dati strutturati
-- **Pulsante stampa** → Ogni fattura ha un pulsante per stampare/salvare come PDF
-- **Integrazione Prima Nota Banca** → I movimenti con fattura associata mostrano pulsante "📄 Vedi"
-- **Integrazione Gestione Assegni** → Gli assegni con fattura collegata mostrano pulsante "📄 Vedi"
-
-#### File Coinvolti
-- `/app/app/routers/invoices/fatture_ricevute.py` - Endpoint view_fattura_assoinvoice
-- `/app/app/static/FoglioStileAssoSoftware.xsl` - Foglio stile XSL
-- `/app/frontend/src/pages/PrimaNotaBanca.jsx` - 262 pulsanti "Vedi" (anno 2025)
-- `/app/frontend/src/pages/GestioneAssegni.jsx` - 134 pulsanti "Vedi"
 
 ---
 
-### Ricerca Web Ricette con AI
-- Ricerca ricette online con Claude Sonnet 4.5
-- Categorie: dolci, rosticceria napoletana, rosticceria siciliana, contorni, basi
-- **Normalizzazione automatica a 1kg** dell'ingrediente base
-- Formula: `fattore = 1000 / grammi_ingrediente_base`
-- Tutti gli ingredienti moltiplicati per lo stesso fattore
-
-### Riconciliazione Automatica Migliorata
-Sistema a punteggio (score) con 3 criteri:
-1. **Importo esatto** (±0.05€) → +10 punti
-2. **Nome fornitore** nella descrizione → +5 punti
-3. **Numero fattura** nella descrizione → +5 punti
-
-Logica:
-- Score ≥ 15 → Riconciliazione automatica sicura
-- Score 10-14 → Riconcilia se unica fattura
-- Score = 10 → Da confermare manualmente
-
-### Associazione Bonifici ↔ Salari
-- Dropdown suggerimenti in Archivio Bonifici
-- Match per importo e periodo
-- Collegamento a prima_nota_salari
-
----
-
-## Schema Database (MongoDB)
+## 📊 COLLEZIONI DATABASE
 
 ### Collezioni Principali
-```
-invoices                    # Fatture ricevute (XML)
-suppliers                   # Anagrafica fornitori
-cash_movements              # Prima nota cassa
-bank_movements              # Prima nota banca
-prima_nota_salari           # Movimenti salari
-estratto_conto_movimenti    # Estratto conto importato
-operazioni_da_confermare    # Workflow approvazione
-archivio_bonifici           # Bonifici emessi
-ricette                     # Ricettario (158 ricette)
-lotti_materie_prime         # Tracciabilità ingredienti
-settings_assets             # Logo e asset aziendali
-```
 
-### Schema Ricette
-```javascript
-{
-  id: String,
-  nome: String,
-  categoria: String,  // "dolci", "rosticceria_napoletana", etc.
-  ingredienti: [{
-    nome: String,
-    quantita: Number,
-    unita: String
-  }],
-  ingrediente_base: String,  // "farina", "mandorle", etc.
-  normalizzata_1kg: Boolean,
-  fattore_normalizzazione: Number,
-  procedimento: String,
-  fonte: String,  // "AI Generated - Claude Sonnet 4.5"
-  created_at: DateTime
-}
+| Collezione | Descrizione | Campi Chiave |
+|------------|-------------|--------------|
+| `invoices` | Fatture (principale) | id, invoice_number, supplier_vat, total_amount |
+| `fatture_ricevute` | Fatture ricevute | id, numero_documento, fornitore_piva, importo_totale |
+| `suppliers` / `fornitori` | Anagrafica fornitori | id, partita_iva, ragione_sociale, esclude_magazzino |
+| `prima_nota_banca` | Movimenti banca | id, data, tipo, importo, fattura_id |
+| `prima_nota_cassa` | Movimenti cassa | id, data, tipo, importo, fattura_id |
+| `scadenziario_fornitori` | Scadenze pagamento | id, fattura_id, data_scadenza, importo_totale, pagato |
+| `estratto_conto_movimenti` | Movimenti bancari importati | id, data, importo, tipo, fattura_id (se riconciliato) |
+| `riconciliazioni` | Match scadenze-movimenti | id, scadenza_id, transazione_id |
+| `assegni` | Gestione assegni | id, numero, beneficiario, fattura_collegata |
+| `warehouse_inventory` | Prodotti magazzino | id, nome, fornitore_piva, giacenza |
+| `magazzino_doppia_verita` | Giacenze teoriche/reali | id, prodotto_id, giacenza_teorica, giacenza_reale |
+
+---
+
+## 🔄 FLUSSO CICLO PASSIVO INTEGRATO
+
+```
+1. IMPORT XML FATTURA
+   └──► Parse fattura elettronica
+   
+2. IDENTIFICAZIONE
+   ├──► Trova/Crea fornitore
+   └──► Se fornitore.esclude_magazzino → SALTA magazzino
+   
+3. MAGAZZINO (se non escluso)
+   ├──► Crea movimenti warehouse_movements
+   ├──► Aggiorna giacenze magazzino_doppia_verita
+   └──► Crea/Aggiorna prodotti warehouse_inventory
+   
+4. PRIMA NOTA
+   └──► Crea movimento in prima_nota_banca
+        (tipo: uscita, categoria: Fornitori)
+   
+5. SCADENZIARIO
+   └──► Crea scadenza in scadenziario_fornitori
+        (data_scadenza = data_fattura + giorni_pagamento)
+   
+6. RICONCILIAZIONE AUTOMATICA
+   ├──► Cerca match in estratto_conto_movimenti
+   │    - Criteri: importo ± 0.10€, data ± 60gg
+   │    - Fuzzy match su nome fornitore (score ≥60%)
+   └──► Se match trovato → Crea riconciliazione
 ```
 
 ---
 
-## API Endpoints Principali
+## 📱 PAGINE RESPONSIVE
 
-### HACCP - Ricette Web Search
-```
-POST /api/haccp-v2/ricette-web/cerca
-POST /api/haccp-v2/ricette-web/importa
-POST /api/haccp-v2/ricette-web/normalizza-esistenti
-POST /api/haccp-v2/ricette-web/migliora
-GET  /api/haccp-v2/ricette-web/suggerimenti
-GET  /api/haccp-v2/ricette-web/statistiche-normalizzazione
-```
+Tutte le pagine principali supportano layout mobile:
 
-### Riconciliazione
-```
-POST /api/riconciliazione-auto/riconcilia-estratto-conto
-GET  /api/riconciliazione-auto/stats-riconciliazione
-GET  /api/riconciliazione-auto/operazioni-dubbi
-POST /api/riconciliazione-auto/conferma-operazione/{id}
-```
-
-### Operazioni da Confermare
-```
-GET  /api/operazioni-da-confermare/lista
-POST /api/operazioni-da-confermare/sync-email
-POST /api/operazioni-da-confermare/{id}/conferma
-```
-
-### Settings
-```
-GET  /api/settings/logo
-POST /api/settings/logo
-```
+| Pagina | Desktop | Mobile |
+|--------|---------|--------|
+| Prima Nota | Tabella | Card con tab sticky |
+| Fatture | Tabella | Card con info chiave |
+| Archivio Fatture | Tabella | Card |
+| Riconciliazione | Grid 2 colonne | Stack verticale |
+| Gestione Assegni | Tabella | Card per carnet |
+| Magazzino DV | Tabella | Card con griglia giacenze |
+| Scadenze | Card statistiche | Card impilate |
+| Fornitori | Grid | Card responsive |
 
 ---
 
-## Architettura File
+## 🔍 FILTRI GESTIONE ASSEGNI
 
-```
-/app
-├── app/
-│   ├── main.py                          # Entry point FastAPI
-│   ├── database.py                      # Connessione MongoDB
-│   ├── routers/
-│   │   ├── accounting/
-│   │   │   └── riconciliazione_automatica.py  # Match triplo
-│   │   ├── haccp_v2/
-│   │   │   ├── ricette_web_search.py    # AI search + normalizzazione
-│   │   │   ├── ricettario_dinamico.py   # Gestione ricette
-│   │   │   ├── libro_allergeni.py       # PDF allergeni
-│   │   │   └── ...
-│   │   ├── operazioni_da_confermare.py  # Workflow email
-│   │   ├── settings.py                  # Logo e config
-│   │   └── ...
-│   └── services/
-│       ├── aruba_invoice_parser.py      # Parsing email Aruba
-│       └── ...
-├── frontend/
-│   └── src/
-│       ├── App.jsx                      # Layout principale
-│       ├── pages/
-│       │   ├── RicettarioDinamico.jsx   # UI ricettario + search AI
-│       │   ├── OperazioniDaConfermare.jsx
-│       │   ├── Dashboard.jsx
-│       │   └── ...
-│       ├── hooks/
-│       │   └── useResponsive.js         # Hook responsive
-│       └── public/
-│           └── logo-ceraldi.png         # Logo bianco
-└── memory/
-    ├── PRD.md                           # Questo file
-    ├── CHANGELOG.md                     # Storico modifiche
-    └── ROADMAP.md                       # Task futuri
-```
+| Filtro | Campo | Note |
+|--------|-------|------|
+| Fornitore/Beneficiario | `beneficiario` | Ricerca parziale |
+| Importo Min | `importo` | ≥ valore |
+| Importo Max | `importo` | ≤ valore |
+| Numero Assegno | `numero` | Ricerca parziale |
+| Numero Fattura | `numero_fattura` | Ricerca parziale |
 
 ---
 
-## Integrazioni Esterne
+## 🎯 BUSINESS RULES
 
-| Servizio | Uso | Chiave |
-|----------|-----|--------|
-| Claude Sonnet 4.5 | Ricerca ricette AI | EMERGENT_LLM_KEY |
-| MongoDB | Database | MONGO_URL |
-| Aruba Email | Notifiche fatture | EMAIL_ADDRESS, EMAIL_PASSWORD |
+### Eliminazione Fattura
 
----
+- ❌ **NON eliminabile** se: pagata, inviata AdE
+- ⚠️ **Richiede conferma** se: ha Prima Nota, Scadenze, Movimenti magazzino
+- ✅ **Eliminabile** se: bozza, non registrata
 
-## Filtro Anno Globale (Implementato 2025-01-10)
+### Eliminazione Fornitore
 
-Sistema di filtro anno centralizzato per l'intera applicazione.
+- ⚠️ **Richiede conferma** se: ha prodotti in magazzino
+- ✅ Eliminazione cascade di tutti i prodotti
 
-### Architettura
-- **Contesto**: `/app/frontend/src/contexts/AnnoContext.jsx`
-- **Hook**: `useAnnoGlobale()` restituisce `{ anno, setAnno }`
-- **Selettore**: `<AnnoSelector />` posizionato nella sidebar
-- **Persistenza**: localStorage (`annoGlobale`)
+### Modifica Fornitore - "Escludi Magazzino"
 
-### Pagine Convertite
-- Dashboard, Archivio Fatture Ricevute, Controllo Mensile
-- Ciclo Passivo Integrato, Gestione Riservata
-- HACCPCompleto, HACCPCongelatoriV2, HACCPFrigoriferiV2
-- HACCPSanificazioniV2, HACCPNonConformita, HACCPSanificazione, HACCPTemperature
-- Corrispettivi, IVA, LiquidazioneIVA, Fatture, ContabilitaAvanzata, HACCPAnalytics
-
-### Comportamento
-- L'anno selezionato nella sidebar filtra tutti i dati dell'app
-- Le pagine mostrano `"ANNO (globale)"` per indicare che il valore è read-only
-- La navigazione tra mesi è limitata all'anno corrente selezionato
+- Quando `esclude_magazzino` passa a `true`:
+  - Elimina automaticamente tutti i prodotti del fornitore
+  - Feedback visivo all'utente
 
 ---
 
-## Logica Corrispettivi (Aggiornata 2025-01-10)
+## 📁 FILE DI RIFERIMENTO
 
-### ⚠️ IMPORTANTE - Nuova Logica dal 2026
+### Backend
 
-**ELIMINATO:** Import corrispettivi da Excel (non più supportato)
+| File | Descrizione |
+|------|-------------|
+| `/app/app/services/cascade_operations.py` | Logica CASCADE DELETE/UPDATE |
+| `/app/app/services/business_rules.py` | Regole business |
+| `/app/app/routers/ciclo_passivo_integrato.py` | Flusso integrato import |
+| `/app/app/routers/invoices/fatture_upload.py` | Gestione fatture |
+| `/app/app/routers/suppliers.py` | Gestione fornitori |
+| `/app/app/routers/scadenzario_fornitori.py` | Scadenziario |
 
-### Flusso Operativo
+### Frontend
 
-```
-1. INSERIMENTO MANUALE
-   └─→ Prima Nota → Chiusure Giornaliere → Corrispettivo
-   └─→ Inserisci importo LORDO del giorno
-   └─→ Viene salvato in prima_nota_cassa (categoria: "Corrispettivi")
-
-2. CARICAMENTO XML (dal Registratore Telematico)
-   └─→ POST /api/prima-nota/import-corrispettivi-xml
-   └─→ SE esiste già corrispettivo per quella data:
-       └─→ AGGIORNA solo dettagli IVA (imponibile, imposta, dettaglio_iva)
-       └─→ NON modifica l'importo inserito manualmente
-   └─→ SE NON esiste corrispettivo:
-       └─→ CREA nuovo movimento da XML (fallback)
-```
-
-### Struttura Dati
-```json
-{
-  "id": "uuid",
-  "data": "2026-01-10",
-  "tipo": "entrata",
-  "importo": 500.00,           // LORDO inserito manualmente
-  "categoria": "Corrispettivi",
-  "pagato_contanti": 150.00,   // Da XML
-  "pagato_elettronico": 350.00, // Da XML
-  "imponibile": 454.55,        // Da XML
-  "imposta": 45.45,            // Da XML
-  "dettaglio_iva": [           // Da XML
-    {"aliquota": 10, "imponibile": 454.55, "imposta": 45.45}
-  ],
-  "iva_popolata": true         // Flag XML caricato
-}
-```
-
-### Dati Storici (Pre-2026)
-I dati esistenti sono **definitivi e corretti**. La correzione `fix-corrispettivi-importo` è già stata applicata per aggiungere l'IVA agli importi.
+| File | Descrizione |
+|------|-------------|
+| `/app/frontend/src/pages/PrimaNota.jsx` | Prima Nota unificata |
+| `/app/frontend/src/pages/Fatture.jsx` | Lista fatture |
+| `/app/frontend/src/pages/GestioneAssegni.jsx` | Assegni con filtri |
+| `/app/frontend/src/pages/MagazzinoDoppiaVerita.jsx` | Magazzino |
+| `/app/frontend/src/pages/Riconciliazione.jsx` | Riconciliazione |
 
 ---
 
-## Vincoli Tecnici
-
-1. **Stili inline obbligatori** - No CSS esterno, solo `style={{...}}`
-2. **MongoDB ObjectId** - Sempre escludere `_id` nelle risposte
-3. **Normalizzazione 1kg** - Tutte le ricette devono avere ingrediente base = 1000g
-4. **Match riconciliazione** - Triplo criterio (importo + fornitore + numero fattura)
-5. **Filtro Anno** - Usare sempre `useAnnoGlobale()` per l'anno, non `useState` locale
-6. **Entrate Cassa** - SEMPRE imponibile + IVA (totale lordo), MAI solo imponibile
-
----
-
-## Sincronizzazione Dati Relazionale (Implementato 2025-01-10)
-
-Sistema di propagazione modifiche tra moduli contabili.
-
-### Principio
-> **MODIFICA UNA VOLTA → AGGIORNA OVUNQUE**
-
-### Relazioni
-```
-CORRISPETTIVI ────→ PRIMA NOTA CASSA (ENTRATA = imponibile + IVA)
-FATTURE XML ──┬──→ PRIMA NOTA CASSA (se metodo = "Cassa")
-              └──→ PRIMA NOTA BANCA (se metodo = "Bonifico")
-```
-
-### API Sincronizzazione
-| Endpoint | Descrizione |
-|----------|-------------|
-| `GET /api/sync/stato-sincronizzazione` | Status sistema |
-| `POST /api/sync/match-fatture-cassa` | Match fatture ↔ prima nota cassa |
-| `POST /api/sync/fatture-to-banca` | Imposta fatture a Bonifico |
-| `PUT /api/sync/update-fattura-everywhere/{id}` | Aggiorna fattura ovunque |
-| `GET /api/prima-nota/cassa/verifica-entrate-corrispettivi` | Verifica importi |
-| `POST /api/prima-nota/cassa/fix-corrispettivi-importo` | Correggi importi |
-
-### UI Admin
-Tab "Sincronizzazione" in `/admin` per gestire:
-- Stato sincronizzazione
-- Verifica e correzione entrate corrispettivi
-- Match fatture con prima nota cassa
-- Impostazione metodo pagamento default
-
-### File Implementazione
-- Backend: `/app/app/routers/sync_relazionale.py`
-- Documentazione: `/app/memory/LOGICA_RELAZIONALE.md`
-
----
-
-## Note Importanti
-
-### Modulo HACCP (RIMOSSO - 2026-01-10)
-Il modulo HACCP completo (Temperature, Sanificazione, Ricettario Dinamico, Libro Allergeni, Non Conformità) è stato **eliminato** su richiesta dell'utente.
-
-### Sistema Ricette Semplificato
-Le ricette sono ora gestite dalla pagina `/ricette` (Ricette & Food Cost) con focus sul calcolo del costo ingredienti, senza le funzionalità HACCP precedenti.
-
----
-
-## Changelog - Gennaio 2026
-
-### 2026-01-11
-- **Foglio Stile AssoInvoice**: Implementato il foglio di stile `FoglioStileAssoSoftware.xsl` fornito dall'utente per la visualizzazione delle fatture XML in formato HTML professionale.
-- **Salvataggio XML Content**: Modificato l'import delle fatture (`/api/fatture-ricevute/import-xml`, `import-xml-multipli`, `import-zip`) per salvare il contenuto XML originale nel campo `xml_content`, necessario per la trasformazione XSL.
-- **Pulizia Magazzino Fornitori Esclusi**: Implementata funzionalità completa:
-  - Endpoint `POST /api/magazzino-dv/pulizia-fornitori-esclusi` (dry_run per anteprima, effettivo per rimozione)
-  - Endpoint `GET /api/magazzino-dv/fornitori-esclusi` per visualizzare i fornitori con flag attivo
-  - UI nella pagina "Magazzino Doppia Verità" con pulsante "Pulizia Fornitori Esclusi" e pannello di conferma
-  - La pulizia rimuove prodotti da `warehouse_inventory` e `magazzino_doppia_verita`
-- **Pulsanti PDF Fatture su tutte le pagine**:
-  - **Fatture.jsx**: Aggiunto pulsante "📄 PDF" per visualizzare fatture in formato AssoInvoice
-  - **CicloPassivoIntegrato.jsx**: Aggiunto pulsante "📄" per le scadenze con fattura associata  
-  - **Riconciliazione.jsx**: Aggiunto pulsante "📄" per le fatture matching
-  - **Scadenze.jsx**: Aggiunto pulsante "📄 PDF" accanto ai dettagli per scadenze fattura
-- **Visualizzazione Fatture Migliorata**: 
-  - Template HTML migliorato per fatture senza XML (stile blu professionale)
-  - Caricamento automatico righe da `dettaglio_righe_fatture`
-  - Visualizzazione dati fornitore completi (CF, indirizzo, città)
-  - Sezione cliente/destinatario
-  - Sezione dati pagamento (modalità, scadenza, IBAN)
-- **Riconciliazione Automatica v3 (Task P2)**:
-  - Fuzzy matching per nomi fornitori usando `rapidfuzz`
-  - Match parziale importi per pagamenti a rate (±10% tolleranza)
-  - Score basato su data scadenza vicina al movimento
-  - Risultato test: 109 movimenti riconciliati automaticamente
-- **Semplificazione Prima Nota**:
-  - Rimosso `TransactionDetailModal` (popup al click sulla riga)
-  - Rimosse righe cliccabili dalla tabella movimenti
-  - Mantenuto solo pulsante "Vedi" nella colonna Fattura che apre AssoInvoice in nuova scheda
-  - Codice ridotto di ~250 righe (1597 → 1347)
-- **Uniformità Visualizzazione Fatture**:
-  - Pulsante "📄 Vedi" in Prima Nota apre `/api/fatture-ricevute/fattura/{id}/view-assoinvoice`
-  - Pulsante "📄 PDF" in Fatture.jsx apre la stessa vista AssoInvoice
-  - Pulsante "📄 Vedi PDF" in ArchivioFattureRicevute apre AssoInvoice
-  - Template HTML migliorato per fatture senza XML content (stile blu professionale)
+## 📝 CHANGELOG
 
 ### 2026-01-12
-- **Refactoring Responsive Design Completato**:
-  - **Fatture.jsx**: Implementato layout a card per mobile (breakpoint 768px), tabella per desktop. Nessuno scroll orizzontale su mobile.
-  - **ArchivioFattureRicevute.jsx**: Corretto errore JSX (fragment non chiuso), implementato layout card mobile/tabella desktop.
-  - **Riconciliazione.jsx**: Aggiornato layout tab "Manuale" da `1fr 1fr` a `repeat(auto-fit, minmax(300px, 1fr))` per impilare le colonne su mobile.
-  - **CicloPassivoIntegrato.jsx**: Aggiornato `splitView` da `1fr 1fr` a `repeat(auto-fit, minmax(300px, 1fr))` per responsive.
-- **Test Responsive 100% superato**: Tutte le pagine principali ora sono responsive senza scroll orizzontale su mobile (testato a 375px viewport).
+- ✅ Implementato CASCADE DELETE per fatture
+- ✅ Implementato CASCADE UPDATE per fatture
+- ✅ Aggiunta DOPPIA CONFERMA per operazioni registrate
+- ✅ Responsive GestioneAssegni con filtri
+- ✅ Responsive MagazzinoDoppiaVerita
+- ✅ Pulizia magazzino automatica su "Escludi Fornitore"
+- ✅ Fuzzy matching per riconciliazione automatica
 
-- **INTEGRAZIONE CICLO PASSIVO COMPLETATA**:
-  - Ora l'import delle fatture XML (endpoint `/api/fatture-ricevute/import-xml`) genera AUTOMATICAMENTE:
-    - Movimento in Prima Nota Banca (categoria "Fornitori")
-    - Scadenza nello scadenziario_fornitori (30 giorni default o data dal XML)
-    - Tentativo di riconciliazione automatica con movimenti bancari
-  - Aggiunto endpoint `/api/fatture-ricevute/elabora-fatture-legacy` per rielaborare fatture esistenti dalla collezione `invoices`
-  - 17 fatture 2026 rielaborate con successo: 17 Prima Nota + 17 Scadenze
+### 2026-01-11
+- ✅ Integrazione ciclo passivo (Import → Prima Nota → Scadenze)
+- ✅ Nuovo foglio stile AssoInvoice
+- ✅ Responsive pagine principali (Fatture, Prima Nota, etc.)
+- ✅ Rimozione pagine legacy
 
-- **FIX COLLEZIONI PRIMA NOTA**:
-  - La funzione `genera_scrittura_prima_nota` ora scrive in `prima_nota_banca` invece di `prima_nota` (collezione errata)
-  - Struttura documento allineata con schema esistente (data, tipo, categoria, descrizione, importo, riferimenti)
+---
 
-- **PULIZIA MAGAZZINO AUTOMATICA**:
-  - Quando si imposta `esclude_magazzino=True` su un fornitore, i suoi prodotti vengono automaticamente rimossi dal magazzino
-  - Modificato endpoint PUT `/api/suppliers/{id}` per eseguire pulizia automatica
-  - Feedback visivo nel frontend quando prodotti vengono rimossi
+## 🚀 PROSSIMI TASK
 
-- **RICONCILIAZIONE AUTOMATICA MIGLIORATA**:
-  - Aggiunto endpoint `/api/scadenzario-fornitori/riconcilia-automatica` per riconciliazione batch
-  - Cerca match in `estratto_conto_movimenti` (principale) e `bank_transactions` (fallback)
-  - Gestisce importi negativi (uscite) e cerca in range temporale più ampio (60 giorni prima della scadenza)
-  - 2 riconciliazioni automatiche eseguite per 2026
+### P1 - Priorità Alta
+- [ ] Dashboard Statistiche Riconciliazione
+- [ ] Migliorare UI eliminazione fattura (mostrare entità correlate)
 
-- **SCADENZIARIO INTEGRATO**:
-  - Nuovo endpoint `/api/scadenzario-fornitori/scadenze-integrate` per visualizzare scadenze dalla collezione `scadenziario_fornitori`
+### P2 - Priorità Media
+- [ ] Gestione Lotti Avanzata
+- [ ] Calcolo Food Cost Ricette
+- [ ] Report PDF scadenze
 
-### 2026-01-12 (sessione 2)
-- **RESPONSIVE GestioneAssegni.jsx**:
-  - Layout a card su mobile con raggruppamento per carnet
-  - Tabella desktop con tutte le colonne
-  - Nessuno scroll orizzontale su mobile
-
-- **FILTRI GESTIONE ASSEGNI**:
-  - Filtro per Fornitore/Beneficiario
-  - Filtro per Importo Min/Max
-  - Filtro per Numero Assegno
-  - Filtro per Numero Fattura (collegata)
-  - Pulsante "Reset Filtri"
-  - Riepilogo risultati filtrati
-
-- **FUZZY MATCHING RICONCILIAZIONE**:
-  - Integrato rapidfuzz per match sul nome fornitore nella descrizione bancaria
-  - Match prioritario su importo esatto, poi fuzzy matching
-  - Score minimo 60% per match fuzzy
-  - Bonus per numero fattura nella descrizione
-
-- **RESPONSIVE MagazzinoDoppiaVerita.jsx**:
-  - Layout a card su mobile con griglia 3 colonne per giacenze
-  - Badge stato (OK/DIFF/BASSO) visibili
-  - Filtri compatti su mobile (Differenze, Scorte basse)
-  - Tabella desktop completa con tutte le colonne
-
-
+### P3 - Priorità Bassa
+- [ ] Export Excel magazzino
+- [ ] Notifiche email scadenze
