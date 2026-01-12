@@ -382,7 +382,10 @@ export default function ArchivioFatture() {
                     🔍
                   </button>
                   <button
-                    onClick={() => handleOpenMatch(f.id)}
+                    onClick={() => {
+                      setSelectedFatturaId(f.id);
+                      setShowEtichette(true);
+                    }}
                     style={{ padding: '8px 12px', background: '#fef3c7', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}
                   >
                     🏷️
@@ -474,6 +477,7 @@ export default function ArchivioFatture() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
