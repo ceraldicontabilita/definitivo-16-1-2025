@@ -20,6 +20,16 @@ import base64
 from app.database import Database
 from app.parsers.fattura_elettronica_parser import parse_fattura_xml
 
+# Import funzioni da ciclo passivo integrato per Prima Nota, Scadenze, etc.
+from app.routers.ciclo_passivo_integrato import (
+    genera_scrittura_prima_nota,
+    crea_scadenza_pagamento,
+    cerca_match_bancario,
+    esegui_riconciliazione,
+    processa_carico_magazzino,
+    COL_SCADENZIARIO
+)
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
