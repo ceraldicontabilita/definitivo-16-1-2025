@@ -582,38 +582,100 @@ export default function ArchivioBonifici() {
         </div>
       </div>
 
+      {/* TABS */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 0 }}>
+        <button
+          onClick={() => setActiveTab('da_associare')}
+          style={{
+            padding: '12px 24px',
+            background: activeTab === 'da_associare' ? '#1e3a5f' : '#f1f5f9',
+            color: activeTab === 'da_associare' ? 'white' : '#475569',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 14,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}
+          data-testid="tab-da-associare"
+        >
+          📋 Da Associare
+          <span style={{
+            background: activeTab === 'da_associare' ? 'rgba(255,255,255,0.2)' : '#e2e8f0',
+            padding: '2px 8px',
+            borderRadius: 10,
+            fontSize: 12
+          }}>
+            {bonificiDaAssociare.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('associati')}
+          style={{
+            padding: '12px 24px',
+            background: activeTab === 'associati' ? '#16a34a' : '#f1f5f9',
+            color: activeTab === 'associati' ? 'white' : '#475569',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 14,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            marginLeft: 4
+          }}
+          data-testid="tab-associati"
+        >
+          ✅ Associati
+          <span style={{
+            background: activeTab === 'associati' ? 'rgba(255,255,255,0.2)' : '#dcfce7',
+            color: activeTab === 'associati' ? 'white' : '#16a34a',
+            padding: '2px 8px',
+            borderRadius: 10,
+            fontSize: 12
+          }}>
+            {bonificiAssociati.length}
+          </span>
+        </button>
+      </div>
+
       {/* Table */}
       <div style={{ 
         background: 'white', 
-        borderRadius: 12, 
+        borderRadius: '0 12px 12px 12px', 
         border: '1px solid #e2e8f0',
         overflow: 'hidden'
       }}>
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>⏳ Caricamento...</div>
-        ) : transfers.length === 0 ? (
+        ) : transfersToShow.length === 0 ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-            Nessun bonifico trovato. <a href="/import-export" style={{ color: '#3b82f6' }}>Vai a Import Dati</a> per caricare PDF o ZIP.
+            {activeTab === 'da_associare' 
+              ? '🎉 Tutti i bonifici sono stati associati!' 
+              : 'Nessun bonifico associato. Seleziona il tab "Da Associare" per iniziare.'}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1400, fontSize: 12 }}>
               <thead>
-                <tr style={{ background: '#1e3a5f', color: 'white' }}>
+                <tr style={{ background: activeTab === 'associati' ? '#16a34a' : '#1e3a5f', color: 'white' }}>
                   <th style={{ padding: 8, textAlign: 'center', width: 40 }}>✓</th>
                   <th style={{ padding: 8, textAlign: 'left' }}>Data</th>
                   <th style={{ padding: 8, textAlign: 'right' }}>Importo</th>
                   <th style={{ padding: 8, textAlign: 'left' }}>Beneficiario</th>
                   <th style={{ padding: 8, textAlign: 'left' }}>Causale</th>
                   <th style={{ padding: 8, textAlign: 'left' }}>CRO/TRN</th>
-                  <th style={{ padding: 8, textAlign: 'left', width: 180 }}>Associa Salario</th>
-                  <th style={{ padding: 8, textAlign: 'left', width: 180 }}>Associa Fattura</th>
+                  <th style={{ padding: 8, textAlign: 'left', width: 180 }}>{activeTab === 'associati' ? 'Salario Associato' : 'Associa Salario'}</th>
+                  <th style={{ padding: 8, textAlign: 'left', width: 180 }}>{activeTab === 'associati' ? 'Fattura Associata' : 'Associa Fattura'}</th>
                   <th style={{ padding: 8, textAlign: 'left', width: 100 }}>Note</th>
                   <th style={{ padding: 8, textAlign: 'center', width: 50 }}>🗑️</th>
                 </tr>
               </thead>
               <tbody>
-                {transfers.map((t, idx) => (
+                {transfersToShow.map((t, idx) => (
                   <tr key={t.id || idx} style={{ borderBottom: '1px solid #f1f5f9', background: t.riconciliato ? '#f0fdf4' : 'white' }}>
                     <td style={{ padding: 8, textAlign: 'center' }}>
                       {t.riconciliato ? (
