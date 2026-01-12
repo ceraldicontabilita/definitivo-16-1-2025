@@ -168,9 +168,9 @@ export default function MagazzinoDoppiaVerita() {
         )}
       </div>
 
-      {/* Filtri */}
+      {/* Filtri - Responsive */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '150px', maxWidth: '300px' }}>
           <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
           <input
             type="text"
@@ -179,7 +179,7 @@ export default function MagazzinoDoppiaVerita() {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              padding: '12px 12px 12px 40px',
+              padding: '10px 10px 10px 36px',
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
               fontSize: '14px'
@@ -187,15 +187,15 @@ export default function MagazzinoDoppiaVerita() {
             data-testid="search-prodotti"
           />
         </div>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
           <input
             type="checkbox"
             checked={soloDifferenze}
             onChange={(e) => setSoloDifferenze(e.target.checked)}
           />
-          <span style={{ fontSize: '14px', color: '#374151' }}>Solo con differenze</span>
+          <span style={{ color: '#374151' }}>Differenze</span>
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
           <input
             type="checkbox"
             checked={soloScorteBasse}
