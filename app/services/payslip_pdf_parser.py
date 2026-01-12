@@ -1,6 +1,7 @@
 """
 Parser per estrarre dati dalle buste paga PDF (Libro Unico del Lavoro).
 Estrae: dipendente, retribuzione utile TFR, lordo, netto, periodo.
+Versione migliorata con estrazione di: ore, paga oraria, straordinari, ferie, qualifica.
 """
 import pdfplumber
 import re
@@ -15,15 +16,31 @@ logger = logging.getLogger(__name__)
 class PayslipPDFParser:
     """Parser per PDF delle buste paga italiane (formato Zucchetti/standard)."""
     
-    # Pattern per estrarre dati
+    # Pattern per estrarre dati - MIGLIORATI
     PATTERNS = {
         'codice_fiscale': r'[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]',
         'retribuzione_tfr': r'Retribuzione\s+utile\s+T\.?F\.?R\.?\s*[:\s]*([0-9.,]+)',
-        'netto_mese': r'NETTO\s+DEL\s+MESE\s*[:\s]*([0-9.,]+)',
-        'totale_competenze': r'TOTALE\s+COMPETENZE\s*[:\s]*([0-9.,]+)',
-        'totale_trattenute': r'TOTALE\s+TRATTENUTE\s*[:\s]*([0-9.,]+)',
+        'netto_mese': r'NETTO\s*(?:DEL\s*)?MESE\s*[:\s€]*([0-9.,]+)',
+        'totale_competenze': r'TOTALE\s*COMPETENZE\s*[:\s€]*([0-9.,]+)',
+        'totale_trattenute': r'TOTALE\s*TRATTENUTE\s*[:\s€]*([0-9.,]+)',
         'periodo': r'Periodo\s+di\s+riferimento[:\s]*(\w+\s+\d{4})',
         'mese_anno': r'(Gennaio|Febbraio|Marzo|Aprile|Maggio|Giugno|Luglio|Agosto|Settembre|Ottobre|Novembre|Dicembre)\s+(\d{4})',
+        # NUOVI PATTERN
+        'ore_ordinarie': r'(?:Ore\s*ordinarie|ORE)[:\s]*(\d+(?:[.,]\d+)?)',
+        'ore_straordinarie': r'(?:Ore\s*straordinarie|straordinarie)[:\s]*(\d+(?:[.,]\d+)?)',
+        'ore_lavorate_tabella': r'(\d+)\s+(\d+)\s+(\d+(?:[.,]\d+)?)\s+(?:ORE|ore)',  # Pattern per tabella ore
+        'paga_base': r'PAGA\s*BASE[:\s]*([0-9.,]+)',
+        'contingenza': r'CONTING\.?[:\s]*([0-9.,]+)',
+        'livello': r"(\d+'?\s*Livello|\d+°\s*Livello|Livello\s*\d+)",
+        'qualifica': r'(CAMERIERE|CUOCO|BARISTA|AIUTO CUOCO|LAVAPIATTI|PIZZAIOLO|COMMIS|CHEF|RECEPTIONIST)',
+        'part_time': r'Part\s*Time\s*([0-9.,]+)%',
+        'iban': r'IT[0-9]{2}[A-Z][0-9]{10}[0-9A-Z]{12}',
+        'ferie_maturate': r'Ferie[:\s]*([0-9.,]+)\s+([0-9.,]+)\s+([0-9.,]+)',  # Residuo, Maturato, Goduto
+        'permessi': r'Permessi[:\s]*([0-9.,]+)\s+([0-9.,]+)',
+        'tfr_quota_anno': r'Quota\s*anno[:\s]*([0-9.,]+)',
+        'tfr_fondo': r'T\.?F\.?R\.?\s*F\.?do[:\s]*([0-9.,]+)',
+        'matricola': r'Matricola[:\s]*(\d+)|Nr\.\s*(\d+)',
+        'data_assunzione': r'Data\s*Assunzione[:\s]*(\d{2}[-/]\d{2}[-/]\d{4})',
     }
     
     MESI_MAP = {
