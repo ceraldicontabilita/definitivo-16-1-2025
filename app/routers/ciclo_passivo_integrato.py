@@ -1135,6 +1135,109 @@ async def match_manuale(
     }
 
 
+@router.post("/riconcilia-automatica-batch")
+async def riconcilia_automatica_batch(
+    dry_run: bool = Query(default=True, description="Se True, mostra solo i match senza eseguirli")
+):
+    """
+    Riesegue la riconciliazione automatica su TUTTE le scadenze aperte.
+    Usa l'algoritmo migliorato con fuzzy matching su:
+    - Campo 'fornitore' del movimento bancario
+    - Descrizione originale (SDD, bonifici)
+    - Parole chiave del nome fornitore
+    
+    Args:
+        dry_run: Se True, mostra solo i match potenziali senza eseguirli
+    """
+    db = Database.get_db()
+    
+    # Trova tutte le scadenze aperte
+    scadenze = await db[COL_SCADENZIARIO].find(
+        {"stato": "aperto", "pagato": False},
+        {"_id": 0}
+    ).to_list(500)
+    
+    risultati = {
+        "totale_scadenze": len(scadenze),
+        "match_trovati": 0,
+        "riconciliati": 0,
+        "nessun_match": 0,
+        "errori": 0,
+        "dettagli": [],
+        "dry_run": dry_run
+    }
+    
+    for scad in scadenze:
+        scadenza_id = scad.get("id")
+        fornitore = scad.get("fornitore_nome", "N/A")
+        importo = scad.get("importo_totale", 0)
+        
+        try:
+            # Cerca match con algoritmo migliorato
+            match = await cerca_match_bancario(db, scad)
+            
+            if match:
+                risultati["match_trovati"] += 1
+                
+                dettaglio = {
+                    "scadenza_id": scadenza_id,
+                    "fornitore": fornitore,
+                    "importo_scadenza": importo,
+                    "movimento_id": match.get("id"),
+                    "importo_movimento": abs(match.get("importo", 0)),
+                    "descrizione": (match.get("descrizione_originale") or match.get("descrizione", ""))[:60],
+                    "fornitore_movimento": match.get("fornitore", ""),
+                    "match_type": match.get("match_type"),
+                    "match_score": match.get("match_score"),
+                    "source": match.get("source_collection"),
+                    "data_movimento": match.get("data", ""),
+                    "status": "trovato"
+                }
+                
+                # Esegui riconciliazione se non in dry_run
+                if not dry_run:
+                    try:
+                        ric_result = await esegui_riconciliazione(
+                            db, scadenza_id, match.get("id"), match.get("source_collection")
+                        )
+                        if ric_result.get("success"):
+                            risultati["riconciliati"] += 1
+                            dettaglio["status"] = "riconciliato"
+                            dettaglio["riconciliazione_id"] = ric_result.get("riconciliazione_id")
+                        else:
+                            dettaglio["status"] = "errore_riconciliazione"
+                            risultati["errori"] += 1
+                    except Exception as e:
+                        dettaglio["status"] = "errore"
+                        dettaglio["errore"] = str(e)
+                        risultati["errori"] += 1
+                
+                risultati["dettagli"].append(dettaglio)
+            else:
+                risultati["nessun_match"] += 1
+                risultati["dettagli"].append({
+                    "scadenza_id": scadenza_id,
+                    "fornitore": fornitore,
+                    "importo_scadenza": importo,
+                    "status": "nessun_match"
+                })
+        except Exception as e:
+            risultati["errori"] += 1
+            risultati["dettagli"].append({
+                "scadenza_id": scadenza_id,
+                "fornitore": fornitore,
+                "status": "errore",
+                "errore": str(e)
+            })
+    
+    # Statistiche finali
+    risultati["percentuale_match"] = round(
+        (risultati["match_trovati"] / risultati["totale_scadenze"] * 100) if risultati["totale_scadenze"] > 0 else 0, 1
+    )
+    
+    return risultati
+
+
 @router.get("/suggerimenti-match/{scadenza_id}")
 async def get_suggerimenti_match(scadenza_id: str):
     """
