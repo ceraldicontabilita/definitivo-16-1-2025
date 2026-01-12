@@ -1720,11 +1720,11 @@ async def get_fatture_compatibili(bonifico_id: str):
     
     fatture = await db.invoices.find(query, {"_id": 0}).to_list(100)
     
-    # Cerca anche in invoices
-    invoices = await db.invoices.find(query, {"_id": 0}).to_list(100)
+    # Cerca anche legacy (deprecated - per retrocompatibilità)
+    # invoices_legacy = await db.invoices.find(query, {"_id": 0}).to_list(100)
     
-    # Unisci risultati
-    all_fatture = fatture + invoices
+    # Unisci risultati (solo invoices ora)
+    all_fatture = fatture
     
     # Calcola score di compatibilità
     risultati = []
