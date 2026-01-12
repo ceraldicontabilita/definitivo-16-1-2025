@@ -1413,6 +1413,7 @@ async def get_operazioni_salari_compatibili(bonifico_id: str):
     
     pipeline = [
         {"$match": match_stage},
+        {"$project": {"_id": 0}},  # Esclude _id per evitare ObjectId
         # Deduplica per dipendente + importo + anno + mese
         {"$group": {
             "_id": {
