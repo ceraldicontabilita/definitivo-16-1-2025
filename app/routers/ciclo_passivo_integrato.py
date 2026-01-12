@@ -531,19 +531,20 @@ async def crea_scadenza_pagamento(db, fattura_id: str, fattura: Dict, fornitore:
 
 # ==================== MODULO 4: RICONCILIAZIONE ====================
 
-async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 3, tolleranza_importo: float = 0.05) -> Optional[Dict]:
+async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 30, tolleranza_importo: float = 0.10) -> Optional[Dict]:
     """
     Cerca un match tra la scadenza e i movimenti bancari.
     
     Criteri di match:
-    - Importo uguale (tolleranza €0.05)
-    - Data entro ±3 giorni dalla scadenza
+    - Importo uguale (tolleranza 10 cent o valore assoluto per importi negativi)
+    - Data dalla fattura fino a 30 giorni dopo la scadenza
     - Movimento di tipo uscita/addebito
     
     Cerca prima in estratto_conto_movimenti (principale), poi in bank_transactions.
     """
-    importo = scadenza.get("importo_totale", 0)
+    importo = abs(float(scadenza.get("importo_totale", 0)))
     data_scadenza = scadenza.get("data_scadenza")
+    data_fattura = scadenza.get("data_fattura")
     fornitore_nome = scadenza.get("fornitore_nome", "")
     
     if not data_scadenza or not importo:
@@ -551,15 +552,22 @@ async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 3, t
     
     try:
         data_scad = datetime.strptime(data_scadenza[:10], "%Y-%m-%d")
-        data_min = (data_scad - timedelta(days=tolleranza_giorni)).strftime("%Y-%m-%d")
+        # Cerca da 60 giorni prima della scadenza fino a 30 giorni dopo
+        data_min = (data_scad - timedelta(days=60)).strftime("%Y-%m-%d")
         data_max = (data_scad + timedelta(days=tolleranza_giorni)).strftime("%Y-%m-%d")
     except (ValueError, TypeError):
         return None
     
-    # Prima cerca in estratto_conto_movimenti (principale)
+    # Prima cerca in estratto_conto_movimenti - gestisce importi negativi
+    # Gli importi negativi in estratto_conto rappresentano uscite
     query_estratto = {
         "tipo": {"$in": ["uscita", "addebito"]},
-        "importo": {"$gte": importo - tolleranza_importo, "$lte": importo + tolleranza_importo},
+        "$or": [
+            # Importo positivo
+            {"importo": {"$gte": importo - tolleranza_importo, "$lte": importo + tolleranza_importo}},
+            # Importo negativo (valore assoluto)
+            {"importo": {"$gte": -importo - tolleranza_importo, "$lte": -importo + tolleranza_importo}}
+        ],
         "data": {"$gte": data_min, "$lte": data_max},
         "fattura_id": {"$exists": False}  # Non già riconciliato
     }
@@ -573,7 +581,10 @@ async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 3, t
     # Fallback: cerca in bank_transactions
     query_bank = {
         "tipo": {"$in": ["uscita", "addebito", "bonifico_uscita"]},
-        "importo": {"$gte": importo - tolleranza_importo, "$lte": importo + tolleranza_importo},
+        "$or": [
+            {"importo": {"$gte": importo - tolleranza_importo, "$lte": importo + tolleranza_importo}},
+            {"importo": {"$gte": -importo - tolleranza_importo, "$lte": -importo + tolleranza_importo}}
+        ],
         "data": {"$gte": data_min, "$lte": data_max},
         "riconciliato": {"$ne": True}
     }
