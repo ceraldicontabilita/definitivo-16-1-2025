@@ -268,11 +268,36 @@ Tutte le pagine principali supportano layout mobile:
 - ✅ Pulizia magazzino automatica su "Escludi Fornitore"
 - ✅ Fuzzy matching per riconciliazione automatica
 
+### 2026-01-12 (continua)
+- ✅ Migliorato algoritmo riconciliazione automatica con 3 livelli di confidenza:
+  - **ALTA**: Match solo quando importo esatto (±€1) E nome fornitore confermato
+  - **MEDIA**: Match quando importo esatto per importi > €100
+  - **SUGGERIMENTO**: Match per importi simili (±10%) - richiede verifica manuale
+- ✅ Aggiunto endpoint `/api/ciclo-passivo/riconcilia-automatica-batch` per:
+  - Eseguire riconciliazione batch su tutte le scadenze aperte
+  - Modalità dry_run per preview senza eseguire
+  - Opzione `include_suggerimenti` per vedere match a bassa confidenza
+
 ### 2026-01-11
 - ✅ Integrazione ciclo passivo (Import → Prima Nota → Scadenze)
 - ✅ Nuovo foglio stile AssoInvoice
 - ✅ Responsive pagine principali (Fatture, Prima Nota, etc.)
 - ✅ Rimozione pagine legacy
+
+---
+
+## 📊 NOTE SULLA RICONCILIAZIONE AUTOMATICA
+
+### Situazione Attuale
+L'algoritmo di riconciliazione NON trova molti match automatici perché:
+1. I **movimenti bancari** contengono principalmente pagamenti a dipendenti/servizi, non a fornitori
+2. I **beneficiari** nei bonifici (es. "Lesina Angela", "Ceraldi Vincenzo") sono diversi dai fornitori delle fatture
+3. Le **scadenze** sono per febbraio 2026, ma i movimenti importati sono fino a gennaio 2026
+
+### Per Migliorare il Tasso di Riconciliazione
+1. **Match per IBAN**: Registrare l'IBAN del fornitore e matcharlo con l'IBAN di destinazione del bonifico
+2. **Riferimento in causale**: Inserire il numero fattura nella causale del bonifico
+3. **Import completo estratto conto**: Assicurarsi che i movimenti siano aggiornati al periodo delle scadenze
 
 ---
 
@@ -286,6 +311,7 @@ Tutte le pagine principali supportano layout mobile:
 - [ ] Gestione Lotti Avanzata
 - [ ] Calcolo Food Cost Ricette
 - [ ] Report PDF scadenze
+- [ ] Match IBAN per riconciliazione avanzata
 
 ### P3 - Priorità Bassa
 - [ ] Export Excel magazzino
