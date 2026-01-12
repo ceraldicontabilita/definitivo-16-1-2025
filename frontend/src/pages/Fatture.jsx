@@ -202,16 +202,49 @@ export default function Fatture() {
   }
 
   async function handleDeleteInvoice(id) {
-    if (!window.confirm("Eliminare questa fattura?")) return;
     try {
-      await api.delete(`/api/fatture/${id}`);
+      // Prima chiamata senza force per verificare se richiede conferma
+      const response = await api.delete(`/api/fatture/${id}`);
+      
+      // Se richiede conferma (doppia conferma per fatture registrate)
+      if (response.data?.require_force) {
+        const warnings = response.data.warnings || [];
+        const entita = response.data.entita_correlate || {};
+        
+        let messaggio = "⚠️ ATTENZIONE - Questa fattura ha dati registrati:\n\n";
+        
+        if (entita.prima_nota_banca > 0 || entita.prima_nota_cassa > 0) {
+          messaggio += `• ${entita.prima_nota_banca + entita.prima_nota_cassa} movimenti Prima Nota\n`;
+        }
+        if (entita.scadenze > 0) {
+          messaggio += `• ${entita.scadenze} scadenze pagamento\n`;
+        }
+        if (entita.movimenti_magazzino > 0) {
+          messaggio += `• ${entita.movimenti_magazzino} movimenti magazzino\n`;
+        }
+        if (entita.assegni_collegati > 0) {
+          messaggio += `• ${entita.assegni_collegati} assegni collegati\n`;
+        }
+        
+        messaggio += "\nTutti questi dati verranno eliminati/archiviati.\n\nConfermi l'eliminazione?";
+        
+        if (!window.confirm(messaggio)) return;
+        
+        // Seconda chiamata con force=true
+        await api.delete(`/api/fatture/${id}?force=true`);
+      }
+      
       loadInvoices();
-      // Chiudi dettaglio se era aperto
       if (selectedInvoice && selectedInvoice.id === id) {
         setSelectedInvoice(null);
       }
     } catch (e) {
-      setErr("Errore eliminazione: " + (e.response?.data?.detail || e.message));
+      const detail = e.response?.data?.detail;
+      if (typeof detail === 'object') {
+        setErr("Eliminazione non consentita: " + (detail.errors?.join(', ') || detail.message));
+      } else {
+        setErr("Errore eliminazione: " + (detail || e.message));
+      }
     }
   }
 
