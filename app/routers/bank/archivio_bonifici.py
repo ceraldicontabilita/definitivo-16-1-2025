@@ -1957,6 +1957,7 @@ async def get_fatture_compatibili(bonifico_id: str):
     - Importo simile (±10%)
     - Data vicina (±60 giorni)
     - Fornitore nel beneficiario/causale
+    - Non già associate ad altri bonifici
     """
     db = Database.get_db()
     
@@ -1965,20 +1966,41 @@ async def get_fatture_compatibili(bonifico_id: str):
     if not bonifico:
         raise HTTPException(status_code=404, detail="Bonifico non trovato")
     
-    importo = abs(bonifico.get("importo", 0))
+    # Fix: gestisce None esplicito
+    raw_importo = bonifico.get("importo")
+    importo = abs(float(raw_importo)) if raw_importo is not None else 0
     data_bonifico = bonifico.get("data", "")
     causale = (bonifico.get("causale") or "").lower()
     beneficiario = ((bonifico.get("beneficiario") or {}).get("nome") or "").lower()
     
     # Pipeline con deduplicazione per numero fattura + fornitore
-    match_stage = {"fattura_associata": {"$ne": True}}
+    # IMPORTANTE: Escludi fatture già associate a QUALSIASI bonifico
+    match_stage = {
+        "fattura_associata": {"$ne": True},
+        "$or": [
+            {"bonifico_id": {"$exists": False}},
+            {"bonifico_id": None},
+            {"bonifico_id": ""},
+            {"bonifico_associato": {"$ne": True}}
+        ]
+    }
     
     if importo > 0:
-        match_stage["$or"] = [
-            {"totale_documento": {"$gte": importo * 0.85, "$lte": importo * 1.15}},
-            {"importo_totale": {"$gte": importo * 0.85, "$lte": importo * 1.15}},
-            {"total_amount": {"$gte": importo * 0.85, "$lte": importo * 1.15}}
+        match_stage["$and"] = [
+            {"$or": [
+                {"bonifico_id": {"$exists": False}},
+                {"bonifico_id": None},
+                {"bonifico_id": ""},
+                {"bonifico_associato": {"$ne": True}}
+            ]},
+            {"$or": [
+                {"totale_documento": {"$gte": importo * 0.85, "$lte": importo * 1.15}},
+                {"importo_totale": {"$gte": importo * 0.85, "$lte": importo * 1.15}},
+                {"total_amount": {"$gte": importo * 0.85, "$lte": importo * 1.15}}
+            ]}
         ]
+        # Rimuovi il $or originale perché ora è in $and
+        del match_stage["$or"]
     
     pipeline = [
         {"$match": match_stage},
