@@ -1120,17 +1120,26 @@ async def paga_fattura(invoice_id: str) -> Dict[str, Any]:
 @router.delete("/{invoice_id}")
 async def delete_invoice(
     invoice_id: str,
-    force: bool = Query(False, description="Forza eliminazione anche con warning")
+    force: bool = Query(False, description="Forza eliminazione anche con warning"),
+    hard_delete: bool = Query(False, description="Elimina fisicamente invece di archiviare")
 ) -> Dict[str, Any]:
     """
     Elimina una singola fattura con validazione business rules.
     
     **Regole:**
     - Non può eliminare fatture pagate
-    - Non può eliminare fatture registrate in Prima Nota
+    - Non può eliminare fatture registrate in Prima Nota (richiede force=true)
     - Fatture con movimenti magazzino richiedono force=true
+    
+    **CASCADE DELETE:**
+    - Elimina/archivia righe dettaglio
+    - Elimina/archivia Prima Nota associata
+    - Elimina/archivia scadenze
+    - Annulla movimenti magazzino
+    - Sgancia assegni collegati
     """
     from app.services.business_rules import BusinessRules, EntityStatus
+    from app.services.cascade_operations import CascadeOperations
     from datetime import datetime, timezone
     
     db = Database.get_db()
@@ -1140,41 +1149,51 @@ async def delete_invoice(
     if not invoice:
         raise HTTPException(status_code=404, detail="Fattura non trovata")
     
+    # Verifica se ha operazioni registrate
+    stato_registrazione = await CascadeOperations.is_fattura_registrata(db, invoice_id)
+    entita_correlate = await CascadeOperations.get_entita_correlate(db, invoice_id)
+    
     # Valida eliminazione con business rules
     validation = BusinessRules.can_delete_invoice(invoice)
+    
+    # Aggiungi warning per entità correlate
+    if entita_correlate["totale_entita"] > 0:
+        validation.warnings.append(f"Verranno eliminate {entita_correlate['totale_entita']} entità correlate")
+        if entita_correlate["prima_nota_banca"] > 0 or entita_correlate["prima_nota_cassa"] > 0:
+            validation.warnings.append("⚠️ ATTENZIONE: Verranno eliminate registrazioni contabili (Prima Nota)")
+        if entita_correlate["movimenti_magazzino"] > 0:
+            validation.warnings.append("⚠️ ATTENZIONE: Verranno annullati movimenti di magazzino")
     
     if not validation.is_valid:
         raise HTTPException(
             status_code=400,
             detail={
                 "message": "Eliminazione non consentita",
-                "errors": validation.errors
+                "errors": validation.errors,
+                "entita_correlate": entita_correlate
             }
         )
     
-    # Se ci sono warning e non è forzata, richiedi conferma
-    if validation.warnings and not force:
+    # Se ci sono warning e non è forzata, richiedi conferma (DOPPIA CONFERMA)
+    if (validation.warnings or stato_registrazione["registrata"]) and not force:
         return {
             "status": "warning",
             "message": "Eliminazione richiede conferma",
             "warnings": validation.warnings,
-            "require_force": True
+            "stato_registrazione": stato_registrazione,
+            "entita_correlate": entita_correlate,
+            "require_force": True,
+            "nota": "Usa force=true per confermare l'eliminazione"
         }
     
-    # Soft-delete invece di hard-delete
-    await db[Collections.INVOICES].update_one(
-        {"id": invoice_id},
-        {"$set": {
-            "entity_status": EntityStatus.DELETED.value,
-            "status": "deleted",
-            "deleted_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
+    # Esegui CASCADE DELETE
+    risultato_cascade = await CascadeOperations.delete_fattura_cascade(db, invoice_id, hard_delete=hard_delete)
     
     return {
         "success": True,
-        "message": "Fattura eliminata (archiviata)",
-        "invoice_id": invoice_id
+        "message": "Fattura eliminata" + (" (hard delete)" if hard_delete else " (archiviata)"),
+        "invoice_id": invoice_id,
+        "cascade_result": risultato_cascade
     }
 
 
