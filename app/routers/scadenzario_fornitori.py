@@ -494,3 +494,71 @@ async def get_scadenze_integrate(
         "lista_completa": scadenze
     }
 
+
+
+@router.post("/riconcilia-automatica")
+async def riconcilia_automatica_scadenze(
+    anno: int = Query(None, description="Anno scadenze da riconciliare"),
+    dry_run: bool = Query(True, description="Se True, mostra anteprima senza modificare")
+) -> Dict[str, Any]:
+    """
+    Esegue la riconciliazione automatica cercando match tra scadenze e movimenti bancari.
+    """
+    db = Database.get_db()
+    
+    if not anno:
+        anno = datetime.now().year
+    
+    # Trova scadenze aperte
+    query = {
+        "data_scadenza": {"$regex": f"^{anno}"},
+        "pagato": {"$ne": True},
+        "riconciliato": {"$ne": True}
+    }
+    
+    scadenze = await db["scadenziario_fornitori"].find(query, {"_id": 0}).to_list(500)
+    
+    risultati = {
+        "anno": anno,
+        "scadenze_analizzate": len(scadenze),
+        "match_trovati": 0,
+        "riconciliazioni_eseguite": 0,
+        "dettagli": []
+    }
+    
+    for scadenza in scadenze:
+        match = await cerca_match_bancario(db, scadenza)
+        
+        if match:
+            risultati["match_trovati"] += 1
+            
+            dettaglio = {
+                "scadenza_id": scadenza.get("id"),
+                "fornitore": scadenza.get("fornitore_nome"),
+                "importo_scadenza": scadenza.get("importo_totale"),
+                "data_scadenza": scadenza.get("data_scadenza"),
+                "match": {
+                    "id": match.get("id"),
+                    "importo": match.get("importo"),
+                    "data": match.get("data"),
+                    "descrizione": match.get("descrizione_originale", "")[:50]
+                }
+            }
+            
+            if not dry_run:
+                try:
+                    source_col = match.get("source_collection", "estratto_conto_movimenti")
+                    await esegui_riconciliazione(db, scadenza.get("id"), match.get("id"), source_col)
+                    risultati["riconciliazioni_eseguite"] += 1
+                    dettaglio["riconciliato"] = True
+                except Exception as e:
+                    dettaglio["errore"] = str(e)
+                    dettaglio["riconciliato"] = False
+            else:
+                dettaglio["dry_run"] = True
+            
+            risultati["dettagli"].append(dettaglio)
+    
+    return risultati
+
+
