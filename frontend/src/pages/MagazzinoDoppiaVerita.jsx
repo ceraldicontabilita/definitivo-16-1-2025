@@ -348,90 +348,186 @@ export default function MagazzinoDoppiaVerita() {
         </div>
       )}
 
-      {/* Tabella Prodotti */}
+      {/* Tabella/Cards Prodotti */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>Caricamento...</div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc' }}>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Prodotto</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Categoria</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Giac. Teorica</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Giac. Reale</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Differenza</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Costo Medio</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {prodotti.map((p, i) => {
+        <>
+          {/* MOBILE CARDS VIEW */}
+          <style>{`
+            @media (min-width: 768px) {
+              .mobile-cards-magazzino { display: none !important; }
+              .desktop-table-magazzino { display: block !important; }
+            }
+            @media (max-width: 767px) {
+              .mobile-cards-magazzino { display: block !important; }
+              .desktop-table-magazzino { display: none !important; }
+            }
+          `}</style>
+          
+          <div className="mobile-cards-magazzino" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {prodotti.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280', background: 'white', borderRadius: 12 }}>
+                Nessun prodotto trovato
+              </div>
+            ) : (
+              prodotti.map((p, i) => {
                 const diff = (p.giacenza_teorica || 0) - (p.giacenza_reale || 0);
                 const hasDiff = diff !== 0;
                 const scortaBassa = (p.giacenza_teorica || 0) <= (p.scorta_minima || 0);
                 
                 return (
-                  <tr 
-                    key={p.id || i} 
-                    style={{ 
-                      borderBottom: '1px solid #f3f4f6',
+                  <div 
+                    key={p.id || i}
+                    onClick={() => loadDettaglioProdotto(p.id)}
+                    style={{
                       background: hasDiff ? '#fef2f2' : (scortaBassa ? '#fefce8' : 'white'),
+                      borderRadius: 12,
+                      padding: 14,
+                      border: '1px solid #e5e7eb',
                       cursor: 'pointer'
                     }}
-                    onClick={() => loadDettaglioProdotto(p.id)}
                   >
-                    <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 500, color: '#1f2937' }}>
-                      {p.nome}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280' }}>
-                      {p.categoria || '-'}
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '14px', color: '#2563eb', fontWeight: 600 }}>
-                      {(p.giacenza_teorica || 0).toFixed(2)} {p.unita || ''}
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '14px', color: '#16a34a', fontWeight: 600 }}>
-                      {(p.giacenza_reale || 0).toFixed(2)} {p.unita || ''}
-                    </td>
-                    <td style={{ 
-                      padding: '12px 16px', 
-                      textAlign: 'right', 
-                      fontSize: '14px', 
-                      fontWeight: 600,
-                      color: diff > 0 ? '#dc2626' : (diff < 0 ? '#16a34a' : '#6b7280')
-                    }}>
-                      {diff > 0 ? '+' : ''}{diff.toFixed(2)}
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '14px', color: '#374151' }}>
-                      {formatEuro(p.costo_medio || 0)}
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                    {/* Row 1: Nome + Stato */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, color: '#1f2937', fontSize: 14, marginBottom: 2 }}>
+                          {p.nome}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          {p.categoria || 'N/D'} • {p.fornitore || 'Fornitore n/d'}
+                        </div>
+                      </div>
                       {hasDiff ? (
-                        <span style={{ background: '#fecaca', color: '#b91c1c', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
+                        <span style={{ background: '#fecaca', color: '#b91c1c', padding: '4px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600 }}>
                           DIFF
                         </span>
                       ) : scortaBassa ? (
-                        <span style={{ background: '#fde047', color: '#a16207', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
+                        <span style={{ background: '#fde047', color: '#a16207', padding: '4px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600 }}>
                           BASSO
                         </span>
                       ) : (
-                        <span style={{ background: '#dcfce7', color: '#16a34a', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
+                        <span style={{ background: '#dcfce7', color: '#16a34a', padding: '4px 8px', borderRadius: 6, fontSize: 10, fontWeight: 600 }}>
                           OK
                         </span>
                       )}
-                    </td>
-                  </tr>
+                    </div>
+                    
+                    {/* Row 2: Giacenze */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                      <div style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(37, 99, 235, 0.1)', borderRadius: 6 }}>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>Teorica</div>
+                        <div style={{ fontWeight: 600, color: '#2563eb', fontSize: 14 }}>
+                          {(p.giacenza_teorica || 0).toFixed(1)}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(22, 163, 74, 0.1)', borderRadius: 6 }}>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>Reale</div>
+                        <div style={{ fontWeight: 600, color: '#16a34a', fontSize: 14 }}>
+                          {(p.giacenza_reale || 0).toFixed(1)}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center', padding: '8px 4px', background: diff !== 0 ? 'rgba(220, 38, 38, 0.1)' : 'rgba(107, 114, 128, 0.1)', borderRadius: 6 }}>
+                        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 2 }}>Diff.</div>
+                        <div style={{ fontWeight: 600, color: diff > 0 ? '#dc2626' : (diff < 0 ? '#16a34a' : '#6b7280'), fontSize: 14 }}>
+                          {diff > 0 ? '+' : ''}{diff.toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Row 3: Costo */}
+                    <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Costo medio: <strong style={{ color: '#374151' }}>{formatEuro(p.costo_medio || 0)}</strong></span>
+                      <span>{p.unita || 'pz'}</span>
+                    </div>
+                  </div>
                 );
-              })}
-            </tbody>
-          </table>
+              })
+            )}
+          </div>
           
-          {prodotti.length === 0 && (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
-              Nessun prodotto trovato
-            </div>
-          )}
-        </div>
+          {/* DESKTOP TABLE VIEW */}
+          <div className="desktop-table-magazzino" style={{ background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Prodotto</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Categoria</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Giac. Teorica</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Giac. Reale</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Differenza</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Costo Medio</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600, fontSize: '13px', color: '#374151' }}>Stato</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prodotti.map((p, i) => {
+                  const diff = (p.giacenza_teorica || 0) - (p.giacenza_reale || 0);
+                  const hasDiff = diff !== 0;
+                  const scortaBassa = (p.giacenza_teorica || 0) <= (p.scorta_minima || 0);
+                  
+                  return (
+                    <tr 
+                      key={p.id || i} 
+                      style={{ 
+                        borderBottom: '1px solid #f3f4f6',
+                        background: hasDiff ? '#fef2f2' : (scortaBassa ? '#fefce8' : 'white'),
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => loadDettaglioProdotto(p.id)}
+                    >
+                      <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: 500, color: '#1f2937' }}>
+                        {p.nome}
+                      </td>
+                      <td style={{ padding: '12px 16px', fontSize: '13px', color: '#6b7280' }}>
+                        {p.categoria || '-'}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '14px', color: '#2563eb', fontWeight: 600 }}>
+                        {(p.giacenza_teorica || 0).toFixed(2)} {p.unita || ''}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '14px', color: '#16a34a', fontWeight: 600 }}>
+                        {(p.giacenza_reale || 0).toFixed(2)} {p.unita || ''}
+                      </td>
+                      <td style={{ 
+                        padding: '12px 16px', 
+                        textAlign: 'right', 
+                        fontSize: '14px', 
+                        fontWeight: 600,
+                        color: diff > 0 ? '#dc2626' : (diff < 0 ? '#16a34a' : '#6b7280')
+                      }}>
+                        {diff > 0 ? '+' : ''}{diff.toFixed(2)}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '14px', color: '#374151' }}>
+                        {formatEuro(p.costo_medio || 0)}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                        {hasDiff ? (
+                          <span style={{ background: '#fecaca', color: '#b91c1c', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
+                            DIFF
+                          </span>
+                        ) : scortaBassa ? (
+                          <span style={{ background: '#fde047', color: '#a16207', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
+                            BASSO
+                          </span>
+                        ) : (
+                          <span style={{ background: '#dcfce7', color: '#16a34a', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
+                            OK
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            
+            {prodotti.length === 0 && (
+              <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+                Nessun prodotto trovato
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Modal Dettaglio */}
