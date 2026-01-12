@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { to: "/operazioni-da-confermare", label: "Operazioni da Confermare", icon: "📋", short: "Opz.Conf." },
   { to: "/controllo-mensile", label: "Controllo Mensile", icon: "📈", short: "Contr." },
   { to: "/riconciliazione", label: "Riconciliazione", icon: "🔄", short: "Riconc." },
+  { to: "/dashboard-riconciliazione", label: "Dashboard Riconc.", icon: "📈", short: "Dash.Ric." },
   // Contabilità Analitica - Sottomenu
   { 
     label: "Contabilità Analitica", 
