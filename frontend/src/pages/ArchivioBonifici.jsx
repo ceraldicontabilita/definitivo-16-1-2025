@@ -267,9 +267,15 @@ export default function ArchivioBonifici() {
     }
   };
 
-  // Disassocia bonifico
-  const handleDisassocia = async (bonifico_id) => {
-    if (!window.confirm('Rimuovere associazione?')) return;
+  // Disassocia bonifico da salario (DOPPIA CONFERMA)
+  const handleDisassocia = async (bonifico_id, dipendente_nome) => {
+    const msg1 = `Rimuovere associazione con "${dipendente_nome || 'salario'}"?`;
+    if (!window.confirm(msg1)) return;
+    
+    // Seconda conferma
+    const msg2 = `⚠️ CONFERMA RIMOZIONE\n\nQuesta azione rimuoverà l'associazione tra il bonifico e il salario.\n\nSei sicuro di voler procedere?`;
+    if (!window.confirm(msg2)) return;
+    
     try {
       await api.delete(`/api/archivio-bonifici/disassocia-salario/${bonifico_id}`);
       loadTransfers();
