@@ -1025,3 +1025,153 @@ export default function Admin() {
     </div>
   );
 }
+
+// Componente per gestione fatture admin
+function FattureAdminTab() {
+  const [fattureStats, setFattureStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+
+  useEffect(() => {
+    loadFattureStats();
+  }, []);
+
+  const loadFattureStats = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/admin/fatture-stats');
+      setFattureStats(res.data);
+    } catch (e) {
+      console.error('Errore caricamento stats fatture:', e);
+    }
+    setLoading(false);
+  };
+
+  const handleSetMetodoPagamento = async (metodo) => {
+    if (!confirmAction) {
+      setConfirmAction({ type: 'set_metodo', metodo });
+      return;
+    }
+    
+    setUpdating(true);
+    try {
+      const res = await api.post('/api/admin/fatture-set-metodo-pagamento', { metodo_pagamento: metodo });
+      alert(`✅ ${res.data.message}\n\nFatture aggiornate: ${res.data.updated}`);
+      loadFattureStats();
+    } catch (e) {
+      alert('❌ Errore: ' + (e.response?.data?.detail || e.message));
+    }
+    setUpdating(false);
+    setConfirmAction(null);
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+      {/* Stats Metodi Pagamento */}
+      <Card>
+        <CardHeader style={{ padding: '12px 16px' }}>
+          <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FileText style={{ width: 16, height: 16 }} /> Metodi di Pagamento Fatture
+          </CardTitle>
+        </CardHeader>
+        <CardContent style={{ padding: 16 }}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
+          ) : fattureStats ? (
+            <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <span style={{ fontWeight: 600 }}>Totale Fatture:</span>
+                <span style={{ fontWeight: 700, color: '#1e40af' }}>{fattureStats.totale}</span>
+              </div>
+              
+              {fattureStats.metodi_pagamento?.map((m, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                  <span>{m._id || '(Nessuno)'}</span>
+                  <span style={{ fontWeight: 500 }}>{m.count}</span>
+                </div>
+              ))}
+              
+              <div style={{ 
+                marginTop: 12, 
+                padding: 12, 
+                background: fattureStats.senza_metodo > 0 ? '#fef3c7' : '#dcfce7', 
+                borderRadius: 8,
+                border: `1px solid ${fattureStats.senza_metodo > 0 ? '#fcd34d' : '#86efac'}`
+              }}>
+                <div style={{ fontWeight: 600, color: fattureStats.senza_metodo > 0 ? '#92400e' : '#166534' }}>
+                  {fattureStats.senza_metodo > 0 ? '⚠️' : '✅'} Fatture SENZA metodo: {fattureStats.senza_metodo}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ color: '#dc2626' }}>Errore caricamento dati</div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Azioni Massive */}
+      <Card>
+        <CardHeader style={{ padding: '12px 16px' }}>
+          <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Settings style={{ width: 16, height: 16 }} /> Azioni Massive
+          </CardTitle>
+        </CardHeader>
+        <CardContent style={{ padding: 16 }}>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8 }}>
+              <p style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
+                Imposta metodo di pagamento <strong>"Bonifico"</strong> per tutte le fatture che non hanno un metodo specificato.
+              </p>
+              
+              {confirmAction?.type === 'set_metodo' ? (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleSetMetodoPagamento(confirmAction.metodo)}
+                    disabled={updating}
+                    style={{ background: '#16a34a', flex: 1 }}
+                  >
+                    {updating ? '⏳ Aggiornando...' : '✓ Conferma'}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setConfirmAction(null)}
+                    disabled={updating}
+                  >
+                    ✕ Annulla
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  size="sm" 
+                  onClick={() => handleSetMetodoPagamento('Bonifico')}
+                  disabled={loading || (fattureStats?.senza_metodo === 0)}
+                  style={{ width: '100%' }}
+                >
+                  🏦 Imposta "Bonifico" ({fattureStats?.senza_metodo || 0} fatture)
+                </Button>
+              )}
+            </div>
+            
+            <div style={{ padding: 12, background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
+              <p style={{ fontSize: 12, color: '#991b1b', marginBottom: 8 }}>
+                <strong>⚠️ Attenzione:</strong> Le azioni massive modificano molti record. Usa con cautela.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Refresh */}
+      <Card style={{ gridColumn: 'span 2' }}>
+        <CardContent style={{ padding: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="outline" size="sm" onClick={loadFattureStats} disabled={loading}>
+            <RefreshCw style={{ width: 14, height: 14, marginRight: 6 }} /> Aggiorna Stats
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
