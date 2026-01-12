@@ -1,119 +1,139 @@
 <analysis>**original_problem_statement:**
-L'utente ha segnalato una serie di bug e ha richiesto nuove funzionalità per migliorare l'applicazione:
-1.  **Visualizzazione Fatture Non Funzionante:** Il pulsante Vedi nella pagina  non apriva le fatture e l'accesso diretto a un URL di fattura (es. ) falliva.
-2.  **Mancanza Visualizzazione PDF in Archivio Fatture:** La pagina  non aveva un'opzione per visualizzare la fattura in formato leggibile (AssoInvoice).
-3.  **Riconciliazione Stipendi:** I bonifici per gli stipendi dei dipendenti presenti nell'estratto conto non erano collegati alla Prima Nota Salari.
-4.  **Associazione PDF Bonifici:** I file PDF dei bonifici, caricati in , non erano collegati ai rispettivi movimenti nell'estratto conto.
-5.  **Generazione Contratti Errata:** La generazione dei contratti di lavoro inseriva dati errati e placeholder (es. Luigi Taiano) in campi non pertinenti, invece di recuperare i dati corretti dalla scheda anagrafica del dipendente.
-6.  **Dati Dipendenti Incompleti:** Molti dipendenti mancavano di informazioni anagrafiche come luogo di nascita e livello contrattuale.
+L'utente ha avviato la sessione con una serie di richieste di refactoring e correzione dell'interfaccia utente (UI/UX) per rendere l'applicazione completamente responsive e usabile su mobile, eliminando lo scroll orizzontale. Durante la sessione, l'utente ha espresso forte frustrazione per una discontinuità logica fondamentale: il caricamento delle fatture non innescava automaticamente la creazione delle scritture contabili (Prima Nota) e delle scadenze di pagamento, dando l'impressione che il lavoro venisse perso tra una sessione e l'altra.
+
+Le richieste si sono evolute in:
+1.  **Correzione Bug Critico:** Risolvere il problema per cui l'import delle fatture non popolava la Prima Nota e lo Scadenziario.
+2.  **Refactoring Responsive Completo:** Rendere responsive tutte le pagine principali che presentano tabelle (, , ecc.), seguendo il pattern già applicato ad altre pagine.
+3.  **Miglioramento Funzionalità Esistenti:**
+    *   **Riconciliazione Automatica:** Aumentare il tasso di successo del matching automatico tra scadenze e movimenti bancari.
+    *   **Gestione Assegni:** Aggiungere filtri avanzati (fornitore, importo, numero assegno/fattura) e un link per visualizzare la fattura associata.
+    *   **Pulizia Magazzino:** Rendere la pulizia automatica all'aggiornamento di un fornitore come escluso, invece di un'operazione manuale.
+4.  **Coerenza Dati e Architettura:** A seguito della frustrazione, l'utente ha richiesto un controllo completo della coerenza dei dati (es. eliminazione a cascata) e ha fornito un **documento architetturale dettagliato** da usare come guida definitiva per lo sviluppo futuro del gestionale, chiedendo di riscrivere il PRD di conseguenza.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'agente ha completato con successo tutte le richieste dell'utente. È stata implementata una funzionalità robusta per la visualizzazione delle fatture XML in formato HTML (stile AssoInvoice) su più pagine. I bug relativi ai link non funzionanti sono stati risolti. È stato creato un sistema di riconciliazione automatica per i bonifici degli stipendi che ha collegato con successo 290 movimenti. La generazione dei contratti è stata completamente riscritta per utilizzare i dati corretti dalla scheda anagrafica del dipendente, e i dati mancanti di molti dipendenti sono stati popolati automaticamente. È stata inoltre implementata la funzionalità per collegare e visualizzare i PDF dei bonifici.
+L'agente ha risolto con successo il bug critico del ciclo passivo, unificando la logica di importazione delle fatture in modo che ora crei automaticamente le scritture in Prima Nota e le relative scadenze. È stato creato un endpoint per rielaborare i dati storici (le fatture del 2026), risolvendo la discrepanza lamentata dall'utente. È stato completato il refactoring responsive per tutte le pagine principali richieste, tra cui  e , aggiungendo anche i filtri richiesti. La logica di Pulizia Magazzino è stata resa automatica. È stato implementato un sistema di eliminazione a cascata (con doppia conferma) per le fatture, garantendo maggiore coerenza dei dati. Infine, l'agente ha recepito la nuova architettura fornita dall'utente e ha riscritto il file  per rifletterla.
 
 **Last working item**:
-- **Last item agent was working**: L'agente ha completato l'intera serie di richieste dell'utente, concludendo con la correzione della generazione dei contratti di lavoro e l'arricchimento dei dati dei dipendenti. L'ultimo passo è stato verificare il contratto generato, che ora si popola correttamente con i dati anagrafici del dipendente, inclusi quelli recuperati da altre fonti (luogo di nascita dal codice fiscale e livello dalla qualifica).
+- **Last item agent was working**: L'agente stava finalizzando l'implementazione del sistema di coerenza dei dati, in particolare la gestione dell'eliminazione a cascata (soft-delete con doppia conferma) per le fatture. L'ultima azione è stata aggiornare la pagina  per gestire il pop-up di conferma quando un utente tenta di eliminare una fattura che ha entità correlate (es. scritture in prima nota).
 - **Status**: USER VERIFICATION PENDING
 - **Agent Testing Done**: Y
-- **Which testing method agent to use?**: Manual testing by user. L'utente dovrebbe verificare che:
-    1.  I pulsanti Vedi nelle pagine  (sia Cassa che Banca) e  aprano correttamente le fatture.
-    2.  La generazione di un contratto per un dipendente (es. Luigi Taiano) produca un documento corretto.
-    3.  Nella pagina , i bonifici stipendio mostrino la categoria Stipendi e i bonifici con PDF allegato mostrino un pulsante per visualizzarlo.
+- **Which testing method agent to use?**: Manual testing by user. L'utente dovrebbe provare a eliminare una fattura dalla pagina  per verificare che il nuovo modale di conferma appaia correttamente.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-Nessuno. Tutti i problemi segnalati dall'utente in questa sessione sono stati risolti. Il lavoro è in attesa di verifica da parte dell'utente.
+  - **Issue 1**:  (P1) Tasso di Riconciliazione Automatica Basso
+
+  **Issues Detail**:
+  - **Issue 1**:
+     - **Attempted fixes**: L'agente ha migliorato l'algoritmo di matching in  per usare il valore assoluto degli importi, cercare in un intervallo di date più ampio (da data fattura a data scadenza) e usare  per il matching fuzzy sul nome del fornitore. Questo ha portato a 2 match su 17 scadenze aperte.
+     - **Next debug checklist**:
+       1. Analizzare le 15 scadenze rimanenti e i movimenti bancari del periodo per capire perché il matching fallisce (es. descrizioni troppo generiche come PRELIEVO ASSEGNO, pagamenti parziali, soglia del fuzzy matching troppo restrittiva).
+       2. Valutare se includere anche il numero della fattura (se presente nella causale bancaria) come criterio di matching.
+       3. Affinare la funzione  in .
+     - **Why fix this issue and what will be achieved with the fix?**: Migliorare questa funzionalità è cruciale per automatizzare la contabilità e ridurre il lavoro manuale dell'utente.
+     - **Status**: IN PROGRESS
+     - **Is recurring issue?**: Y
+     - **Should Test frontend/backend/both after fix?**: Backend
+     - **Blocked on other issue**: None
 
 **In progress Task List**:
 Nessuno.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1) Pulizia Magazzino:** Aggiungere una funzione per rimuovere dal magazzino i prodotti esistenti appartenenti a fornitori che sono stati successivamente contrassegnati come Esclude Magazzino.
-    - **(P2) Migliorare match automatico pagamenti:** Sviluppare logiche di matching più sofisticate (es. per importo parziale, per nome fornitore con fuzzy matching) per ridurre il numero di pagamenti non riconciliati.
+    - **(P0) Allineamento all'Architettura Utente**: L'utente ha fornito un nuovo e dettagliato documento architetturale (ora in ). Il prossimo passo fondamentale è:
+        1.  Analizzare a fondo il nuovo PRD.
+        2.  Confrontare l'architettura richiesta (nomi delle collezioni, flussi di dati) con quella attuale.
+        3.  Proporre all'utente un piano di refactoring per allineare completamente il sistema alla sua visione (es. consolidare le collezioni  e  in , standardizzare i modelli dei dati).
+    - **(P1) Verifica link Vedi fattura in Gestione Assegni**: Non è stato possibile testare se il pulsante Vedi nella pagina  apre correttamente la fattura, poiché non c'erano assegni collegati a fatture. Questo va verificato.
+
 - **Future Tasks**:
-    - **(P2) Refactoring Responsive:** Riprendere il task, attualmente in pausa, di rendere l'intera applicazione mobile-friendly.
+    - **(P2)** Creare una dashboard con le statistiche sulla riconciliazione automatica.
+    - **(P2)** Implementare una gestione dei lotti di magazzino più avanzata.
+    - **(P3)** Completare il calcolo del food cost nelle ricette.
 
 **Completed work in this session**
-- **Visualizzazione Fatture (COMPLETATO):**
-    - Creato un endpoint () per trasformare l'XML delle fatture in HTML usando un foglio di stile XSL.
-    - Aggiunto il pulsante 📄 Vedi alle pagine  (tab Cassa e Banca), ,  e .
-    - Risolto il bug che impediva l'apertura delle fatture usando path relativi invece di .
-    - Risolta la rotta  () correggendo l'endpoint API e la mappatura dei dati.
-- **Riconciliazione Stipendi (COMPLETATO):**
-    - Creato un endpoint () che ha riconciliato automaticamente **290 bonifici** con i cedolini dei dipendenti, aggiornando la categoria in Stipendi.
-- **Gestione Contratti Dipendenti (COMPLETATO):**
-    - Riscritta la logica di generazione dei contratti in  per usare placeholder specifici e robusti, risolvendo il bug dei dati errati.
-    - Popolati i dati mancanti per **20 dipendenti** estraendo il luogo di nascita dal codice fiscale.
-    - Assegnato il livello contrattuale a **19 dipendenti** basandosi sulla loro qualifica.
-- **Collegamento PDF Bonifici (COMPLETATO):**
-    - Implementata la logica per collegare i PDF dei bonifici caricati ai movimenti corrispondenti nell'estratto conto.
-    - Aggiunto un pulsante per visualizzare il PDF del bonifico direttamente dalla pagina .
+- **Integrazione Ciclo Passivo (COMPLETATO)**: Risolto il bug per cui l'import delle fatture non creava Prima Nota e Scadenze, unificando la logica in .
+- **Rielaborazione Dati Storici (COMPLETATO)**: Creato e usato l'endpoint  per correggere 17 fatture del 2026.
+- **Responsive UI Refactoring (COMPLETATO)**:
+    - Resa responsive la pagina  e aggiunti filtri avanzati.
+    - Resa responsive la pagina .
+- **Coerenza dei Dati (COMPLETATO)**: Implementato un sistema di **eliminazione a cascata con doppia conferma** per le fatture in  e .
+- **Automatizzazione Pulizia Magazzino (COMPLETATO)**: La pulizia ora si attiva automaticamente quando un fornitore viene aggiornato come escluso ().
+- **Miglioramento Riconciliazione (COMPLETATO)**: Potenziato l'algoritmo di match con  e logica migliorata in .
+- **Aggiornamento PRD (COMPLETATO)**: Il file  è stato completamente riscritto per riflettere la nuova, dettagliata architettura fornita dall'utente.
+
+**Earlier issues found/mentioned but not fixed**
+Nessuno. Tutti i problemi sollevati sono stati affrontati o sono elencati come in corso.
+
+**Known issue recurrence from previous fork**
+- **Disconnessione Logica del Flusso Dati**: Problema critico in cui parti dell'applicazione non comunicavano (l'import fatture non creava scritture contabili). È stato **risolto** in questa sessione unificando gli endpoint di import.
+- **Mancanza di Design Responsive**: Problema ricorrente che causava frustrazione all'utente. È stato **risolto** in questa sessione estendendo il refactoring responsive a tutte le pagine principali.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** Logica complessa in FastAPI per la riconciliazione dei dati, trasformazione XSLT con , generazione di documenti  con , parsing del codice fiscale.
-- **Frontend:** Modifiche estese a componenti React per aggiungere nuove funzionalità (pulsanti, link), gestire lo stato e interagire con nuovi endpoint.
-- **Debugging:** Risoluzione di problemi legati a URL relativi vs. assoluti, routing in FastAPI (ordine degli endpoint) e mappatura dei dati tra frontend e backend.
-- **Data Enrichment:** Creazione di script per popolare dati mancanti nel database analizzando informazioni esistenti (es. codice fiscale, qualifica).
+- **Backend**: FastAPI, Coerenza dei dati (Cascade Delete), Fuzzy String Matching ().
+- **Frontend**: React, Design Responsive (classi , ), gestione di filtri complessi e stato UI.
+- **Architettura**: Il focus si è spostato sulla creazione di un sistema robusto e coerente, come definito dal nuovo PRD fornito dall'utente.
 
 **key DB schema**
-- **invoices, fatture_ricevute**: 
-- **estratto_conto**: 
-- **prima_nota_cassa**: 
-- **employees**: 
-- **bonifici_transfers**: 
-- **prima_nota_salari**: 
+Il sistema utilizza diverse collezioni, tra cui:
+- , : Per le fatture (da consolidare secondo il nuovo PRD).
+- , : Per le scritture contabili.
+- : Per le scadenze di pagamento.
+- : Per i movimenti bancari da riconciliare.
+- , : Per l'inventario.
 
 **All files of reference**
--  (Logica generazione contratti)
--  (Endpoint visualizzazione fatture)
--  (Endpoint riconciliazione stipendi)
--  (Logica associazione PDF bonifici)
--  (UI principale per cassa e banca)
--  (UI archivio fatture)
--  (UI dettaglio singola fattura)
+- : **Fonte di verità primaria per tutta l'architettura futura.**
+- : Implementa la logica di eliminazione a cascata.
+- : Endpoint di eliminazione fatture con doppia conferma.
+- : Contiene la logica di business centrale per l'import integrato e la riconciliazione.
+- : Contiene il nuovo flusso di eliminazione con conferma utente.
 
 **Critical Info for New Agent**
-- **Flusso di lavoro guidato dall'utente:** L'utente è molto attivo, segnala bug specifici e richiede modifiche mentre interagisce con l'applicazione. È fondamentale essere pronti a cambiare priorità e indirizzare i problemi man mano che vengono segnalati.
-- **Verifica Funzionalità UI:** Le richieste dell'utente sono spesso incentrate sulla UI. Ogni modifica deve essere verificata con screenshot per confermare che l'aspetto e il comportamento siano corretti.
-- **Complessità dei dati:** I dati sono distribuiti in più collezioni MongoDB con nomi talvolta incoerenti. È necessario indagare attentamente la struttura dei dati prima di implementare nuove logiche. Ad esempio, esistono  e ,  e .
-- **Logica di business fragile:** La generazione dei contratti, sebbene ora funzionante, si basa sulla sostituzione di stringhe in file  ed è sensibile a modifiche nei template.
+- **Segui il Nuovo PRD**: La priorità assoluta è analizzare e aderire alla nuova architettura definita dall'utente nel file . Il tuo primo compito sarà proporre un piano per allineare l'app a questa visione.
+- **Coerenza e Integrazione**: L'utente è molto sensibile alla coerenza dei dati e all'integrazione dei flussi. Ogni nuova funzionalità deve essere perfettamente integrata con il resto del sistema. L'implementazione del cascade delete è un passo in questa direzione e questo approccio va mantenuto.
+- **Automatizzazione**: L'utente preferisce processi automatici a quelli manuali (vedi richiesta sulla pulizia magazzino). Tieni a mente questa preferenza.
 
 **documents and test reports created in this job**
+-  (Riscritto completamente)
 - 
--  (aggiornato)
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **10. Richiesta completamento dati e collegamento bonifici:** L'utente chiede di riempire i dati mancanti dei dipendenti usando il parser PDF e di collegare i PDF dei bonifici. (COMPLETATO)
-- **9. Segnalazione bug contratti e richiesta PDF in archivio:** L'utente segnala che la generazione dei contratti inserisce dati errati e richiede un pulsante per visualizzare il PDF delle fatture nella pagina di archivio. (COMPLETATO)
-- **8. Segnalazione bug Fattura non trovata e richiesta riconciliazione stipendi:** L'utente segnala che il pulsante Vedi restituisce Fattura non trovata, chiede di riconciliare i bonifici degli stipendi e di associare i PDF dei bonifici. (COMPLETATO)
-- **7. Segnalazione bug link non funzionanti:** L'utente segnala che il pulsante Vedi non funziona e il link diretto a una fattura non si apre. (COMPLETATO)
-- **6. Richiesta screenshot sezione Banca:** L'utente chiede di vedere uno screenshot della sezione Banca nella pagina Prima Nota. (COMPLETATO)
-- **5. Chiarimento pagina in uso:** L'utente chiarisce di essere sulla pagina  e non , fornendo uno screenshot. (COMPLETATO)
-- **4. Approvazione e nuova richiesta:** L'utente approva il piano e chiede che, cliccando su un movimento in Prima Nota Banca, si apra il PDF della fattura associata in formato AssoInvoice. (COMPLETATO)
-- **3. Risposta utente al piano:** continua (COMPLETATO)
+- **10. Richiesta di fine lavori:** L'utente chiede di completare tutti i fix in sospeso e di non procedere con nuove implementazioni, ma solo con correzioni. (COMPLETATO)
+- **9. Richiesta di controllo coerenza e nuovo PRD:** L'utente richiede un controllo completo delle relazioni tra i dati (es. eliminazione fatture), una doppia conferma per le operazioni registrate, e la creazione di un nuovo PRD definitivo con lo schema aggiornato. (COMPLETATO)
+- **8. Richiesta di continuare:** L'utente chiede di continuare con il responsive della pagina . (COMPLETATO)
+- **7. Richiesta di continuare:** L'utente chiede di procedere con i task. (COMPLETATO)
+- **6. Richiesta di responsive e filtri per Gestione Assegni:** L'utente chiede di rendere responsive la pagina , migliorare il match della riconciliazione e aggiungere filtri avanzati, incluso un link alla fattura associata. (COMPLETATO)
+- **5. Feedback su Pulizia Magazzino:** L'utente chiarisce che la pulizia del magazzino deve essere automatica all'aggiornamento del fornitore, non un pulsante manuale. Invia screenshot su CSS Flexbox. (COMPLETATO)
+- **4. Richiesta di conferma pulizia magazzino:** L'agente chiede conferma per eseguire la pulizia. (SUPERATO)
+- **3. Richiesta di procedere:** L'utente chiede di procedere con i task successivi. (COMPLETATO)
+- **2. Messaggio di soddisfazione e richiesta di procedere:** L'utente è soddisfatto della risoluzione del problema del ciclo passivo integrato e chiede di procedere. (COMPLETATO)
+- **1. Frustrazione per logica disconnessa:** L'utente esprime grande frustrazione perché le fatture caricate nel 2026 non hanno creato automaticamente Prima Nota e Scadenze, lamentando una perdita di memoria tra le sessioni. (RISOLTO)
+- **Pending Human Message:** L'utente ha fornito un'intera specifica architetturale, che deve essere trattata come la principale direttiva per il lavoro futuro (P0).
 
 **Project Health Check:**
-- **Broken:** Nessuna funzionalità critica è attualmente rotta. I problemi principali segnalati dall'utente (visualizzazione fatture, generazione contratti) sono stati risolti.
+- **Broken**: Nessuno. I bug critici sono stati risolti.
 - **Mocked**: Nessuno.
-- **Technical Debt**:
-    - La generazione dei contratti tramite sostituzione di testo su file  è fragile.
-    - La presenza di collezioni con dati simili e nomi incoerenti ( vs ) aumenta la complessità.
-    - L'assenza di un framework di test automatici robusto rimane un debito tecnico significativo.
+- **Technical Debt**: Esiste un debito tecnico legato alla presenza di collezioni duplicate o con nomi non standard ( vs ). Il nuovo PRD fornisce una roadmap per risolvere questo debito.
 
 **3rd Party Integrations**
-- : Utilizzato per la trasformazione XSLT delle fatture XML.
-- : Utilizzato per la manipolazione e la generazione dei contratti di lavoro in formato .
+- : Per il parsing delle fatture XML.
+- : Per il fuzzy string matching nella riconciliazione automatica.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES (ha restituito un esito positivo)
+- **Testing agent used after significant changes**: YES, per verificare il refactoring responsive.
 - **Troubleshoot agent used after agent stuck in loop**: NO
 - **Test files created**: Nessuno.
-- **Known regressions**: Nessuna regressione nota introdotta in questa sessione.
+- **Known regressions**: Nessuna.
+
+**Credentials to test flow:**
+Nessuna credenziale specifica richiesta. L'app non ha un login bloccante in ambiente di sviluppo.
 
 **What agent forgot to execute**
-L'agente è stato molto reattivo e ha affrontato tutte le richieste dell'utente in questa sessione. Il task originale dell'handoff (correzione di 63 pagamenti) è stato investigato e ritenuto in gran parte obsoleto o già risolto, una decisione ragionevole data la successiva valanga di nuove richieste prioritarie da parte dell'utente.</analysis>
+Nessuno. L'agente ha completato tutti i task richiesti prima che l'utente fornisse la nuova architettura e chiedesse di fermare le implementazioni.</analysis>
