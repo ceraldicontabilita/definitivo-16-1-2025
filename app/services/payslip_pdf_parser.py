@@ -203,7 +203,12 @@ class PayslipPDFParser:
         
         # Part-time
         part_time_match = re.search(self.PATTERNS['part_time'], text)
-        part_time_percent = self._parse_italian_number(part_time_match.group(1)) if part_time_match else 100.0
+        if part_time_match:
+            intero = part_time_match.group(1)
+            decimale = part_time_match.group(2) if part_time_match.group(2) else '0'
+            part_time_percent = float(f"{intero}.{decimale}")
+        else:
+            part_time_percent = 100.0
         
         # Ferie e permessi
         ferie_data = self._extract_ferie(text)
