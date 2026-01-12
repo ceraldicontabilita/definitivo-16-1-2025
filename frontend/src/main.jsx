@@ -104,6 +104,7 @@ const LiquidazioneIVA = lazy(() => import("./pages/LiquidazioneIVA.jsx"));
 // Riconciliazione & Controllo
 const Riconciliazione = lazy(() => import("./pages/Riconciliazione.jsx"));
 const RiconciliazioneF24 = lazy(() => import("./pages/RiconciliazioneF24.jsx"));
+const DashboardRiconciliazione = lazy(() => import("./pages/DashboardRiconciliazione.jsx"));
 const ControlloMensile = lazy(() => import("./pages/ControlloMensile.jsx"));
 const VerificaCoerenza = lazy(() => import("./pages/VerificaCoerenza.jsx"));
 
