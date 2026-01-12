@@ -701,9 +701,48 @@ async def update_supplier(
         )
         alerts_risolti = alert_result.modified_count
     
+    # PULIZIA MAGAZZINO AUTOMATICA: se esclude_magazzino passa a True, rimuovi i prodotti
+    prodotti_rimossi = 0
+    if data.get("esclude_magazzino") == True:
+        piva = supplier.get("partita_iva")
+        supplier_id_db = supplier.get("id") or supplier.get("_id")
+        
+        # Rimuovi da warehouse_stocks
+        result_stocks = await db["warehouse_stocks"].delete_many({
+            "$or": [
+                {"supplier_piva": piva},
+                {"supplier_id": str(supplier_id_db)},
+                {"fornitore_piva": piva}
+            ]
+        })
+        prodotti_rimossi += result_stocks.deleted_count
+        
+        # Rimuovi da magazzino_doppia_verita
+        result_dv = await db["magazzino_doppia_verita"].delete_many({
+            "$or": [
+                {"fornitore_piva": piva},
+                {"fornitore_id": str(supplier_id_db)},
+                {"supplier_piva": piva}
+            ]
+        })
+        prodotti_rimossi += result_dv.deleted_count
+        
+        # Rimuovi da warehouse_inventory
+        result_inv = await db["warehouse_inventory"].delete_many({
+            "$or": [
+                {"supplier_piva": piva},
+                {"supplier_id": str(supplier_id_db)},
+                {"fornitore_piva": piva}
+            ]
+        })
+        prodotti_rimossi += result_inv.deleted_count
+        
+        logger.info(f"Pulizia magazzino automatica per {piva}: {prodotti_rimossi} prodotti rimossi")
+    
     return {
         "message": "Fornitore aggiornato con successo",
-        "alerts_risolti": alerts_risolti
+        "alerts_risolti": alerts_risolti,
+        "prodotti_rimossi_magazzino": prodotti_rimossi
     }
 
 
