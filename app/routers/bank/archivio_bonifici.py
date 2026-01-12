@@ -782,7 +782,11 @@ async def _execute_riconciliazione_batch(task_id: str):
                 if idx in movimenti_usati:
                     continue
                 
-                mov_importo = abs(mov.get("importo", 0))
+                # Fix: gestisce None esplicito per importo movimento
+                raw_mov_importo = mov.get("importo")
+                if raw_mov_importo is None:
+                    continue
+                mov_importo = abs(float(raw_mov_importo))
                 mov_data_str = mov.get("data", "")
                 
                 try:
