@@ -1310,9 +1310,12 @@ async def view_fattura_assoinvoice(fattura_id: str):
     if not fattura:
         raise HTTPException(status_code=404, detail="Fattura non trovata")
     
+    # Usa l'id UUID della fattura per le query successive
+    fattura_uuid = fattura.get("id") or fattura_id
+    
     # Carica le righe della fattura dalla collezione dettaglio_righe_fatture
     righe_fattura = await db["dettaglio_righe_fatture"].find(
-        {"fattura_id": fattura_id},
+        {"fattura_id": fattura_uuid},
         {"_id": 0}
     ).sort("numero_linea", 1).to_list(1000)
     
