@@ -328,12 +328,8 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 
 ## 🚀 PROSSIMI TASK
 
-### P0 - Priorità Critica
-- [ ] **Auto-associazione con Score Alto**: Associare automaticamente bonifico a fattura/stipendio se score > 80%
-- [ ] **Bottone "Vedi PDF" in Prima Nota Salari**: Aggiungere in Cedolini.jsx per visualizzare il bonifico associato
-
 ### P1 - Priorità Alta
-- [ ] Verifica link "Vedi" fattura in Gestione Assegni
+- [ ] Migliorare parser buste paga per estrarre più dati
 - [ ] Dashboard Statistiche Riconciliazione
 - [ ] Migliorare UI eliminazione fattura (mostrare entità correlate)
 
@@ -341,7 +337,6 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 - [ ] Gestione Lotti Avanzata
 - [ ] Calcolo Food Cost Ricette
 - [ ] Report PDF scadenze
-- [ ] Match IBAN per riconciliazione avanzata
 
 ### P3 - Priorità Bassa
 - [ ] Export Excel magazzino
