@@ -1806,7 +1806,7 @@ async def get_fatture_compatibili(bonifico_id: str):
 async def associa_bonifico_fattura(
     bonifico_id: str = Query(...),
     fattura_id: str = Query(...),
-    collection: str = Query(default="fatture_ricevute")
+    collection: str = Query(default="invoices")
 ):
     """
     Associa un bonifico a una fattura ricevuta.
