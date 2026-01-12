@@ -541,7 +541,9 @@ async def riconcilia_automatica_scadenze(
                     "id": match.get("id"),
                     "importo": match.get("importo"),
                     "data": match.get("data"),
-                    "descrizione": match.get("descrizione_originale", "")[:50]
+                    "descrizione": match.get("descrizione_originale", "")[:50],
+                    "match_type": match.get("match_type", "unknown"),
+                    "match_score": match.get("match_score")
                 }
             }
             
