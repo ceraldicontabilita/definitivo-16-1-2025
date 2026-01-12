@@ -542,12 +542,14 @@ async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 30, 
     """
     Cerca un match tra la scadenza e i movimenti bancari.
     
-    Criteri di match (in ordine di priorità):
-    1. Match ESATTO: Importo uguale + campo 'fornitore' del movimento
-    2. Match FUZZY NOME: Nome fornitore nel campo 'fornitore' o nella descrizione
-    3. Match IMPORTO AMPIO: Tolleranza più alta su importo + verifica nome
+    Criteri di match RIGOROSI (per evitare falsi positivi):
+    1. Match ESATTO IMPORTO + NOME: Importo identico (±€0.50) E nome fornitore nel campo 'fornitore'
+    2. Match IMPORTO SIMILE + NOME FORTE: Importo simile (±5%) E nome fornitore confermato
+    3. Match SOLO IMPORTO ESATTO: Se nessun altro match, accetta solo se importo è perfettamente uguale
     
-    Cerca in estratto_conto_movimenti (principale), poi in bank_transactions.
+    NON matcha mai se:
+    - L'importo differisce più del 10% senza conferma nome
+    - Il movimento è già stato usato per altra scadenza
     """
     importo = abs(float(scadenza.get("importo_totale", 0)))
     data_scadenza = scadenza.get("data_scadenza")
@@ -567,47 +569,59 @@ async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 30, 
     except (ValueError, TypeError):
         return None
     
-    # Prepara parole chiave del fornitore (min 3 caratteri, escluse parole comuni)
-    parole_comuni = {"srl", "spa", "snc", "sas", "sapa", "srls", "ltd", "gmbh", "s.r.l.", "s.p.a.", "di", "e", "del", "della", "dei"}
-    parole_fornitore = [p.lower() for p in fornitore_nome.split() if len(p) > 2 and p.lower() not in parole_comuni]
+    # Prepara parole chiave del fornitore (min 4 caratteri, escluse parole comuni)
+    parole_comuni = {"srl", "spa", "snc", "sas", "sapa", "srls", "ltd", "gmbh", "s.r.l.", "s.p.a.", 
+                     "di", "e", "del", "della", "dei", "gruppo", "group", "italia", "italy", "europe"}
+    parole_fornitore = [p.lower() for p in fornitore_nome.split() if len(p) >= 4 and p.lower() not in parole_comuni]
     
-    # --- STEP 1: MATCH ESATTO per importo + campo fornitore ---
-    query_estratto = {
+    # Prima parola significativa del fornitore (più importante)
+    prima_parola = parole_fornitore[0] if parole_fornitore else ""
+    
+    # --- STEP 1: MATCH ESATTO per importo (±€0.50) ---
+    query_esatto = {
         "tipo": {"$in": ["uscita", "addebito"]},
         "$or": [
-            {"importo": {"$gte": importo - tolleranza_importo, "$lte": importo + tolleranza_importo}},
-            {"importo": {"$gte": -importo - tolleranza_importo, "$lte": -importo + tolleranza_importo}}
+            {"importo": {"$gte": importo - 0.50, "$lte": importo + 0.50}},
+            {"importo": {"$gte": -importo - 0.50, "$lte": -importo + 0.50}}
         ],
         "data": {"$gte": data_min, "$lte": data_max},
         "fattura_id": {"$exists": False}
     }
     
-    movimenti_candidati = await db["estratto_conto_movimenti"].find(query_estratto, {"_id": 0}).to_list(100)
+    movimenti_esatti = await db["estratto_conto_movimenti"].find(query_esatto, {"_id": 0}).to_list(50)
     
-    # Prima cerca match con campo 'fornitore' del movimento
-    for mov in movimenti_candidati:
+    # Prima cerca match con nome fornitore confermato
+    for mov in movimenti_esatti:
         mov_fornitore = (mov.get("fornitore") or "").lower()
-        if mov_fornitore and fornitore_nome_lower:
-            # Match diretto sul campo fornitore
-            if FUZZY_AVAILABLE:
-                score = fuzz.ratio(fornitore_nome_lower, mov_fornitore)
-                if score >= 70:
-                    mov["source_collection"] = "estratto_conto_movimenti"
-                    mov["match_type"] = "exact_fornitore"
-                    mov["match_score"] = score
-                    return mov
-            # Match parole chiave
-            for parola in parole_fornitore:
-                if parola in mov_fornitore:
-                    mov["source_collection"] = "estratto_conto_movimenti"
-                    mov["match_type"] = "keyword_fornitore"
-                    mov["match_score"] = 80
-                    return mov
+        descrizione_orig = (mov.get("descrizione_originale") or "").lower()
+        testo_completo = f"{mov_fornitore} {descrizione_orig}"
+        
+        # Match diretto sul nome fornitore
+        if mov_fornitore and prima_parola and prima_parola in mov_fornitore:
+            mov["source_collection"] = "estratto_conto_movimenti"
+            mov["match_type"] = "exact_amount_name"
+            mov["match_score"] = 95
+            return mov
+        
+        # Match su parole chiave nella descrizione
+        if prima_parola and prima_parola in testo_completo:
+            mov["source_collection"] = "estratto_conto_movimenti"
+            mov["match_type"] = "exact_amount_desc"
+            mov["match_score"] = 90
+            return mov
     
-    # --- STEP 2: MATCH FUZZY su descrizione e nome fornitore ---
-    if fornitore_nome and FUZZY_AVAILABLE:
-        # Tolleranza più ampia per fuzzy matching (10% o €10 minimo)
-        tolleranza_fuzzy = max(importo * 0.10, 10.0)
+    # Se importo esatto senza match nome, accetta solo se importo > €100 (meno ambiguo)
+    if movimenti_esatti and importo >= 100:
+        mov = movimenti_esatti[0]
+        mov["source_collection"] = "estratto_conto_movimenti"
+        mov["match_type"] = "exact_amount_only"
+        mov["match_score"] = 70
+        return mov
+    
+    # --- STEP 2: MATCH FUZZY con tolleranza importo più ampia (ma RICHIEDE match nome) ---
+    if fornitore_nome and FUZZY_AVAILABLE and prima_parola:
+        # Tolleranza: max 5% dell'importo o €5, quale sia maggiore
+        tolleranza_fuzzy = max(importo * 0.05, 5.0)
         
         query_fuzzy = {
             "tipo": {"$in": ["uscita", "addebito"]},
@@ -625,86 +639,56 @@ async def cerca_match_bancario(db, scadenza: Dict, tolleranza_giorni: int = 30, 
         best_score = 0
         
         for mov in movimenti_fuzzy:
-            # Combina tutti i campi di testo disponibili
             mov_fornitore = (mov.get("fornitore") or "").lower()
             descrizione_orig = (mov.get("descrizione_originale") or "").lower()
             descrizione = (mov.get("descrizione") or "").lower()
             testo_completo = f"{mov_fornitore} {descrizione_orig} {descrizione}"
             
             score = 0
+            nome_confermato = False
             
-            # Score da fuzzy ratio sul campo fornitore (se presente)
-            if mov_fornitore:
-                score = max(score, fuzz.partial_ratio(fornitore_nome_lower, mov_fornitore) * 1.2)  # Peso maggiore
+            # Verifica presenza nome fornitore (OBBLIGATORIO per fuzzy)
+            if prima_parola in testo_completo:
+                nome_confermato = True
+                score = 70  # Base score per match nome
+                
+                # Bonus per match più precisi
+                if mov_fornitore and prima_parola in mov_fornitore:
+                    score += 15  # Nome nel campo fornitore
+                
+                # Bonus per numero fattura
+                if numero_fattura and numero_fattura.lower() in testo_completo:
+                    score += 10
+                
+                # Bonus per importo molto vicino
+                importo_mov = abs(float(mov.get("importo", 0)))
+                diff_importo = abs(importo - importo_mov)
+                if diff_importo < 1.0:
+                    score += 10
+                elif diff_importo < 3.0:
+                    score += 5
             
-            # Score da fuzzy ratio sulla descrizione
-            score = max(score, fuzz.partial_ratio(fornitore_nome_lower, testo_completo))
+            # Match fuzzy sul nome (solo se non trovato diretto)
+            if not nome_confermato and FUZZY_AVAILABLE:
+                if mov_fornitore:
+                    fuzzy_score = fuzz.partial_ratio(fornitore_nome_lower, mov_fornitore)
+                    if fuzzy_score >= 80:  # Soglia alta per fuzzy
+                        nome_confermato = True
+                        score = 60 + (fuzzy_score - 80)  # 60-80 range
             
-            # Bonus per numero fattura nella descrizione
-            if numero_fattura and numero_fattura.lower() in testo_completo:
-                score += 25
-            
-            # Bonus per parole chiave del fornitore nel testo
-            for parola in parole_fornitore:
-                if parola in testo_completo:
-                    score += 15
-            
-            # Bonus per match SDD/SEPA con nome azienda
-            if "sdd" in descrizione_orig or "sepa" in descrizione_orig:
-                # Estrai potenziale nome dopo identificativo SDD
-                for parola in parole_fornitore:
-                    if parola in descrizione_orig:
-                        score += 20
-                        break
-            
-            # Bonus se importo è molto vicino (entro €2)
-            importo_mov = abs(float(mov.get("importo", 0)))
-            diff_importo = abs(importo - importo_mov)
-            if diff_importo < 2.0:
-                score += 15
-            elif diff_importo < 5.0:
-                score += 10
-            
-            # Soglia minima abbassata a 50 per catturare più match
-            if score > best_score and score >= 50:
+            # Accetta solo se nome è confermato E score > best
+            if nome_confermato and score > best_score:
                 best_score = score
                 best_match = mov
         
-        if best_match:
+        if best_match and best_score >= 65:  # Soglia minima per accettare
             best_match["source_collection"] = "estratto_conto_movimenti"
-            best_match["match_type"] = "fuzzy_name"
+            best_match["match_type"] = "fuzzy_confirmed"
             best_match["match_score"] = min(100, int(best_score))
             return best_match
     
-    # --- STEP 3: MATCH solo importo esatto (fallback) ---
-    # Se non c'è fuzzy ma l'importo è esatto (±€0.50), accetta comunque
-    for mov in movimenti_candidati:
-        importo_mov = abs(float(mov.get("importo", 0)))
-        if abs(importo - importo_mov) < 0.50:
-            mov["source_collection"] = "estratto_conto_movimenti"
-            mov["match_type"] = "exact_amount_only"
-            mov["match_score"] = 60
-            return mov
-    
-    # --- STEP 4: Fallback su bank_transactions ---
-    query_bank = {
-        "tipo": {"$in": ["uscita", "addebito", "bonifico_uscita"]},
-        "$or": [
-            {"importo": {"$gte": importo - tolleranza_importo, "$lte": importo + tolleranza_importo}},
-            {"importo": {"$gte": -importo - tolleranza_importo, "$lte": -importo + tolleranza_importo}}
-        ],
-        "data": {"$gte": data_min, "$lte": data_max},
-        "riconciliato": {"$ne": True}
-    }
-    
-    movimento = await db[COL_BANK_TRANSACTIONS].find_one(query_bank, {"_id": 0})
-    
-    if movimento:
-        movimento["source_collection"] = "bank_transactions"
-        movimento["match_type"] = "exact_amount"
-        movimento["match_score"] = 50
-    
-    return movimento
+    # --- STEP 3: Nessun match trovato ---
+    return None
 
 
 async def esegui_riconciliazione(db, scadenza_id: str, transazione_id: str, source_collection: str = "estratto_conto_movimenti") -> Dict:
