@@ -296,6 +296,12 @@ Tutte le pagine principali supportano layout mobile:
   - Modificato `get_fatture_compatibili`: aggiunto filtro per escludere fatture già associate
 - ✅ **Endpoint PDF bonifico**: Aggiunto `/api/archivio-bonifici/transfers/{id}/pdf` per visualizzare il PDF originale
 - ✅ **Cedolini - Colonna "Bonifico"**: Aggiunta colonna per mostrare se il salario è stato riconciliato con un bonifico
+- ✅ **Riconciliazione IBAN dipendenti**:
+  - Matchinng automatico IBAN beneficiario bonifico → IBAN dipendente in `employees`
+  - Score +100 per operazioni con match IBAN
+  - Banner "🔗 IBAN riconosciuto" nel dropdown associazione
+  - Badge "IBAN ✓" verde per evidenziare match
+- ✅ **Link "Vedi" fattura in Gestione Assegni**: Verificato funzionante con collezione `invoices`
 
 ### 2026-01-11
 - ✅ Integrazione ciclo passivo (Import → Prima Nota → Scadenze)
