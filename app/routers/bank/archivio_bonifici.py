@@ -27,8 +27,8 @@ from app.database import Database
 router = APIRouter(prefix="/archivio-bonifici", tags=["Archivio Bonifici"])
 logger = logging.getLogger(__name__)
 
-# Directory per upload temporanei
-UPLOAD_DIR = Path("/app/tmp_bonifici")
+# Directory per upload temporanei (fuori dalla directory monitorata)
+UPLOAD_DIR = Path("/tmp/bonifici_uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- UTILS ----
