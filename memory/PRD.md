@@ -287,6 +287,16 @@ Tutte le pagine principali supportano layout mobile:
   - Modalità dry_run per preview senza eseguire
   - Opzione `include_suggerimenti` per vedere match a bassa confidenza
 
+### 2026-01-12 (sessione corrente)
+- ✅ **FIX BUG CRITICO**: Risolto errore `abs(): NoneType` nella riconciliazione automatica
+  - Aggiunto check per valori None prima di chiamare abs() su importi
+  - Applicato a funzioni: `riconcilia_bonifici_con_estratto`, `_execute_riconciliazione_batch`
+- ✅ **Esclusione beneficiari già associati dal dropdown**:
+  - Modificato `get_operazioni_salari_compatibili`: aggiunto filtro per escludere operazioni con `bonifico_id` esistente
+  - Modificato `get_fatture_compatibili`: aggiunto filtro per escludere fatture già associate
+- ✅ **Endpoint PDF bonifico**: Aggiunto `/api/archivio-bonifici/transfers/{id}/pdf` per visualizzare il PDF originale
+- ✅ **Cedolini - Colonna "Bonifico"**: Aggiunta colonna per mostrare se il salario è stato riconciliato con un bonifico
+
 ### 2026-01-11
 - ✅ Integrazione ciclo passivo (Import → Prima Nota → Scadenze)
 - ✅ Nuovo foglio stile AssoInvoice
