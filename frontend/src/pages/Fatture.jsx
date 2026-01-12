@@ -947,6 +947,7 @@ export default function Fatture() {
             </tbody>
           </table>
           </div>
+          </>
         )}
       </div>
       
