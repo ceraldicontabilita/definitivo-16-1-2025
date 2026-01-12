@@ -867,13 +867,20 @@ export default function Fornitori() {
   const handleSave = async (formData) => {
     setSaving(true);
     try {
+      let response;
       if (currentSupplier?.id) {
         // UPDATE nel database
-        await api.put(`/api/suppliers/${currentSupplier.id}`, formData);
+        response = await api.put(`/api/suppliers/${currentSupplier.id}`, formData);
       } else {
         // INSERT nel database
-        await api.post('/api/suppliers', { denominazione: formData.ragione_sociale, ...formData });
+        response = await api.post('/api/suppliers', { denominazione: formData.ragione_sociale, ...formData });
       }
+      
+      // Mostra feedback se sono stati rimossi prodotti dal magazzino
+      if (response.data?.prodotti_rimossi_magazzino > 0) {
+        alert(`✅ Fornitore salvato!\n\n🗑️ ${response.data.prodotti_rimossi_magazzino} prodotti rimossi automaticamente dal magazzino (fornitore escluso).`);
+      }
+      
       setModalOpen(false);
       setCurrentSupplier(null);
       reloadData(); // Ricarica dati aggiornati
