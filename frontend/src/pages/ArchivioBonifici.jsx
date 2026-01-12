@@ -319,11 +319,18 @@ export default function ArchivioBonifici() {
     }
   };
 
-  // Calcola totali
+  // Calcola totali e filtra per tab
   const totaleImporto = transfers.reduce((sum, t) => sum + (t.importo || 0), 0);
+  
+  // Separa bonifici associati da non associati
+  const bonificiDaAssociare = transfers.filter(t => !t.salario_associato && !t.fattura_associata);
+  const bonificiAssociati = transfers.filter(t => t.salario_associato || t.fattura_associata);
+  
+  // Dati da mostrare in base al tab
+  const transfersToShow = activeTab === 'da_associare' ? bonificiDaAssociare : bonificiAssociati;
 
   return (
-    <div style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{ padding: 24, maxWidth: 1400, margin: '0 auto' }} ref={dropdownRef}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 'bold', color: '#1e3a5f', marginBottom: 8 }}>
