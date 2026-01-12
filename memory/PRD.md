@@ -512,4 +512,10 @@ Le ricette sono ora gestite dalla pagina `/ricette` (Ricette & Food Cost) con fo
   - Score minimo 60% per match fuzzy
   - Bonus per numero fattura nella descrizione
 
+- **RESPONSIVE MagazzinoDoppiaVerita.jsx**:
+  - Layout a card su mobile con griglia 3 colonne per giacenze
+  - Badge stato (OK/DIFF/BASSO) visibili
+  - Filtri compatti su mobile (Differenze, Scorte basse)
+  - Tabella desktop completa con tutte le colonne
+
 
