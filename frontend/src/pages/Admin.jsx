@@ -315,12 +315,15 @@ export default function Admin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList style={{ marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 12 }}>
+        <TabsList style={{ marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 12, flexWrap: 'wrap' }}>
           <TabsTrigger value="email" style={{ padding: '10px 16px', borderRadius: 8 }}>
             <Mail style={{ width: 16, height: 16, marginRight: 8 }} /> Email
           </TabsTrigger>
           <TabsTrigger value="keywords" style={{ padding: '10px 16px', borderRadius: 8 }}>
             <Key style={{ width: 16, height: 16, marginRight: 8 }} /> Parole Chiave
+          </TabsTrigger>
+          <TabsTrigger value="fatture" style={{ padding: '10px 16px', borderRadius: 8 }}>
+            <FileText style={{ width: 16, height: 16, marginRight: 8 }} /> Fatture
           </TabsTrigger>
           <TabsTrigger value="system" style={{ padding: '10px 16px', borderRadius: 8 }}>
             <Database style={{ width: 16, height: 16, marginRight: 8 }} /> Sistema
