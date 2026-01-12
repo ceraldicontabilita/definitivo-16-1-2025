@@ -617,10 +617,10 @@ export default function GestioneAssegni() {
         </div>
       )}
 
-      {/* Assegni Table */}
+      {/* Assegni Table/Cards */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40 }}>Caricamento...</div>
-      ) : assegni.length === 0 ? (
+      ) : filteredAssegni.length === 0 ? (
         <div style={{ 
           background: 'white', 
           borderRadius: 12, 
@@ -628,79 +628,223 @@ export default function GestioneAssegni() {
           textAlign: 'center',
           boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
         }}>
-          <h3 style={{ color: '#666', marginBottom: 10 }}>Nessun assegno presente</h3>
-          <p style={{ color: '#999' }}>Genera i primi 10 assegni per iniziare</p>
+          <h3 style={{ color: '#666', marginBottom: 10 }}>
+            {assegni.length === 0 ? 'Nessun assegno presente' : 'Nessun assegno corrisponde ai filtri'}
+          </h3>
+          <p style={{ color: '#999' }}>
+            {assegni.length === 0 ? 'Genera i primi assegni per iniziare' : 'Prova a modificare i filtri di ricerca'}
+          </p>
         </div>
       ) : (
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 12, 
-          overflow: 'hidden',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-        }}>
-          <div style={{ padding: 20, borderBottom: '1px solid #eee' }}>
-            <h3 style={{ margin: 0 }}>Lista Assegni ({assegni.length})</h3>
+        <>
+          {/* MOBILE CARDS VIEW */}
+          <div className="md:hidden" style={{ display: 'block' }}>
+            <style>{`
+              @media (min-width: 768px) {
+                .mobile-cards-assegni { display: none !important; }
+                .desktop-table-assegni { display: block !important; }
+              }
+              @media (max-width: 767px) {
+                .mobile-cards-assegni { display: block !important; }
+                .desktop-table-assegni { display: none !important; }
+              }
+            `}</style>
+            <div className="mobile-cards-assegni">
+              <div style={{ padding: '12px 0', borderBottom: '1px solid #eee', marginBottom: 12 }}>
+                <h3 style={{ margin: 0, fontSize: 16 }}>Lista Assegni ({filteredAssegni.length})</h3>
+              </div>
+              {Object.entries(carnets).map(([carnetId, carnetAssegni], carnetIdx) => (
+                <div key={carnetId} style={{ marginBottom: 16 }}>
+                  {/* Carnet Header Mobile */}
+                  <div style={{ 
+                    background: '#f0f9ff', 
+                    padding: '10px 12px', 
+                    borderRadius: '8px 8px 0 0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 8
+                  }}>
+                    <div>
+                      <strong style={{ fontSize: 14 }}>Carnet {carnetIdx + 1}</strong>
+                      <span style={{ color: '#666', marginLeft: 8, fontSize: 12 }}>
+                        ({carnetAssegni.length} assegni)
+                      </span>
+                    </div>
+                    <div style={{ fontWeight: 'bold', color: '#1a365d', fontSize: 14 }}>
+                      {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))}
+                    </div>
+                  </div>
+                  
+                  {/* Assegni Cards */}
+                  {carnetAssegni.map((assegno, idx) => (
+                    <div 
+                      key={assegno.id}
+                      style={{
+                        background: idx % 2 === 0 ? 'white' : '#fafafa',
+                        padding: 12,
+                        borderBottom: '1px solid #eee',
+                        borderLeft: '1px solid #eee',
+                        borderRight: '1px solid #eee',
+                        ...(idx === carnetAssegni.length - 1 ? { borderRadius: '0 0 8px 8px' } : {})
+                      }}
+                    >
+                      {/* Row 1: Numero + Stato + Importo */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#1a365d', fontSize: 13 }}>
+                            {assegno.numero?.split('-')[1] || assegno.numero}
+                          </span>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: 10,
+                            fontSize: 10,
+                            fontWeight: 'bold',
+                            background: STATI_ASSEGNO[assegno.stato]?.color || '#9e9e9e',
+                            color: 'white'
+                          }}>
+                            {STATI_ASSEGNO[assegno.stato]?.label || assegno.stato}
+                          </span>
+                        </div>
+                        <span style={{ fontWeight: 'bold', fontSize: 15, color: '#1a365d' }}>
+                          {formatEuro(assegno.importo)}
+                        </span>
+                      </div>
+                      
+                      {/* Row 2: Beneficiario */}
+                      {assegno.beneficiario && (
+                        <div style={{ fontSize: 13, marginBottom: 6 }}>
+                          <span style={{ color: '#666' }}>👤</span> {assegno.beneficiario}
+                        </div>
+                      )}
+                      
+                      {/* Row 3: Fattura (se presente) */}
+                      {assegno.numero_fattura && (
+                        <div style={{ fontSize: 12, color: '#2196f3', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>📄 Fatt. {assegno.numero_fattura}</span>
+                          {assegno.data_fattura && (
+                            <span style={{ color: '#666' }}>({new Date(assegno.data_fattura).toLocaleDateString('it-IT')})</span>
+                          )}
+                          {/* Link alla fattura */}
+                          {assegno.fattura_collegata && (
+                            <a
+                              href={`/api/fatture-ricevute/fattura/${assegno.fattura_collegata}/view-assoinvoice`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                padding: '2px 8px',
+                                background: '#2196f3',
+                                color: 'white',
+                                borderRadius: 4,
+                                fontSize: 11,
+                                textDecoration: 'none'
+                              }}
+                            >
+                              Vedi
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Row 4: Azioni */}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <button 
+                          onClick={() => startEdit(assegno)} 
+                          style={{ flex: 1, padding: '8px', background: '#f5f5f5', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+                        >
+                          ✏️ Modifica
+                        </button>
+                        <button 
+                          onClick={() => openFattureModal(assegno)} 
+                          style={{ flex: 1, padding: '8px', background: '#e3f2fd', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+                        >
+                          📄 Fatture
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(assegno)} 
+                          style={{ padding: '8px 12px', background: '#ffebee', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#c62828', fontSize: 12 }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>N. Assegno</th>
-                  <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Stato</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Beneficiario / Note</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, fontSize: 12 }}>Importo</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Fattura / Data</th>
-                  <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(carnets).map(([carnetId, carnetAssegni], carnetIdx) => (
-                  <React.Fragment key={carnetId}>
-                    {/* Carnet Header with Print Button */}
-                    <tr style={{ background: '#f0f9ff' }}>
-                      <td colSpan={3} style={{ padding: '8px 12px' }}>
-                        <strong>Carnet {carnetIdx + 1}</strong>
-                        <span style={{ color: '#666', marginLeft: 10, fontSize: 13 }}>
-                          (Assegni {carnetAssegni.length} - Totale: {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
-                        </span>
-                      </td>
-                      <td colSpan={3} style={{ padding: '8px 12px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => handleStampaCarnet(carnetId, carnetAssegni)}
-                          data-testid={`stampa-carnet-${carnetIdx}`}
-                          style={{
-                            padding: '5px 12px',
-                            background: '#2196f3',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            fontSize: 11,
-                            fontWeight: 'bold',
-                            marginRight: 8
-                          }}
-                        >
-                          🖨️ Stampa
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCarnet(carnetId, carnetAssegni)}
-                          data-testid={`delete-carnet-${carnetIdx}`}
-                          style={{
-                            padding: '5px 12px',
-                            background: '#dc2626',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            fontSize: 11,
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          🗑️ Elimina Carnet
-                        </button>
-                      </td>
-                    </tr>
+          {/* DESKTOP TABLE VIEW */}
+          <div className="desktop-table-assegni" style={{ 
+            background: 'white', 
+            borderRadius: 12, 
+            overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}>
+            <div style={{ padding: 16, borderBottom: '1px solid #eee' }}>
+              <h3 style={{ margin: 0 }}>Lista Assegni ({filteredAssegni.length})</h3>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>N. Assegno</th>
+                    <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Stato</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Beneficiario / Note</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, fontSize: 12 }}>Importo</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Fattura / Data</th>
+                    <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(carnets).map(([carnetId, carnetAssegni], carnetIdx) => (
+                    <React.Fragment key={carnetId}>
+                      {/* Carnet Header with Print Button */}
+                      <tr style={{ background: '#f0f9ff' }}>
+                        <td colSpan={3} style={{ padding: '8px 12px' }}>
+                          <strong>Carnet {carnetIdx + 1}</strong>
+                          <span style={{ color: '#666', marginLeft: 10, fontSize: 13 }}>
+                            (Assegni {carnetAssegni.length} - Totale: {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
+                          </span>
+                        </td>
+                        <td colSpan={3} style={{ padding: '8px 12px', textAlign: 'right' }}>
+                          <button
+                            onClick={() => handleStampaCarnet(carnetId, carnetAssegni)}
+                            data-testid={`stampa-carnet-${carnetIdx}`}
+                            style={{
+                              padding: '5px 12px',
+                              background: '#2196f3',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 11,
+                              fontWeight: 'bold',
+                              marginRight: 8
+                            }}
+                          >
+                            🖨️ Stampa
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCarnet(carnetId, carnetAssegni)}
+                            data-testid={`delete-carnet-${carnetIdx}`}
+                            style={{
+                              padding: '5px 12px',
+                              background: '#dc2626',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              fontSize: 11,
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            🗑️ Elimina
+                          </button>
+                        </td>
+                      </tr>
 
                     {/* Assegni del carnet - Layout compatto su singola riga */}
                     {carnetAssegni.map((assegno, idx) => (
