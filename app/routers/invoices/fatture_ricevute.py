@@ -1198,26 +1198,47 @@ async def get_archivio_fatture(
     # Filtro mese
     if mese and anno:
         mese_str = str(mese).zfill(2)
-        query["data_documento"] = {"$regex": f"^{anno}-{mese_str}"}
+        # Supporta entrambi i formati data
+        query["$or"] = [
+            {"data_documento": {"$regex": f"^{anno}-{mese_str}"}},
+            {"invoice_date": {"$regex": f"^{anno}-{mese_str}"}}
+        ]
     
-    # Filtro fornitore per P.IVA
+    # Filtro fornitore per P.IVA (supporta entrambi gli schemi)
     if fornitore_piva:
-        query["fornitore_partita_iva"] = fornitore_piva.strip().upper()
+        piva_norm = fornitore_piva.strip().upper()
+        if "$or" in query:
+            query["$and"] = [{"$or": query.pop("$or")}, {"$or": [
+                {"fornitore_partita_iva": piva_norm},
+                {"supplier_vat": piva_norm}
+            ]}]
+        else:
+            query["$or"] = [
+                {"fornitore_partita_iva": piva_norm},
+                {"supplier_vat": piva_norm}
+            ]
     
-    # Filtro fornitore per nome
+    # Filtro fornitore per nome (supporta entrambi gli schemi)
     if fornitore_nome:
-        query["fornitore_ragione_sociale"] = {"$regex": fornitore_nome, "$options": "i"}
+        nome_filter = [
+            {"fornitore_ragione_sociale": {"$regex": fornitore_nome, "$options": "i"}},
+            {"supplier_name": {"$regex": fornitore_nome, "$options": "i"}}
+        ]
+        if "$or" in query:
+            query["$and"] = query.get("$and", []) + [{"$or": nome_filter}]
+        else:
+            query["$or"] = nome_filter
     
     # Filtro stato
     if stato:
         if stato == "pagata":
             query["pagato"] = True
         else:
-            query["stato"] = stato
+            query["$or"] = [{"stato": stato}, {"status": stato}] if "$or" not in query else query["$or"]
     
     # Ricerca libera
     if search:
-        query["$or"] = [
+        search_filter = [
             {"numero_documento": {"$regex": search, "$options": "i"}},
             {"invoice_number": {"$regex": search, "$options": "i"}},
             {"fornitore_ragione_sociale": {"$regex": search, "$options": "i"}},
@@ -1225,6 +1246,12 @@ async def get_archivio_fatture(
             {"supplier_name": {"$regex": search, "$options": "i"}},
             {"supplier_vat": {"$regex": search, "$options": "i"}}
         ]
+        if "$and" in query:
+            query["$and"].append({"$or": search_filter})
+        elif "$or" in query:
+            query["$and"] = [{"$or": query.pop("$or")}, {"$or": search_filter}]
+        else:
+            query["$or"] = search_filter
     
     # Query - ordina per data documento (supporta entrambi i formati)
     cursor = db[COL_FATTURE_RICEVUTE].find(query, {"_id": 0})
