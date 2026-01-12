@@ -1892,8 +1892,6 @@ async def disassocia_bonifico_fattura(bonifico_id: str):
             )
     
     return {"success": True, "bonifico_id": bonifico_id}
-        "message": f"Riconciliati {riconciliati} bonifici PDF con estratto conto"
-    }
 
 
 @router.get("/transfers/{bonifico_id}/pdf")
