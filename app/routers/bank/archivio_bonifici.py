@@ -1048,6 +1048,100 @@ async def stato_riconciliazione_bonifici():
     }
 
 
+@router.get("/dashboard-riconciliazione")
+async def dashboard_riconciliazione():
+    """
+    Dashboard completa riconciliazione con statistiche dettagliate.
+    """
+    db = Database.get_db()
+    
+    # === BONIFICI ===
+    totale_bonifici = await db.bonifici_transfers.count_documents({})
+    bonifici_riconciliati = await db.bonifici_transfers.count_documents({"riconciliato": True})
+    bonifici_con_salario = await db.bonifici_transfers.count_documents({"salario_associato": True})
+    bonifici_con_fattura = await db.bonifici_transfers.count_documents({"fattura_associata": True})
+    
+    # Importi bonifici per stato
+    pipeline_bonifici = [
+        {"$group": {
+            "_id": {
+                "riconciliato": {"$ifNull": ["$riconciliato", False]},
+                "salario": {"$ifNull": ["$salario_associato", False]},
+                "fattura": {"$ifNull": ["$fattura_associata", False]}
+            },
+            "totale": {"$sum": {"$abs": "$importo"}},
+            "count": {"$sum": 1}
+        }}
+    ]
+    bonifici_stats = await db.bonifici_transfers.aggregate(pipeline_bonifici).to_list(10)
+    
+    importo_totale = sum(s.get("totale", 0) for s in bonifici_stats)
+    importo_riconciliato = sum(s.get("totale", 0) for s in bonifici_stats if s["_id"].get("riconciliato"))
+    
+    # === SCADENZE ===
+    totale_scadenze = await db.scadenziario_fornitori.count_documents({})
+    scadenze_pagate = await db.scadenziario_fornitori.count_documents({"status": "pagata"})
+    scadenze_aperte = await db.scadenziario_fornitori.count_documents({"status": {"$ne": "pagata"}})
+    
+    # === PRIMA NOTA SALARI ===
+    totale_salari = await db.prima_nota_salari.count_documents({})
+    salari_associati = await db.prima_nota_salari.count_documents({"salario_associato": True})
+    
+    # === DIPENDENTI CON IBAN ===
+    dipendenti_totali = await db.employees.count_documents({})
+    dipendenti_con_iban = await db.employees.count_documents({"iban": {"$exists": True, "$nin": [None, ""]}})
+    
+    # === STATISTICHE PER MESE (ultimi 6 mesi) ===
+    from datetime import datetime, timedelta
+    sei_mesi_fa = datetime.utcnow() - timedelta(days=180)
+    
+    pipeline_mensile = [
+        {"$match": {"data": {"$gte": sei_mesi_fa.isoformat()}}},
+        {"$addFields": {
+            "mese": {"$substr": ["$data", 0, 7]}  # "2025-11"
+        }},
+        {"$group": {
+            "_id": "$mese",
+            "totale": {"$sum": 1},
+            "riconciliati": {"$sum": {"$cond": [{"$eq": ["$riconciliato", True]}, 1, 0]}},
+            "importo": {"$sum": {"$abs": "$importo"}}
+        }},
+        {"$sort": {"_id": -1}},
+        {"$limit": 6}
+    ]
+    stats_mensili = await db.bonifici_transfers.aggregate(pipeline_mensile).to_list(6)
+    
+    return {
+        "bonifici": {
+            "totale": totale_bonifici,
+            "riconciliati": bonifici_riconciliati,
+            "con_salario": bonifici_con_salario,
+            "con_fattura": bonifici_con_fattura,
+            "non_associati": totale_bonifici - bonifici_con_salario - bonifici_con_fattura,
+            "percentuale_riconciliazione": round(bonifici_riconciliati / max(totale_bonifici, 1) * 100, 1),
+            "importo_totale": round(importo_totale, 2),
+            "importo_riconciliato": round(importo_riconciliato, 2)
+        },
+        "scadenze": {
+            "totale": totale_scadenze,
+            "pagate": scadenze_pagate,
+            "aperte": scadenze_aperte
+        },
+        "salari": {
+            "totale": totale_salari,
+            "associati": salari_associati,
+            "percentuale": round(salari_associati / max(totale_salari, 1) * 100, 1)
+        },
+        "dipendenti": {
+            "totale": dipendenti_totali,
+            "con_iban": dipendenti_con_iban,
+            "percentuale_iban": round(dipendenti_con_iban / max(dipendenti_totali, 1) * 100, 1)
+        },
+        "trend_mensile": stats_mensili,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
 @router.post("/reset-riconciliazione")
 async def reset_riconciliazione():
     """Reset dello stato di riconciliazione di tutti i bonifici."""
