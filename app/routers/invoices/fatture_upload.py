@@ -1199,6 +1199,37 @@ async def delete_invoice(
 
 
 
+@router.get("/{invoice_id}/entita-correlate")
+async def get_entita_correlate_fattura(invoice_id: str) -> Dict[str, Any]:
+    """
+    Restituisce tutte le entità correlate a una fattura.
+    Utile per mostrare all'utente cosa verrà modificato/eliminato.
+    """
+    from app.services.cascade_operations import CascadeOperations
+    
+    db = Database.get_db()
+    
+    invoice = await db[Collections.INVOICES].find_one({"id": invoice_id})
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Fattura non trovata")
+    
+    stato = await CascadeOperations.is_fattura_registrata(db, invoice_id)
+    entita = await CascadeOperations.get_entita_correlate(db, invoice_id)
+    
+    return {
+        "fattura_id": invoice_id,
+        "numero_documento": invoice.get("invoice_number") or invoice.get("numero_documento"),
+        "fornitore": invoice.get("supplier_name") or invoice.get("fornitore_ragione_sociale"),
+        "importo": invoice.get("total_amount") or invoice.get("importo_totale"),
+        "stato_registrazione": stato,
+        "entita_correlate": entita,
+        "eliminabile": not stato["dettagli"]["ha_pagamenti"],
+        "richiede_conferma": stato["registrata"]
+    }
+
+
+
+
 @router.post("/recalculate-iva")
 async def recalculate_iva_all_invoices() -> Dict[str, Any]:
     """
