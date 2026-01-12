@@ -447,7 +447,7 @@ async def genera_scrittura_prima_nota(db, fattura_id: str, fattura: Dict, fornit
         
         # Metadati
         "centro_costo": centro_costo,
-        "note": f"Generato automaticamente da import fattura",
+        "note": "Generato automaticamente da import fattura",
         "source": "import_xml_integrato",
         "stato": "registrato",
         
