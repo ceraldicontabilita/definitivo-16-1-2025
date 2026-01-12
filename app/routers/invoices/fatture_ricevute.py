@@ -1189,7 +1189,8 @@ async def get_archivio_fatture(
     """
     db = Database.get_db()
     
-    query = {"tipo": "passiva"}
+    # Query base - include sia fatture migrate che nuove
+    query = {}
     
     # Filtro anno
     if anno:
@@ -1472,7 +1473,8 @@ async def get_statistiche(anno: Optional[int] = Query(None)):
     """
     db = Database.get_db()
     
-    query = {"tipo": "passiva"}
+    # Query base - include sia fatture migrate che nuove
+    query = {}
     if anno:
         query["data_documento"] = {"$regex": f"^{anno}"}
     
