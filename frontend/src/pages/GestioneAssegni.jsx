@@ -985,9 +985,20 @@ export default function GestioneAssegni() {
                         key={assegno.id} 
                         style={{ 
                           borderBottom: '1px solid #eee',
-                          background: idx % 2 === 0 ? 'white' : '#fafafa'
+                          background: selectedAssegni.has(assegno.id) ? '#e8f5e9' : (idx % 2 === 0 ? 'white' : '#fafafa')
                         }}
                       >
+                        {/* Checkbox selezione */}
+                        <td style={{ padding: '8px', textAlign: 'center' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedAssegni.has(assegno.id)}
+                            onChange={() => toggleSelectAssegno(assegno.id)}
+                            data-testid={`select-${assegno.id}`}
+                            style={{ width: 18, height: 18, cursor: 'pointer' }}
+                          />
+                        </td>
+
                         {/* Numero Assegno */}
                         <td style={{ padding: '8px 12px' }}>
                           <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#1a365d', fontSize: 13 }}>
