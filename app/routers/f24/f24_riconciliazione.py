@@ -321,6 +321,43 @@ async def get_f24_commercialista(f24_id: str) -> Dict[str, Any]:
     return f24
 
 
+@router.delete("/commercialista/{f24_id}")
+async def delete_f24_commercialista(f24_id: str) -> Dict[str, Any]:
+    """
+    Elimina (soft delete) un F24 commercialista.
+    Imposta lo stato a 'eliminato' invece di cancellare fisicamente.
+    """
+    db = Database.get_db()
+    
+    # Verifica esistenza
+    f24 = await db[COLL_F24_COMMERCIALISTA].find_one({"id": f24_id})
+    if not f24:
+        raise HTTPException(status_code=404, detail="F24 non trovato")
+    
+    # Se già eliminato
+    if f24.get("status") == "eliminato":
+        raise HTTPException(status_code=400, detail="F24 già eliminato")
+    
+    # Soft delete - imposta status a eliminato
+    from datetime import datetime
+    await db[COLL_F24_COMMERCIALISTA].update_one(
+        {"id": f24_id},
+        {
+            "$set": {
+                "status": "eliminato",
+                "eliminato_at": datetime.utcnow().isoformat(),
+                "eliminato_manualmente": True
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "F24 eliminato con successo",
+        "f24_id": f24_id
+    }
+
+
 # ============================================
 # ALERTS
 # ============================================
