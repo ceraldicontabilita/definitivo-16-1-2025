@@ -335,6 +335,21 @@ Tutte le pagine principali supportano layout mobile:
 - ✅ Responsive pagine principali (Fatture, Prima Nota, etc.)
 - ✅ Rimozione pagine legacy
 
+### 2026-01-13
+- ✅ **Lotti Fornitore negli Ingredienti Ricette**: Nuova funzionalità per tracciabilità HACCP
+  - Estrazione automatica lotti e scadenze dalle fatture XML (parser già esistente)
+  - Salvataggio `lotto_fornitore` e `data_scadenza` in `dettaglio_righe_fatture`
+  - Nuovi endpoint API:
+    - `GET /api/ricette/lotti-fornitore/cerca` - Cerca lotti per prodotto
+    - `POST /api/ricette/{id}/ingredienti/{idx}/lotto` - Associa lotto a ingrediente
+    - `DELETE /api/ricette/{id}/ingredienti/{idx}/lotto` - Rimuove associazione
+    - `GET /api/ricette/{id}/lotti-ingredienti` - Lista ingredienti con/senza lotto
+  - UI in modal "Modifica Ricetta":
+    - Pulsante "🏷️ Assegna Lotto Fornitore" per ogni ingrediente
+    - Modal di ricerca lotti dalla tracciabilità e fatture
+    - Visualizzazione lotto assegnato con codice e scadenza
+    - Pulsante rimozione associazione
+
 ---
 
 ## 📊 NOTE SULLA RICONCILIAZIONE AUTOMATICA
