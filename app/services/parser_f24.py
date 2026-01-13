@@ -1004,13 +1004,89 @@ def get_descrizione_causale_inps(causale: str) -> str:
 
 
 def get_descrizione_tributo_regioni(codice: str) -> str:
-    """Descrizione codici tributo regionali."""
+    """
+    Descrizione codici tributo regionali (sezione REGIONI F24).
+    Include IRAP, addizionali regionali e relativi ravvedimenti/sanzioni.
+    Fonte: https://www1.agenziaentrate.gov.it/servizi/codici/ricerca/
+    """
     descrizioni = {
+        # ============================================
+        # IRAP - Autoliquidazione
+        # ============================================
+        "1868": "IRAP riallineamento principi contabili (D.Lgs. 192/2024)",
+        "3800": "IRAP saldo",
+        "3805": "Interessi pagamento dilazionato tributi regionali",
+        "3812": "IRAP acconto prima rata",
+        "3813": "IRAP acconto seconda rata o unica soluzione",
+        "3858": "IRAP versamento mensile (art.10-bis D.Lgs. 446/97)",
+        "3881": "Maggior acconto I rata IRAP (L. 207/2024)",
+        "3882": "Maggior acconto II rata IRAP (L. 207/2024)",
+        "3883": "IRAP compensazione credito (L. 190/2014)",
+        "4070": "CPB maggiorazione acconto IRAP (D.Lgs. 13/2024)",
+        
+        # ============================================
+        # IRAP - Ravvedimento operoso
+        # ============================================
+        "1993": "Interessi ravvedimento IRAP (art.13 D.Lgs. 472/97)",
+        "8907": "Sanzione pecuniaria IRAP",
+        
+        # ============================================
+        # IRAP - Accertamento e contenzioso
+        # ============================================
+        "1987": "Ravvedimento importi rateizzati IRAP - interessi",
+        "5063": "Recupero aiuto Stato esonero IRAP saldo - imposta/interessi",
+        "5064": "Recupero aiuto Stato esonero IRAP saldo - sanzione",
+        "5065": "Recupero aiuto Stato esonero IRAP acconto - imposta/interessi",
+        "5066": "Recupero aiuto Stato esonero IRAP acconto - sanzione",
+        "7452": "IRAP recupero credito compensazione - imposta/interessi",
+        "7453": "IRAP recupero credito compensazione - sanzione",
+        "9400": "Spese di notifica atti impositivi",
+        "9415": "IRAP accertamento con adesione - imposta/interessi",
+        "9416": "IRAP accertamento con adesione - sanzione",
+        "9424": "Sanzione anagrafe tributaria codice fiscale",
+        "9466": "IRAP omessa impugnazione - imposta/interessi",
+        "9467": "IRAP omessa impugnazione - sanzione",
+        "9478": "Sanzione decadenza rateazione IRAP (art.29 DL 78/2010)",
+        "9512": "IRAP conciliazione giudiziale - imposta/interessi",
+        "9513": "IRAP conciliazione giudiziale - sanzione",
+        "9607": "Sanzione pecuniaria IRAP definizione sanzioni",
+        "9695": "Sanzione componenti reddituali negativi non scambiati",
+        "9908": "IRAP adesione verbale constatazione - imposta/interessi",
+        "9909": "IRAP adesione verbale constatazione - sanzione",
+        "9920": "IRAP adesione invito comparire - imposta/interessi",
+        "9921": "IRAP adesione invito comparire - sanzione",
+        "9934": "IRAP contenzioso art.29 DL 78/2010 - imposta",
+        "9935": "IRAP contenzioso art.29 DL 78/2010 - interessi",
+        "9949": "Ravvedimento importi rateizzati IRAP - sanzione",
+        "9955": "IRAP reclamo/mediazione art.17-bis - imposta/interessi",
+        "9956": "IRAP reclamo/mediazione - sanzioni",
+        "9971": "Sanzioni IRAP contenzioso art.29 DL 78/2010",
+        "9988": "IRAP definizione agevolata PVC - imposta/interessi",
+        "9990": "IRAP definizione agevolata PVC - sanzione",
+        
+        # ============================================
+        # Addizionale regionale IRPEF
+        # ============================================
         "3801": "Addizionale regionale IRPEF - sostituto d'imposta",
-        "3802": "Addizionale regionale IRPEF",
-        "3805": "Addizionale regionale IRPEF - rata",
-        "3796": "Addizionale regionale attività produttive",
-        "3843": "Addizionale regionale IRPEF - autotassazione",
+        "3802": "Addizionale regionale IRPEF - autotassazione saldo",
+        "3803": "Addizionale regionale IRPEF - autotassazione acconto",
+        "8902": "Interessi ravvedimento addizionale regionale IRPEF",
+        "8903": "Sanzione pecuniaria addizionale regionale IRPEF",
+        
+        # ============================================
+        # Sanatorie e definizioni regionali
+        # ============================================
+        "LP33": "IRAP/Add.reg. IRPEF definizione controversie (L. 130/2022) - imposta",
+        "LP34": "IRAP/Add.reg. IRPEF definizione controversie (L. 130/2022) - sanzioni",
+        "PF11": "IRAP definizione agevolata PVC (DL 119/2018)",
+        "PF33": "IRAP/Add.reg. IRPEF definizione controversie (DL 119/2018) - imposta",
+        "PF34": "IRAP/Add.reg. IRPEF definizione controversie (DL 119/2018) - sanzioni",
+        "TF23": "IRAP/Add.reg. IRPEF definizione controversie (L. 197/2022) - imposta",
+        "TF24": "IRAP/Add.reg. IRPEF definizione controversie (L. 197/2022) - sanzioni",
+        "TF42": "IRAP/Add.reg. IRPEF regolarizzazione pagamenti (L. 197/2022)",
+        "TF50": "IRAP ravvedimento speciale (L. 197/2022) - sanzioni",
+        "8124": "IRAP/Add.reg. IRPEF definizione controversie (DL 50/2017) - imposta",
+        "8125": "IRAP/Add.reg. IRPEF definizione controversie (DL 50/2017) - sanzioni",
     }
     return descrizioni.get(codice, f"Tributo regionale {codice}")
 
