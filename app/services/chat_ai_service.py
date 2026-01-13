@@ -297,23 +297,30 @@ Usa il grassetto (**testo**) per evidenziare informazioni importanti."""
         
         return results
     
-    async def ask(self, question: str) -> Dict[str, Any]:
+    async def ask(self, question: str, anno: int = None) -> Dict[str, Any]:
         """
         Elabora una domanda e restituisce una risposta.
         
-        1. Cerca dati rilevanti nel database
+        Args:
+            question: La domanda dell'utente
+            anno: Anno di riferimento per i dati (default: anno corrente)
+        
+        1. Cerca dati rilevanti nel database per l'anno specificato
         2. Costruisce il contesto per l'AI
         3. Genera la risposta
         """
         try:
             # Cerca dati rilevanti
-            data = await self.search_relevant_data(question)
+            data = await self.search_relevant_data(question, anno=anno)
+            
+            # Anno effettivo usato nella ricerca
+            anno_usato = anno or datetime.now().year
             
             # Costruisci il messaggio con contesto
-            context_parts = []
+            context_parts = [f"ANNO DI RIFERIMENTO: {anno_usato}"]
             
             if data["fatture"]:
-                context_parts.append("FATTURE TROVATE:")
+                context_parts.append(f"\nFATTURE TROVATE ({len(data['fatture'])} per anno {anno_usato}):")
                 for f in data["fatture"][:20]:  # Mostra max 20
                     fornitore = f.get('supplier_name') or f.get('cedente_denominazione') or 'N/D'
                     context_parts.append(f"- N.{f.get('invoice_number')} del {f.get('invoice_date')} - {fornitore} - €{f.get('total_amount', 0):.2f} - {'Pagata' if f.get('pagato') else 'Da pagare'}")
@@ -321,9 +328,9 @@ Usa il grassetto (**testo**) per evidenziare informazioni importanti."""
                 # Aggiungi statistiche se presenti
                 if data.get("statistiche_fornitore"):
                     stats = data["statistiche_fornitore"]
-                    context_parts.append(f"\nSTATISTICHE {stats['fornitore'].upper()}:")
-                    context_parts.append(f"- Numero fatture: {stats['num_fatture']}")
-                    context_parts.append(f"- Totale fatturato: €{stats['totale_fatturato']:.2f}")
+                    context_parts.append(f"\nSTATISTICHE {stats['fornitore'].upper()} (Anno {stats['anno']}):")
+                    context_parts.append(f"- Numero fatture: {stats['num_fatture']} ({stats['num_pagate']} pagate, {stats['num_da_pagare']} da pagare)")
+                    context_parts.append(f"- Totale fatturato anno: €{stats['totale_fatturato']:.2f}")
                     context_parts.append(f"- Già pagate: €{stats['totale_pagate']:.2f}")
                     context_parts.append(f"- Da pagare: €{stats['totale_da_pagare']:.2f}")
             
