@@ -345,6 +345,27 @@ async def mark_f24_pagato(f24_id: str) -> Dict[str, Any]:
     return {"success": True, "message": "F24 segnato come pagato"}
 
 
+@router.get("/commercialista/{f24_id}/pdf")
+async def get_f24_pdf(f24_id: str):
+    """Restituisce il PDF di un F24 commercialista."""
+    from fastapi.responses import FileResponse
+    
+    db = Database.get_db()
+    f24 = await db[COLL_F24_COMMERCIALISTA].find_one({"id": f24_id})
+    if not f24:
+        raise HTTPException(status_code=404, detail="F24 non trovato")
+    
+    file_path = f24.get("file_path")
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="PDF non trovato")
+    
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename=f24.get("file_name", "F24.pdf")
+    )
+
+
 @router.get("/commercialista/{f24_id}")
 async def get_f24_commercialista(f24_id: str) -> Dict[str, Any]:
     """Dettaglio F24 commercialista."""
