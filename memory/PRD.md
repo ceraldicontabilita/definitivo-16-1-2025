@@ -455,16 +455,24 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 ## 🚀 PROSSIMI TASK
 
 ### P0 - Priorità Critica
+- [x] ~~Fix duplicazione tributi parser F24~~ ✅ COMPLETATO 2026-01-13
 - [ ] UI per importare estratti conto Nexi da frontend
 - [ ] Automazione download email per estratti conto (ricerca keyword, scarica allegati PDF)
 
 ### P1 - Priorità Alta
+- [ ] Integrazione Parser Buste Paga Zucchetti (parser già esistente, manca UI e endpoint)
+- [ ] Caricamento Prima Nota Salari da XML
+- [ ] Caricamento dati Fornitori da XML
+- [ ] Migliorare algoritmo riconciliazione F24-Quietanza (matching più intelligente)
 - [ ] Errore visualizzazione "PRELIEVO ASSEGNO" (segnalato dall'utente - investigare frontend)
 
 ### P2 - Priorità Media
+- [ ] Gestione transazioni "PRELIEVO ASSEGNO" nella Riconciliazione Smart
 - [ ] Calcolo Food Cost Ricette
 - [ ] Report PDF scadenze
 
 ### P3 - Priorità Bassa
+- [ ] Frontend per Upload Estratti Conto Nexi
+- [ ] Sezione HACCP
 - [ ] Export Excel magazzino
 - [ ] Notifiche email scadenze
