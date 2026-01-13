@@ -415,6 +415,11 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
             # Codici 1xxx = Interessi ravvedimento (quando hanno codice regione)
             # Riconosce righe con "0 X" dove X è una cifra (es: "0 5" = regione 05)
             # ============================================
+            
+            # Lista codici IRAP che vanno SEMPRE in REGIONI
+            CODICI_IRAP = {'1868', '3800', '3801', '3802', '3803', '3805', '3812', '3813', 
+                          '3858', '3881', '3882', '3883', '4070', '1993', '8907'}
+            
             is_regioni_row = False
             cod_regione = ""
             if len(row) >= 3:
@@ -428,6 +433,7 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                     cod_regione = first_words[0]
                     is_regioni_row = True
             
+            # Processa righe con codice regione esplicito
             if is_regioni_row:
                 for i, item in enumerate(row):
                     word = item['word']
