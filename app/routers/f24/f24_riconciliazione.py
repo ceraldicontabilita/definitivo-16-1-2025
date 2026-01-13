@@ -389,7 +389,13 @@ async def get_f24_commercialista(f24_id: str) -> Dict[str, Any]:
 @router.delete("/commercialista/{f24_id}")
 async def delete_f24_commercialista(f24_id: str) -> Dict[str, Any]:
     """
-    Elimina un F24 commercialista.
+    Elimina un F24 commercialista con CASCADE DELETE.
+    
+    Elimina anche:
+    - Movimenti in prima_nota_banca collegati (f24_id)
+    - Quietanze associate
+    - Alert correlati
+    
     Se già eliminato (soft delete), lo cancella definitivamente.
     """
     db = Database.get_db()
@@ -399,13 +405,48 @@ async def delete_f24_commercialista(f24_id: str) -> Dict[str, Any]:
     if not f24:
         raise HTTPException(status_code=404, detail="F24 non trovato")
     
+    cascade_results = {
+        "prima_nota_banca": 0,
+        "quietanze": 0,
+        "alerts": 0
+    }
+    
+    # CASCADE DELETE - Elimina movimenti prima_nota_banca collegati
+    pn_result = await db["prima_nota_banca"].delete_many({"f24_id": f24_id})
+    cascade_results["prima_nota_banca"] = pn_result.deleted_count
+    
+    # CASCADE DELETE - Elimina/sgancia quietanze associate
+    if f24.get("quietanza_id"):
+        q_result = await db[COLL_QUIETANZE].update_one(
+            {"id": f24.get("quietanza_id")},
+            {"$unset": {"f24_associato": ""}}
+        )
+        cascade_results["quietanze"] = 1 if q_result.modified_count else 0
+    
+    # CASCADE DELETE - Elimina alert correlati
+    alert_result = await db[COLL_F24_ALERTS].delete_many({
+        "$or": [
+            {"f24_id": f24_id},
+            {"f24_originale_id": f24_id}
+        ]
+    })
+    cascade_results["alerts"] = alert_result.deleted_count
+    
     # Se già eliminato, cancella definitivamente
     if f24.get("status") == "eliminato":
+        # Elimina anche il file PDF fisico
+        if f24.get("file_path") and os.path.exists(f24.get("file_path")):
+            try:
+                os.remove(f24.get("file_path"))
+            except:
+                pass
+        
         await db[COLL_F24_COMMERCIALISTA].delete_one({"id": f24_id})
         return {
             "success": True,
-            "message": "F24 eliminato definitivamente",
-            "f24_id": f24_id
+            "message": "F24 eliminato definitivamente con CASCADE",
+            "f24_id": f24_id,
+            "cascade_deleted": cascade_results
         }
     
     # Soft delete - imposta status a eliminato
@@ -422,8 +463,9 @@ async def delete_f24_commercialista(f24_id: str) -> Dict[str, Any]:
     
     return {
         "success": True,
-        "message": "F24 eliminato con successo",
-        "f24_id": f24_id
+        "message": "F24 eliminato con successo (soft delete + CASCADE)",
+        "f24_id": f24_id,
+        "cascade_deleted": cascade_results
     }
 
 
