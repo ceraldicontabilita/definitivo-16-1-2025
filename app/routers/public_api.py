@@ -31,7 +31,7 @@ async def get_f24_alerts_public() -> List[Dict[str, Any]]:
     alerts = []
     today = datetime.now(timezone.utc).date()
     
-    # Cerca in f24_models
+    # Cerca in f24_models (non pagati)
     f24_models = await db["f24_models"].find({
         "$or": [
             {"pagato": {"$ne": True}},
@@ -39,12 +39,9 @@ async def get_f24_alerts_public() -> List[Dict[str, Any]]:
         ]
     }, {"_id": 0}).to_list(1000)
     
-    # Cerca in f24_commercialista
+    # Cerca in f24_commercialista (non pagati e non eliminati)
     f24_comm = await db["f24_commercialista"].find({
-        "$or": [
-            {"stato": {"$ne": "PAGATO"}},
-            {"stato": {"$exists": False}}
-        ]
+        "status": {"$nin": ["pagato", "eliminato"]},  # Solo "da_pagare"
     }, {"_id": 0}).to_list(1000)
     
     all_f24 = []
