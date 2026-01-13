@@ -391,27 +391,23 @@ Tutte le pagine principali supportano layout mobile:
 ### 2026-01-13 (sessione corrente)
 - ✅ **Parser Estratto Conto Carta di Credito Nexi/Banco BPM**: Nuovo parser per importare estratti conto carte Nexi
   - Backend: Parser `/app/app/parsers/estratto_conto_nexi_parser.py`
-  - Estrae metadata: intestatario, numero carta (mascherato), scadenza, totali mese
-  - Estrae transazioni con categorizzazione automatica (Amazon, Spotify, Carburante, ecc.)
-  - Supporta rimborsi (importi negativi)
-  - API endpoints in `/api/estratto-conto/`:
-    - `POST /api/estratto-conto/parse-nexi` - Parse PDF e restituisce dati
-    - `POST /api/estratto-conto/import-nexi?anno=XXXX` - Importa nel database
-    - `GET /api/estratto-conto/nexi/movimenti` - Lista movimenti con filtri e statistiche per categoria
+  - API endpoints: parse-nexi, import-nexi, nexi/movimenti
   - Collezione MongoDB: `estratto_conto_nexi`
-  - Categorie auto-riconosciute: E-commerce Amazon, Abbonamento Spotify/Netflix, Carburante, Supermercato, Ristorazione, Trasporti, Assicurazione, Utenze, Bonifico Internazionale
 
 - ✅ **Gestione Assegni - Selezione Multipla e Stampa PDF**:
-  - Aggiunta checkbox per selezionare singoli assegni o tutti
-  - Pulsante "🖨️ Stampa X Selezionati" appare quando ci sono selezioni
-  - Genera PDF con report degli assegni selezionati (numero, stato, beneficiario, importo, fattura)
-  - Le righe selezionate hanno sfondo verde chiaro per evidenziarle
+  - Checkbox per selezionare singoli assegni o tutti
+  - Pulsante "Stampa X Selezionati" genera PDF professionale
+  - Filtri sticky (fissi in alto durante scroll)
 
-- ✅ **Gestione Assegni - Filtri Fixed/Sticky**:
-  - Pannello filtri rimane fisso in alto quando si scorre la pagina
-  - Sempre accessibile per modificare rapidamente i criteri di ricerca
-  - Pulsante "✕" per chiudere velocemente i filtri
-  - Mostra conteggio risultati in tempo reale
+- ✅ **Pulizia Database MongoDB**:
+  - Eliminate 13 collezioni vuote/inutilizzate: prima_nota, warehouse_products, payslips, estratti_conto, bank_movements, bank_statements_imported, materie_prime, non_conformita_haccp, notifiche_scadenze, regole_categorizzazione_descrizioni, comparatore_cart, comparatore_supplier_exclusions, acconti_dipendenti
+
+- ✅ **Miglioramento Chat AI**:
+  - **Ricerca fuzzy fornitori**: Basta "Kimbo" invece di "KIMBO S.P.A."
+  - **Filtro per anno**: La Chat rispetta l'anno selezionato nella barra blu (annoGlobale)
+  - **Statistiche dettagliate**: Mostra numero fatture pagate vs da pagare per fornitore
+  - **Alias fornitori**: Supporto per nomi comuni (metro, coop, barilla, ecc.)
+  - Fix: Rimosso import re duplicato che causava errori
 
 ---
 
