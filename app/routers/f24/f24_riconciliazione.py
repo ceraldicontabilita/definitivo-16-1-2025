@@ -324,6 +324,27 @@ async def list_f24_commercialista(
     }
 
 
+@router.put("/commercialista/{f24_id}/pagato")
+async def mark_f24_pagato(f24_id: str) -> Dict[str, Any]:
+    """Segna un F24 come pagato manualmente."""
+    db = Database.get_db()
+    
+    f24 = await db[COLL_F24_COMMERCIALISTA].find_one({"id": f24_id})
+    if not f24:
+        raise HTTPException(status_code=404, detail="F24 non trovato")
+    
+    await db[COLL_F24_COMMERCIALISTA].update_one(
+        {"id": f24_id},
+        {"$set": {
+            "status": "pagato",
+            "pagato_manualmente": True,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"success": True, "message": "F24 segnato come pagato"}
+
+
 @router.get("/commercialista/{f24_id}")
 async def get_f24_commercialista(f24_id: str) -> Dict[str, Any]:
     """Dettaglio F24 commercialista."""
