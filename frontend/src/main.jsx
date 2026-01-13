@@ -125,6 +125,15 @@ const Scadenze = lazy(() => import("./pages/Scadenze.jsx"));
 // Dipendenti
 const GestioneDipendenti = lazy(() => import("./pages/GestioneDipendenti.jsx"));
 const Cedolini = lazy(() => import("./pages/Cedolini.jsx"));
+const PrimaNotaSalari = lazy(() => import("./pages/PrimaNotaSalari.jsx"));
+const TFR = lazy(() => import("./pages/TFR.jsx"));
+
+// HACCP
+const HACCPTemperature = lazy(() => import("./pages/HACCPTemperature.jsx"));
+const HACCPSanificazioni = lazy(() => import("./pages/HACCPSanificazioni.jsx"));
+const HACCPLotti = lazy(() => import("./pages/HACCPLotti.jsx"));
+const HACCPRicezione = lazy(() => import("./pages/HACCPRicezione.jsx"));
+const HACCPScadenze = lazy(() => import("./pages/HACCPScadenze.jsx"));
 
 // Finanziaria & Assegni
 const Finanziaria = lazy(() => import("./pages/Finanziaria.jsx"));
