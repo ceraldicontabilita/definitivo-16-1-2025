@@ -1354,6 +1354,71 @@ export default function Ricette() {
                           <span><strong>{ing.fornitore || 'Fornitore N/D'}</strong> • {ing.prezzo_kg ? `€${ing.prezzo_kg.toFixed(2)}/kg` : 'Prezzo N/D'}</span>
                         </div>
                       )}
+                      {/* NUOVO: Sezione Lotto Fornitore */}
+                      <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {ing.lotto_fornitore ? (
+                          <div style={{ 
+                            flex: 1, 
+                            padding: '8px 12px', 
+                            background: '#fef3c7', 
+                            borderRadius: '6px', 
+                            fontSize: '12px', 
+                            color: '#92400e',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Tag size={14} />
+                              <span>
+                                <strong>Lotto:</strong> {ing.lotto_fornitore}
+                                {ing.scadenza_lotto && (
+                                  <span style={{ marginLeft: '8px' }}>
+                                    <Clock size={12} style={{ verticalAlign: 'middle', marginRight: '2px' }} />
+                                    Scad: {ing.scadenza_lotto}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removeLottoFromIngrediente(idx)}
+                              style={{ 
+                                padding: '4px 8px', 
+                                background: '#fee2e2', 
+                                border: 'none', 
+                                borderRadius: '4px', 
+                                cursor: 'pointer', 
+                                color: '#dc2626',
+                                fontSize: '11px'
+                              }}
+                              title="Rimuovi lotto"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => openLottiModal(idx, ing.nome)}
+                            style={{
+                              padding: '6px 12px',
+                              background: '#fef3c7',
+                              color: '#92400e',
+                              border: '1px solid #fcd34d',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '11px',
+                              fontWeight: 500,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                            data-testid={`assegna-lotto-${idx}`}
+                          >
+                            <Tag size={12} />
+                            Assegna Lotto Fornitore
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
