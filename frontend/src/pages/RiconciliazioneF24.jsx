@@ -400,13 +400,18 @@ export default function RiconciliazioneF24() {
       <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 12, padding: 16, marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <span>ℹ️</span>
-          <strong style={{ color: '#1e40af' }}>Come funziona</strong>
+          <strong style={{ color: '#1e40af' }}>Come funziona la Riconciliazione F24</strong>
         </div>
         <ol style={{ margin: 0, paddingLeft: 20, color: '#1e40af', fontSize: 13 }}>
-          <li><strong>Carica F24:</strong> Carica il PDF ricevuto dalla commercialista</li>
-          <li><strong>Carica Quietanza:</strong> Dopo il pagamento, carica la quietanza dall'Agenzia delle Entrate</li>
-          <li><strong>Riconciliazione:</strong> Il sistema confronta e aggiorna lo stato automaticamente</li>
+          <li><strong>Carica F24:</strong> Carica i PDF ricevuti dalla commercialista</li>
+          <li><strong>Carica Quietanze:</strong> Dopo i pagamenti, carica le quietanze dall&apos;Agenzia delle Entrate (puoi caricare più file insieme)</li>
+          <li><strong>Matching Automatico:</strong> Il sistema associa automaticamente le quietanze agli F24 tramite codici tributo</li>
+          <li><strong>Riconciliazione Banca:</strong> La vera conferma avviene con l&apos;estratto conto (Riconciliazione Smart)</li>
         </ol>
+        <div style={{ marginTop: 12, padding: 10, background: '#dbeafe', borderRadius: 8, fontSize: 12 }}>
+          <strong>💡 Nota:</strong> La quietanza contiene il <em>protocollo telematico</em> dell&apos;Agenzia delle Entrate che certifica il pagamento.
+          La riconciliazione con l&apos;estratto conto bancario è il controllo finale.
+        </div>
       </div>
     </div>
   );
