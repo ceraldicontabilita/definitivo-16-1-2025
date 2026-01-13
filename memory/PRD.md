@@ -409,6 +409,32 @@ Tutte le pagine principali supportano layout mobile:
   - **Alias fornitori**: Supporto per nomi comuni (metro, coop, barilla, ecc.)
   - Fix: Rimosso import re duplicato che causava errori
 
+### 2026-01-13 - Parser F24 (SESSIONE ATTUALE)
+- ✅ **REFACTORING COMPLETO PARSER F24**: Risolto problema duplicazione tributi tra sezioni ERARIO/REGIONI
+  - **Problema originale**: Codici come `8907` (sanzione IRAP), `1993` (interessi ravvedimento IRAP) apparivano sia in ERARIO che in REGIONI
+  - **Soluzione**: 
+    - Definita lista `CODICI_SOLO_REGIONI` con tutti i codici IRAP che vanno ESCLUSIVAMENTE in REGIONI
+    - Aggiunto controllo nella sezione ERARIO per escludere questi codici
+    - Aggiunto fallback per catturare codici IRAP anche senza codice regione esplicito nel PDF
+  - **Codici IRAP gestiti**: 1868, 3800, 3801, 3802, 3803, 3805, 3812, 3813, 3858, 3881, 3882, 3883, 4070, 1993, 8907
+
+- ✅ **AGGIORNAMENTO DIZIONARIO CODICI TRIBUTO**: Scraping completo dal sito Agenzia delle Entrate
+  - **Fonte ufficiale**: https://www1.agenziaentrate.gov.it/servizi/codici/ricerca/
+  - **Codici aggiunti/aggiornati**:
+    - **IRAP** (76 codici): 1868, 3800, 3805, 3812, 3813, 3858, 3881, 3882, 3883, 4070, 1987, 1993, 5063-5066, 7452-7453, 8907, 9415-9416, 9466-9467, 9478, 9512-9513, 9607, 9695, 9908-9909, 9920-9921, 9934-9935, 9949, 9955-9956, 9971, 9988, 9990, LP33-LP34, PF11, PF33-PF34, TF23-TF24, TF42, TF50, 8124-8125
+    - **IRPEF** (120+ codici): 1001, 1002, 1012, 1018, 1019, 1036, 1039, 1040, 1045, 1049, 1050, 1052, 1058, 1065, 1066, 4001-4005, 4033-4038, 4040, 4049, 4050, 4068, 4072, 4200, 4700, 4711, 4722-4726...
+    - **IRES** (50+ codici): 1120-1132, 2001-2049, 4069, 8920, 9932-9933, 9977...
+    - **IVA** (80+ codici): 6001-6012, 6031-6038, 6040-6045, 6099, 6201-6312, 6492-6729...
+    - **IMU/Tributi Locali** (50+ codici): 3912-3966, 3901-3907, 3944-3957, 3850-3852...
+  - File aggiornato: `/app/app/services/parser_f24.py`
+
+- ✅ **TEST VALIDAZIONE**: Parser testato con successo su 5 PDF F24 reali:
+  - F24 ravvedimento IRES/IRAP → Nessuna duplicazione
+  - F24 ravvedimento saldo IRES 2022 → IRES correttamente in ERARIO
+  - F24 IVA acconto → IVA correttamente in ERARIO
+  - F24 IMU → IMU correttamente in TRIBUTI LOCALI
+  - F24 contributi → INPS, ERARIO e REGIONI separati correttamente
+
 ---
 
 ## 📊 NOTE SULLA RICONCILIAZIONE AUTOMATICA
