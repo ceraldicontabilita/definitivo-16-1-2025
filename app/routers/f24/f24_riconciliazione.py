@@ -577,3 +577,274 @@ async def dashboard_riconciliazione() -> Dict[str, Any]:
             "importo": f.get("totali", {}).get("saldo_netto", 0)
         } for f in f24_in_scadenza]
     }
+
+
+# ============================================
+# UPLOAD MULTIPLO QUIETANZE CON MATCHING AUTOMATICO
+# ============================================
+
+QUIETANZE_DIR = "/app/uploads/quietanze_f24"
+os.makedirs(QUIETANZE_DIR, exist_ok=True)
+
+
+@router.post("/quietanze/upload-multiplo")
+async def upload_quietanze_multiplo(
+    files: List[UploadFile] = File(..., description="PDF quietanze da caricare")
+) -> Dict[str, Any]:
+    """
+    Upload multiplo di quietanze F24 con matching automatico.
+    
+    Il sistema:
+    1. Parsa ogni quietanza ed estrae codici tributo + protocollo
+    2. Cerca F24 commercialista con codici corrispondenti
+    3. Associa automaticamente e segna come "pagato"
+    4. Crea alert per discrepanze
+    
+    La VERA riconciliazione avviene poi con l'estratto conto bancario.
+    La quietanza è un doppio controllo (protocollo Agenzia Entrate).
+    """
+    from app.services.f24_parser import parse_quietanza_f24
+    
+    db = Database.get_db()
+    
+    risultati = {
+        "totale_caricati": 0,
+        "totale_matchati": 0,
+        "totale_senza_match": 0,
+        "dettaglio": []
+    }
+    
+    for file in files:
+        if not file.filename.lower().endswith('.pdf'):
+            risultati["dettaglio"].append({
+                "filename": file.filename,
+                "success": False,
+                "error": "Il file deve essere un PDF"
+            })
+            continue
+        
+        # Salva file
+        file_id = str(uuid.uuid4())
+        file_path = os.path.join(QUIETANZE_DIR, f"{file_id}_{file.filename}")
+        
+        try:
+            content = await file.read()
+            with open(file_path, "wb") as f:
+                f.write(content)
+        except Exception as e:
+            risultati["dettaglio"].append({
+                "filename": file.filename,
+                "success": False,
+                "error": f"Errore salvataggio: {str(e)}"
+            })
+            continue
+        
+        # Parsing quietanza
+        try:
+            parsed = parse_quietanza_f24(file_path)
+        except Exception as e:
+            logger.error(f"Errore parsing quietanza {file.filename}: {e}")
+            risultati["dettaglio"].append({
+                "filename": file.filename,
+                "success": False,
+                "error": f"Errore parsing: {str(e)}"
+            })
+            continue
+        
+        if "error" in parsed and parsed.get("error"):
+            risultati["dettaglio"].append({
+                "filename": file.filename,
+                "success": False,
+                "error": parsed["error"]
+            })
+            continue
+        
+        # Estrai dati chiave dalla quietanza
+        dg = parsed.get("dati_generali", {})
+        protocollo = dg.get("protocollo_telematico", "")
+        saldo_quietanza = dg.get("saldo_delega", 0) or parsed.get("totali", {}).get("saldo_netto", 0)
+        data_pagamento = dg.get("data_pagamento")
+        codice_fiscale = dg.get("codice_fiscale", "")
+        
+        # Estrai tutti i codici tributo dalla quietanza
+        codici_quietanza = set()
+        for t in parsed.get("sezione_erario", []):
+            if t.get("codice_tributo"):
+                codici_quietanza.add(t["codice_tributo"])
+        for t in parsed.get("sezione_inps", []):
+            if t.get("causale"):
+                codici_quietanza.add(t["causale"])
+        for t in parsed.get("sezione_regioni", []):
+            if t.get("codice_tributo"):
+                codici_quietanza.add(t["codice_tributo"])
+        for t in parsed.get("sezione_tributi_locali", []):
+            if t.get("codice_tributo"):
+                codici_quietanza.add(t["codice_tributo"])
+        
+        # Salva quietanza nel database
+        quietanza_doc = {
+            "id": file_id,
+            "filename": file.filename,
+            "file_path": file_path,
+            "dati_generali": dg,
+            "protocollo_telematico": protocollo,
+            "data_pagamento": data_pagamento,
+            "codice_fiscale": codice_fiscale,
+            "saldo": saldo_quietanza,
+            "sezione_erario": parsed.get("sezione_erario", []),
+            "sezione_inps": parsed.get("sezione_inps", []),
+            "sezione_regioni": parsed.get("sezione_regioni", []),
+            "sezione_tributi_locali": parsed.get("sezione_tributi_locali", []),
+            "sezione_inail": parsed.get("sezione_inail", []),
+            "totali": parsed.get("totali", {}),
+            "codici_tributo": list(codici_quietanza),
+            "f24_associati": [],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db[COLL_QUIETANZE].insert_one(quietanza_doc)
+        risultati["totale_caricati"] += 1
+        
+        # ============================================
+        # MATCHING AUTOMATICO CON F24 COMMERCIALISTA
+        # ============================================
+        
+        # Cerca F24 da pagare con codici tributo corrispondenti
+        f24_da_pagare = await db[COLL_F24_COMMERCIALISTA].find({
+            "status": "da_pagare",
+            "riconciliato": False
+        }, {"_id": 0}).to_list(1000)
+        
+        f24_matchati = []
+        
+        for f24 in f24_da_pagare:
+            # Estrai codici tributo dall'F24
+            codici_f24 = set()
+            for t in f24.get("sezione_erario", []):
+                if t.get("codice_tributo"):
+                    codici_f24.add(t["codice_tributo"])
+            for t in f24.get("sezione_inps", []):
+                if t.get("causale"):
+                    codici_f24.add(t["causale"])
+            for t in f24.get("sezione_regioni", []):
+                if t.get("codice_tributo"):
+                    codici_f24.add(t["codice_tributo"])
+            for t in f24.get("sezione_tributi_locali", []):
+                if t.get("codice_tributo"):
+                    codici_f24.add(t["codice_tributo"])
+            
+            # Calcola match
+            codici_comuni = codici_f24.intersection(codici_quietanza)
+            
+            if len(codici_comuni) == 0:
+                continue
+            
+            # Match se almeno 80% dei codici coincidono
+            match_percentage = (len(codici_comuni) / max(len(codici_f24), 1)) * 100
+            
+            saldo_f24 = f24.get("totali", {}).get("saldo_netto", 0)
+            differenza = abs(saldo_f24 - saldo_quietanza)
+            
+            # Match considerato valido se:
+            # - Match codici >= 80% OPPURE
+            # - Differenza importo < €1 (stesso importo = stesso F24)
+            is_match = match_percentage >= 80 or differenza < 1
+            
+            if is_match:
+                # MATCH TROVATO! Aggiorna F24 come pagato
+                await db[COLL_F24_COMMERCIALISTA].update_one(
+                    {"id": f24["id"]},
+                    {"$set": {
+                        "status": "pagato",
+                        "quietanza_id": file_id,
+                        "protocollo_quietanza": protocollo,
+                        "data_pagamento_quietanza": data_pagamento,
+                        "match_percentage": match_percentage,
+                        "differenza_importo": round(saldo_f24 - saldo_quietanza, 2),
+                        "riconciliato_quietanza": True,  # Riconciliato con quietanza, ma non ancora con banca
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                # Aggiorna quietanza con F24 associato
+                await db[COLL_QUIETANZE].update_one(
+                    {"id": file_id},
+                    {"$push": {"f24_associati": f24["id"]}}
+                )
+                
+                f24_matchati.append({
+                    "f24_id": f24["id"],
+                    "f24_filename": f24.get("file_name"),
+                    "importo_f24": saldo_f24,
+                    "importo_quietanza": saldo_quietanza,
+                    "differenza": round(saldo_f24 - saldo_quietanza, 2),
+                    "match_percentage": round(match_percentage, 1),
+                    "codici_comuni": list(codici_comuni)[:5]
+                })
+                
+                risultati["totale_matchati"] += 1
+        
+        # Risultato per questa quietanza
+        dettaglio_file = {
+            "filename": file.filename,
+            "success": True,
+            "quietanza_id": file_id,
+            "protocollo": protocollo,
+            "saldo": saldo_quietanza,
+            "data_pagamento": data_pagamento,
+            "codici_tributo": len(codici_quietanza),
+            "f24_matchati": f24_matchati
+        }
+        
+        if not f24_matchati:
+            risultati["totale_senza_match"] += 1
+            dettaglio_file["warning"] = "Nessun F24 corrispondente trovato"
+            
+            # Crea alert per quietanza senza match
+            alert = {
+                "id": str(uuid.uuid4()),
+                "tipo": "quietanza_senza_match",
+                "quietanza_id": file_id,
+                "message": f"Quietanza {file.filename} (€{saldo_quietanza:.2f}) non corrisponde a nessun F24 in attesa",
+                "importo": saldo_quietanza,
+                "protocollo": protocollo,
+                "status": "pending",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db[COLL_F24_ALERTS].insert_one(alert)
+        
+        risultati["dettaglio"].append(dettaglio_file)
+    
+    return risultati
+
+
+@router.get("/quietanze")
+async def list_quietanze(
+    skip: int = Query(0),
+    limit: int = Query(100)
+) -> Dict[str, Any]:
+    """Lista tutte le quietanze caricate."""
+    db = Database.get_db()
+    
+    quietanze = await db[COLL_QUIETANZE].find(
+        {}, {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    totale = await db[COLL_QUIETANZE].count_documents({})
+    
+    return {
+        "quietanze": quietanze,
+        "totale": totale
+    }
+
+
+@router.get("/quietanze/{quietanza_id}")
+async def get_quietanza(quietanza_id: str) -> Dict[str, Any]:
+    """Dettaglio di una quietanza."""
+    db = Database.get_db()
+    
+    quietanza = await db[COLL_QUIETANZE].find_one({"id": quietanza_id}, {"_id": 0})
+    if not quietanza:
+        raise HTTPException(status_code=404, detail="Quietanza non trovata")
+    
+    return quietanza
