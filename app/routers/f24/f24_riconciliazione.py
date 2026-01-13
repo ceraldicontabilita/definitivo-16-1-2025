@@ -24,9 +24,6 @@ COLL_F24_COMMERCIALISTA = "f24_commercialista"
 COLL_QUIETANZE = "quietanze_f24"
 COLL_F24_ALERTS = "f24_riconciliazione_alerts"
 
-# Flag per usare Gemini come parser principale
-USE_GEMINI_PARSER = True
-
 
 # ============================================
 # UPLOAD F24 COMMERCIALISTA
