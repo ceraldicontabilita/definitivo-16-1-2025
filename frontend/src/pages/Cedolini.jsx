@@ -30,6 +30,18 @@ export default function Cedolini() {
     assenze: 0
   });
 
+  const loadCedoliniDipendente = useCallback(async (dipId) => {
+    try {
+      setLoadingCedolini(true);
+      const res = await api.get(`/api/cedolini/dipendente/${dipId}?anno=${anno}`);
+      setCedolini(res.data || []);
+    } catch (e) {
+      setCedolini([]);
+    } finally {
+      setLoadingCedolini(false);
+    }
+  }, [anno]);
+
   useEffect(() => {
     loadDipendenti();
   }, []);
@@ -43,30 +55,7 @@ export default function Cedolini() {
       }));
       setStima(null);
     }
-  }, [selectedDip, anno]);
-
-  const loadDipendenti = async () => {
-    try {
-      const res = await api.get('/api/dipendenti');
-      setDipendenti(res.data.filter(d => d.status === 'attivo' || d.status === 'active' || !d.status));
-    } catch (e) {
-      console.error('Errore:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCedoliniDipendente = async (dipId) => {
-    try {
-      setLoadingCedolini(true);
-      const res = await api.get(`/api/cedolini/dipendente/${dipId}?anno=${anno}`);
-      setCedolini(res.data || []);
-    } catch (e) {
-      setCedolini([]);
-    } finally {
-      setLoadingCedolini(false);
-    }
-  };
+  }, [selectedDip, anno, loadCedoliniDipendente]);
 
   const handleCalcola = async () => {
     if (!selectedDip || !formData.paga_oraria) {
