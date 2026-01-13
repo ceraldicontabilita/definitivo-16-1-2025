@@ -187,6 +187,12 @@ export default function RiconciliazioneF24() {
               {uploading ? '⏳' : '📤'} Carica F24
             </span>
           </label>
+          <label style={{ cursor: 'pointer' }}>
+            <input type="file" accept=".pdf" multiple style={{ display: 'none' }} onChange={handleUploadQuietanza} />
+            <span style={{ padding: '8px 16px', background: '#10b981', color: 'white', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500 }}>
+              📄 Carica Quietanze
+            </span>
+          </label>
         </div>
       </div>
 
