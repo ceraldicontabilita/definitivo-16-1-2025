@@ -1113,7 +1113,8 @@ async def get_archivio_fatture(
     totale = await db[COL_FATTURE_RICEVUTE].count_documents(query)
     
     return {
-        "items": fatture,
+        "fatture": fatture,
+        "items": fatture,  # Retrocompatibilità
         "total": totale,
         "limit": limit,
         "skip": skip
