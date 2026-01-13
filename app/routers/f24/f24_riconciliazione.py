@@ -36,6 +36,7 @@ async def upload_f24_commercialista(
     """
     Upload F24 ricevuto dalla commercialista (PDF).
     Estrae codici tributo e lo inserisce come "DA PAGARE".
+    Usa chiave univoca per evitare duplicati.
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Il file deve essere un PDF")
@@ -63,18 +64,40 @@ async def upload_f24_commercialista(
         raise HTTPException(status_code=400, detail=parsed["error"])
     
     # Genera chiave univoca per rilevare duplicati
+    # Basata su: filename + data_versamento + saldo
     dg = parsed.get("dati_generali", {})
-    codici_key = "_".join(sorted(parsed.get("codici_univoci", [])))
-    f24_key = f"{dg.get('codice_fiscale', '')}_{dg.get('data_versamento', '')}_{codici_key[:50]}"
+    totali = parsed.get("totali", {})
+    saldo = totali.get("saldo_netto", totali.get("saldo_finale", 0))
+    data_vers = dg.get("data_versamento", "")
+    
+    # Chiave univoca: filename_base + data + saldo arrotondato
+    filename_base = file.filename.replace(".pdf", "").replace(".PDF", "")
+    f24_key = f"{filename_base}_{data_vers}_{round(saldo, 2)}"
+    
+    # Verifica duplicati con chiave esatta
+    existing_key = await db[COLL_F24_COMMERCIALISTA].find_one({
+        "f24_key": f24_key,
+        "status": {"$ne": "eliminato"}
+    })
+    
+    if existing_key:
+        # Rimuovi file temporaneo
+        os.remove(file_path)
+        return {
+            "success": False,
+            "error": "F24 già presente nel sistema",
+            "existing_id": existing_key.get("id"),
+            "filename": file.filename
+        }
     
     # Verifica se esiste già un F24 simile (possibile ravvedimento)
+    is_ravvedimento_update = False
+    f24_precedente = None
+    
     existing = await db[COLL_F24_COMMERCIALISTA].find_one({
         "dati_generali.codice_fiscale": dg.get("codice_fiscale"),
         "status": "da_pagare"
     })
-    
-    is_ravvedimento_update = False
-    f24_precedente = None
     
     if existing and parsed.get("has_ravvedimento"):
         # Questo F24 ha ravvedimento, potrebbe sostituire il precedente
