@@ -225,9 +225,15 @@ export default function RiconciliazioneF24() {
             color="#f97316"
             icon="⏰"
           />
-          <SummaryCard
-            title="F24 Pagati"
-            value={dashboard.f24_commercialista?.pagato || 0}
+          <div onClick={loadPagatiDetails} style={{ cursor: 'pointer' }}>
+            <SummaryCard
+              title="F24 Pagati"
+              value={dashboard.f24_commercialista?.pagato || 0}
+              subtitle="Clicca per dettagli"
+              color="#10b981"
+              icon="✅"
+            />
+          </div>
             subtitle="Riconciliati"
             color="#10b981"
             icon="✅"
