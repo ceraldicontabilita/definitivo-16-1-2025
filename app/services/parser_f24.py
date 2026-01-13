@@ -519,27 +519,45 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                         break
             
             # ============================================
-            # SEZIONE TRIBUTI LOCALI - Pattern: cod_comune 37xx/38xx/391x rateazione anno debito/credito
-            # Riconosce righe con lettere all'inizio (B 9 9 0, F 8 3 9)
-            # Include anche codici IMU (391x)
+            # SEZIONE TRIBUTI LOCALI - Pattern: cod_comune/cod_ente codice rateazione anno debito/credito
+            # Riconosce righe con lettere all'inizio:
+            # - "B 9 9 0" o "F 8 3 9" = codice comune (4 caratteri)
+            # - "N A" = codice ente (es. NA = Napoli per Camera di Commercio)
+            # Include codici: 37xx, 38xx (Camera Commercio), 391x (IMU)
             # ============================================
             is_locali_row = False
             cod_comune = ""
+            cod_ente = ""
+            
             if len(row) >= 4:
                 first_words = [r['word'] for r in row[:5]]
-                # Pattern "B 9 9 0" o "F 8 3 9" = codice comune
+                
+                # Pattern 1: "B 9 9 0" o "F 8 3 9" = codice comune (4 caratteri separati)
                 if (len(first_words) >= 4 and 
                     re.match(r'^[A-Z]$', first_words[0]) and
                     all(re.match(r'^\d$', w) for w in first_words[1:4])):
                     cod_comune = ''.join(first_words[:4])
+                    is_locali_row = True
+                    
+                # Pattern 2: "N A" = codice ente (2 lettere separate, es. NA = Napoli)
+                elif (len(first_words) >= 2 and 
+                      re.match(r'^[A-Z]$', first_words[0]) and
+                      re.match(r'^[A-Z]$', first_words[1])):
+                    cod_ente = first_words[0] + first_words[1]
+                    is_locali_row = True
+                    
+                # Pattern 3: "NA" = codice ente diretto (2 lettere insieme)
+                elif (len(first_words) >= 1 and 
+                      re.match(r'^[A-Z]{2}$', first_words[0])):
+                    cod_ente = first_words[0]
                     is_locali_row = True
             
             if is_locali_row:
                 for i, item in enumerate(row):
                     word = item['word']
                     
-                    # Codici tributi locali: 37xx, 38xx, 391x (IMU)
-                    if re.match(r'^(37\d{2}|38\d{2}|391\d)$', word):
+                    # Codici tributi locali: 37xx, 38xx (Camera Commercio), 391x (IMU), 39xx (altri)
+                    if re.match(r'^(37\d{2}|38\d{2}|39\d{2})$', word):
                         codice = word
                         rateazione = ""
                         anno = ""
@@ -557,13 +575,15 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                         
                         if anno and (debito > 0 or credito > 0):
                             mese = rateazione[2:4] if len(rateazione) == 4 else "00"
-                            key = f"L_{codice}_{cod_comune}_{anno}_{rateazione}_{debito}_{credito}"
+                            ente_ref = cod_comune or cod_ente or ""
+                            key = f"L_{codice}_{ente_ref}_{anno}_{rateazione}_{debito}_{credito}"
                             
                             if key not in tributi_visti:
                                 tributi_visti.add(key)
                                 result["sezione_tributi_locali"].append({
                                     "codice_tributo": codice,
                                     "codice_comune": cod_comune,
+                                    "codice_ente": cod_ente,
                                     "rateazione": rateazione,
                                     "periodo_riferimento": parse_periodo(mese, anno),
                                     "anno": anno,
