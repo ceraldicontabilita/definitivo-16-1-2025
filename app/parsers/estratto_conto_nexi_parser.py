@@ -136,82 +136,80 @@ class EstrattoContoNexiParser:
         # Estrai solo la parte dopo l'inizio del dettaglio
         text_dettaglio = text[dettaglio_start:]
         
-        # Pattern per le transazioni:
-        # DD/MM/YY  Descrizione  Importo
-        # Es: 01/12/25 Iba It Zx9925vv4 Luxembourg L 10,73
+        # Trova la fine della sezione (prima di "TOTALE SPESE" o "SERVIZIO CLIENTI")
+        end_markers = ["TOTALE SPESE", "SERVIZIO CLIENTI NEXI", "Blocco Carta"]
+        end_pos = len(text_dettaglio)
+        for marker in end_markers:
+            pos = text_dettaglio.find(marker)
+            if pos != -1 and pos < end_pos:
+                end_pos = pos
         
-        # Trova tutte le righe che iniziano con una data
-        lines = text_dettaglio.split('\n')
+        text_dettaglio = text_dettaglio[:end_pos]
         
-        current_transaction = None
+        # Le transazioni nel PDF Nexi sono strutturate così (su righe separate):
+        # Riga 1: Data (DD/MM/YY)
+        # Riga 2: Descrizione
+        # Riga 3: Importo (X,XX o - X,XX)
+        # (poi si ripete)
         
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
+        lines = [line.strip() for line in text_dettaglio.split('\n') if line.strip()]
+        
+        # Salta le righe di header
+        skip_lines = ["Data", "Descrizione", "Importo in Euro", "Importo in altre valute", "Cambio",
+                      "DETTAGLIO DEI SUOI MOVIMENTI"]
+        lines = [l for l in lines if l not in skip_lines]
+        
+        i = 0
+        while i < len(lines):
+            line = lines[i]
             
-            # Pattern data: DD/MM/YY o DD/MM/YYYY
-            date_pattern = r'^(\d{2}/\d{2}/\d{2,4})\s+'
-            date_match = re.match(date_pattern, line)
-            
-            if date_match:
-                # Nuova transazione
-                if current_transaction:
-                    self.transactions.append(current_transaction)
+            # Cerca una data come inizio di transazione
+            if re.match(r'^\d{2}/\d{2}/\d{2,4}$', line):
+                data_str = line
+                descrizione = ""
+                importo = None
                 
-                data_str = date_match.group(1)
-                rest = line[date_match.end():].strip()
-                
-                # Estrai importo dalla fine della riga
-                # Può essere negativo (rimborsi) o positivo
-                amount_pattern = r'(-?\s*\d+[.,]\d{2})\s*$'
-                amount_match = re.search(amount_pattern, rest)
-                
-                if amount_match:
-                    importo_str = amount_match.group(1)
-                    descrizione = rest[:amount_match.start()].strip()
-                    importo = self._parse_amount(importo_str)
+                # La prossima riga dovrebbe essere la descrizione
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1]
+                    
+                    # Verifica che non sia un'altra data o un importo
+                    if not re.match(r'^\d{2}/\d{2}/\d{2,4}$', next_line):
+                        # Verifica se è un importo
+                        if re.match(r'^-?\s*\d+[\d\.,]*\d{2}$', next_line.replace('.', '').replace(',', '').replace('-', '').replace(' ', '')):
+                            # È un importo, quindi la descrizione era vuota
+                            importo = self._parse_amount(next_line)
+                            i += 2
+                        else:
+                            # È la descrizione
+                            descrizione = next_line
+                            i += 2
+                            
+                            # L'importo dovrebbe essere nella riga successiva
+                            if i < len(lines):
+                                amount_line = lines[i]
+                                # Verifica se è un importo
+                                if re.match(r'^-?\s*[\d\.,]+$', amount_line.replace(' ', '')):
+                                    importo = self._parse_amount(amount_line)
+                                    i += 1
+                    else:
+                        i += 1
                 else:
-                    # Potrebbe essere su più righe
-                    descrizione = rest
-                    importo = 0.0
+                    i += 1
                 
-                # Salta righe di totale
-                if descrizione.upper().startswith("TOTALE"):
-                    current_transaction = None
-                    continue
-                
-                current_transaction = {
-                    "data": self._parse_date(data_str),
-                    "data_originale": data_str,
-                    "descrizione": descrizione,
-                    "importo": importo,
-                    "tipo": "addebito" if importo >= 0 else "accredito",
-                    "categoria": self._categorize_transaction(descrizione)
-                }
-            
-            elif current_transaction and not line.startswith("TOTALE"):
-                # Continuazione della descrizione precedente
-                # Verifica se c'è un importo in questa riga
-                amount_pattern = r'(-?\s*\d+[.,]\d{2})\s*$'
-                amount_match = re.search(amount_pattern, line)
-                
-                if amount_match and current_transaction.get("importo", 0) == 0:
-                    current_transaction["importo"] = self._parse_amount(amount_match.group(1))
-                    current_transaction["tipo"] = "addebito" if current_transaction["importo"] >= 0 else "accredito"
-                    extra_desc = line[:amount_match.start()].strip()
-                    if extra_desc:
-                        current_transaction["descrizione"] += " " + extra_desc
-                elif not any(skip in line.upper() for skip in ["SERVIZIO CLIENTI", "BLOCCO CARTA", "INFORMAZIONI"]):
-                    # Aggiungi alla descrizione se non è una riga di servizio
-                    pass
-        
-        # Aggiungi l'ultima transazione
-        if current_transaction:
-            self.transactions.append(current_transaction)
-        
-        # Filtra transazioni valide (con importo)
-        self.transactions = [t for t in self.transactions if t.get("importo", 0) != 0]
+                # Se abbiamo trovato dati validi, crea la transazione
+                if importo is not None and importo != 0:
+                    transaction = {
+                        "data": self._parse_date(data_str),
+                        "data_originale": data_str,
+                        "descrizione": descrizione or "Movimento",
+                        "importo": importo,
+                        "tipo": "addebito" if importo >= 0 else "accredito",
+                        "categoria": self._categorize_transaction(descrizione)
+                    }
+                    self.transactions.append(transaction)
+            else:
+                i += 1
     
     def _parse_date(self, date_str: str) -> str:
         """Converte una data da DD/MM/YY a YYYY-MM-DD."""
