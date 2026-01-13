@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { to: "/riconciliazione-f24", label: "Riconciliazione F24", icon: "📋", short: "F24" },
   { to: "/prima-nota", label: "Prima Nota", icon: "📒", short: "P.Nota" },
   { to: "/operazioni-da-confermare", label: "Operazioni da Confermare", icon: "📋", short: "Opz.Conf." },
+  { to: "/riconciliazione-smart", label: "⚡ Riconciliazione Smart", icon: "⚡", short: "Smart" },
   { to: "/controllo-mensile", label: "Controllo Mensile", icon: "📈", short: "Contr." },
   { to: "/riconciliazione", label: "Riconciliazione", icon: "🔄", short: "Riconc." },
   { to: "/dashboard-riconciliazione", label: "Dashboard Riconc.", icon: "📈", short: "Dash.Ric." },
