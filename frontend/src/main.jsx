@@ -88,74 +88,80 @@ const PageLoader = () => (
 );
 
 // Lazy load all pages for code splitting
-// Core pages (loaded first)
+// === CORE ===
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
 
-// Fatture & Contabilità
-const Fatture = lazy(() => import("./pages/Fatture.jsx"));
+// === FATTURE & ACQUISTI ===
 const ArchivioFattureRicevute = lazy(() => import("./pages/ArchivioFattureRicevute.jsx"));
 const DettaglioFattura = lazy(() => import("./pages/DettaglioFattura.jsx"));
 const Corrispettivi = lazy(() => import("./pages/Corrispettivi.jsx"));
-const PrimaNota = lazy(() => import("./pages/PrimaNota.jsx"));
-const IVA = lazy(() => import("./pages/IVA.jsx"));
-const LiquidazioneIVA = lazy(() => import("./pages/LiquidazioneIVA.jsx"));
-
-// Riconciliazione & Controllo
-const Riconciliazione = lazy(() => import("./pages/Riconciliazione.jsx"));
-const RiconciliazioneF24 = lazy(() => import("./pages/RiconciliazioneF24.jsx"));
-const DashboardRiconciliazione = lazy(() => import("./pages/DashboardRiconciliazione.jsx"));
-const RiconciliazioneSmart = lazy(() => import("./pages/RiconciliazioneSmart.jsx"));
-const ControlloMensile = lazy(() => import("./pages/ControlloMensile.jsx"));
-const VerificaCoerenza = lazy(() => import("./pages/VerificaCoerenza.jsx"));
-
-// Ciclo Passivo Integrato
 const CicloPassivoIntegrato = lazy(() => import("./pages/CicloPassivoIntegrato.jsx"));
-
-// Fornitori & Magazzino
 const Fornitori = lazy(() => import("./pages/Fornitori.jsx"));
-const Magazzino = lazy(() => import("./pages/Magazzino.jsx"));
-const RicercaProdotti = lazy(() => import("./pages/RicercaProdotti.jsx"));
 const OrdiniFornitori = lazy(() => import("./pages/OrdiniFornitori.jsx"));
-const DizionarioArticoli = lazy(() => import("./pages/DizionarioArticoli.jsx"));
+const PrevisioniAcquisti = lazy(() => import("./pages/PrevisioniAcquisti.jsx"));
 
-// F24 & Tributi
-const F24 = lazy(() => import("./pages/F24.jsx"));
-const Scadenze = lazy(() => import("./pages/Scadenze.jsx"));
+// === BANCA & PAGAMENTI ===
+const PrimaNota = lazy(() => import("./pages/PrimaNota.jsx"));
+const Riconciliazione = lazy(() => import("./pages/Riconciliazione.jsx"));
+const RiconciliazioneSmart = lazy(() => import("./pages/RiconciliazioneSmart.jsx"));
+const DashboardRiconciliazione = lazy(() => import("./pages/DashboardRiconciliazione.jsx"));
+const GestioneAssegni = lazy(() => import("./pages/GestioneAssegni.jsx"));
+const ArchivioBonifici = lazy(() => import("./pages/ArchivioBonifici.jsx"));
+const EstrattoContoImport = lazy(() => import("./pages/EstrattoContoImport.jsx"));
 
-// Dipendenti
+// === DIPENDENTI ===
 const GestioneDipendenti = lazy(() => import("./pages/GestioneDipendenti.jsx"));
 const Cedolini = lazy(() => import("./pages/Cedolini.jsx"));
 const PrimaNotaSalari = lazy(() => import("./pages/PrimaNotaSalari.jsx"));
 const TFR = lazy(() => import("./pages/TFR.jsx"));
 
-// HACCP
+// === FISCO & TRIBUTI ===
+const IVA = lazy(() => import("./pages/IVA.jsx"));
+const LiquidazioneIVA = lazy(() => import("./pages/LiquidazioneIVA.jsx"));
+const F24 = lazy(() => import("./pages/F24.jsx"));
+const RiconciliazioneF24 = lazy(() => import("./pages/RiconciliazioneF24.jsx"));
+const ContabilitaAvanzata = lazy(() => import("./pages/ContabilitaAvanzata.jsx"));
+const Scadenze = lazy(() => import("./pages/Scadenze.jsx"));
+
+// === MAGAZZINO ===
+const Magazzino = lazy(() => import("./pages/Magazzino.jsx"));
+const Inventario = lazy(() => import("./pages/Inventario.jsx"));
+const RicercaProdotti = lazy(() => import("./pages/RicercaProdotti.jsx"));
+const DizionarioArticoli = lazy(() => import("./pages/DizionarioArticoli.jsx"));
+const MagazzinoDoppiaVerita = lazy(() => import("./pages/MagazzinoDoppiaVerita.jsx"));
+
+// === HACCP ===
 const HACCPTemperature = lazy(() => import("./pages/HACCPTemperature.jsx"));
 const HACCPSanificazioni = lazy(() => import("./pages/HACCPSanificazioni.jsx"));
 const HACCPLotti = lazy(() => import("./pages/HACCPLotti.jsx"));
 const HACCPRicezione = lazy(() => import("./pages/HACCPRicezione.jsx"));
 const HACCPScadenze = lazy(() => import("./pages/HACCPScadenze.jsx"));
+const RegistroLotti = lazy(() => import("./pages/RegistroLotti.jsx"));
 
-// Finanziaria & Assegni
-const Finanziaria = lazy(() => import("./pages/Finanziaria.jsx"));
-const Assegni = lazy(() => import("./pages/Assegni.jsx"));
-const GestioneAssegni = lazy(() => import("./pages/GestioneAssegni.jsx"));
-
-// Bilancio & Contabilità
-const Bilancio = lazy(() => import("./pages/Bilancio.jsx"));
-const ContabilitaAvanzata = lazy(() => import("./pages/ContabilitaAvanzata.jsx"));
-const PianoDeiConti = lazy(() => import("./pages/PianoDeiConti.jsx"));
-const Commercialista = lazy(() => import("./pages/Commercialista.jsx"));
-const GestioneCespiti = lazy(() => import("./pages/GestioneCespiti.jsx"));
-const RegoleCategorizzazione = lazy(() => import("./pages/RegoleCategorizzazione.jsx"));
-
-// Contabilità Analitica
-const CentriCosto = lazy(() => import("./pages/CentriCosto.jsx"));
+// === CUCINA & PRODUZIONE ===
 const Ricette = lazy(() => import("./pages/Ricette.jsx"));
 const DizionarioProdotti = lazy(() => import("./pages/DizionarioProdotti.jsx"));
-const RegistroLotti = lazy(() => import("./pages/RegistroLotti.jsx"));
-const MagazzinoDoppiaVerita = lazy(() => import("./pages/MagazzinoDoppiaVerita.jsx"));
-const Inventario = lazy(() => import("./pages/Inventario.jsx"));
+const CentriCosto = lazy(() => import("./pages/CentriCosto.jsx"));
 const UtileObiettivo = lazy(() => import("./pages/UtileObiettivo.jsx"));
+
+// === CONTABILITÀ & BILANCIO ===
+const Bilancio = lazy(() => import("./pages/Bilancio.jsx"));
+const ControlloMensile = lazy(() => import("./pages/ControlloMensile.jsx"));
+const PianoDeiConti = lazy(() => import("./pages/PianoDeiConti.jsx"));
+const GestioneCespiti = lazy(() => import("./pages/GestioneCespiti.jsx"));
+const Finanziaria = lazy(() => import("./pages/Finanziaria.jsx"));
+
+// === STRUMENTI ===
+const Documenti = lazy(() => import("./pages/Documenti.jsx"));
+const ImportExport = lazy(() => import("./pages/ImportExport.jsx"));
+const RegoleCategorizzazione = lazy(() => import("./pages/RegoleCategorizzazione.jsx"));
+const VerificaCoerenza = lazy(() => import("./pages/VerificaCoerenza.jsx"));
+const Commercialista = lazy(() => import("./pages/Commercialista.jsx"));
+const Pianificazione = lazy(() => import("./pages/Pianificazione.jsx"));
+
+// === ADMIN ===
+const Admin = lazy(() => import("./pages/Admin.jsx"));
+const GestioneRiservata = lazy(() => import("./pages/GestioneRiservata.jsx"));
 
 // Import/Export
 const ImportExport = lazy(() => import("./pages/ImportExport.jsx"));
