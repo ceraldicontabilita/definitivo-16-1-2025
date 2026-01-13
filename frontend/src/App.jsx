@@ -677,6 +677,9 @@ export default function App() {
           }
         }
       `}</style>
+      
+      {/* Chat AI Flottante - Disponibile in tutta l'app */}
+      <ChatAI />
     </div>
   );
 }
