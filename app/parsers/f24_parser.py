@@ -76,9 +76,10 @@ def parse_f24_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                 if banca_match:
                     result["banca"] = banca_match.group(0).strip()
                 
-                # Extract ERARIO tributes (1001, 1701, 1704, etc.)
-                # Pattern: codice_tributo  mese_rif  anno  importo_debito  importo_credito
-                erario_pattern = re.findall(r'(1\d{3})\s+(\d{4})\s+(\d{4})\s+([\d,.]+)?\s*([\d,.]+)?', text)
+                # Extract ERARIO tributes (1001, 1701, 1704, 2501, 2502, 2503, etc.)
+                # Pattern: codice_tributo  mese_rif/anno  anno  importo_debito  importo_credito
+                # Codici che iniziano con 1xxx (IRPEF, ritenute) e 2xxx (addizionali, altri)
+                erario_pattern = re.findall(r'([12]\d{3})\s+(\d{4})\s+(\d{4})\s+([\d,.]+)?\s*([\d,.]+)?', text)
                 for match in erario_pattern:
                     codice, mese_rif, anno, debito, credito = match
                     tributo = {
