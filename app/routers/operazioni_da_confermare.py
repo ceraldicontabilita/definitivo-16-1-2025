@@ -1,13 +1,15 @@
 """
 Router per Operazioni da Confermare
 Gestisce le fatture ricevute via email Aruba in attesa di conferma metodo pagamento.
+Include funzionalità di Riconciliazione Smart per estratto conto.
 """
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Body
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 import os
 import logging
+import uuid
 
 from app.database import Database
 from app.services.aruba_invoice_parser import fetch_aruba_invoices
