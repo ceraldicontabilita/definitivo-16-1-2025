@@ -603,7 +603,6 @@ async def upload_quietanze_multiplo(
     La VERA riconciliazione avviene poi con l'estratto conto bancario.
     La quietanza è un doppio controllo (protocollo Agenzia Entrate).
     """
-    from app.services.f24_parser import parse_quietanza_f24
     
     db = Database.get_db()
     
