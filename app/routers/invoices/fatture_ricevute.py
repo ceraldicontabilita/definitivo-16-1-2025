@@ -1042,14 +1042,17 @@ async def get_archivio_fatture(
     # Query base - include sia fatture migrate che nuove
     query = {}
     
-    # Filtro anno
+    # Filtro anno (supporta entrambi i formati)
     if anno:
-        query["data_documento"] = {"$regex": f"^{anno}"}
+        query["$or"] = [
+            {"data_documento": {"$regex": f"^{anno}"}},
+            {"invoice_date": {"$regex": f"^{anno}"}}
+        ]
     
-    # Filtro mese
+    # Filtro mese (aggiunge al filtro anno esistente)
     if mese and anno:
         mese_str = str(mese).zfill(2)
-        # Supporta entrambi i formati data
+        # Sostituisce $or con filtro più specifico
         query["$or"] = [
             {"data_documento": {"$regex": f"^{anno}-{mese_str}"}},
             {"invoice_date": {"$regex": f"^{anno}-{mese_str}"}}
