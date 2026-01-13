@@ -278,6 +278,10 @@ app.include_router(configurazioni.router, prefix="/api/config", tags=["Configura
 # --- Chat AI ---
 app.include_router(chat_ai.router, prefix="/api/chat-ai", tags=["Chat AI"])
 
+# --- HACCP ---
+from app.routers import haccp
+app.include_router(haccp.router, tags=["HACCP"])
+
 
 # =============================================================================
 # HEALTH CHECK ENDPOINTS
