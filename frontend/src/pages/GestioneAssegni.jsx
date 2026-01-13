@@ -434,7 +434,7 @@ export default function GestioneAssegni() {
       a.numero_fattura || '-'
     ]);
     
-    doc.autoTable({
+    autoTable(doc, {
       startY: 60,
       head: [['N. Assegno', 'Stato', 'Beneficiario', 'Importo', 'Data Fatt.', 'N. Fattura']],
       body: tableData,
