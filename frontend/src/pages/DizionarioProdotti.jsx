@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { Package, Search, AlertTriangle, Check, RefreshCw, Edit2, Save, X, ChevronDown, Database, Filter } from 'lucide-react';
@@ -27,34 +27,25 @@ export default function DizionarioProdotti() {
   const [offset, setOffset] = useState(0);
   const [totale, setTotale] = useState(0);
 
-  useEffect(() => {
-    loadStats();
-    loadFornitori();
-  }, []);
-
-  useEffect(() => {
-    loadProdotti();
-  }, [search, soloSenzaPrezzo, fornitoreFilter, limit, offset]);
-
-  async function loadStats() {
+  const loadStats = useCallback(async () => {
     try {
       const res = await api.get('/api/dizionario-prodotti/stats');
       setStats(res.data);
     } catch (e) {
       console.error('Errore caricamento stats:', e);
     }
-  }
+  }, []);
 
-  async function loadFornitori() {
+  const loadFornitori = useCallback(async () => {
     try {
       const res = await api.get('/api/dizionario-prodotti/fornitori');
       setFornitori(res.data.fornitori || []);
     } catch (e) {
       console.error('Errore caricamento fornitori:', e);
     }
-  }
+  }, []);
 
-  async function loadProdotti() {
+  const loadProdotti = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -68,6 +59,19 @@ export default function DizionarioProdotti() {
       setProdotti(res.data.prodotti || []);
       setTotale(res.data.totale || 0);
     } catch (e) {
+      console.error('Errore caricamento prodotti:', e);
+    }
+    setLoading(false);
+  }, [search, soloSenzaPrezzo, fornitoreFilter, limit, offset]);
+
+  useEffect(() => {
+    loadStats();
+    loadFornitori();
+  }, [loadStats, loadFornitori]);
+
+  useEffect(() => {
+    loadProdotti();
+  }, [loadProdotti]);
       console.error('Errore caricamento prodotti:', e);
     }
     setLoading(false);
