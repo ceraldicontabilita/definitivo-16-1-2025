@@ -913,6 +913,16 @@ export default function GestioneAssegni() {
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e5e7eb' }}>
+                    <th style={{ padding: '10px 8px', textAlign: 'center', fontWeight: 600, fontSize: 12, width: 40 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedAssegni.size === filteredAssegni.length && filteredAssegni.length > 0}
+                        onChange={toggleSelectAll}
+                        data-testid="select-all-checkbox"
+                        style={{ width: 18, height: 18, cursor: 'pointer' }}
+                        title="Seleziona tutti"
+                      />
+                    </th>
                     <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>N. Assegno</th>
                     <th style={{ padding: '10px 6px', textAlign: 'center', fontWeight: 600, fontSize: 12 }}>Stato</th>
                     <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: 12 }}>Beneficiario / Note</th>
