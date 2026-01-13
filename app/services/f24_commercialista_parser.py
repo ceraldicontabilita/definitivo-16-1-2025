@@ -103,6 +103,7 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
         result["dati_generali"]["ragione_sociale"] = "CERALDI GROUP S.R.L."
     
     data_patterns = [
+        r'[Ss]cadenza\s*(\d{2})/(\d{2})/(\d{4})',  # Pattern Zucchetti: "Scadenza 20/08/2025"
         r'data\s*di\s*pagamento[:\s]*(\d{2})[/\s-](\d{2})[/\s-](\d{4})',
         r'(\d{2})\s+(\d{2})\s+(\d{4})\s*(?:SALDO|codice)',
         r'giorno\s*mese\s*anno\s*(\d{2})\s*(\d{2})\s*(\d{4})',
