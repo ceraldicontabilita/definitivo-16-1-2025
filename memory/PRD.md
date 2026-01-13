@@ -369,8 +369,10 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 
 ## 🚀 PROSSIMI TASK
 
+### P1 - Priorità Alta
+- [ ] Errore visualizzazione "PRELIEVO ASSEGNO" (segnalato dall'utente - investigare frontend)
+
 ### P2 - Priorità Media
-- [ ] Gestione Lotti Avanzata
 - [ ] Calcolo Food Cost Ricette
 - [ ] Report PDF scadenze
 
