@@ -52,7 +52,7 @@ Usa il grassetto (**testo**) per evidenziare informazioni importanti."""
             api_key=EMERGENT_KEY,
             session_id=self.session_id,
             system_message=self.system_message
-        ).with_model("anthropic", "claude-sonnet-4-5-20250514")
+        ).with_model("anthropic", "claude-sonnet-4-5")
     
     async def transcribe_audio(self, audio_file, language: str = "it") -> str:
         """Converte audio in testo usando Whisper."""
