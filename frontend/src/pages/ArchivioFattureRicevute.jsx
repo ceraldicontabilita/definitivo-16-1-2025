@@ -414,15 +414,15 @@ export default function ArchivioFatture() {
               <tbody>
                 {fatture.map((f, idx) => (
                   <tr key={f.id} style={{ borderBottom: '1px solid #f3f4f6', background: idx % 2 === 0 ? 'white' : '#f9fafb' }}>
-                    <td style={{ padding: '12px 16px' }}>{f.data_documento}</td>
-                    <td style={{ padding: '12px 16px', fontWeight: '500' }}>{f.numero_documento}</td>
+                    <td style={{ padding: '12px 16px' }}>{f.invoice_date || f.data_documento}</td>
+                    <td style={{ padding: '12px 16px', fontWeight: '500' }}>{f.invoice_number || f.numero_documento}</td>
                     <td style={{ padding: '12px 16px' }}>
-                      <div style={{ fontWeight: '500' }}>{f.fornitore_ragione_sociale}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{f.fornitore_partita_iva}</div>
+                      <div style={{ fontWeight: '500' }}>{f.supplier_name || f.fornitore_ragione_sociale}</div>
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>{f.supplier_vat || f.fornitore_partita_iva}</div>
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>{formatCurrency(f.imponibile)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>{formatCurrency(f.iva)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(f.importo_totale)}</td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 'bold' }}>{formatCurrency(f.total_amount || f.importo_totale)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>{getStatoBadge(f)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <a
