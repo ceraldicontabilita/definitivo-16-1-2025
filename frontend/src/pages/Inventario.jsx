@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { Package, Search, Plus, Trash2, Save, X, Check, Calculator, Archive } from 'lucide-react';
@@ -23,17 +23,7 @@ export default function Inventario() {
   // Salvataggio
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadInventari();
-  }, []);
-
-  useEffect(() => {
-    // Calcola totale corrente
-    const tot = prodottiInventario.reduce((sum, p) => sum + (p.quantita * p.prezzo_unitario), 0);
-    setTotaleCorrente(tot);
-  }, [prodottiInventario]);
-
-  async function loadInventari() {
+  const loadInventari = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/api/inventario');
@@ -42,7 +32,17 @@ export default function Inventario() {
       console.error('Errore caricamento inventari:', e);
     }
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    loadInventari();
+  }, [loadInventari]);
+
+  useEffect(() => {
+    // Calcola totale corrente
+    const tot = prodottiInventario.reduce((sum, p) => sum + (p.quantita * p.prezzo_unitario), 0);
+    setTotaleCorrente(tot);
+  }, [prodottiInventario]);
 
   async function searchProdotti(query) {
     if (!query || query.length < 2) {
