@@ -8,7 +8,6 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from app.database import Database
 from app.services.parser_f24 import parse_f24_commercialista, confronta_codici_tributo
-from app.services.parser_f24_gemini import parse_f24_with_gemini
 from app.services.f24_parser import parse_quietanza_f24
 import os
 import uuid
