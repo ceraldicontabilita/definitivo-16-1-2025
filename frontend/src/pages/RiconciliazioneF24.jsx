@@ -234,10 +234,6 @@ export default function RiconciliazioneF24() {
               icon="✅"
             />
           </div>
-            subtitle="Riconciliati"
-            color="#10b981"
-            icon="✅"
-          />
           <SummaryCard
             title="Quietanze"
             value={dashboard.quietanze_caricate || 0}
