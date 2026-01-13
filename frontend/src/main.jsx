@@ -163,23 +163,6 @@ const Pianificazione = lazy(() => import("./pages/Pianificazione.jsx"));
 const Admin = lazy(() => import("./pages/Admin.jsx"));
 const GestioneRiservata = lazy(() => import("./pages/GestioneRiservata.jsx"));
 
-// Import/Export
-const ImportExport = lazy(() => import("./pages/ImportExport.jsx"));
-const EstrattoContoImport = lazy(() => import("./pages/EstrattoContoImport.jsx"));
-const ArchivioBonifici = lazy(() => import("./pages/ArchivioBonifici.jsx"));
-const Documenti = lazy(() => import("./pages/Documenti.jsx"));
-
-// Altri
-const Ordini = lazy(() => import("./pages/Ordini.jsx"));
-const Pianificazione = lazy(() => import("./pages/Pianificazione.jsx"));
-const ExportPage = lazy(() => import("./pages/Export.jsx"));
-const AdminPage = lazy(() => import("./pages/Admin.jsx"));
-const MetodiPagamento = lazy(() => import("./pages/MetodiPagamento.jsx"));
-const GestioneRiservata = lazy(() => import("./pages/GestioneRiservata.jsx"));
-
-// Previsioni Acquisti
-const PrevisioniAcquisti = lazy(() => import("./pages/PrevisioniAcquisti.jsx"));
-
 // Wrapper component with Suspense
 const LazyPage = ({ children }) => (
   <Suspense fallback={<PageLoader />}>
@@ -188,7 +171,7 @@ const LazyPage = ({ children }) => (
 );
 
 const router = createBrowserRouter([
-  // Gestione Riservata standalone (login con codice 507488)
+  // Gestione Riservata standalone
   {
     path: "/gestione-riservata",
     element: <LazyPage><GestioneRiservata /></LazyPage>
@@ -197,57 +180,82 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
+      // === CORE ===
       { index: true, element: <LazyPage><Dashboard /></LazyPage> },
-      { path: "fatture", element: <LazyPage><Fatture /></LazyPage> },
+      
+      // === FATTURE & ACQUISTI ===
+      { path: "ciclo-passivo", element: <LazyPage><CicloPassivoIntegrato /></LazyPage> },
       { path: "fatture-ricevute", element: <LazyPage><ArchivioFattureRicevute /></LazyPage> },
       { path: "fatture-ricevute/:id", element: <LazyPage><DettaglioFattura /></LazyPage> },
       { path: "corrispettivi", element: <LazyPage><Corrispettivi /></LazyPage> },
+      { path: "fornitori", element: <LazyPage><Fornitori /></LazyPage> },
+      { path: "ordini-fornitori", element: <LazyPage><OrdiniFornitori /></LazyPage> },
+      { path: "previsioni-acquisti", element: <LazyPage><PrevisioniAcquisti /></LazyPage> },
+      
+      // === BANCA & PAGAMENTI ===
       { path: "prima-nota", element: <LazyPage><PrimaNota /></LazyPage> },
       { path: "riconciliazione-smart", element: <LazyPage><RiconciliazioneSmart /></LazyPage> },
       { path: "riconciliazione", element: <LazyPage><Riconciliazione /></LazyPage> },
       { path: "dashboard-riconciliazione", element: <LazyPage><DashboardRiconciliazione /></LazyPage> },
+      { path: "gestione-assegni", element: <LazyPage><GestioneAssegni /></LazyPage> },
+      { path: "archivio-bonifici", element: <LazyPage><ArchivioBonifici /></LazyPage> },
       { path: "estratto-conto", element: <LazyPage><EstrattoContoImport /></LazyPage> },
-      { path: "magazzino", element: <LazyPage><Magazzino /></LazyPage> },
-      { path: "ricerca-prodotti", element: <LazyPage><RicercaProdotti /></LazyPage> },
+      
+      // === DIPENDENTI ===
       { path: "dipendenti", element: <LazyPage><GestioneDipendenti /></LazyPage> },
       { path: "cedolini", element: <LazyPage><Cedolini /></LazyPage> },
       { path: "prima-nota-salari", element: <LazyPage><PrimaNotaSalari /></LazyPage> },
       { path: "tfr", element: <LazyPage><TFR /></LazyPage> },
-      // HACCP
+      
+      // === FISCO & TRIBUTI ===
+      { path: "iva", element: <LazyPage><IVA /></LazyPage> },
+      { path: "liquidazione-iva", element: <LazyPage><LiquidazioneIVA /></LazyPage> },
+      { path: "f24", element: <LazyPage><F24 /></LazyPage> },
+      { path: "riconciliazione-f24", element: <LazyPage><RiconciliazioneF24 /></LazyPage> },
+      { path: "contabilita", element: <LazyPage><ContabilitaAvanzata /></LazyPage> },
+      { path: "scadenze", element: <LazyPage><Scadenze /></LazyPage> },
+      
+      // === MAGAZZINO ===
+      { path: "magazzino", element: <LazyPage><Magazzino /></LazyPage> },
+      { path: "inventario", element: <LazyPage><Inventario /></LazyPage> },
+      { path: "ricerca-prodotti", element: <LazyPage><RicercaProdotti /></LazyPage> },
+      { path: "dizionario-articoli", element: <LazyPage><DizionarioArticoli /></LazyPage> },
+      { path: "magazzino-dv", element: <LazyPage><MagazzinoDoppiaVerita /></LazyPage> },
+      
+      // === HACCP ===
       { path: "haccp-temperature", element: <LazyPage><HACCPTemperature /></LazyPage> },
       { path: "haccp-sanificazioni", element: <LazyPage><HACCPSanificazioni /></LazyPage> },
       { path: "haccp-lotti", element: <LazyPage><HACCPLotti /></LazyPage> },
       { path: "haccp-ricezione", element: <LazyPage><HACCPRicezione /></LazyPage> },
       { path: "haccp-scadenze", element: <LazyPage><HACCPScadenze /></LazyPage> },
-      { path: "f24", element: <LazyPage><F24 /></LazyPage> },
-      { path: "finanziaria", element: <LazyPage><Finanziaria /></LazyPage> },
-      { path: "assegni", element: <LazyPage><Assegni /></LazyPage> },
-      { path: "gestione-assegni", element: <LazyPage><GestioneAssegni /></LazyPage> },
-      { path: "ordini", element: <LazyPage><Ordini /></LazyPage> },
-      { path: "pianificazione", element: <LazyPage><Pianificazione /></LazyPage> },
-      { path: "export", element: <LazyPage><ExportPage /></LazyPage> },
-      { path: "import-export", element: <LazyPage><ImportExport /></LazyPage> },
-      { path: "admin", element: <LazyPage><AdminPage /></LazyPage> },
-      { path: "iva", element: <LazyPage><IVA /></LazyPage> },
-      { path: "liquidazione-iva", element: <LazyPage><LiquidazioneIVA /></LazyPage> },
-      { path: "riconciliazione-f24", element: <LazyPage><RiconciliazioneF24 /></LazyPage> },
-      { path: "verifica-coerenza", element: <LazyPage><VerificaCoerenza /></LazyPage> },
-      { path: "documenti", element: <LazyPage><Documenti /></LazyPage> },
-      { path: "metodi-pagamento", element: <LazyPage><MetodiPagamento /></LazyPage> },
-      { path: "ordini-fornitori", element: <LazyPage><OrdiniFornitori /></LazyPage> },
-      { path: "fornitori", element: <LazyPage><Fornitori /></LazyPage> },
+      { path: "registro-lotti", element: <LazyPage><RegistroLotti /></LazyPage> },
+      
+      // === CUCINA & PRODUZIONE ===
+      { path: "ricette", element: <LazyPage><Ricette /></LazyPage> },
+      { path: "dizionario-prodotti", element: <LazyPage><DizionarioProdotti /></LazyPage> },
+      { path: "centri-costo", element: <LazyPage><CentriCosto /></LazyPage> },
+      { path: "utile-obiettivo", element: <LazyPage><UtileObiettivo /></LazyPage> },
+      
+      // === CONTABILITÀ & BILANCIO ===
+      { path: "bilancio", element: <LazyPage><Bilancio /></LazyPage> },
       { path: "controllo-mensile", element: <LazyPage><ControlloMensile /></LazyPage> },
       { path: "piano-dei-conti", element: <LazyPage><PianoDeiConti /></LazyPage> },
-      { path: "commercialista", element: <LazyPage><Commercialista /></LazyPage> },
-      { path: "bilancio", element: <LazyPage><Bilancio /></LazyPage> },
-      { path: "contabilita", element: <LazyPage><ContabilitaAvanzata /></LazyPage> },
       { path: "cespiti", element: <LazyPage><GestioneCespiti /></LazyPage> },
+      { path: "finanziaria", element: <LazyPage><Finanziaria /></LazyPage> },
+      
+      // === STRUMENTI ===
+      { path: "documenti", element: <LazyPage><Documenti /></LazyPage> },
+      { path: "import-export", element: <LazyPage><ImportExport /></LazyPage> },
       { path: "regole-categorizzazione", element: <LazyPage><RegoleCategorizzazione /></LazyPage> },
-      { path: "dizionario-articoli", element: <LazyPage><DizionarioArticoli /></LazyPage> },
-      { path: "scadenze", element: <LazyPage><Scadenze /></LazyPage> },
-      { path: "archivio-bonifici", element: <LazyPage><ArchivioBonifici /></LazyPage> },
-      // Contabilità Analitica
-      { path: "centri-costo", element: <LazyPage><CentriCosto /></LazyPage> },
+      { path: "verifica-coerenza", element: <LazyPage><VerificaCoerenza /></LazyPage> },
+      { path: "commercialista", element: <LazyPage><Commercialista /></LazyPage> },
+      { path: "pianificazione", element: <LazyPage><Pianificazione /></LazyPage> },
+      
+      // === ADMIN ===
+      { path: "admin", element: <LazyPage><Admin /></LazyPage> },
+    ]
+  }
+]);
       { path: "ricette", element: <LazyPage><Ricette /></LazyPage> },
       { path: "dizionario-prodotti", element: <LazyPage><DizionarioProdotti /></LazyPage> },
       { path: "registro-lotti", element: <LazyPage><RegistroLotti /></LazyPage> },
