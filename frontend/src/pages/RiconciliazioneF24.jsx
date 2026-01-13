@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import { formatEuro } from '../lib/utils';
+import { Eye, Edit, X, Trash2 } from 'lucide-react';
 
 /**
- * Gestione F24 Unificata
- * Combina visualizzazione F24, upload, riconciliazione con quietanze
+ * Riconciliazione F24
+ * Gestione F24 commercialista → Quietanza → Riconciliazione
+ * Include: upload multiplo, visualizzazione PDF, modifica, riconciliazione automatica
  */
 export default function RiconciliazioneF24() {
   const [dashboard, setDashboard] = useState(null);
@@ -21,6 +23,12 @@ export default function RiconciliazioneF24() {
   const [showModal, setShowModal] = useState(null);
   const [modalData, setModalData] = useState([]);
   const [quietanzeList, setQuietanzeList] = useState([]);
+  
+  // Visualizzatore PDF
+  const [viewingPdf, setViewingPdf] = useState(null);
+  
+  // Modifica F24
+  const [editingF24, setEditingF24] = useState(null);
 
   const loadDashboard = useCallback(async () => {
     try {
@@ -49,14 +57,18 @@ export default function RiconciliazioneF24() {
     }
   }, []);
 
+  const refreshAll = useCallback(async () => {
+    await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
+  }, [loadDashboard, loadF24List, loadAlerts]);
+
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
-      await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
+      await refreshAll();
       setLoading(false);
     };
     loadAll();
-  }, [loadDashboard, loadF24List, loadAlerts]);
+  }, [refreshAll]);
 
   // Upload multiplo F24
   const handleUploadF24 = async (e) => {
@@ -89,7 +101,7 @@ export default function RiconciliazioneF24() {
     if (errorCount > 0) msg += `\n❌ Errori: ${errorCount}`;
     alert(msg);
     
-    await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
+    await refreshAll();
     setUploading(false);
     e.target.value = '';
   };
@@ -119,7 +131,7 @@ export default function RiconciliazioneF24() {
     } catch (err) {
       alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
     }
-    await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
+    await refreshAll();
     setUploading(false);
     e.target.value = '';
   };
@@ -137,7 +149,7 @@ export default function RiconciliazioneF24() {
       console.error('Errore riconciliazione:', err);
       alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
     }
-    await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
+    await refreshAll();
     setUploading(false);
   };
 
@@ -146,7 +158,7 @@ export default function RiconciliazioneF24() {
     if (!window.confirm('Segnare questo F24 come pagato?')) return;
     try {
       await api.put(`/api/f24-riconciliazione/commercialista/${f24Id}/pagato`);
-      await Promise.all([loadDashboard(), loadF24List()]);
+      await refreshAll();
     } catch (err) {
       alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
     }
@@ -156,7 +168,28 @@ export default function RiconciliazioneF24() {
     if (!window.confirm('Eliminare questo F24?')) return;
     try {
       await api.delete(`/api/f24-riconciliazione/commercialista/${id}`);
-      await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
+      await refreshAll();
+    } catch (err) {
+      alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
+    }
+  };
+
+  // Visualizza PDF
+  const handleViewPdf = (f24) => {
+    if (f24.file_path) {
+      const pdfUrl = `${api.defaults.baseURL}/api/f24-riconciliazione/commercialista/${f24.id}/pdf`;
+      setViewingPdf({ url: pdfUrl, name: f24.file_name || 'F24.pdf', f24 });
+    } else {
+      alert('PDF non disponibile per questo F24');
+    }
+  };
+
+  // Aggiorna F24
+  const handleUpdateF24 = async (f24Id, updates) => {
+    try {
+      await api.put(`/api/f24-riconciliazione/commercialista/${f24Id}`, updates);
+      setEditingF24(null);
+      await refreshAll();
     } catch (err) {
       alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
     }
@@ -378,10 +411,10 @@ export default function RiconciliazioneF24() {
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span>📋</span> Gestione F24
+            <span>📋</span> Riconciliazione F24
           </h1>
           <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: 14 }}>
-            Upload, visualizzazione e riconciliazione F24
+            F24 Commercialista → Quietanza → Riconciliazione Banca
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -559,21 +592,35 @@ export default function RiconciliazioneF24() {
 
                   {/* Azioni */}
                   <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleViewPdf(f24)}
+                      style={{ padding: '6px 10px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                      title="Visualizza PDF"
+                    >
+                      <Eye size={12} /> PDF
+                    </button>
                     {f24.status === 'da_pagare' && (
                       <button
                         onClick={() => handleMarkAsPaid(f24.id)}
-                        style={{ padding: '6px 10px', background: '#d1fae5', color: '#065f46', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+                        style={{ padding: '6px 10px', background: '#10b981', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
                         title="Segna come pagato"
                       >
                         ✅
                       </button>
                     )}
                     <button
+                      onClick={() => setEditingF24(f24)}
+                      style={{ padding: '6px 10px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                      title="Modifica"
+                    >
+                      <Edit size={12} />
+                    </button>
+                    <button
                       onClick={() => handleDeleteF24(f24.id)}
-                      style={{ padding: '6px 10px', background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+                      style={{ padding: '6px 10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
                       title="Elimina"
                     >
-                      🗑️
+                      <Trash2 size={12} />
                     </button>
                   </div>
                 </div>
@@ -619,7 +666,7 @@ export default function RiconciliazioneF24() {
         </ol>
       </div>
 
-      {/* MODAL */}
+      {/* MODAL DETTAGLI */}
       {showModal && (
         <div style={{ 
           position: 'fixed', 
@@ -664,52 +711,20 @@ export default function RiconciliazioneF24() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* Modal F24 Da Pagare */}
-                {showModal === 'da_pagare' && modalData.map((f24) => (
-                  <div key={f24.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{f24.file_name || 'F24'}</div>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>Scadenza: {f24.dati_generali?.data_versamento || '-'}</div>
-                        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                          <span style={{ padding: '2px 6px', background: '#dbeafe', borderRadius: 4, fontSize: 10 }}>ERARIO: {f24.sezione_erario?.length || 0}</span>
-                          <span style={{ padding: '2px 6px', background: '#dcfce7', borderRadius: 4, fontSize: 10 }}>INPS: {f24.sezione_inps?.length || 0}</span>
-                          <span style={{ padding: '2px 6px', background: '#fef3c7', borderRadius: 4, fontSize: 10 }}>REGIONI: {f24.sezione_regioni?.length || 0}</span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: '#f97316' }}>
-                        {formatEuro(f24.totali?.saldo_netto || 0)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Modal F24 Pagati con Associazioni */}
                 {showModal === 'pagati' && modalData.map((f24) => {
                   const quietanza = quietanzeList.find(q => q.id === f24.quietanza_id);
                   return (
                     <div key={f24.id} style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, background: '#f9fafb' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'start' }}>
-                        {/* F24 */}
                         <div style={{ background: 'white', borderRadius: 8, padding: 12, border: '1px solid #dbeafe' }}>
                           <div style={{ fontSize: 11, color: '#3b82f6', fontWeight: 600, marginBottom: 8 }}>📤 F24 COMMERCIALISTA</div>
                           <div style={{ fontWeight: 600 }}>{f24.file_name || 'F24'}</div>
                           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>Scadenza: {f24.dati_generali?.data_versamento || '-'}</div>
                           <div style={{ fontSize: 16, fontWeight: 700, color: '#1e40af', marginTop: 8 }}>{formatEuro(f24.totali?.saldo_netto || 0)}</div>
-                          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 8 }}>
-                            ERARIO: {f24.sezione_erario?.length || 0} | INPS: {f24.sezione_inps?.length || 0} | REGIONI: {f24.sezione_regioni?.length || 0}
-                          </div>
                         </div>
-
-                        {/* Arrow */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
                           <div style={{ fontSize: 24 }}>🔗</div>
-                          <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>
-                            {f24.match_percentage ? `${Math.round(f24.match_percentage)}%` : 'MATCH'}
-                          </div>
                         </div>
-
-                        {/* Quietanza */}
                         <div style={{ background: 'white', borderRadius: 8, padding: 12, border: '1px solid #d1fae5' }}>
                           <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginBottom: 8 }}>📄 QUIETANZA ADE</div>
                           {quietanza ? (
@@ -723,30 +738,14 @@ export default function RiconciliazioneF24() {
                                 </div>
                               )}
                             </>
-                          ) : f24.riconciliato_quietanza ? (
-                            <div style={{ color: '#065f46' }}>
-                              <div style={{ fontWeight: 500 }}>Quietanza associata</div>
-                              {f24.protocollo_quietanza && (
-                                <div style={{ fontSize: 10, color: '#6b7280', marginTop: 4, fontFamily: 'monospace' }}>
-                                  {f24.protocollo_quietanza}
-                                </div>
-                              )}
-                            </div>
                           ) : (
                             <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>Segnato pagato manualmente</div>
                           )}
                         </div>
                       </div>
-                      {f24.differenza_importo && Math.abs(f24.differenza_importo) > 0.01 && (
-                        <div style={{ marginTop: 12, padding: 8, background: '#fef3c7', borderRadius: 6, fontSize: 12, color: '#92400e' }}>
-                          ⚠️ Differenza: {formatEuro(f24.differenza_importo)}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
-
-                {/* Modal Quietanze */}
                 {showModal === 'quietanze' && modalData.map((q) => (
                   <div key={q.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
@@ -758,17 +757,6 @@ export default function RiconciliazioneF24() {
                             Protocollo: {q.protocollo_telematico}
                           </div>
                         )}
-                        <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
-                          {q.f24_associati?.length > 0 ? (
-                            <span style={{ padding: '2px 6px', background: '#d1fae5', color: '#065f46', borderRadius: 4, fontSize: 10 }}>
-                              ✅ Associato a {q.f24_associati.length} F24
-                            </span>
-                          ) : (
-                            <span style={{ padding: '2px 6px', background: '#fee2e2', color: '#991b1b', borderRadius: 4, fontSize: 10 }}>
-                              ⚠️ Non associato
-                            </span>
-                          )}
-                        </div>
                       </div>
                       <div style={{ fontSize: 18, fontWeight: 700, color: '#3b82f6' }}>
                         {formatEuro(q.saldo || 0)}
@@ -776,18 +764,155 @@ export default function RiconciliazioneF24() {
                     </div>
                   </div>
                 ))}
-
-                {/* Modal Alert */}
+                {showModal === 'da_pagare' && modalData.map((f24) => (
+                  <div key={f24.id} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{f24.file_name || 'F24'}</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>Scadenza: {f24.dati_generali?.data_versamento || '-'}</div>
+                      </div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: '#f97316' }}>
+                        {formatEuro(f24.totali?.saldo_netto || 0)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
                 {showModal === 'alert' && modalData.map((alert) => (
                   <div key={alert.id} style={{ border: '1px solid #fecaca', borderRadius: 8, padding: 12, background: '#fef2f2' }}>
                     <div style={{ fontWeight: 500, color: '#991b1b' }}>{alert.message}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-                      {alert.importo && formatEuro(alert.importo)}
-                    </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* PDF Viewer Modal */}
+      {viewingPdf && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1001
+          }}
+          onClick={() => setViewingPdf(null)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: 8,
+              width: '90%',
+              height: '90%',
+              maxWidth: 1200,
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ 
+              padding: '12px 20px', 
+              borderBottom: '1px solid #eee', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center' 
+            }}>
+              <h3 style={{ margin: 0 }}>📄 {viewingPdf.name}</h3>
+              <button
+                onClick={() => setViewingPdf(null)}
+                style={{
+                  padding: '8px',
+                  background: '#f5f5f5',
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ flex: 1, padding: 10 }}>
+              <iframe 
+                src={viewingPdf.url}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  border: 'none',
+                  borderRadius: 4
+                }}
+                title="PDF Viewer"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit F24 Modal */}
+      {editingF24 && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1001
+          }}
+          onClick={() => setEditingF24(null)}
+        >
+          <div 
+            style={{
+              background: 'white',
+              borderRadius: 8,
+              padding: 24,
+              maxWidth: 500,
+              width: '90%'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 style={{ marginTop: 0 }}>✏️ Modifica F24</h2>
+            
+            <div style={{ display: 'grid', gap: 15 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>File</label>
+                <input
+                  type="text"
+                  value={editingF24.file_name || ''}
+                  readOnly
+                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd', background: '#f5f5f5' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontWeight: 'bold' }}>Note</label>
+                <textarea
+                  value={editingF24.note || ''}
+                  onChange={(e) => setEditingF24({...editingF24, note: e.target.value})}
+                  rows={3}
+                  style={{ padding: 10, width: '100%', borderRadius: 4, border: '1px solid #ddd' }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button
+                onClick={() => setEditingF24(null)}
+                style={{ padding: '10px 20px', background: '#9e9e9e', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+              >
+                Annulla
+              </button>
+              <button
+                onClick={() => handleUpdateF24(editingF24.id, { note: editingF24.note })}
+                style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
+              >
+                Salva
+              </button>
+            </div>
           </div>
         </div>
       )}
