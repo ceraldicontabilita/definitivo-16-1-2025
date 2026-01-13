@@ -8,9 +8,16 @@ import json
 import asyncio
 import logging
 from typing import Dict, Any, Optional
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Carica .env dal percorso corretto
+env_path = Path(__file__).resolve().parent.parent.parent / "backend" / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
+else:
+    # Fallback: cerca in /app/backend/.env
+    load_dotenv("/app/backend/.env")
 
 logger = logging.getLogger(__name__)
 
