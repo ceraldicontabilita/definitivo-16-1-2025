@@ -226,6 +226,36 @@ export default function F24() {
       );
     }
     
+    if (f.tributi_imu?.length > 0) {
+      sections.push(
+        <div key="imu" style={{ marginBottom: 15 }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#7c3aed', fontSize: 13 }}>🏠 IMU/TRIBUTI LOCALI</h4>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#f3e8ff' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Codice</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Comune</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Periodo</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Credito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f.tributi_imu.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6 }}>{t.codice_tributo || t.codice}</td>
+                  <td style={{ padding: 6 }}>{t.codice_comune || t.codice_ente || '-'}</td>
+                  <td style={{ padding: 6 }}>{t.periodo_riferimento || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_debito || t.importo || 0)}</td>
+                  <td style={{ padding: 6, textAlign: 'right' }}>{formatEuro(t.importo_credito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
     return <div style={{ padding: 10 }}>{sections}</div>;
   };
 
