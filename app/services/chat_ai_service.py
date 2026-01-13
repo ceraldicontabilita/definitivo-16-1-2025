@@ -126,7 +126,7 @@ Usa il grassetto (**testo**) per evidenziare informazioni importanti."""
         if not anno:
             anno = datetime.now().year
         
-        # Estrai anno dalla query se specificato (es. "fatture 2024", "nel 2023")
+        # Estrai anno dalla query se specificato (es. "fatture 2024", "nel 2023", "dell'anno 2025")
         anno_match = re.search(r'\b(20\d{2})\b', query)
         if anno_match:
             anno = int(anno_match.group(1))
@@ -135,35 +135,45 @@ Usa il grassetto (**testo**) per evidenziare informazioni importanti."""
         def filtro_anno(campo_data: str) -> Dict:
             return {campo_data: {"$regex": f"^{anno}"}}
         
-        # Estrai nome fornitore dalla query con fuzzy matching
+        # Estrai nome fornitore dalla query - RICERCA INTELLIGENTE
         def trova_fornitore(q: str) -> Optional[str]:
-            clean_q = re.sub(r'[?!.,;:]', '', q).lower()
+            clean_q = re.sub(r'[?!.,;:\']', '', q).lower()
             words = clean_q.split()
             
-            # Prima cerca nei pattern comuni
+            # 1. Cerca match diretto con alias conosciuti (priorità)
+            for alias, regex in FORNITORI_ALIAS.items():
+                if alias in clean_q:
+                    return regex
+            
+            # 2. Cerca pattern "di/da/con + nome"
             for i, word in enumerate(words):
                 if word in ["di", "da", "a", "per", "con"] and i + 1 < len(words):
                     remaining = words[i+1:]
                     fornitore_words = []
                     for w in remaining:
-                        if w in ["nel", "del", "anno", "mese", "quanto", "quante", "totale", "2020", "2021", "2022", "2023", "2024", "2025", "2026"]:
+                        # Stop su parole chiave o anni
+                        if w in ["nel", "del", "anno", "mese", "quanto", "quante", "totale", "pdf", "estratto"] or re.match(r'^20\d{2}$', w):
+                            break
+                        # Stop su parole comuni che non sono nomi
+                        if w in ["il", "la", "lo", "le", "gli", "un", "una", "che", "come", "sono"]:
                             break
                         fornitore_words.append(w)
                     if fornitore_words:
-                        return " ".join(fornitore_words[:3])
+                        return " ".join(fornitore_words[:4])  # Max 4 parole
             
-            # Cerca match diretto con alias conosciuti
-            for alias, regex in FORNITORI_ALIAS.items():
-                if alias in clean_q:
-                    return regex
+            # 3. Cerca parole che sembrano nomi di aziende (maiuscole, terminano in spa, srl, ecc)
+            for word in words:
+                if len(word) > 3 and word not in ["fattura", "fatture", "fatturato", "fornitore", "quanto", "speso", "pagato", "anno", "dell"]:
+                    # Potrebbe essere un nome fornitore
+                    return word
             
             return None
         
-        # Cerca fatture
-        if any(kw in query_lower for kw in ["fattura", "fatture", "fornitore", "fornitori", "pagato", "pagamento", "fatturato", "acquisti", "speso"]):
-            # Trova il fornitore dalla query
-            fornitore_found = trova_fornitore(query)
-            
+        # SEMPRE cerca di trovare un fornitore dalla query
+        fornitore_found = trova_fornitore(query)
+        
+        # Se c'è un possibile nome fornitore, cerca SEMPRE le fatture
+        if fornitore_found or any(kw in query_lower for kw in ["fattura", "fatture", "fornitore", "fornitori", "pagato", "pagamento", "fatturato", "acquisti", "speso", "estratto", "conto"]):
             # Query con filtro anno
             fatture_query = filtro_anno("invoice_date")
             
