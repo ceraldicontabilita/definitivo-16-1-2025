@@ -324,7 +324,15 @@ async def analizza_movimento(movimento: Dict[str, Any]) -> Dict[str, Any]:
         "richiede_conferma": True
     }
     
-    # 1. Check commissioni POS
+    # 0. Check INCASSI POS (entrate da POS - NON sono commissioni!)
+    if is_incasso_pos(descrizione) and importo > 0:
+        result["tipo"] = "incasso_pos"
+        result["categoria_suggerita"] = "Incasso POS"
+        result["associazione_automatica"] = True
+        result["richiede_conferma"] = False
+        return result
+    
+    # 1. Check commissioni POS (ADDEBITI American Express)
     if is_commissione_pos(descrizione):
         result["tipo"] = "commissione_pos"
         result["categoria_suggerita"] = "Commissioni POS"
