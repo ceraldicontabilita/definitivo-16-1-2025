@@ -478,6 +478,51 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                         break
             
             # ============================================
+            # FALLBACK REGIONI: Cattura codici IRAP senza codice regione esplicito
+            # Alcuni PDF F24 non mostrano il codice regione nella stessa riga
+            # ============================================
+            if not is_regioni_row:
+                for i, item in enumerate(row):
+                    word = item['word']
+                    
+                    # Codici IRAP che vanno SEMPRE in REGIONI
+                    if word in CODICI_IRAP:
+                        codice = word
+                        rateazione = ""
+                        anno = ""
+                        
+                        for j in range(i+1, min(i+5, len(row))):
+                            nw = row[j]['word']
+                            if nw in [',', '+/–']:
+                                continue
+                            if re.match(r'^0[0-9]{3}$', nw) and not rateazione:
+                                rateazione = nw
+                            elif re.match(r'^20\d{2}$', nw) and not anno:
+                                anno = nw
+                        
+                        debito, credito = extract_importo(row)
+                        
+                        if anno and (debito > 0 or credito > 0):
+                            mese = rateazione[2:4] if len(rateazione) == 4 else "00"
+                            # Usa "00" come codice regione placeholder
+                            key = f"R_{codice}_00_{anno}_{rateazione}_{debito}_{credito}"
+                            
+                            if key not in tributi_visti:
+                                tributi_visti.add(key)
+                                result["sezione_regioni"].append({
+                                    "codice_tributo": codice,
+                                    "codice_regione": "",  # Non presente nel PDF
+                                    "rateazione": rateazione,
+                                    "periodo_riferimento": parse_periodo(mese, anno),
+                                    "anno": anno,
+                                    "mese": mese,
+                                    "importo_debito": debito,
+                                    "importo_credito": credito,
+                                    "descrizione": get_descrizione_tributo_regioni(codice)
+                                })
+                        break
+            
+            # ============================================
             # SEZIONE TRIBUTI LOCALI - Pattern: cod_comune 37xx/38xx/391x rateazione anno debito/credito
             # Riconosce righe con lettere all'inizio (B 9 9 0, F 8 3 9)
             # Include anche codici IMU (391x)
