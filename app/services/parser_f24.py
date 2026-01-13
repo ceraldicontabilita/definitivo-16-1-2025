@@ -628,7 +628,6 @@ def get_descrizione_tributo(codice: str) -> str:
         # Ravvedimento operoso
         "1990": "Interessi IRES - ravvedimento",
         "1991": "Sanzione IRES - ravvedimento",
-        "1993": "Interessi IRAP - ravvedimento",
         "1994": "Sanzione IRAP - ravvedimento",
         "8901": "Sanzione pecuniaria IRPEF",
         "8902": "Interessi sul ravvedimento IRPEF",
