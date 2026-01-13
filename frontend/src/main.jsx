@@ -102,7 +102,6 @@ const PrevisioniAcquisti = lazy(() => import("./pages/PrevisioniAcquisti.jsx"));
 
 // === BANCA & PAGAMENTI ===
 const PrimaNota = lazy(() => import("./pages/PrimaNota.jsx"));
-const Riconciliazione = lazy(() => import("./pages/Riconciliazione.jsx"));
 const RiconciliazioneSmart = lazy(() => import("./pages/RiconciliazioneSmart.jsx"));
 const DashboardRiconciliazione = lazy(() => import("./pages/DashboardRiconciliazione.jsx"));
 const GestioneAssegni = lazy(() => import("./pages/GestioneAssegni.jsx"));
@@ -111,6 +110,10 @@ const EstrattoContoImport = lazy(() => import("./pages/EstrattoContoImport.jsx")
 
 // === DIPENDENTI ===
 const GestioneDipendenti = lazy(() => import("./pages/GestioneDipendenti.jsx"));
+const DipendenteRetribuzione = lazy(() => import("./pages/DipendenteRetribuzione.jsx"));
+const DipendenteProgressivi = lazy(() => import("./pages/DipendenteProgressivi.jsx"));
+const DipendenteBonifici = lazy(() => import("./pages/DipendenteBonifici.jsx"));
+const DipendenteAgevolazioni = lazy(() => import("./pages/DipendenteAgevolazioni.jsx"));
 const DipendenteContratti = lazy(() => import("./pages/DipendenteContratti.jsx"));
 const Cedolini = lazy(() => import("./pages/Cedolini.jsx"));
 const PrimaNotaSalari = lazy(() => import("./pages/PrimaNotaSalari.jsx"));
