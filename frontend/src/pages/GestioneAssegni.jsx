@@ -568,14 +568,18 @@ export default function GestioneAssegni() {
         </button>
       </div>
 
-      {/* PANNELLO FILTRI */}
+      {/* PANNELLO FILTRI - STICKY */}
       {showFilters && (
         <div style={{ 
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
           background: '#f8fafc', 
           borderRadius: 12, 
           padding: 16, 
           marginBottom: 20,
-          border: '1px solid #e2e8f0'
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
         }}>
           <div style={{ 
             display: 'grid', 
