@@ -609,16 +609,86 @@ def get_descrizione_tributo(codice: str) -> str:
         
         # IMU e tributi locali
         "3912": "IMU abitazione principale",
-        "3914": "IMU terreni",
+        "3913": "IMU fabbricati rurali strumentali",
+        "3914": "IMU terreni agricoli",
+        "3915": "IMU terreni - Stato",
         "3916": "IMU aree fabbricabili",
+        "3917": "IMU aree fabbricabili - Stato",
         "3918": "IMU altri fabbricati",
         "3919": "IMU interessi da accertamento",
-        "3920": "IMU sanzioni da accertamento",
+        "3920": "IMU/TARSU sanzioni da accertamento",
+        "3921": "TARSU interessi",
+        "3922": "TARSU sanzioni",
+        "3923": "IMU interessi da accertamento",
+        "3924": "IMU sanzioni da accertamento",
         "3925": "IMU immobili gruppo D - Stato",
+        "3926": "ISCOP imposta",
+        "3927": "ISCOP interessi",
+        "3928": "ISCOP sanzioni",
         "3930": "IMU immobili gruppo D - Comune",
+        "3931": "TOSAP/COSAP occupazione permanente",
+        "3932": "TOSAP/COSAP occupazione temporanea",
+        "3933": "TOSAP/COSAP interessi",
+        "3934": "TOSAP/COSAP sanzioni",
+        
+        # ICI (vecchia imposta)
+        "3901": "ICI abitazione principale",
+        "3902": "ICI terreni agricoli",
+        "3903": "ICI aree fabbricabili",
+        "3904": "ICI altri fabbricati",
+        "3906": "ICI interessi",
+        "3907": "ICI sanzioni",
+        "3940": "ICI abitazione principale (IMUP)",
+        "3941": "ICI terreni (IMUP)",
+        "3942": "ICI aree fabbricabili (IMUP)",
+        "3943": "ICI altri fabbricati (IMUP)",
+        
+        # TARES
+        "3944": "TARES imposta",
+        "3945": "TARES interessi",
+        "3946": "TARES sanzioni",
+        "3950": "TARES tariffa",
+        "3951": "TARES tariffa interessi",
+        "3952": "TARES tariffa sanzioni",
+        "3955": "TARES maggiorazione",
+        "3956": "TARES maggiorazione interessi",
+        "3957": "TARES maggiorazione sanzioni",
+        
+        # TASI
+        "3958": "TASI abitazione principale",
+        "3959": "TASI fabbricati rurali",
+        "3960": "TASI aree fabbricabili",
+        "3961": "TASI altri fabbricati",
+        "3962": "TASI interessi da accertamento",
+        "3963": "TASI sanzioni da accertamento",
+        
+        # ICP/CIMP (Pubblicità)
+        "3964": "ICP/CIMP imposta pubblicità",
+        "3965": "ICP/CIMP interessi",
+        "3966": "ICP/CIMP sanzioni",
+        
+        # Codici con suffisso E (enti locali)
+        "350E": "IMU fabbricati rurali - Ente",
+        "351E": "IMU terreni agricoli - Ente",
+        "352E": "IMU terreni - Stato Ente",
+        "353E": "IMU aree fabbricabili - Ente",
+        "354E": "IMU aree fabbricabili - Stato Ente",
+        "355E": "IMU altri fabbricati - Ente",
+        "356E": "IMU altri fabbricati - Stato Ente",
+        "357E": "IMU interessi - Ente",
+        "358E": "IMU sanzioni - Ente",
+        "359E": "IMU gruppo D - Stato Ente",
+        "360E": "IMU gruppo D - Comune Ente",
         
         # Diritto annuale Camera di Commercio
         "3850": "Diritto camerale annuale",
+        "3851": "Interessi diritto camerale",
+        "3852": "Sanzioni diritto camerale",
+        
+        # Imposta sostitutiva TFR (25xx)
+        "2501": "Imposta sostitutiva rivalutazione TFR 17% - Acconto",
+        "2502": "Imposta sostitutiva rivalutazione TFR 17% - Saldo",
+        "2503": "Imposta sostitutiva TFR a forme pensionistiche",
     }
     return descrizioni.get(codice, f"Tributo {codice}")
 
