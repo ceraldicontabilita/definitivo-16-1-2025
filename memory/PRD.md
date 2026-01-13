@@ -374,6 +374,20 @@ Tutte le pagine principali supportano layout mobile:
 
 - ✅ **Fix pagina Archivio Fatture**: Corretto bug che non mostrava le fatture (filtro anno sbagliato)
 
+- ✅ **Chat AI Vocale per tutta l'App**: Nuova funzionalità assistente AI
+  - Backend: Servizio `chat_ai_service.py` con Claude Sonnet 4.5 via Emergent LLM Key
+  - Speech-to-Text con OpenAI Whisper per input vocale
+  - RAG (Retrieval Augmented Generation) che cerca nei dati:
+    - Fatture, Stipendi/Cedolini, Dipendenti, F24, Movimenti bancari
+  - API endpoints:
+    - `POST /api/chat-ai/ask` - Domanda testuale
+    - `POST /api/chat-ai/ask-voice` - Domanda vocale
+  - Frontend: Componente `ChatAI.jsx` flottante
+    - Pulsante viola in basso a destra su tutte le pagine
+    - Chat window con input testo + microfono
+    - Risposte formattate con markdown
+    - Mostra dati trovati nel database
+
 ---
 
 ## 📊 NOTE SULLA RICONCILIAZIONE AUTOMATICA
