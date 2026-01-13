@@ -371,8 +371,9 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                         })
             
             # ============================================
-            # SEZIONE REGIONI - Pattern: cod_regione 3802 rateazione anno debito/credito
-            # Riconosce righe con "0 5" prima del codice 38xx
+            # SEZIONE REGIONI - Pattern: cod_regione 3xxx rateazione anno debito/credito
+            # Codici 3xxx = IRAP, addizionali regionali, tributi locali
+            # Riconosce righe con "0 5" prima del codice 3xxx
             # ============================================
             # Verifica se è una riga regioni (ha "0 5" all'inizio)
             is_regioni_row = False
@@ -388,8 +389,9 @@ def parse_f24_commercialista(pdf_path: str) -> Dict[str, Any]:
                 for i, item in enumerate(row):
                     word = item['word']
                     
-                    # Codici regionali: 38xx (addizionale IRPEF) e 37xx (IRAP)
-                    if re.match(r'^(38\d{2}|379\d)$', word):
+                    # Codici regionali: 3xxx (IRAP, addizionale IRPEF, tributi locali)
+                    # Include 3800-3899, 3790-3799, 3810-3819, ecc.
+                    if re.match(r'^3\d{3}$', word):
                         codice = word
                         rateazione = ""
                         anno = ""
