@@ -568,22 +568,23 @@ export default function GestioneAssegni() {
         </button>
       </div>
 
-      {/* PANNELLO FILTRI - STICKY */}
+      {/* PANNELLO FILTRI - FIXED quando aperto */}
       {showFilters && (
         <div style={{ 
-          position: 'sticky',
-          top: 0,
+          position: 'fixed',
+          top: 60,
+          left: 200,
+          right: 20,
           zIndex: 100,
           background: '#f8fafc', 
           borderRadius: 12, 
           padding: 16, 
-          marginBottom: 20,
           border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
         }}>
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
             gap: 12 
           }}>
             <div>
@@ -676,7 +677,7 @@ export default function GestioneAssegni() {
               />
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
               <button
                 onClick={resetFilters}
                 data-testid="reset-filters-btn"
@@ -690,7 +691,21 @@ export default function GestioneAssegni() {
                   fontSize: 13
                 }}
               >
-                Reset Filtri
+                Reset
+              </button>
+              <button
+                onClick={() => setShowFilters(false)}
+                style={{
+                  padding: '8px 12px',
+                  background: '#64748b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13
+                }}
+              >
+                ✕
               </button>
             </div>
           </div>
