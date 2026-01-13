@@ -936,7 +936,7 @@ export default function GestioneAssegni() {
                     <React.Fragment key={carnetId}>
                       {/* Carnet Header with Print Button */}
                       <tr style={{ background: '#f0f9ff' }}>
-                        <td colSpan={3} style={{ padding: '8px 12px' }}>
+                        <td colSpan={4} style={{ padding: '8px 12px' }}>
                           <strong>Carnet {carnetIdx + 1}</strong>
                           <span style={{ color: '#666', marginLeft: 10, fontSize: 13 }}>
                             (Assegni {carnetAssegni.length} - Totale: {formatEuro(carnetAssegni.reduce((s, a) => s + (parseFloat(a.importo) || 0), 0))})
