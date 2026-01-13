@@ -61,7 +61,7 @@ export default function ArchivioFatture() {
       params.append('limit', '100');
       
       const res = await api.get(`/api/fatture-ricevute/archivio?${params.toString()}`);
-      setFatture(res.data.items || []);
+      setFatture(res.data.fatture || res.data.items || []);
     } catch (err) {
       console.error('Errore caricamento fatture:', err);
     }
