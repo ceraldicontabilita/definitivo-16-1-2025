@@ -218,25 +218,66 @@ def parse_amount(amount_str: str) -> float:
 def get_tributo_name(codice: str) -> str:
     """Get tributo description from code."""
     codici = {
+        # Ritenute lavoro dipendente e autonomo (1xxx)
         "1001": "Ritenute su redditi di lavoro dipendente",
+        "1002": "Ritenute su redditi assimilati a lavoro dipendente",
+        "1012": "Ritenute su indennità per cessazione rapporto lavoro",
         "1040": "Ritenute su redditi di lavoro autonomo",
+        "1053": "Ritenute su dividendi",
+        "1100": "Imposta sostitutiva su plusvalenze",
+        
+        # Addizionali IRPEF (17xx)
         "1701": "Addizionale regionale IRPEF",
         "1704": "Addizionale comunale IRPEF - Acconto",
         "1705": "Addizionale comunale IRPEF - Saldo",
         "1712": "Acconto IRPEF su trattamento fine rapporto",
         "1713": "Saldo IRPEF su trattamento fine rapporto",
+        "1714": "IRPEF su rivalutazione TFR",
+        
+        # IRES (2xxx)
         "2001": "IRES - Acconto prima rata",
         "2002": "IRES - Acconto seconda rata",
         "2003": "IRES - Saldo",
+        "2004": "Addizionale IRES",
+        
+        # Imposte sostitutive TFR (25xx) - IMPORTANTE
         "2501": "Imposta sostitutiva rivalutazione TFR 17% - Acconto",
         "2502": "Imposta sostitutiva rivalutazione TFR 17% - Saldo",
-        "2503": "Imposta sostitutiva TFR destinato a forme pensionistiche",
+        "2503": "Imposta sostitutiva TFR a forme pensionistiche",
+        
+        # Addizionali regionali e comunali (3xxx)
         "3801": "Addizionale regionale IRPEF",
-        "3802": "Addizionale comunale IRPEF",
+        "3802": "Addizionale comunale IRPEF - Autotassazione",
+        "3843": "Addizionale comunale IRPEF - Acconto",
+        "3844": "Addizionale comunale IRPEF - Saldo",
         "3847": "IMU - Immobili gruppo D - Stato",
         "3848": "IMU - Immobili gruppo D - Incremento comune",
-        "6001": "IVA mensile",
-        "6099": "IVA annuale",
+        "3850": "Diritto camerale",
+        "3852": "Sanzioni diritto camerale",
+        
+        # IVA (6xxx)
+        "6001": "IVA - Versamento mensile gennaio",
+        "6002": "IVA - Versamento mensile febbraio",
+        "6003": "IVA - Versamento mensile marzo",
+        "6004": "IVA - Versamento mensile aprile",
+        "6005": "IVA - Versamento mensile maggio",
+        "6006": "IVA - Versamento mensile giugno",
+        "6007": "IVA - Versamento mensile luglio",
+        "6008": "IVA - Versamento mensile agosto",
+        "6009": "IVA - Versamento mensile settembre",
+        "6010": "IVA - Versamento mensile ottobre",
+        "6011": "IVA - Versamento mensile novembre",
+        "6012": "IVA - Versamento mensile dicembre",
+        "6013": "IVA - Versamento acconto",
+        "6031": "IVA - Versamento trimestrale I",
+        "6032": "IVA - Versamento trimestrale II",
+        "6033": "IVA - Versamento trimestrale III",
+        "6034": "IVA - Versamento trimestrale IV",
+        "6035": "IVA - Versamento trimestrale soggetti speciali",
+        "6099": "IVA - Versamento annuale",
+        "6494": "IVA - Credito anno precedente",
+        
+        # INPS (5xxx)
         "5100": "Contributi INPS",
     }
     return codici.get(codice, f"Tributo {codice}")
