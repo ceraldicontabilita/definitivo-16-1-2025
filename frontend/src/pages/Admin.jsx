@@ -1033,11 +1033,7 @@ function FattureAdminTab() {
   const [updating, setUpdating] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
 
-  useEffect(() => {
-    loadFattureStats();
-  }, []);
-
-  const loadFattureStats = async () => {
+  const loadFattureStats = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/api/admin/fatture-stats');
@@ -1046,7 +1042,11 @@ function FattureAdminTab() {
       console.error('Errore caricamento stats fatture:', e);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    loadFattureStats();
+  }, [loadFattureStats]);
 
   const handleSetMetodoPagamento = async (metodo) => {
     if (!confirmAction) {
