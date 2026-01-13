@@ -202,7 +202,6 @@ const router = createBrowserRouter([
       // === BANCA & PAGAMENTI ===
       { path: "prima-nota", element: <LazyPage><PrimaNota /></LazyPage> },
       { path: "riconciliazione-smart", element: <LazyPage><RiconciliazioneSmart /></LazyPage> },
-      { path: "riconciliazione", element: <LazyPage><Riconciliazione /></LazyPage> },
       { path: "dashboard-riconciliazione", element: <LazyPage><DashboardRiconciliazione /></LazyPage> },
       { path: "gestione-assegni", element: <LazyPage><GestioneAssegni /></LazyPage> },
       { path: "archivio-bonifici", element: <LazyPage><ArchivioBonifici /></LazyPage> },
@@ -210,6 +209,10 @@ const router = createBrowserRouter([
       
       // === DIPENDENTI ===
       { path: "dipendenti", element: <LazyPage><GestioneDipendenti /></LazyPage> },
+      { path: "dipendenti-retribuzione", element: <LazyPage><DipendenteRetribuzione /></LazyPage> },
+      { path: "dipendenti-progressivi", element: <LazyPage><DipendenteProgressivi /></LazyPage> },
+      { path: "dipendenti-bonifici", element: <LazyPage><DipendenteBonifici /></LazyPage> },
+      { path: "dipendenti-agevolazioni", element: <LazyPage><DipendenteAgevolazioni /></LazyPage> },
       { path: "dipendenti-contratti", element: <LazyPage><DipendenteContratti /></LazyPage> },
       { path: "cedolini", element: <LazyPage><Cedolini /></LazyPage> },
       { path: "prima-nota-salari", element: <LazyPage><PrimaNotaSalari /></LazyPage> },
