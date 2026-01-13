@@ -136,221 +136,78 @@ export default function GestioneDipendenti() {
         gap: 10
       }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)' }}>👥 Gestione Dipendenti</h1>
+          <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)', color: '#1a365d' }}>👥 Anagrafica Dipendenti</h1>
           <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: 'clamp(12px, 3vw, 14px)' }}>
-            Anagrafica, prima nota salari, libro unico
+            Gestione anagrafica del personale
           </p>
         </div>
         
-        {activeTab === 'anagrafica' && (
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              padding: '10px 20px',
-              background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
-            }}
-            data-testid="add-employee-btn"
-          >
-            ➕ Nuovo Dipendente
-          </button>
-        )}
+        <button
+          onClick={() => setShowForm(true)}
+          style={{
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
+          }}
+          data-testid="add-employee-btn"
+        >
+          ➕ Nuovo Dipendente
+        </button>
       </div>
 
-      {/* Tabs */}
-      <div style={{ 
-        display: 'flex', 
-        gap: 4, 
-        marginBottom: 20, 
-        background: '#f1f5f9',
-        padding: 4,
-        borderRadius: 12,
-        overflowX: 'auto'
-      }}>
-        <TabButton 
-          active={activeTab === 'anagrafica'} 
-          onClick={() => setActiveTab('anagrafica')}
-          icon="👤"
-          label="Anagrafica"
-          color="#2196f3"
-          testId="tab-anagrafica"
-        />
-        <TabButton 
-          active={activeTab === 'contratti'} 
-          onClick={() => setActiveTab('contratti')}
-          icon="📄"
-          label="Contratti"
-          color="#8b5cf6"
-          testId="tab-contratti"
-        />
-        <TabButton 
-          active={activeTab === 'salari'} 
-          onClick={() => setActiveTab('salari')}
-          icon="📒"
-          label="Prima Nota"
-          color="#ff9800"
-          testId="tab-prima-nota"
-        />
-        <TabButton 
-          active={activeTab === 'libro-unico'} 
-          onClick={() => setActiveTab('libro-unico')}
-          icon="📚"
-          label="Libro Unico"
-          color="#10b981"
-          testId="tab-libro-unico"
-        />
-        <TabButton 
-          active={activeTab === 'libretti'} 
-          onClick={() => setActiveTab('libretti')}
-          icon="🏥"
-          label="Libretti Sanitari"
-          color="#ef4444"
-          testId="tab-libretti"
-        />
-        <TabButton 
-          active={activeTab === 'acconti'} 
-          onClick={() => setActiveTab('acconti')}
-          icon="💰"
-          label="Acconti"
-          color="#e91e63"
-          testId="tab-acconti"
-        />
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
+        <KPICard title="Totale Dipendenti" value={dipendenti.length} color="#2196f3" icon="👥" />
+        <KPICard title="Dati Completi" value={completeCount} color="#4caf50" icon="✅" />
+        <KPICard title="Da Completare" value={dipendenti.length - completeCount} color="#ff9800" icon="⚠️" />
       </div>
 
-      {/* TAB: Anagrafica */}
-      {activeTab === 'anagrafica' && (
-        <>
-          {/* KPI Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 20 }}>
-            <KPICard title="Totale Dipendenti" value={dipendenti.length} color="#2196f3" icon="👥" />
-            <KPICard title="Dati Completi" value={completeCount} color="#4caf50" icon="✅" />
-            <KPICard title="Da Completare" value={dipendenti.length - completeCount} color="#ff9800" icon="⚠️" />
-          </div>
-
-          {/* Actions Bar */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              type="text"
-              placeholder="🔍 Cerca dipendente..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ 
-                padding: '10px 14px', 
-                borderRadius: 8, 
-                border: '1px solid #e2e8f0', 
-                minWidth: 200, 
-                flex: '1 1 200px',
-                fontSize: 14
-              }}
-              data-testid="search-employee"
-            />
-            <select
-              value={filterMansione}
-              onChange={(e) => setFilterMansione(e.target.value)}
-              style={{ 
-                padding: '10px 14px', 
-                borderRadius: 8, 
-                border: '1px solid #e2e8f0',
-                fontSize: 14
-              }}
-            >
-              <option value="">Tutte le mansioni</option>
-              {uniqueMansioni.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Dipendenti Table */}
-          <DipendenteTable
-            dipendenti={dipendenti}
-            loading={loading}
-            onView={openDetail}
-            onDelete={handleDelete}
-          />
-        </>
-      )}
-
-
-      {/* TAB: Contratti - Componente Ottimizzato */}
-      {activeTab === 'contratti' && <ContrattiTab />}
-
-      {/* TAB: Prima Nota Salari - Componente Ottimizzato */}
-      {activeTab === 'salari' && <PrimaNotaSalariTab />}
-
-      {/* TAB: Libro Unico - Componente Ottimizzato */}
-      {activeTab === 'libro-unico' && (
-        <LibroUnicoTab
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          onChangeYear={setSelectedYear}
-          onChangeMonth={setSelectedMonth}
+      {/* Actions Bar */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input
+          type="text"
+          placeholder="🔍 Cerca dipendente..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ 
+            padding: '10px 14px', 
+            borderRadius: 8, 
+            border: '1px solid #e2e8f0', 
+            minWidth: 200, 
+            flex: '1 1 200px',
+            fontSize: 14
+          }}
+          data-testid="search-employee"
         />
-      )}
+        <select
+          value={filterMansione}
+          onChange={(e) => setFilterMansione(e.target.value)}
+          style={{ 
+            padding: '10px 14px', 
+            borderRadius: 8, 
+            border: '1px solid #e2e8f0',
+            fontSize: 14
+          }}
+        >
+          <option value="">Tutte le mansioni</option>
+          {uniqueMansioni.map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      </div>
 
-      {/* TAB: Libretti Sanitari - Componente Ottimizzato */}
-      {activeTab === 'libretti' && <LibrettiSanitariTab />}
-
-      {/* TAB: Acconti TFR/Ferie/13ima/14ima/Prestiti */}
-      {activeTab === 'acconti' && (
-        <div style={{ background: 'white', borderRadius: 12, padding: 16 }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: 16 }}>
-            💰 Gestione Acconti Dipendenti
-          </h3>
-          <p style={{ color: '#666', marginBottom: 16, fontSize: 13 }}>
-            Seleziona un dipendente per gestire i suoi acconti (TFR, Ferie, 13ª, 14ª, Prestiti)
-          </p>
-          
-          {/* Selettore Dipendente */}
-          <div style={{ marginBottom: 20 }}>
-            <select
-              value={selectedDipendente?.id || ''}
-              onChange={(e) => {
-                const dip = dipendenti.find(d => d.id === e.target.value);
-                setSelectedDipendente(dip || null);
-              }}
-              style={{ 
-                padding: '12px 16px', 
-                borderRadius: 8, 
-                border: '1px solid #e2e8f0',
-                fontSize: 14,
-                minWidth: 300,
-                maxWidth: '100%'
-              }}
-              data-testid="select-dipendente-acconti"
-            >
-              <option value="">-- Seleziona Dipendente --</option>
-              {dipendenti.map(d => (
-                <option key={d.id} value={d.id}>{d.nome_completo || d.nome}</option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Contenuto Acconti */}
-          {selectedDipendente ? (
-            <AccontiTab 
-              dipendenteId={selectedDipendente.id} 
-              dipendenteName={selectedDipendente.nome_completo || selectedDipendente.nome}
-            />
-          ) : (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: 60, 
-              color: '#9e9e9e',
-              background: '#fafafa',
-              borderRadius: 8
-            }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>👆</div>
-              <div>Seleziona un dipendente dalla lista sopra</div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Dipendenti Table */}
+      <DipendenteTable
+        dipendenti={dipendenti}
+        loading={loading}
+        onView={openDetail}
+        onDelete={handleDelete}
+      />
 
       {/* Modal Dettaglio Dipendente */}
       {selectedDipendente && (
