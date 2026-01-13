@@ -24,18 +24,20 @@ async def ask_question(
     Body:
     {
         "question": "Qual era l'ultima fattura di Naturissima?",
-        "session_id": "optional-session-id"
+        "session_id": "optional-session-id",
+        "anno": 2025  // Anno di riferimento (opzionale, default anno corrente)
     }
     """
     question = data.get("question", "").strip()
     session_id = data.get("session_id")
+    anno = data.get("anno")  # Anno selezionato dall'utente
     
     if not question:
         raise HTTPException(status_code=400, detail="La domanda è richiesta")
     
     try:
         chat_service = get_chat_service(session_id)
-        result = await chat_service.ask(question)
+        result = await chat_service.ask(question, anno=anno)
         return result
     except Exception as e:
         logger.exception(f"Errore chat AI: {e}")
