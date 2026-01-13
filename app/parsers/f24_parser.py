@@ -76,22 +76,55 @@ def parse_f24_pdf(pdf_bytes: bytes) -> Dict[str, Any]:
                 if banca_match:
                     result["banca"] = banca_match.group(0).strip()
                 
-                # Extract ERARIO tributes (1001, 1701, 1704, 2501, 2502, 2503, etc.)
-                # Pattern: codice_tributo  mese_rif/anno  anno  importo_debito  importo_credito
-                # Codici che iniziano con 1xxx (IRPEF, ritenute) e 2xxx (addizionali, altri)
-                erario_pattern = re.findall(r'([12]\d{3})\s+(\d{4})\s+(\d{4})\s+([\d,.]+)?\s*([\d,.]+)?', text)
-                for match in erario_pattern:
-                    codice, mese_rif, anno, debito, credito = match
-                    tributo = {
-                        "codice": codice,
-                        "mese_riferimento": mese_rif,
-                        "anno": anno,
-                        "debito": parse_amount(debito),
-                        "credito": parse_amount(credito),
-                        "tipo": get_tributo_name(codice)
-                    }
-                    if tributo["debito"] > 0 or tributo["credito"] > 0:
-                        result["tributi_erario"].append(tributo)
+                # Extract ERARIO tributes - MIGLIORATO
+                # Supporta tutti i codici: 1xxx, 2xxx, 6xxx (IVA)
+                # Pattern più flessibile per diversi formati F24
+                
+                # Pattern 1: codice_tributo rateazione/regione mese/anno importo_debito importo_credito
+                erario_patterns = [
+                    # Pattern standard: 1001 0101 2022 48,00
+                    r'([1-6]\d{3})\s+(\d{4})\s+(\d{4})\s+([\d.,]+)\s*([\d.,]*)',
+                    # Pattern con spazi: 1 0 0 1  0 1 0 1  2 0 2 2  4 8 , 0 0
+                    r'([1-6])\s*(\d)\s*(\d)\s*(\d)\s+(\d)\s*(\d)\s*(\d)\s*(\d)\s+(\d)\s*(\d)\s*(\d)\s*(\d)\s+([\d\s.,]+)',
+                    # Pattern con mese/anno separati: 2501 12 2022 48,00
+                    r'([1-6]\d{3})\s+(\d{1,2})\s+(\d{4})\s+([\d.,]+)',
+                ]
+                
+                seen_tributi = set()
+                
+                for pattern in erario_patterns:
+                    matches = re.findall(pattern, text)
+                    for match in matches:
+                        if len(match) >= 4:
+                            if len(match[0]) == 1:
+                                # Pattern con cifre separate
+                                codice = ''.join(match[:4])
+                                mese_rif = ''.join(match[4:8])
+                                anno = ''.join(match[8:12])
+                                debito = match[12].replace(' ', '') if len(match) > 12 else '0'
+                                credito = '0'
+                            elif len(match) == 4:
+                                codice, mese_rif, anno, debito = match
+                                credito = '0'
+                            else:
+                                codice, mese_rif, anno, debito, credito = match[:5]
+                            
+                            # Evita duplicati
+                            key = f"{codice}_{mese_rif}_{anno}"
+                            if key in seen_tributi:
+                                continue
+                            seen_tributi.add(key)
+                            
+                            tributo = {
+                                "codice": codice,
+                                "mese_riferimento": mese_rif,
+                                "anno": anno,
+                                "debito": parse_amount(debito),
+                                "credito": parse_amount(credito) if credito else 0,
+                                "tipo": get_tributo_name(codice)
+                            }
+                            if tributo["debito"] > 0 or tributo["credito"] > 0:
+                                result["tributi_erario"].append(tributo)
                 
                 # Extract INPS contributions (5100, DM10, etc.)
                 # Pattern: sede codice causale matricola periodo importo
