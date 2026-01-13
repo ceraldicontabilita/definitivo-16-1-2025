@@ -3,8 +3,8 @@ import api from '../api';
 import { formatEuro } from '../lib/utils';
 
 /**
- * Riconciliazione F24
- * Gestione F24 commercialista → Quietanza → Banca
+ * Gestione F24 Unificata
+ * Combina visualizzazione F24, upload, riconciliazione con quietanze
  */
 export default function RiconciliazioneF24() {
   const [dashboard, setDashboard] = useState(null);
@@ -14,8 +14,11 @@ export default function RiconciliazioneF24() {
   const [uploading, setUploading] = useState(false);
   const [filterStatus, setFilterStatus] = useState('da_pagare');
   
+  // Espansione righe per vedere tributi
+  const [expandedRows, setExpandedRows] = useState(new Set());
+  
   // Modali
-  const [showModal, setShowModal] = useState(null); // 'da_pagare', 'pagati', 'quietanze', 'alert'
+  const [showModal, setShowModal] = useState(null);
   const [modalData, setModalData] = useState([]);
   const [quietanzeList, setQuietanzeList] = useState([]);
 
@@ -63,20 +66,29 @@ export default function RiconciliazioneF24() {
     setUploading(true);
     let successCount = 0;
     let errorCount = 0;
+    let duplicateCount = 0;
     
     for (let i = 0; i < files.length; i++) {
       try {
         const formData = new FormData();
         formData.append('file', files[i]);
-        await api.post('/api/f24-riconciliazione/commercialista/upload', formData);
-        successCount++;
+        const response = await api.post('/api/f24-riconciliazione/commercialista/upload', formData);
+        if (response.data.success === false) {
+          duplicateCount++;
+        } else {
+          successCount++;
+        }
       } catch (err) {
         console.error(`Errore upload ${files[i].name}:`, err);
         errorCount++;
       }
     }
     
-    alert(`✅ Caricati: ${successCount}\n${errorCount > 0 ? `❌ Errori: ${errorCount}` : ''}`);
+    let msg = `✅ Caricati: ${successCount}`;
+    if (duplicateCount > 0) msg += `\n⚠️ Già presenti: ${duplicateCount}`;
+    if (errorCount > 0) msg += `\n❌ Errori: ${errorCount}`;
+    alert(msg);
+    
     await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
     setUploading(false);
     e.target.value = '';
@@ -122,11 +134,22 @@ export default function RiconciliazioneF24() {
       const data = response.data;
       alert(`✅ Riconciliazione completata!\n${data.f24_riconciliati || 0} F24 riconciliati\n${data.nuovi_match || 0} nuovi match trovati`);
     } catch (err) {
-      // Se l'endpoint non esiste, fai refresh
       console.error('Errore riconciliazione:', err);
+      alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
     }
     await Promise.all([loadDashboard(), loadF24List(), loadAlerts()]);
     setUploading(false);
+  };
+
+  // Segna come pagato manualmente
+  const handleMarkAsPaid = async (f24Id) => {
+    if (!window.confirm('Segnare questo F24 come pagato?')) return;
+    try {
+      await api.put(`/api/f24-riconciliazione/commercialista/${f24Id}/pagato`);
+      await Promise.all([loadDashboard(), loadF24List()]);
+    } catch (err) {
+      alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
+    }
   };
 
   const handleDeleteF24 = async (id) => {
@@ -137,6 +160,17 @@ export default function RiconciliazioneF24() {
     } catch (err) {
       alert(`❌ Errore: ${err.response?.data?.detail || err.message}`);
     }
+  };
+
+  // Toggle espansione riga
+  const toggleRow = (id) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedRows(newExpanded);
   };
 
   // Carica dettagli per modale
@@ -165,10 +199,121 @@ export default function RiconciliazioneF24() {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('it-IT');
+  // Render dettagli tributi (espandibile)
+  const renderTributiDetails = (f24) => {
+    const sections = [];
+    
+    if (f24.sezione_erario?.length > 0) {
+      sections.push(
+        <div key="erario" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#1e40af', marginBottom: 6 }}>💰 SEZIONE ERARIO</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#dbeafe' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Codice</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Descrizione</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Periodo</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Credito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f24.sezione_erario.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6, fontFamily: 'monospace', fontWeight: 600 }}>{t.codice_tributo}</td>
+                  <td style={{ padding: 6 }}>{t.descrizione || '-'}</td>
+                  <td style={{ padding: 6 }}>{t.periodo_riferimento || t.anno || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right', color: '#dc2626' }}>{formatEuro(t.importo_debito || 0)}</td>
+                  <td style={{ padding: 6, textAlign: 'right', color: '#16a34a' }}>{formatEuro(t.importo_credito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    if (f24.sezione_inps?.length > 0) {
+      sections.push(
+        <div key="inps" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#065f46', marginBottom: 6 }}>🏛️ SEZIONE INPS</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#dcfce7' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Causale</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Matricola</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Periodo</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f24.sezione_inps.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6, fontFamily: 'monospace', fontWeight: 600 }}>{t.causale}</td>
+                  <td style={{ padding: 6 }}>{t.matricola || '-'}</td>
+                  <td style={{ padding: 6 }}>{t.periodo_riferimento || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right', color: '#dc2626' }}>{formatEuro(t.importo_debito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    if (f24.sezione_regioni?.length > 0) {
+      sections.push(
+        <div key="regioni" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#92400e', marginBottom: 6 }}>🗺️ SEZIONE REGIONI</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#fef3c7' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Codice</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Regione</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f24.sezione_regioni.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6, fontFamily: 'monospace', fontWeight: 600 }}>{t.codice_tributo}</td>
+                  <td style={{ padding: 6 }}>{t.codice_regione || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right', color: '#dc2626' }}>{formatEuro(t.importo_debito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    if (f24.sezione_tributi_locali?.length > 0) {
+      sections.push(
+        <div key="locali" style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#7c3aed', marginBottom: 6 }}>🏠 TRIBUTI LOCALI/IMU</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr style={{ background: '#f3e8ff' }}>
+                <th style={{ padding: 6, textAlign: 'left' }}>Codice</th>
+                <th style={{ padding: 6, textAlign: 'left' }}>Comune</th>
+                <th style={{ padding: 6, textAlign: 'right' }}>Debito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {f24.sezione_tributi_locali.map((t, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: 6, fontFamily: 'monospace', fontWeight: 600 }}>{t.codice_tributo}</td>
+                  <td style={{ padding: 6 }}>{t.codice_comune || '-'}</td>
+                  <td style={{ padding: 6, textAlign: 'right', color: '#dc2626' }}>{formatEuro(t.importo_debito || 0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    
+    return sections.length > 0 ? sections : <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>Nessun tributo estratto</div>;
   };
 
   // Card Component cliccabile
@@ -233,29 +378,29 @@ export default function RiconciliazioneF24() {
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span>📋</span> Riconciliazione F24
+            <span>📋</span> Gestione F24
           </h1>
           <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: 14 }}>
-            Gestione F24 commercialista → Quietanza → Riconciliazione
+            Upload, visualizzazione e riconciliazione F24
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
             onClick={handleRiconcilia}
             disabled={uploading}
-            style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500 }}
+            style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, opacity: uploading ? 0.6 : 1 }}
           >
             🔄 Riconcilia
           </button>
-          <label style={{ cursor: 'pointer' }}>
+          <label style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}>
             <input type="file" accept=".pdf" multiple style={{ display: 'none' }} onChange={handleUploadF24} disabled={uploading} />
-            <span style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500 }}>
+            <span style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, opacity: uploading ? 0.6 : 1 }}>
               {uploading ? '⏳' : '📤'} Carica F24
             </span>
           </label>
-          <label style={{ cursor: 'pointer' }}>
+          <label style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}>
             <input type="file" accept=".pdf" multiple style={{ display: 'none' }} onChange={handleUploadQuietanza} disabled={uploading} />
-            <span style={{ padding: '8px 16px', background: '#10b981', color: 'white', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500 }}>
+            <span style={{ padding: '8px 16px', background: '#10b981', color: 'white', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, opacity: uploading ? 0.6 : 1 }}>
               📄 Carica Quietanze
             </span>
           </label>
@@ -304,13 +449,13 @@ export default function RiconciliazioneF24() {
       {/* Filter Tabs */}
       <div style={{ display: 'flex', gap: 4, background: '#f3f4f6', padding: 4, borderRadius: 8, marginBottom: 16, width: 'fit-content' }}>
         {[
-          { key: 'da_pagare', label: 'Da Pagare' },
-          { key: 'pagato', label: 'Pagati' },
-          { key: 'eliminato', label: 'Eliminati' }
+          { key: 'da_pagare', label: 'Da Pagare', icon: '⏰' },
+          { key: 'pagato', label: 'Pagati', icon: '✅' },
+          { key: 'eliminato', label: 'Eliminati', icon: '🗑️' }
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setFilterStatus(tab.key)}
+            onClick={() => { setFilterStatus(tab.key); setExpandedRows(new Set()); }}
             style={{
               padding: '8px 16px',
               background: filterStatus === tab.key ? 'white' : 'transparent',
@@ -319,18 +464,22 @@ export default function RiconciliazioneF24() {
               cursor: 'pointer',
               fontWeight: filterStatus === tab.key ? 600 : 400,
               color: filterStatus === tab.key ? '#3b82f6' : '#6b7280',
-              boxShadow: filterStatus === tab.key ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+              boxShadow: filterStatus === tab.key ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
             }}
           >
-            {tab.label}
+            <span>{tab.icon}</span> {tab.label}
           </button>
         ))}
       </div>
 
-      {/* F24 List */}
+      {/* F24 List con righe espandibili */}
       <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e7eb', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
           <strong>Lista F24 ({f24List.length})</strong>
+          <span style={{ marginLeft: 8, fontSize: 12, color: '#6b7280' }}>Clicca su una riga per vedere i tributi</span>
         </div>
         
         {f24List.length === 0 ? (
@@ -339,71 +488,120 @@ export default function RiconciliazioneF24() {
             <div>Nessun F24 trovato</div>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f9fafb' }}>
-                <th style={{ padding: 12, textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>File</th>
-                <th style={{ padding: 12, textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Tributi</th>
-                <th style={{ padding: 12, textAlign: 'right', fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Importo</th>
-                <th style={{ padding: 12, textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Stato</th>
-                <th style={{ padding: 12, textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', borderBottom: '1px solid #e5e7eb' }}>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {f24List.map((f24) => (
-                <tr key={f24.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: 12 }}>
-                    <div style={{ fontWeight: 500 }}>{f24.file_name || 'F24'}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
-                      Scadenza: {f24.dati_generali?.data_versamento || '-'}
+          <div>
+            {f24List.map((f24) => (
+              <div key={f24.id}>
+                {/* Riga principale cliccabile */}
+                <div 
+                  onClick={() => toggleRow(f24.id)}
+                  style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr auto auto auto auto', 
+                    gap: 16, 
+                    padding: '12px 20px', 
+                    borderBottom: '1px solid #f3f4f6',
+                    cursor: 'pointer',
+                    background: expandedRows.has(f24.id) ? '#f8fafc' : 'white',
+                    transition: 'background 0.15s',
+                    alignItems: 'center'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = expandedRows.has(f24.id) ? '#f8fafc' : 'white'}
+                >
+                  {/* File info */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ transform: expandedRows.has(f24.id) ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▶</span>
+                      <div>
+                        <div style={{ fontWeight: 500 }}>{f24.file_name || 'F24'}</div>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          Scadenza: {f24.dati_generali?.data_versamento || '-'}
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td style={{ padding: 12 }}>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {(f24.sezione_erario?.length || 0) > 0 && (
-                        <span style={{ padding: '2px 6px', background: '#dbeafe', color: '#1e40af', borderRadius: 4, fontSize: 11 }}>
-                          ERARIO: {f24.sezione_erario.length}
-                        </span>
-                      )}
-                      {(f24.sezione_inps?.length || 0) > 0 && (
-                        <span style={{ padding: '2px 6px', background: '#dcfce7', color: '#166534', borderRadius: 4, fontSize: 11 }}>
-                          INPS: {f24.sezione_inps.length}
-                        </span>
-                      )}
-                      {(f24.sezione_regioni?.length || 0) > 0 && (
-                        <span style={{ padding: '2px 6px', background: '#fef3c7', color: '#92400e', borderRadius: 4, fontSize: 11 }}>
-                          REGIONI: {f24.sezione_regioni.length}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'right', fontWeight: 600, fontSize: 16 }}>
+                  </div>
+
+                  {/* Tributi badges */}
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    {(f24.sezione_erario?.length || 0) > 0 && (
+                      <span style={{ padding: '2px 6px', background: '#dbeafe', color: '#1e40af', borderRadius: 4, fontSize: 11 }}>
+                        ERARIO: {f24.sezione_erario.length}
+                      </span>
+                    )}
+                    {(f24.sezione_inps?.length || 0) > 0 && (
+                      <span style={{ padding: '2px 6px', background: '#dcfce7', color: '#166534', borderRadius: 4, fontSize: 11 }}>
+                        INPS: {f24.sezione_inps.length}
+                      </span>
+                    )}
+                    {(f24.sezione_regioni?.length || 0) > 0 && (
+                      <span style={{ padding: '2px 6px', background: '#fef3c7', color: '#92400e', borderRadius: 4, fontSize: 11 }}>
+                        REGIONI: {f24.sezione_regioni.length}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Importo */}
+                  <div style={{ fontWeight: 600, fontSize: 16, textAlign: 'right' }}>
                     {formatEuro(f24.totali?.saldo_netto || 0)}
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'center' }}>
-                    <span style={{
-                      padding: '4px 10px',
-                      borderRadius: 9999,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      background: f24.status === 'pagato' ? '#d1fae5' : f24.status === 'eliminato' ? '#fee2e2' : '#fef3c7',
-                      color: f24.status === 'pagato' ? '#065f46' : f24.status === 'eliminato' ? '#991b1b' : '#92400e'
-                    }}>
-                      {f24.status === 'pagato' ? '✅ Pagato' : f24.status === 'eliminato' ? '🗑️ Eliminato' : '⏰ Da Pagare'}
-                    </span>
-                  </td>
-                  <td style={{ padding: 12, textAlign: 'center' }}>
+                  </div>
+
+                  {/* Stato */}
+                  <span style={{
+                    padding: '4px 10px',
+                    borderRadius: 9999,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    background: f24.status === 'pagato' ? '#d1fae5' : f24.status === 'eliminato' ? '#fee2e2' : '#fef3c7',
+                    color: f24.status === 'pagato' ? '#065f46' : f24.status === 'eliminato' ? '#991b1b' : '#92400e'
+                  }}>
+                    {f24.status === 'pagato' ? '✅ Pagato' : f24.status === 'eliminato' ? '🗑️ Eliminato' : '⏰ Da Pagare'}
+                  </span>
+
+                  {/* Azioni */}
+                  <div style={{ display: 'flex', gap: 6 }} onClick={(e) => e.stopPropagation()}>
+                    {f24.status === 'da_pagare' && (
+                      <button
+                        onClick={() => handleMarkAsPaid(f24.id)}
+                        style={{ padding: '6px 10px', background: '#d1fae5', color: '#065f46', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+                        title="Segna come pagato"
+                      >
+                        ✅
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteF24(f24.id)}
                       style={{ padding: '6px 10px', background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+                      title="Elimina"
                     >
                       🗑️
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+
+                {/* Dettagli tributi espandibili */}
+                {expandedRows.has(f24.id) && (
+                  <div style={{ padding: '16px 20px 16px 48px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb' }}>
+                    {renderTributiDetails(f24)}
+                    
+                    {/* Se pagato, mostra associazione quietanza */}
+                    {f24.status === 'pagato' && f24.quietanza_id && (
+                      <div style={{ marginTop: 12, padding: 12, background: '#d1fae5', borderRadius: 8 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: '#065f46', marginBottom: 4 }}>📄 QUIETANZA ASSOCIATA</div>
+                        <div style={{ fontSize: 12 }}>
+                          Protocollo: <span style={{ fontFamily: 'monospace' }}>{f24.protocollo_quietanza || '-'}</span>
+                        </div>
+                        {f24.differenza_importo && Math.abs(f24.differenza_importo) > 0.01 && (
+                          <div style={{ fontSize: 12, color: '#92400e', marginTop: 4 }}>
+                            ⚠️ Differenza: {formatEuro(f24.differenza_importo)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -416,7 +614,8 @@ export default function RiconciliazioneF24() {
         <ol style={{ margin: 0, paddingLeft: 20, color: '#1e40af', fontSize: 13 }}>
           <li><strong>Carica F24:</strong> Carica i PDF dalla commercialista (anche multipli)</li>
           <li><strong>Carica Quietanze:</strong> Carica le quietanze dall&apos;Agenzia delle Entrate</li>
-          <li><strong>Riconcilia:</strong> Clicca per riassociare automaticamente F24 e Quietanze</li>
+          <li><strong>Riconcilia:</strong> Associa automaticamente F24 e Quietanze per importo</li>
+          <li><strong>Clicca sulla riga:</strong> Per vedere i dettagli dei tributi</li>
         </ol>
       </div>
 
@@ -433,16 +632,16 @@ export default function RiconciliazioneF24() {
           alignItems: 'center', 
           justifyContent: 'center',
           zIndex: 1000 
-        }}>
+        }} onClick={() => setShowModal(null)}>
           <div style={{ 
             background: 'white', 
             borderRadius: 16, 
             padding: 24, 
-            maxWidth: 900, 
-            width: '90%', 
-            maxHeight: '80vh', 
+            maxWidth: 950, 
+            width: '95%', 
+            maxHeight: '85vh', 
             overflow: 'auto' 
-          }}>
+          }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h2 style={{ margin: 0, fontSize: 20 }}>
                 {showModal === 'da_pagare' && '⏰ F24 Da Pagare'}
@@ -524,8 +723,17 @@ export default function RiconciliazioneF24() {
                                 </div>
                               )}
                             </>
+                          ) : f24.riconciliato_quietanza ? (
+                            <div style={{ color: '#065f46' }}>
+                              <div style={{ fontWeight: 500 }}>Quietanza associata</div>
+                              {f24.protocollo_quietanza && (
+                                <div style={{ fontSize: 10, color: '#6b7280', marginTop: 4, fontFamily: 'monospace' }}>
+                                  {f24.protocollo_quietanza}
+                                </div>
+                              )}
+                            </div>
                           ) : (
-                            <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>Nessuna quietanza</div>
+                            <div style={{ color: '#9ca3af', fontStyle: 'italic' }}>Segnato pagato manualmente</div>
                           )}
                         </div>
                       </div>
@@ -574,7 +782,7 @@ export default function RiconciliazioneF24() {
                   <div key={alert.id} style={{ border: '1px solid #fecaca', borderRadius: 8, padding: 12, background: '#fef2f2' }}>
                     <div style={{ fontWeight: 500, color: '#991b1b' }}>{alert.message}</div>
                     <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
-                      {formatDate(alert.created_at)} {alert.importo && `| ${formatEuro(alert.importo)}`}
+                      {alert.importo && formatEuro(alert.importo)}
                     </div>
                   </div>
                 ))}
