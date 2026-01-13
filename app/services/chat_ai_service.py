@@ -253,31 +253,14 @@ Usa il grassetto (**testo**) per evidenziare informazioni importanti."""
             else:
                 full_message = f"DOMANDA UTENTE: {question}\n\nNOTA: Non ho trovato dati specifici nel database per questa richiesta. Rispondi che non ci sono dati disponibili."
             
-            # Aggiungi alla history
-            self.conversation_history.append({"role": "user", "content": full_message})
-            
-            # Prepara messaggi per OpenAI
-            messages = [
-                {"role": "system", "content": self.system_message}
-            ] + self.conversation_history[-10:]  # Ultimi 10 messaggi per contesto
-            
-            # Chiama GPT-4o
-            response = await client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1000
-            )
-            
-            answer = response.choices[0].message.content
-            
-            # Salva risposta nella history
-            self.conversation_history.append({"role": "assistant", "content": answer})
+            # Invia al modello Claude
+            user_message = UserMessage(text=full_message)
+            response = await self.chat.send_message(user_message)
             
             return {
                 "success": True,
                 "question": question,
-                "answer": answer,
+                "answer": response,
                 "data_found": {k: len(v) for k, v in data.items() if v},
                 "session_id": self.session_id
             }
