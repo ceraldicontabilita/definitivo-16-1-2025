@@ -583,12 +583,37 @@ def get_descrizione_tributo(codice: str) -> str:
         "6494": "Interessi pagamento dilazionato - autotassazione",
         "6497": "IVA credito da compensare",
         
-        # IRAP
+        # IRAP - Autoliquidazione
+        "1868": "IRAP riallineamento principi contabili (D.Lgs. 192/2024)",
         "3800": "IRAP saldo",
+        "3805": "Interessi pagamento dilazionato tributi regionali",
         "3812": "IRAP acconto prima rata",
         "3813": "IRAP acconto seconda rata o unica soluzione",
+        "3858": "IRAP versamento mensile",
         "3881": "Maggior acconto I rata IRAP (L. 207/2024)",
         "3882": "Maggior acconto II rata IRAP (L. 207/2024)",
+        "3883": "IRAP compensazione credito (L. 190/2014)",
+        "4070": "CPB maggiorazione acconto IRAP (D.Lgs. 13/2024)",
+        
+        # IRAP - Ravvedimento operoso
+        "1993": "Interessi ravvedimento IRAP",
+        "8907": "Sanzione pecuniaria IRAP",
+        
+        # IRAP - Definizioni e accertamento
+        "9415": "IRAP accertamento con adesione - imposta",
+        "9416": "IRAP accertamento con adesione - sanzione",
+        "9466": "IRAP omessa impugnazione - imposta",
+        "9467": "IRAP omessa impugnazione - sanzione",
+        "9512": "IRAP conciliazione giudiziale - imposta",
+        "9513": "IRAP conciliazione giudiziale - sanzione",
+        "9607": "IRAP definizione sanzioni",
+        "9908": "IRAP adesione verbale constatazione - imposta",
+        "9909": "IRAP adesione verbale constatazione - sanzione",
+        "9920": "IRAP adesione invito comparire - imposta",
+        "9921": "IRAP adesione invito comparire - sanzione",
+        "9934": "IRAP contenzioso art.29 DL 78/2010 - imposta",
+        "9935": "IRAP contenzioso art.29 DL 78/2010 - interessi",
+        "9971": "IRAP contenzioso art.29 DL 78/2010 - sanzioni",
         
         # Addizionali regionali
         "3801": "Addizionale regionale IRPEF - sostituto d'imposta",
