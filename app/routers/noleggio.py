@@ -1,11 +1,18 @@
 """
 Router Gestione Noleggio Auto
 Estrae dati da fatture XML e permette gestione flotta aziendale.
+
+FORNITORI SUPPORTATI:
+- ALD Automotive (01924961004): Targa e contratto in descrizione linea
+- ARVAL (04911190488): Targa in descrizione, codice cliente in causali
+- Leasys (06714021000): Targa e modello in descrizione
+- LeasePlan (02615080963): NO targa in fattura - richiede associazione manuale
+
 CATEGORIE SPESE:
-- Canoni: Canone locazione, servizi, rifatturazione (con segno se nota credito), conguaglio km
-- Pedaggio: Gestione multe, pedaggi, telepass
+- Canoni: Canone locazione, servizi, rifatturazione, conguaglio km
+- Pedaggio: Gestione pedaggi, telepass
 - Verbali: Verbali, multe, sanzioni
-- Bollo: Tasse automobilistiche, bollo
+- Bollo: Tasse automobilistiche
 - Costi Extra: Penalità, addebiti extra
 - Riparazioni: Sinistri, danni, carrozzeria, meccanica
 """
@@ -22,83 +29,53 @@ logger = logging.getLogger(__name__)
 
 COLLECTION = "veicoli_noleggio"
 
-# Fornitori noleggio conosciuti
-FORNITORI_NOLEGGIO = [
-    "Leasys",
-    "ARVAL",
-    "ALD",
-    "LeasePlan",
-    "Alphabet",
-    "Hertz",
-    "Avis",
-    "Europcar",
-    "Locauto"
-]
+# Fornitori noleggio con P.IVA
+FORNITORI_NOLEGGIO = {
+    "ALD": "01924961004",
+    "ARVAL": "04911190488", 
+    "Leasys": "06714021000",
+    "LeasePlan": "02615080963"
+}
 
 # Pattern per targhe italiane
 TARGA_PATTERN = r'\b([A-Z]{2}\d{3}[A-Z]{2})\b'
 
-# ============================================
-# DIZIONARIO PARTI AUTO PER RIPARAZIONI
-# Fonte: pezzidiricambio24.it, auto-doc.it
-# ============================================
-PARTI_AUTO_RIPARAZIONI = {
-    # CARROZZERIA
-    "carrozzeria": [
-        "paraurti", "parafango", "cofano", "portiera", "porta", "specchietto",
-        "retrovisore", "fanale", "faro", "proiettore", "freccia", "indicatore",
-        "lunotto", "parabrezza", "vetro", "cristallo", "griglia", "calandra",
-        "passaruota", "minigonna", "spoiler", "alettone", "tetto", "montante",
-        "fiancata", "lamiera", "scocca", "verniciatura", "vernice", "lucidatura"
-    ],
-    # MECCANICA MOTORE
-    "motore": [
-        "motore", "testata", "cilindro", "pistone", "biella", "albero",
-        "distribuzione", "cinghia", "catena", "turbina", "turbo", "intercooler",
-        "radiatore", "pompa acqua", "termostato", "ventola", "olio", "filtro",
-        "candela", "iniettore", "carburatore", "collettore", "scarico", "marmitta",
-        "catalizzatore", "sonda lambda", "centralina", "sensore", "guarnizione"
-    ],
-    # FRENI
-    "freni": [
-        "freno", "freni", "disco", "pastiglie", "ganasce", "tamburo",
-        "pinza", "pompa freno", "servofreno", "abs", "pedale", "tubo freno",
-        "liquido freni", "cilindretto"
-    ],
-    # SOSPENSIONI
-    "sospensioni": [
-        "ammortizzatore", "molla", "sospensione", "braccetto", "braccio",
-        "tirante", "bielletta", "barra stabilizzatrice", "silent block",
-        "cuscinetto ruota", "mozzo", "snodo", "testina", "giunto"
-    ],
-    # TRASMISSIONE
-    "trasmissione": [
-        "cambio", "frizione", "volano", "semiasse", "giunto omocinetico",
-        "differenziale", "albero trasmissione", "cardano", "cuscinetto",
-        "sincronizzatore", "leveraggio"
-    ],
-    # IMPIANTO ELETTRICO
-    "elettrico": [
-        "batteria", "alternatore", "motorino avviamento", "starter",
-        "cablaggio", "fusibile", "relè", "interruttore", "pulsante",
-        "alzacristallo", "motorino", "tergicristallo", "spazzola"
-    ],
-    # CLIMATIZZAZIONE
-    "clima": [
-        "climatizzatore", "condizionatore", "compressore", "condensatore",
-        "evaporatore", "filtro abitacolo", "ventilatore", "riscaldamento"
-    ],
-    # PNEUMATICI E RUOTE
-    "ruote": [
-        "pneumatico", "gomma", "cerchio", "cerchione", "bullone ruota",
-        "convergenza", "equilibratura", "bilanciatura"
-    ]
-}
 
-# Lista flat di tutte le parole chiave riparazioni
-KEYWORDS_RIPARAZIONI = []
-for categoria, keywords in PARTI_AUTO_RIPARAZIONI.items():
-    KEYWORDS_RIPARAZIONI.extend(keywords)
+def estrai_codice_cliente(invoice: dict, fornitore: str) -> Optional[str]:
+    """
+    Estrae il codice cliente/contratto in base al fornitore.
+    Ogni fornitore ha un formato diverso.
+    """
+    supplier_vat = invoice.get("supplier_vat", "")
+    
+    # ALD: Contratto nella descrizione linea (numero 7-8 cifre)
+    if supplier_vat == FORNITORI_NOLEGGIO["ALD"]:
+        for linea in invoice.get("linee", []):
+            desc = linea.get("descrizione", "")
+            # Pattern: 7-8 cifre seguite da data
+            match = re.search(r'\s(\d{7,8})\s+\d{4}-\d{2}', desc)
+            if match:
+                return match.group(1)
+        return None
+    
+    # ARVAL: Codice cliente nel campo causali
+    elif supplier_vat == FORNITORI_NOLEGGIO["ARVAL"]:
+        causali = invoice.get("causali", [])
+        for c in causali:
+            match = re.search(r'Codice Cliente[_\s]*(\w+)', str(c))
+            if match:
+                return match.group(1)
+        return None
+    
+    # Leasys: Non ha codice cliente in fattura
+    elif supplier_vat == FORNITORI_NOLEGGIO["Leasys"]:
+        return None
+    
+    # LeasePlan: Non ha codice cliente in fattura
+    elif supplier_vat == FORNITORI_NOLEGGIO["LeasePlan"]:
+        return None
+    
+    return None
 
 
 def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = False) -> tuple:
@@ -106,16 +83,7 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     Categorizza una spesa in base alla descrizione.
     Returns: (categoria, importo_con_segno)
     
-    Categorie:
-    - canoni: Canone locazione, servizi, rifatturazione, conguaglio km
-    - pedaggio: Gestione multe, pedaggi, telepass
-    - verbali: Verbali, multe, sanzioni codice strada
-    - bollo: Tasse automobilistiche, bollo
-    - costi_extra: Penalità, addebiti extra, commissioni
-    - riparazioni: Sinistri, danni, carrozzeria, meccanica
-    
     IMPORTANTE: L'ordine dei controlli è cruciale per evitare falsi positivi.
-    Ad esempio "Turbo Diesel" nel nome modello non deve matchare "turbo" come riparazione.
     """
     desc_lower = descrizione.lower()
     importo_finale = abs(importo)
@@ -125,7 +93,6 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
         importo_finale = -abs(importo)
     
     # STEP 1: CANONI - Controlla PRIMA se è un canone (priorità alta)
-    # Questo evita che "BMW X3 Turbo" venga categorizzato come riparazione
     if any(kw in desc_lower for kw in ["canone", "locazione", "noleggio"]):
         return ("canoni", importo_finale)
     
@@ -141,7 +108,7 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     
     # STEP 4: VERBALI - Multe e sanzioni
     if any(kw in desc_lower for kw in ["verbale", "multa", "sanzione", "contravvenzione",
-                                        "infrazione", "codice strada"]):
+                                        "infrazione", "codice strada", "rinotifica"]):
         return ("verbali", importo_finale)
     
     # STEP 5: COSTI EXTRA - Penalità e addebiti
@@ -150,7 +117,6 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
         return ("costi_extra", importo_finale)
     
     # STEP 6: RIPARAZIONI - Pattern specifici (parole chiare)
-    # Evita parole ambigue come "turbo" che appare nei nomi modelli
     riparazioni_keywords_sicure = [
         "sinistro", "danni", "danno", "carrozzeria", "riparaz", "ripristino", 
         "sostituz", "paraurti", "parafango", "cofano", "portiera", "specchietto",
@@ -160,30 +126,76 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     if any(kw in desc_lower for kw in riparazioni_keywords_sicure):
         return ("riparazioni", importo_finale)
     
-    # STEP 7: CANONI (altri pattern) - servizi, rifatturazione, conguaglio
+    # STEP 7: CANONI (altri pattern)
     if any(kw in desc_lower for kw in ["servizio", "servizi", "rifatturazione", 
-                                        "conguaglio", "chilometr", "km"]):
+                                        "conguaglio", "chilometr", "km", "finanziario",
+                                        "assistenza operativa", "rateo"]):
         return ("canoni", importo_finale)
     
-    # Default: canoni (la maggior parte delle voci senza keyword specifica sono canoni)
+    # Default: canoni
     return ("canoni", importo_finale)
+
+
+def estrai_modello_marca(descrizione: str, targa: str) -> tuple:
+    """
+    Estrae marca e modello dalla descrizione.
+    Returns: (marca, modello)
+    """
+    marca = ""
+    modello = ""
+    
+    # Pattern specifici per marca/modello
+    marca_patterns = [
+        (r'STELVIO[^,\n]{0,50}', "Alfa Romeo"),
+        (r'GIULIA[^,\n]{0,50}', "Alfa Romeo"),
+        (r'TONALE[^,\n]{0,50}', "Alfa Romeo"),
+        (r'BMW\s+(X[1-7][^,\n]{0,40})', "BMW"),
+        (r'(X[1-7]\s*[xXsS]?[Dd]rive[^,\n]{0,40})', "BMW"),
+        (r'MAZDA\s+(CX-?\d+[^,\n]{0,50})', "Mazda"),
+        (r'(CX-?\d+[^,\n]{0,50})', "Mazda"),
+    ]
+    
+    for pattern, marca_nome in marca_patterns:
+        match = re.search(pattern, descrizione, re.IGNORECASE)
+        if match:
+            marca = marca_nome
+            modello = match.group(1) if match.lastindex else match.group(0)
+            modello = modello.strip()
+            # Pulisci modello
+            modello = re.sub(r'\s+', ' ', modello)
+            if marca == "Mazda" and "MAZDA" in modello.upper():
+                modello = modello.upper().replace("MAZDA ", "")
+            break
+    
+    # Se non trovato con pattern specifici, estrai generico
+    if not modello and targa:
+        modello_match = re.search(
+            rf'{targa}\s+(.+?)(?:\s+Canone|\s+Rifatturazione|\s+Serviz|\s+Locazione|\s*$)',
+            descrizione, re.IGNORECASE
+        )
+        if modello_match:
+            modello = modello_match.group(1).strip()
+            modello = re.sub(r'\s+', ' ', modello)
+    
+    return (marca, modello.title() if modello else "")
 
 
 async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
     """
     Scansiona le fatture XML per estrarre dati veicoli noleggio.
-    Raggruppa per fattura per accorpare le voci.
+    Raggruppa per targa e per codice cliente/contratto.
     """
     db = Database.get_db()
     
     veicoli = {}
+    fatture_senza_targa = []  # Per LeasePlan
     
-    # Query base per fornitori noleggio
+    # Query per P.IVA fornitori
     query = {
-        "$or": [{"supplier_name": {"$regex": f, "$options": "i"}} for f in FORNITORI_NOLEGGIO]
+        "supplier_vat": {"$in": list(FORNITORI_NOLEGGIO.values())}
     }
     
-    # Filtro anno se specificato
+    # Filtro anno
     if anno:
         query["invoice_date"] = {"$regex": f"^{anno}"}
     
@@ -193,35 +205,61 @@ async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
         invoice_number = invoice.get("invoice_number", "")
         invoice_date = invoice.get("invoice_date", "")
         supplier = invoice.get("supplier_name", "")
+        supplier_vat = invoice.get("supplier_vat", "")
         is_nota_credito = "nota" in invoice.get("tipo_documento", "").lower() or invoice.get("total_amount", 0) < 0
         
+        # Estrai codice cliente per questo fornitore
+        codice_cliente = estrai_codice_cliente(invoice, supplier)
+        
         linee = invoice.get("linee", [])
+        targhe_trovate = set()
         
-        # Raggruppa per targa all'interno della fattura
-        fattura_per_targa = {}
+        # Prima passata: trova tutte le targhe nella fattura
+        for linea in linee:
+            desc = linea.get("descrizione") or linea.get("Descrizione", "")
+            match = re.search(TARGA_PATTERN, desc)
+            if match:
+                targhe_trovate.add(match.group(1))
         
+        # Se nessuna targa trovata (es: LeasePlan), salva per associazione manuale
+        if not targhe_trovate:
+            fatture_senza_targa.append({
+                "invoice_number": invoice_number,
+                "invoice_date": invoice_date,
+                "supplier": supplier,
+                "supplier_vat": supplier_vat,
+                "codice_cliente": codice_cliente,
+                "total": invoice.get("total_amount", 0),
+                "linee": linee
+            })
+            continue
+        
+        # Processa ogni linea
         for linea in linee:
             desc = linea.get("descrizione") or linea.get("Descrizione", "")
             
-            # Cerca targa nella descrizione
             match = re.search(TARGA_PATTERN, desc)
             if not match:
                 continue
                 
             targa = match.group(1)
             
-            # Inizializza veicolo se non esiste
+            # Inizializza veicolo
             if targa not in veicoli:
+                marca, modello = estrai_modello_marca(desc, targa)
                 veicoli[targa] = {
                     "targa": targa,
                     "fornitore_noleggio": supplier,
-                    "modello": "",
-                    "marca": "",
+                    "fornitore_piva": supplier_vat,
+                    "codice_cliente": codice_cliente,
+                    "modello": modello,
+                    "marca": marca,
                     "driver": None,
-                    "contratto": None,
+                    "driver_id": None,
+                    "contratto": codice_cliente,  # Usa codice cliente come contratto
                     "data_inizio": None,
                     "data_fine": None,
-                    "fatture_aggregate": {},  # Fatture raggruppate
+                    "note": None,
                     "canoni": [],
                     "pedaggio": [],
                     "verbali": [],
@@ -236,110 +274,44 @@ async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
                     "totale_riparazioni": 0,
                     "totale_generale": 0
                 }
-            
-            # Estrai modello COMPLETO dalla descrizione
-            # Cerca pattern tipo "MARCA MODELLO Diesel/Benzina ..." dopo la targa
-            if not veicoli[targa]["modello"]:
-                # Pattern generico: cerca dopo la targa fino a keyword di stop
-                modello_match = re.search(
-                    rf'{targa}\s+(.+?)(?:\s+Canone|\s+Rifatturazione|\s+Serviz|\s+Locazione|\s+-\s+|$)',
-                    desc, re.IGNORECASE
-                )
-                if modello_match:
-                    modello_raw = modello_match.group(1).strip()
-                    # Pulisci il modello
-                    modello_raw = re.sub(r'\s+', ' ', modello_raw)
-                    if len(modello_raw) > 5:
-                        veicoli[targa]["modello"] = modello_raw.title()
+            else:
+                # Aggiorna codice cliente se trovato
+                if codice_cliente and not veicoli[targa]["codice_cliente"]:
+                    veicoli[targa]["codice_cliente"] = codice_cliente
+                    veicoli[targa]["contratto"] = codice_cliente
                 
-                # Pattern specifici per marca
-                marca_patterns = [
-                    (r'(STELVIO[^,\n]{0,50})', "Alfa Romeo"),
-                    (r'(GIULIA[^,\n]{0,50})', "Alfa Romeo"),
-                    (r'(TONALE[^,\n]{0,50})', "Alfa Romeo"),
-                    (r'(X[1-7]\s*[SsDd]?[Rr]?[Ii]?[Vv]?[Ee]?[^,\n]{0,40})', "BMW"),
-                    (r'(SERIE\s*\d+[^,\n]{0,40})', "BMW"),
-                    (r'(CX-?\d+[^,\n]{0,50})', "Mazda"),
-                    (r'(MAZDA\s+[^,\n]{0,50})', "Mazda"),
-                    (r'(CLIO|CAPTUR|MEGANE|KADJAR|SCENIC|ARKANA)', "Renault"),
-                    (r'(500[XLCS]?|PANDA|TIPO|PUNTO|DUCATO|DOBLO)', "Fiat"),
-                    (r'(GOLF|POLO|TIGUAN|PASSAT|T-ROC|T-CROSS|ID\.\d)', "Volkswagen"),
-                    (r'(A[1-8]|Q[2-8]|E-TRON)', "Audi"),
-                    (r'(CLASSE\s*[A-Z]|GLA|GLC|GLE|GLB|CLA)', "Mercedes"),
-                    (r'(YARIS|COROLLA|RAV4|AYGO|C-HR)', "Toyota"),
-                    (r'(QASHQAI|JUKE|MICRA|LEAF|ARIYA)', "Nissan"),
-                    (r'(PEUGEOT\s*\d+|208|308|508|2008|3008|5008)', "Peugeot"),
-                    (r'(CITROEN\s*C\d|C3|C4|C5)', "Citroen"),
-                    (r'(OPEL\s*\w+|CORSA|ASTRA|MOKKA|CROSSLAND)', "Opel"),
-                    (r'(HYUNDAI\s*\w+|TUCSON|KONA|i\d+)', "Hyundai"),
-                    (r'(KIA\s*\w+|SPORTAGE|NIRO|CEED)', "Kia"),
-                ]
-                for pattern, marca in marca_patterns:
-                    mm = re.search(pattern, desc, re.IGNORECASE)
-                    if mm and not veicoli[targa]["marca"]:
-                        modello_estratto = mm.group(1).strip()
-                        # Pulisci modello
-                        modello_estratto = re.sub(r'\s+', ' ', modello_estratto)
-                        if "MAZDA" in modello_estratto.upper():
-                            modello_estratto = modello_estratto.upper().replace("MAZDA ", "")
-                        veicoli[targa]["modello"] = modello_estratto.title()
+                # Aggiorna marca/modello se mancanti
+                if not veicoli[targa]["modello"]:
+                    marca, modello = estrai_modello_marca(desc, targa)
+                    if modello:
+                        veicoli[targa]["modello"] = modello
+                    if marca:
                         veicoli[targa]["marca"] = marca
-                        break
             
             # Estrai importi
-            prezzo_unitario = float(linea.get("prezzo_unitario") or linea.get("PrezzoUnitario") or 0)
-            prezzo_totale = float(linea.get("prezzo_totale") or linea.get("PrezzoTotale") or prezzo_unitario)
+            prezzo_totale = float(linea.get("prezzo_totale") or linea.get("PrezzoTotale") or 
+                                  linea.get("prezzo_unitario") or linea.get("PrezzoUnitario") or 0)
             aliquota_iva = float(linea.get("aliquota_iva") or linea.get("AliquotaIVA") or 22)
             
-            # Categorizza la spesa
-            categoria, importo_con_segno = categorizza_spesa(desc, prezzo_totale, is_nota_credito)
+            # Categorizza
+            categoria, importo = categorizza_spesa(desc, prezzo_totale, is_nota_credito)
+            iva = abs(importo) * aliquota_iva / 100
+            if importo < 0:
+                iva = -iva
             
-            # Chiave fattura per raggruppamento
-            fattura_key = f"{invoice_number}_{invoice_date}_{targa}"
-            
-            if fattura_key not in fattura_per_targa:
-                fattura_per_targa[fattura_key] = {
-                    "data": invoice_date,
-                    "numero_fattura": invoice_number,
-                    "fornitore": supplier,
-                    "targa": targa,
-                    "voci": [],
-                    "imponibile": 0,
-                    "iva": 0,
-                    "totale": 0,
-                    "categoria_principale": categoria
-                }
-            
-            # Aggiungi voce alla fattura
-            iva_voce = abs(prezzo_totale) * aliquota_iva / 100
-            fattura_per_targa[fattura_key]["voci"].append({
-                "descrizione": desc,
-                "importo": importo_con_segno,
-                "iva": iva_voce if importo_con_segno >= 0 else -iva_voce,
-                "categoria": categoria
-            })
-            fattura_per_targa[fattura_key]["imponibile"] += importo_con_segno
-            fattura_per_targa[fattura_key]["iva"] += iva_voce if importo_con_segno >= 0 else -iva_voce
-            fattura_per_targa[fattura_key]["totale"] += importo_con_segno + (iva_voce if importo_con_segno >= 0 else -iva_voce)
-        
-        # Aggiungi fatture raggruppate ai veicoli
-        for fattura_key, fattura_data in fattura_per_targa.items():
-            targa = fattura_data["targa"]
-            categoria = fattura_data["categoria_principale"]
-            
-            # Aggiungi alla lista della categoria
+            # Aggiungi alla categoria
             veicoli[targa][categoria].append({
-                "data": fattura_data["data"],
-                "numero_fattura": fattura_data["numero_fattura"],
-                "fornitore": fattura_data["fornitore"],
-                "voci": fattura_data["voci"],
-                "imponibile": round(fattura_data["imponibile"], 2),
-                "iva": round(fattura_data["iva"], 2),
-                "totale": round(fattura_data["totale"], 2)
+                "data": invoice_date,
+                "numero_fattura": invoice_number,
+                "fornitore": supplier,
+                "voci": [{"descrizione": desc, "importo": importo}],
+                "imponibile": round(importo, 2),
+                "iva": round(iva, 2),
+                "totale": round(importo + iva, 2)
             })
             
-            # Aggiorna totali
-            veicoli[targa][f"totale_{categoria}"] += fattura_data["imponibile"]
+            # Aggiorna totale categoria
+            veicoli[targa][f"totale_{categoria}"] += importo
     
     # Calcola totali generali
     for targa in veicoli:
@@ -353,17 +325,16 @@ async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
             2
         )
         
-        # Arrotonda tutti i totali
         for key in ["totale_canoni", "totale_pedaggio", "totale_verbali", 
                     "totale_bollo", "totale_costi_extra", "totale_riparazioni"]:
             veicoli[targa][key] = round(veicoli[targa][key], 2)
     
-    return veicoli
+    return veicoli, fatture_senza_targa
 
 
 @router.get("/veicoli")
 async def get_veicoli(
-    anno: Optional[int] = Query(None, description="Filtra per anno (2022-2026)")
+    anno: Optional[int] = Query(None, description="Filtra per anno")
 ) -> Dict[str, Any]:
     """
     Lista tutti i veicoli a noleggio con i relativi costi.
@@ -371,57 +342,182 @@ async def get_veicoli(
     """
     db = Database.get_db()
     
-    # Scansiona fatture per dati aggiornati
-    veicoli_fatture = await scan_fatture_noleggio(anno)
+    # Scansiona fatture
+    veicoli_fatture, fatture_senza_targa = await scan_fatture_noleggio(anno)
     
-    # Carica dati salvati (driver, date noleggio)
+    # Carica dati salvati
     veicoli_salvati = {}
     cursor = db[COLLECTION].find({}, {"_id": 0})
     async for v in cursor:
         veicoli_salvati[v["targa"]] = v
     
-    # Merge dati
+    # Associa fatture LeasePlan ai veicoli con associazione manuale
+    for fattura in fatture_senza_targa:
+        piva = fattura["supplier_vat"]
+        # Cerca veicoli salvati con questo fornitore
+        for targa, salvato in veicoli_salvati.items():
+            if salvato.get("fornitore_piva") == piva:
+                # Aggiungi le spese a questo veicolo
+                if targa not in veicoli_fatture:
+                    veicoli_fatture[targa] = {
+                        "targa": targa,
+                        "fornitore_noleggio": fattura["supplier"],
+                        "fornitore_piva": piva,
+                        "codice_cliente": fattura.get("codice_cliente"),
+                        "modello": salvato.get("modello", ""),
+                        "marca": salvato.get("marca", ""),
+                        "driver": salvato.get("driver"),
+                        "driver_id": salvato.get("driver_id"),
+                        "contratto": salvato.get("contratto"),
+                        "data_inizio": salvato.get("data_inizio"),
+                        "data_fine": salvato.get("data_fine"),
+                        "note": salvato.get("note"),
+                        "canoni": [],
+                        "pedaggio": [],
+                        "verbali": [],
+                        "bollo": [],
+                        "costi_extra": [],
+                        "riparazioni": [],
+                        "totale_canoni": 0,
+                        "totale_pedaggio": 0,
+                        "totale_verbali": 0,
+                        "totale_bollo": 0,
+                        "totale_costi_extra": 0,
+                        "totale_riparazioni": 0,
+                        "totale_generale": 0
+                    }
+                
+                # Processa linee fattura
+                for linea in fattura.get("linee", []):
+                    desc = linea.get("descrizione", "")
+                    prezzo = float(linea.get("prezzo_totale") or linea.get("prezzo_unitario") or 0)
+                    categoria, importo = categorizza_spesa(desc, prezzo, False)
+                    
+                    veicoli_fatture[targa][categoria].append({
+                        "data": fattura["invoice_date"],
+                        "numero_fattura": fattura["invoice_number"],
+                        "fornitore": fattura["supplier"],
+                        "voci": [{"descrizione": desc, "importo": importo}],
+                        "imponibile": round(importo, 2),
+                        "iva": round(importo * 0.22, 2),
+                        "totale": round(importo * 1.22, 2)
+                    })
+                    veicoli_fatture[targa][f"totale_{categoria}"] += importo
+                
+                # Ricalcola totale
+                veicoli_fatture[targa]["totale_generale"] = round(sum(
+                    veicoli_fatture[targa][f"totale_{cat}"] 
+                    for cat in ["canoni", "pedaggio", "verbali", "bollo", "costi_extra", "riparazioni"]
+                ), 2)
+                break
+    
+    # Merge con dati salvati
     risultato = []
-    for targa, dati_fattura in veicoli_fatture.items():
-        veicolo = {**dati_fattura}
+    for targa, dati in veicoli_fatture.items():
+        veicolo = {**dati}
         
-        # Applica dati salvati se esistono
         if targa in veicoli_salvati:
             salvato = veicoli_salvati[targa]
             veicolo["driver"] = salvato.get("driver")
             veicolo["driver_id"] = salvato.get("driver_id")
             veicolo["modello"] = salvato.get("modello") or veicolo.get("modello", "")
             veicolo["marca"] = salvato.get("marca") or veicolo.get("marca", "")
-            veicolo["contratto"] = salvato.get("contratto")
+            veicolo["contratto"] = salvato.get("contratto") or veicolo.get("contratto")
             veicolo["data_inizio"] = salvato.get("data_inizio")
             veicolo["data_fine"] = salvato.get("data_fine")
             veicolo["note"] = salvato.get("note")
             veicolo["id"] = salvato.get("id")
-        else:
-            veicolo["id"] = str(uuid.uuid4())
         
         risultato.append(veicolo)
     
-    # Ordina per totale spese (decrescente)
-    risultato.sort(key=lambda x: x.get("totale_generale", 0), reverse=True)
+    # Aggiungi veicoli salvati non presenti nelle fatture dell'anno
+    for targa, salvato in veicoli_salvati.items():
+        if targa not in veicoli_fatture:
+            risultato.append({
+                **salvato,
+                "canoni": [],
+                "pedaggio": [],
+                "verbali": [],
+                "bollo": [],
+                "costi_extra": [],
+                "riparazioni": [],
+                "totale_canoni": 0,
+                "totale_pedaggio": 0,
+                "totale_verbali": 0,
+                "totale_bollo": 0,
+                "totale_costi_extra": 0,
+                "totale_riparazioni": 0,
+                "totale_generale": 0
+            })
     
-    # Statistiche globali
-    stats = {
-        "totale_canoni": round(sum(v["totale_canoni"] for v in risultato), 2),
-        "totale_pedaggio": round(sum(v["totale_pedaggio"] for v in risultato), 2),
-        "totale_verbali": round(sum(v["totale_verbali"] for v in risultato), 2),
-        "totale_bollo": round(sum(v["totale_bollo"] for v in risultato), 2),
-        "totale_costi_extra": round(sum(v["totale_costi_extra"] for v in risultato), 2),
-        "totale_riparazioni": round(sum(v["totale_riparazioni"] for v in risultato), 2),
+    # Statistiche
+    statistiche = {
+        "totale_canoni": sum(v.get("totale_canoni", 0) for v in risultato),
+        "totale_pedaggio": sum(v.get("totale_pedaggio", 0) for v in risultato),
+        "totale_verbali": sum(v.get("totale_verbali", 0) for v in risultato),
+        "totale_bollo": sum(v.get("totale_bollo", 0) for v in risultato),
+        "totale_costi_extra": sum(v.get("totale_costi_extra", 0) for v in risultato),
+        "totale_riparazioni": sum(v.get("totale_riparazioni", 0) for v in risultato),
+        "totale_generale": sum(v.get("totale_generale", 0) for v in risultato)
     }
-    stats["totale_generale"] = round(sum(stats.values()), 2)
     
     return {
-        "veicoli": risultato,
+        "veicoli": sorted(risultato, key=lambda x: x.get("totale_generale", 0), reverse=True),
+        "statistiche": statistiche,
         "count": len(risultato),
-        "anno_filtro": anno,
-        "statistiche": stats
+        "fatture_non_associate": len(fatture_senza_targa),
+        "anno": anno
     }
+
+
+@router.get("/fatture-non-associate")
+async def get_fatture_non_associate(
+    anno: Optional[int] = Query(None, description="Filtra per anno")
+) -> Dict[str, Any]:
+    """
+    Restituisce le fatture di fornitori noleggio che non hanno targa nella descrizione.
+    Utile per LeasePlan che richiede associazione manuale.
+    """
+    _, fatture_senza_targa = await scan_fatture_noleggio(anno)
+    
+    return {
+        "fatture": fatture_senza_targa,
+        "count": len(fatture_senza_targa),
+        "nota": "Queste fatture richiedono associazione manuale ad un veicolo"
+    }
+
+
+@router.get("/fornitori")
+async def get_fornitori() -> Dict[str, Any]:
+    """
+    Restituisce la lista dei fornitori noleggio supportati.
+    """
+    return {
+        "fornitori": [
+            {"nome": "ALD Automotive Italia S.r.l.", "piva": "01924961004", "targa_in_fattura": True, "contratto_in_fattura": True},
+            {"nome": "ARVAL SERVICE LEASE ITALIA SPA", "piva": "04911190488", "targa_in_fattura": True, "contratto_in_fattura": True},
+            {"nome": "Leasys Italia S.p.A", "piva": "06714021000", "targa_in_fattura": True, "contratto_in_fattura": False},
+            {"nome": "LeasePlan Italia S.p.A.", "piva": "02615080963", "targa_in_fattura": False, "contratto_in_fattura": False}
+        ]
+    }
+
+
+@router.get("/drivers")
+async def get_drivers() -> Dict[str, Any]:
+    """
+    Lista dipendenti disponibili come driver.
+    """
+    db = Database.get_db()
+    
+    dipendenti = []
+    cursor = db["dipendenti"].find({}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1})
+    async for d in cursor:
+        dipendenti.append({
+            "id": d.get("id"),
+            "nome_completo": f"{d.get('nome', '')} {d.get('cognome', '')}".strip()
+        })
+    
+    return {"drivers": dipendenti}
 
 
 @router.put("/veicoli/{targa}")
@@ -430,146 +526,100 @@ async def update_veicolo(
     data: Dict[str, Any] = Body(...)
 ) -> Dict[str, Any]:
     """
-    Aggiorna dati veicolo (driver, modello, date noleggio, note).
+    Aggiorna i dati di un veicolo (driver, date noleggio, marca, modello, contratto).
     """
     db = Database.get_db()
     
-    # Campi aggiornabili
     update_data = {
-        "targa": targa,
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "targa": targa.upper(),
+        "updated_at": datetime.now(timezone.utc)
     }
     
-    allowed_fields = ["driver", "driver_id", "modello", "marca", "contratto", 
-                     "data_inizio", "data_fine", "note", "fornitore_noleggio"]
-    
-    for field in allowed_fields:
-        if field in data:
-            update_data[field] = data[field]
+    # Campi aggiornabili
+    for campo in ["driver", "driver_id", "marca", "modello", "contratto", 
+                  "data_inizio", "data_fine", "note", "fornitore_noleggio", "fornitore_piva"]:
+        if campo in data:
+            update_data[campo] = data[campo]
     
     # Upsert
     result = await db[COLLECTION].update_one(
-        {"targa": targa},
-        {"$set": update_data, "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": datetime.now(timezone.utc).isoformat()}},
+        {"targa": targa.upper()},
+        {"$set": update_data, "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": datetime.now(timezone.utc)}},
         upsert=True
     )
     
     return {
         "success": True,
-        "targa": targa,
-        "updated": result.modified_count > 0,
-        "created": result.upserted_id is not None
+        "targa": targa.upper(),
+        "message": "Veicolo aggiornato" if result.modified_count else "Veicolo creato"
     }
 
 
 @router.delete("/veicoli/{targa}")
 async def delete_veicolo(targa: str) -> Dict[str, Any]:
     """
-    Elimina un veicolo con CASCADE DELETE.
-    Rimuove anche tutti i dati salvati associati.
+    Elimina un veicolo dalla gestione (non elimina le fatture).
     """
     db = Database.get_db()
     
-    # Verifica esistenza
-    veicolo = await db[COLLECTION].find_one({"targa": targa})
+    result = await db[COLLECTION].delete_one({"targa": targa.upper()})
     
-    cascade_results = {
-        "veicolo_dati": 0
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Veicolo non trovato")
+    
+    return {"success": True, "message": f"Veicolo {targa} rimosso dalla gestione"}
+
+
+@router.post("/associa-fornitore")
+async def associa_fornitore(
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, Any]:
+    """
+    Associa manualmente un fornitore (es: LeasePlan) ad una targa.
+    Necessario per fornitori che non includono la targa nelle fatture.
+    
+    Body: {
+        "targa": "XX000XX",
+        "fornitore_piva": "02615080963",
+        "marca": "...",
+        "modello": "...",
+        "contratto": "..."
+    }
+    """
+    db = Database.get_db()
+    
+    targa = data.get("targa", "").upper()
+    fornitore_piva = data.get("fornitore_piva")
+    
+    if not targa or not fornitore_piva:
+        raise HTTPException(status_code=400, detail="Targa e fornitore_piva sono obbligatori")
+    
+    # Verifica che il fornitore sia valido
+    if fornitore_piva not in FORNITORI_NOLEGGIO.values():
+        raise HTTPException(status_code=400, detail=f"Fornitore non riconosciuto. Validi: {list(FORNITORI_NOLEGGIO.values())}")
+    
+    # Trova nome fornitore
+    fornitore_nome = next((k for k, v in FORNITORI_NOLEGGIO.items() if v == fornitore_piva), "")
+    
+    update_data = {
+        "targa": targa,
+        "fornitore_piva": fornitore_piva,
+        "fornitore_noleggio": fornitore_nome,
+        "marca": data.get("marca", ""),
+        "modello": data.get("modello", ""),
+        "contratto": data.get("contratto", ""),
+        "updated_at": datetime.now(timezone.utc)
     }
     
-    if veicolo:
-        # Elimina dati salvati del veicolo
-        result = await db[COLLECTION].delete_one({"targa": targa})
-        cascade_results["veicolo_dati"] = result.deleted_count
+    result = await db[COLLECTION].update_one(
+        {"targa": targa},
+        {"$set": update_data, "$setOnInsert": {"id": str(uuid.uuid4()), "created_at": datetime.now(timezone.utc)}},
+        upsert=True
+    )
     
     return {
         "success": True,
         "targa": targa,
-        "message": f"Veicolo {targa} rimosso dalla gestione",
-        "cascade_deleted": cascade_results
-    }
-
-
-@router.get("/veicoli/{targa}")
-async def get_veicolo_dettaglio(
-    targa: str,
-    anno: Optional[int] = Query(None, description="Filtra per anno")
-) -> Dict[str, Any]:
-    """Dettaglio singolo veicolo con tutte le spese."""
-    db = Database.get_db()
-    
-    # Scansiona fatture
-    veicoli = await scan_fatture_noleggio(anno)
-    
-    if targa not in veicoli:
-        raise HTTPException(status_code=404, detail=f"Veicolo {targa} non trovato")
-    
-    veicolo = veicoli[targa]
-    
-    # Carica dati salvati
-    salvato = await db[COLLECTION].find_one({"targa": targa}, {"_id": 0})
-    if salvato:
-        veicolo["driver"] = salvato.get("driver")
-        veicolo["driver_id"] = salvato.get("driver_id")
-        veicolo["modello"] = salvato.get("modello") or veicolo.get("modello", "")
-        veicolo["marca"] = salvato.get("marca") or veicolo.get("marca", "")
-        veicolo["contratto"] = salvato.get("contratto")
-        veicolo["data_inizio"] = salvato.get("data_inizio")
-        veicolo["data_fine"] = salvato.get("data_fine")
-        veicolo["note"] = salvato.get("note")
-    
-    # Ordina spese per data (più recenti prima)
-    for categoria in ["canoni", "pedaggio", "verbali", "bollo", "costi_extra", "riparazioni"]:
-        veicolo[categoria] = sorted(
-            veicolo.get(categoria, []),
-            key=lambda x: x.get("data", ""),
-            reverse=True
-        )
-    
-    return veicolo
-
-
-@router.get("/drivers")
-async def get_drivers() -> Dict[str, Any]:
-    """Lista dipendenti disponibili per assegnazione veicoli."""
-    db = Database.get_db()
-    
-    employees = await db["employees"].find(
-        {"status": {"$ne": "terminated"}},
-        {"_id": 0, "id": 1, "nome": 1, "cognome": 1, "ruolo": 1}
-    ).to_list(100)
-    
-    return {
-        "drivers": [
-            {
-                "id": e.get("id"),
-                "nome_completo": f"{e.get('nome', '')} {e.get('cognome', '')}".strip(),
-                "ruolo": e.get("ruolo", "")
-            }
-            for e in employees
-        ]
-    }
-
-
-@router.get("/parti-auto")
-async def get_parti_auto() -> Dict[str, Any]:
-    """Restituisce il dizionario delle parti auto per riparazioni."""
-    return {
-        "categorie": PARTI_AUTO_RIPARAZIONI,
-        "keywords_totali": len(KEYWORDS_RIPARAZIONI)
-    }
-
-
-@router.post("/scan")
-async def force_scan(
-    anno: Optional[int] = Query(None, description="Anno da scansionare")
-) -> Dict[str, Any]:
-    """Forza ri-scansione fatture per aggiornare dati veicoli."""
-    veicoli = await scan_fatture_noleggio(anno)
-    
-    return {
-        "success": True,
-        "veicoli_trovati": len(veicoli),
-        "targhe": list(veicoli.keys()),
-        "anno_filtro": anno
+        "fornitore": fornitore_nome,
+        "message": f"Targa {targa} associata a {fornitore_nome}"
     }
