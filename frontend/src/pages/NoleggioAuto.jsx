@@ -304,6 +304,9 @@ export default function NoleggioAuto() {
                         <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                           <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600' }}>Data</th>
                           <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600' }}>Fattura</th>
+                          {cat.key === 'verbali' && (
+                            <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600' }}>N° Verbale</th>
+                          )}
                           <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600' }}>Descrizione</th>
                           <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '600' }}>Imponibile</th>
                           <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '600' }}>IVA</th>
@@ -316,6 +319,12 @@ export default function NoleggioAuto() {
                           <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6', background: s.imponibile < 0 ? '#fff7ed' : 'white' }}>
                             <td style={{ padding: '8px 10px', fontSize: 12 }}>{formatDate(s.data)}</td>
                             <td style={{ padding: '8px 10px', color: '#6b7280', fontSize: 11, fontFamily: 'monospace' }}>{s.numero_fattura || "-"}</td>
+                            {cat.key === 'verbali' && (
+                              <td style={{ padding: '8px 10px', fontSize: 11, fontFamily: 'monospace', color: s.numero_verbale ? '#dc2626' : '#9ca3af' }}>
+                                {s.numero_verbale || "-"}
+                                {s.data_verbale && <div style={{ fontSize: 10, color: '#6b7280' }}>{s.data_verbale}</div>}
+                              </td>
+                            )}
                             <td style={{ padding: '8px 10px' }}>
                               {s.voci?.map((v, vi) => (
                                 <div key={vi} style={{ fontSize: 11, color: '#4b5563', paddingBottom: 2 }}>
@@ -357,7 +366,7 @@ export default function NoleggioAuto() {
                       </tbody>
                       <tfoot>
                         <tr style={{ background: `${cat.color}10`, borderTop: '2px solid #e5e7eb' }}>
-                          <td colSpan={4} style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '600' }}>Totale {cat.label}:</td>
+                          <td colSpan={cat.key === 'verbali' ? 5 : 4} style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '600' }}>Totale {cat.label}:</td>
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', fontSize: 12 }}>{formatEuro(spese.reduce((a, s) => a + (s.iva || 0), 0))}</td>
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: cat.color, fontSize: 12 }}>{formatEuro(totaleSezione)}</td>
                           <td></td>
