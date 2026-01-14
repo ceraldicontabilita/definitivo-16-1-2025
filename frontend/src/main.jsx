@@ -221,6 +221,7 @@ const router = createBrowserRouter([
       { path: "dipendenti-libretti", element: <LazyPage><DipendenteLibretti /></LazyPage> },
       { path: "dipendenti-acconti", element: <LazyPage><DipendenteAcconti /></LazyPage> },
       { path: "tfr", element: <LazyPage><TFR /></LazyPage> },
+      { path: "noleggio-auto", element: <LazyPage><NoleggioAuto /></LazyPage> },
       
       // === FISCO & TRIBUTI ===
       { path: "iva", element: <LazyPage><IVA /></LazyPage> },
