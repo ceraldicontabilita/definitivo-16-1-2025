@@ -415,27 +415,46 @@ Tutte le pagine3 supportano layout mobile:
 ### 2026-01-14 - Gestione Noleggio Auto (SESSIONE ATTUALE)
 - ✅ **Nuova sezione "Noleggio Auto"** nel menu Dipendenti
   - **Backend**: `/app/app/routers/noleggio.py` - Estrae automaticamente dati veicoli dalle fatture XML
-  - **Frontend**: `/app/frontend/src/pages/NoleggioAuto.jsx` - Stile identico a DipendenteAcconti
+  - **Frontend**: `/app/frontend/src/pages/NoleggioAuto.jsx` - **RISCRITTO** con stile Corrispettivi.jsx
   - **Collection MongoDB**: `veicoli_noleggio` - Salva driver, date noleggio, note
   - **Fornitori riconosciuti**: Leasys, ARVAL, ALD, LeasePlan, Alphabet, Hertz, Avis, Europcar
-  - **Categorie spese**: Canoni, Verbali/Multe, Riparazioni, Bollo
+  - **Categorie spese**: Canoni, Pedaggio, Verbali, Bollo, Costi Extra, Riparazioni
   - **Funzionalità**:
     - Estrazione automatica targhe da descrizioni fatture (pattern AA000AA)
     - Rilevamento modello auto dalla descrizione
     - Assegnazione driver (dipendente) a veicolo
     - Date inizio/fine noleggio
-    - Ricerca in tutti gli anni (2022-2026)
+    - Filtro per anno (usa useAnnoGlobale)
+    - Dettaglio veicolo con espansione sezioni spese
 
-- ✅ **STILE UI UTILIZZATO** (da documentare per coerenza):
-  - **Layout**: Grid 2 colonne (`gridTemplateColumns: 'minmax(280px, 380px) 1fr'`)
-  - **Container**: `background: 'white', borderRadius: 12, padding: 16/20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)'`
-  - **Selezione lista**: `background: selectedItem ? '#dbeafe' : '#f8fafc', border: selected ? '2px solid #3b82f6' : '1px solid #e2e8f0'`
-  - **SaldoCard Component**: `background: ${color}15, borderLeft: 4px solid ${color}, borderRadius: 8`
-  - **Colori**: Verde #4caf50 (canoni), Rosso #f44336 (verbali), Arancio #ff9800 (riparazioni), Viola #9c27b0 (bollo), Blu navy #1a365d (totali)
-  - **Font header**: `fontSize: 'clamp(20px, 5vw, 28px)', color: '#1a365d'`
-  - **Font subtitle**: `color: '#666', fontSize: 'clamp(12px, 3vw, 14px)'`
-  - **Tabelle**: `borderCollapse: 'collapse', fontSize: 12, background: 'white', border: '1px solid #e0e0e0'`
-  - **Riferimento**: Identico a `/app/frontend/src/pages/DipendenteAcconti.jsx`
+---
+
+## 🎨 STANDARD UI - STILE DI RIFERIMENTO
+
+**IMPORTANTE**: Per qualsiasi nuova pagina o modifica, utilizzare **ESCLUSIVAMENTE** lo stile della pagina `/app/frontend/src/pages/Corrispettivi.jsx`.
+
+### Elementi di stile obbligatori:
+
+| Elemento | Stile |
+|----------|-------|
+| **Container** | `padding: 20, maxWidth: 1400, margin: '0 auto'` |
+| **Header** | `background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)', borderRadius: 12, color: 'white'` |
+| **Card statistiche** | `background: 'white', borderRadius: 12, padding: 16/20, boxShadow: '0 2px 8px rgba(0,0,0,0.08)'` |
+| **Card con colore** | `borderLeft: '4px solid ${color}'` |
+| **Tabelle** | `borderCollapse: 'collapse', background: '#f9fafb' per header, border: '1px solid #f3f4f6'` |
+| **Bottoni azione** | `padding: '6px 10px', borderRadius: 6, border: 'none', cursor: 'pointer'` |
+| **Bottone primario** | `background: '#dbeafe', color: '#2563eb'` |
+| **Bottone danger** | `background: '#fee2e2', color: '#dc2626'` |
+| **Icone** | Usare **emoji** (🚗, 💰, 📋, etc.) invece di componenti Lucide |
+| **Font header** | `fontSize: 22, fontWeight: 'bold'` |
+| **Font subtitle** | `fontSize: 13, opacity: 0.9` |
+| **Colori principali** | Verde #4caf50, Rosso #f44336, Arancio #ff9800, Viola #9c27b0, Blu #2196f3, Marrone #795548, Blu navy #1e3a5f |
+
+### NON utilizzare:
+- ❌ Tailwind CSS classes (usa inline styles)
+- ❌ Componenti Shadcn/UI per layout (Card, Button, Dialog custom)
+- ❌ Icone Lucide (usa emoji)
+- ❌ Altri stili o layout diversi
 
 ### 2026-01-13 - Parser F24 (SESSIONE ATTUALE)
 - ✅ **REFACTORING COMPLETO PARSER F24**: Risolto problema duplicazione tributi tra sezioni ERARIO/REGIONI
