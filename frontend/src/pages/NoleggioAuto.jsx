@@ -350,7 +350,7 @@ export default function NoleggioAuto() {
                             <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                               {s.fattura_id ? (
                                 <a 
-                                  href={`${process.env.REACT_APP_BACKEND_URL}/api/fatture-ricevute/fattura/${s.fattura_id}/view-assoinvoice`}
+                                  href={`/api/fatture-ricevute/fattura/${s.fattura_id}/view-assoinvoice`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{ 
