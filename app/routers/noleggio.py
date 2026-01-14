@@ -139,11 +139,10 @@ async def scan_fatture_noleggio() -> Dict[str, Any]:
 
 
 @router.get("/veicoli")
-async def get_veicoli(
-    anno: Optional[int] = Query(None, description="Filtra per anno")
-) -> Dict[str, Any]:
+async def get_veicoli() -> Dict[str, Any]:
     """
     Lista tutti i veicoli a noleggio con i relativi costi.
+    Cerca in tutti gli anni (2022-2026).
     Combina dati estratti dalle fatture con dati salvati (driver, date).
     """
     db = Database.get_db()
@@ -177,33 +176,12 @@ async def get_veicoli(
         else:
             veicolo["id"] = str(uuid.uuid4())
         
-        # Filtra per anno se specificato
-        if anno:
-            veicolo["canoni"] = [c for c in veicolo.get("canoni", []) 
-                               if c.get("data") and str(anno) in c.get("data", "")]
-            veicolo["verbali"] = [v for v in veicolo.get("verbali", []) 
-                                if v.get("data") and str(anno) in v.get("data", "")]
-            veicolo["riparazioni"] = [r for r in veicolo.get("riparazioni", []) 
-                                     if r.get("data") and str(anno) in r.get("data", "")]
-            veicolo["bollo"] = [b for b in veicolo.get("bollo", []) 
-                              if b.get("data") and str(anno) in b.get("data", "")]
-            
-            # Ricalcola totali per anno
-            veicolo["totale_canoni"] = sum(c["importo"] for c in veicolo["canoni"])
-            veicolo["totale_verbali"] = sum(v["importo"] for v in veicolo["verbali"])
-            veicolo["totale_riparazioni"] = sum(r["importo"] for r in veicolo["riparazioni"])
-            veicolo["totale_bollo"] = sum(b["importo"] for b in veicolo["bollo"])
-            veicolo["totale_generale"] = (
-                veicolo["totale_canoni"] + veicolo["totale_verbali"] + 
-                veicolo["totale_riparazioni"] + veicolo["totale_bollo"]
-            )
-        
         risultato.append(veicolo)
     
-    # Ordina per modello
-    risultato.sort(key=lambda x: (x.get("modello") or "ZZZ", x.get("targa", "")))
+    # Ordina per totale spese (decrescente)
+    risultato.sort(key=lambda x: x.get("totale_generale", 0), reverse=True)
     
-    # Statistiche
+    # Statistiche globali
     totale_canoni = sum(v["totale_canoni"] for v in risultato)
     totale_verbali = sum(v["totale_verbali"] for v in risultato)
     totale_riparazioni = sum(v["totale_riparazioni"] for v in risultato)
