@@ -113,6 +113,9 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     - bollo: Tasse automobilistiche, bollo
     - costi_extra: Penalità, addebiti extra, commissioni
     - riparazioni: Sinistri, danni, carrozzeria, meccanica
+    
+    IMPORTANTE: L'ordine dei controlli è cruciale per evitare falsi positivi.
+    Ad esempio "Turbo Diesel" nel nome modello non deve matchare "turbo" come riparazione.
     """
     desc_lower = descrizione.lower()
     importo_finale = abs(importo)
@@ -121,43 +124,48 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     if is_nota_credito or "nota credito" in desc_lower or "nota di credito" in desc_lower:
         importo_finale = -abs(importo)
     
-    # RIPARAZIONI - Controlla prima le parti auto
-    for keyword in KEYWORDS_RIPARAZIONI:
-        if keyword in desc_lower:
-            return ("riparazioni", importo_finale)
+    # STEP 1: CANONI - Controlla PRIMA se è un canone (priorità alta)
+    # Questo evita che "BMW X3 Turbo" venga categorizzato come riparazione
+    if any(kw in desc_lower for kw in ["canone", "locazione", "noleggio"]):
+        return ("canoni", importo_finale)
     
-    # Pattern specifici per riparazioni
-    if any(kw in desc_lower for kw in ["sinistro", "danno", "danni", "carrozzeria", 
-                                        "riparaz", "ripristino", "sostituz"]):
-        return ("riparazioni", importo_finale)
-    
-    # BOLLO - Tasse automobilistiche
+    # STEP 2: BOLLO - Tasse automobilistiche
     if any(kw in desc_lower for kw in ["bollo", "tassa automobilistic", "tasse auto", 
-                                        "imposta provincial", "ipt"]):
+                                        "imposta provincial", "ipt", "superbollo"]):
         return ("bollo", importo_finale)
     
-    # PEDAGGIO - Gestione pedaggi e telepass
+    # STEP 3: PEDAGGIO - Gestione pedaggi e telepass
     if any(kw in desc_lower for kw in ["pedaggio", "telepass", "autostrad", 
                                         "gestione multe", "spese gestione"]):
         return ("pedaggio", importo_finale)
     
-    # VERBALI - Multe e sanzioni
+    # STEP 4: VERBALI - Multe e sanzioni
     if any(kw in desc_lower for kw in ["verbale", "multa", "sanzione", "contravvenzione",
                                         "infrazione", "codice strada"]):
         return ("verbali", importo_finale)
     
-    # COSTI EXTRA - Penalità e addebiti
+    # STEP 5: COSTI EXTRA - Penalità e addebiti
     if any(kw in desc_lower for kw in ["penalità", "penale", "addebito", "commissione",
-                                        "mora", "ritardo", "extra"]):
+                                        "mora", "ritardo"]):
         return ("costi_extra", importo_finale)
     
-    # CANONI - Tutto il resto relativo a noleggio
-    if any(kw in desc_lower for kw in ["canone", "locazione", "noleggio", "servizio", 
-                                        "servizi", "rifatturazione", "conguaglio", 
-                                        "chilometr", "km"]):
+    # STEP 6: RIPARAZIONI - Pattern specifici (parole chiare)
+    # Evita parole ambigue come "turbo" che appare nei nomi modelli
+    riparazioni_keywords_sicure = [
+        "sinistro", "danni", "danno", "carrozzeria", "riparaz", "ripristino", 
+        "sostituz", "paraurti", "parafango", "cofano", "portiera", "specchietto",
+        "retrovisore", "fanale", "faro", "parabrezza", "vetro", "ammortizzatore",
+        "freno", "freni", "disco", "pastiglie", "sospensione", "cambio", "frizione"
+    ]
+    if any(kw in desc_lower for kw in riparazioni_keywords_sicure):
+        return ("riparazioni", importo_finale)
+    
+    # STEP 7: CANONI (altri pattern) - servizi, rifatturazione, conguaglio
+    if any(kw in desc_lower for kw in ["servizio", "servizi", "rifatturazione", 
+                                        "conguaglio", "chilometr", "km"]):
         return ("canoni", importo_finale)
     
-    # Default: canoni (la maggior parte delle voci sono canoni)
+    # Default: canoni (la maggior parte delle voci senza keyword specifica sono canoni)
     return ("canoni", importo_finale)
 
 
