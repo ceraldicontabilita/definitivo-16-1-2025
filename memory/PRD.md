@@ -9,6 +9,9 @@
 - **FIX**: Importate 247 fatture XML dei fornitori noleggio (ALD, ARVAL, Leasys)
 - **FIX**: Aggiunto anno 2022 nel selettore anni globale
 - **VERIFICATO**: Pagina Noleggio Auto funzionante con dati Verbali, Bollo, Riparazioni estratti correttamente
+- **FIX**: Raggruppamento fatture per numero (non più righe duplicate per ogni linea fattura)
+- **FEATURE**: Estrazione numeri verbale - pattern "Verbale Nr: XXXXX" con data verbale
+- **FEATURE**: Nuova colonna "N° Verbale" nella tabella dettaglio Verbali
 
 ---
 
