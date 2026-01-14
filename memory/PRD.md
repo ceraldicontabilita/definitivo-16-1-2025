@@ -409,6 +409,21 @@ Tutte le pagine principali supportano layout mobile:
   - **Alias fornitori**: Supporto per nomi comuni (metro, coop, barilla, ecc.)
   - Fix: Rimosso import re duplicato che causava errori
 
+### 2026-01-14 - Gestione Noleggio Auto (SESSIONE ATTUALE)
+- ✅ **Nuova sezione "Noleggio Auto"** nel menu Dipendenti
+  - **Backend**: `/app/app/routers/noleggio.py` - Estrae automaticamente dati veicoli dalle fatture XML
+  - **Frontend**: `/app/frontend/src/pages/NoleggioAuto.jsx` - Card per ogni veicolo con dettagli spese
+  - **Collection MongoDB**: `veicoli_noleggio` - Salva driver, date noleggio, note
+  - **Fornitori riconosciuti**: Leasys, ARVAL, ALD, LeasePlan, Alphabet, Hertz, Avis, Europcar
+  - **Categorie spese**: Canoni, Verbali/Multe, Riparazioni, Bollo
+  - **Funzionalità**:
+    - Estrazione automatica targhe da descrizioni fatture (pattern AA000AA)
+    - Rilevamento modello auto dalla descrizione
+    - Assegnazione driver (dipendente) a veicolo
+    - Date inizio/fine noleggio
+    - Filtro per anno
+    - Card espandibili con dettaglio spese
+
 ### 2026-01-13 - Parser F24 (SESSIONE ATTUALE)
 - ✅ **REFACTORING COMPLETO PARSER F24**: Risolto problema duplicazione tributi tra sezioni ERARIO/REGIONI
   - **Problema originale**: Codici come `8907` (sanzione IRAP), `1993` (interessi ravvedimento IRAP) apparivano sia in ERARIO che in REGIONI
