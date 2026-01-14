@@ -124,9 +124,13 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     
     # STEP 2: BOLLO - Tasse automobilistiche (PRIMA di costi extra!)
     # Include "tassa di proprietà" che è il bollo auto
+    # ESCLUDI "Imposta di bollo" che è il bollo fiscale sulle fatture (€2)
     if any(kw in desc_lower for kw in ["bollo", "tassa automobilistic", "tasse auto", 
                                         "tassa di propriet", "imposta provincial", 
                                         "ipt", "superbollo"]):
+        # Escludi il bollo fiscale sulle fatture
+        if "imposta di bollo" in desc_lower and importo <= 2.1:
+            return ("canoni", importo_finale, metadata)  # Trattalo come costo accessorio
         return ("bollo", importo_finale, metadata)
     
     # STEP 3: PEDAGGIO - Gestione pedaggi e telepass
