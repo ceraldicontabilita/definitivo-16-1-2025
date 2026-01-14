@@ -527,37 +527,36 @@ async def get_veicoli(
                         if k not in linee_per_cat[categoria]["metadata"]:
                             linee_per_cat[categoria]["metadata"][k] = v
                 
-                for categoria, dati in linee_per_cat.items():
-                    imponibile = round(dati["imponibile"], 2)
-                    # Calcola IVA in base all'aliquota reale (bollo è esente)
-                    if categoria == "bollo":
-                        iva = 0
-                    else:
-                        iva = round(imponibile * 0.22, 2)
-                    record = {
-                        "data": fattura["invoice_date"],
-                        "numero_fattura": fattura["invoice_number"],
-                        "fattura_id": fattura_id,
-                        "fornitore": fattura["supplier"],
-                        "voci": dati["voci"],
-                        "imponibile": imponibile,
-                        "iva": iva,
-                        "totale": round(imponibile + iva, 2),
-                        "pagato": fattura.get("pagato", False)
-                    }
-                    if categoria == "verbali" and dati["metadata"]:
-                        record["numero_verbale"] = dati["metadata"].get("numero_verbale")
-                        record["data_verbale"] = dati["metadata"].get("data_verbale")
-                    
-                    veicoli_fatture[targa][categoria].append(record)
-                    veicoli_fatture[targa][f"totale_{categoria}"] += imponibile
-                
-                # Ricalcola totale
-                veicoli_fatture[targa]["totale_generale"] = round(sum(
-                    veicoli_fatture[targa][f"totale_{cat}"] 
-                    for cat in ["canoni", "pedaggio", "verbali", "bollo", "costi_extra", "riparazioni"]
-                ), 2)
-                break
+        for categoria, dati in linee_per_cat.items():
+            imponibile = round(dati["imponibile"], 2)
+            # Calcola IVA in base all'aliquota reale (bollo è esente)
+            if categoria == "bollo":
+                iva = 0
+            else:
+                iva = round(imponibile * 0.22, 2)
+            record = {
+                "data": fattura["invoice_date"],
+                "numero_fattura": fattura["invoice_number"],
+                "fattura_id": fattura_id,
+                "fornitore": fattura["supplier"],
+                "voci": dati["voci"],
+                "imponibile": imponibile,
+                "iva": iva,
+                "totale": round(imponibile + iva, 2),
+                "pagato": fattura.get("pagato", False)
+            }
+            if categoria == "verbali" and dati["metadata"]:
+                record["numero_verbale"] = dati["metadata"].get("numero_verbale")
+                record["data_verbale"] = dati["metadata"].get("data_verbale")
+            
+            veicoli_fatture[target_targa][categoria].append(record)
+            veicoli_fatture[target_targa][f"totale_{categoria}"] += imponibile
+        
+        # Ricalcola totale
+        veicoli_fatture[target_targa]["totale_generale"] = round(sum(
+            veicoli_fatture[target_targa][f"totale_{cat}"] 
+            for cat in ["canoni", "pedaggio", "verbali", "bollo", "costi_extra", "riparazioni"]
+        ), 2)
     
     # Merge con dati salvati
     risultato = []
