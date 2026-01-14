@@ -370,15 +370,17 @@ export default function NoleggioAuto() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }} data-testid="noleggio-table">
               <thead>
                 <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Targa</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Veicolo</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Fornitore</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Contratto</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Driver</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>📋 Canoni</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>⚠️ Verbali</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>TOTALE</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: '600', fontSize: 13 }}>Azioni</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: '600', fontSize: 12 }}>Targa</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: '600', fontSize: 12 }}>Veicolo</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: '600', fontSize: 12 }}>Fornitore</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: '600', fontSize: 12 }}>Contratto</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'left', fontWeight: '600', fontSize: 12 }}>Driver</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'right', fontWeight: '600', fontSize: 12 }}>📋 Canoni</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'right', fontWeight: '600', fontSize: 12 }}>⚠️ Verbali</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'right', fontWeight: '600', fontSize: 12 }}>📄 Bollo</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'right', fontWeight: '600', fontSize: 12 }}>🔧 Ripar.</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'right', fontWeight: '600', fontSize: 12 }}>TOTALE</th>
+                  <th style={{ padding: '12px 10px', textAlign: 'center', fontWeight: '600', fontSize: 12 }}>Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -393,33 +395,33 @@ export default function NoleggioAuto() {
                     onClick={() => setSelectedVeicolo(v)}
                     data-testid={`veicolo-row-${v.targa}`}
                   >
-                    <td style={{ padding: '12px 16px', fontWeight: '600', fontFamily: 'monospace', color: '#2563eb' }}>{v.targa}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ fontWeight: '500' }}>{v.marca} {v.modello || '-'}</div>
+                    <td style={{ padding: '10px', fontWeight: '600', fontFamily: 'monospace', color: '#2563eb', fontSize: 13 }}>{v.targa}</td>
+                    <td style={{ padding: '10px' }}>
+                      <div style={{ fontWeight: '500', fontSize: 12 }}>{v.marca} {(v.modello || '-').slice(0, 25)}</div>
                     </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ fontSize: 13 }}>{v.fornitore_noleggio?.split(' ')[0] || '-'}</div>
-                    </td>
-                    <td style={{ padding: '12px 16px', fontSize: 12, fontFamily: 'monospace', color: '#6b7280' }}>
+                    <td style={{ padding: '10px', fontSize: 12 }}>{v.fornitore_noleggio?.split(' ')[0] || '-'}</td>
+                    <td style={{ padding: '10px', fontSize: 11, fontFamily: 'monospace', color: '#6b7280' }}>
                       {v.contratto || v.codice_cliente || '-'}
                     </td>
-                    <td style={{ padding: '12px 16px', fontSize: 13, color: v.driver ? 'inherit' : '#9ca3af' }}>
-                      {v.driver || "Non assegnato"}
+                    <td style={{ padding: '10px', fontSize: 12, color: v.driver ? 'inherit' : '#9ca3af' }}>
+                      {v.driver || "-"}
                     </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#4caf50' }}>{formatEuro(v.totale_canoni)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#f44336' }}>{formatEuro(v.totale_verbali)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 'bold', color: '#1e3a5f' }}>{formatEuro(v.totale_generale)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                    <td style={{ padding: '10px', textAlign: 'right', color: '#4caf50', fontSize: 12 }}>{formatEuro(v.totale_canoni)}</td>
+                    <td style={{ padding: '10px', textAlign: 'right', color: '#f44336', fontSize: 12 }}>{formatEuro(v.totale_verbali)}</td>
+                    <td style={{ padding: '10px', textAlign: 'right', color: '#9c27b0', fontSize: 12 }}>{formatEuro(v.totale_bollo)}</td>
+                    <td style={{ padding: '10px', textAlign: 'right', color: '#795548', fontSize: 12 }}>{formatEuro(v.totale_riparazioni)}</td>
+                    <td style={{ padding: '10px', textAlign: 'right', fontWeight: 'bold', color: '#1e3a5f', fontSize: 13 }}>{formatEuro(v.totale_generale)}</td>
+                    <td style={{ padding: '10px', textAlign: 'center' }}>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSelectedVeicolo(v); }}
-                        style={{ padding: '6px 10px', background: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: 6, cursor: 'pointer', marginRight: 4 }}
+                        style={{ padding: '4px 8px', background: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: 4, cursor: 'pointer', marginRight: 2, fontSize: 12 }}
                         title="Vedi dettaglio"
                       >
                         👁️
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setEditingVeicolo({...v}); }}
-                        style={{ padding: '6px 10px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 6, cursor: 'pointer' }}
+                        style={{ padding: '4px 8px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}
                         title="Modifica"
                       >
                         ✏️
