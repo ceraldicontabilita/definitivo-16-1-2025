@@ -31,13 +31,16 @@ export default function NoleggioAuto() {
     setLoading(true);
     setErr("");
     try {
-      const [vRes, dRes] = await Promise.all([
+      const [vRes, dRes, fRes] = await Promise.all([
         api.get(`/api/noleggio/veicoli?anno=${selectedYear}`),
-        api.get('/api/noleggio/drivers')
+        api.get('/api/noleggio/drivers'),
+        api.get('/api/noleggio/fornitori')
       ]);
       setVeicoli(vRes.data.veicoli || []);
       setStatistiche(vRes.data.statistiche || {});
+      setFattureNonAssociate(vRes.data.fatture_non_associate || 0);
       setDrivers(dRes.data.drivers || []);
+      setFornitori(fRes.data.fornitori || []);
     } catch (e) {
       console.error('Errore:', e);
       setErr("Errore caricamento dati: " + (e.response?.data?.detail || e.message));
