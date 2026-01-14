@@ -340,9 +340,16 @@ export default function NoleggioAuto() {
                               {formatEuro(s.totale)}
                             </td>
                             <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                              {s.pagato ? (
+                                <span style={{ color: '#16a34a', fontWeight: 'bold', fontSize: 10 }}>✓ Pagato</span>
+                              ) : (
+                                <span style={{ color: '#dc2626', fontSize: 10 }}>Da pagare</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                               {s.fattura_id ? (
                                 <a 
-                                  href={`/fatture-ricevute?id=${s.fattura_id}`}
+                                  href={`${process.env.REACT_APP_BACKEND_URL}/api/fatture-ricevute/fattura/${s.fattura_id}/view-assoinvoice`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{ 
@@ -370,6 +377,7 @@ export default function NoleggioAuto() {
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', fontSize: 12 }}>{formatEuro(spese.reduce((a, s) => a + (s.imponibile || 0), 0))}</td>
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', fontSize: 12 }}>{formatEuro(spese.reduce((a, s) => a + (s.iva || 0), 0))}</td>
                           <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: cat.color, fontSize: 12 }}>{formatEuro(totaleSezione)}</td>
+                          <td></td>
                           <td></td>
                         </tr>
                       </tfoot>
