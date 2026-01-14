@@ -414,29 +414,35 @@ Tutte le pagine3 supportano layout mobile:
 
 ### 2026-01-14 - Gestione Noleggio Auto (SESSIONE ATTUALE)
 
-### 2026-01-14 - Algoritmo Riconciliazione F24-Quietanza v2
-- ✅ **Miglioramento algoritmo matching F24-Quietanza**
+### 2026-01-14 - Algoritmo Riconciliazione F24-Quietanza v3
+- ✅ **Algoritmo corretto per gestire ravvedimenti operosi**
   - **File modificato**: `/app/app/routers/f24/f24_riconciliazione.py`
-  - **Problemi risolti**:
-    - Falsi positivi per F24 con stessi codici ma periodi diversi
-    - Match troppo permissivo basato solo su importo
-    - Nessuna verifica coerenza temporale
   
-  - **Nuovo algoritmo SCORING**:
-    | Score | Match Chiavi | Diff. Importo | Descrizione |
-    |-------|--------------|---------------|-------------|
-    | 100 | 100% | < €1 | Match perfetto |
-    | 90 | >= 90% | < €5 | Match ottimo |
-    | 80 | >= 80% | < €10 | Match buono |
-    | 70 | >= 70% | < €20 | Match accettabile |
-    | 60 | >= 60% | < €50 | Possibile ravvedimento |
+  - **LOGICA CORRETTA**:
+    - Confronto **singolo tributo per singolo tributo**
+    - Match = TUTTI i codici tributo dell'F24 presenti nella quietanza
+    - Stesso **codice + stesso periodo + stesso importo** (tolleranza €0.50)
+    - Se quietanza ha codici EXTRA (ravvedimento) → OK, è ravveduto
+    - Se importo quietanza > importo F24 → flag `ravveduto: true`
   
-  - **Chiave di matching**: `{codice_tributo}_{periodo_riferimento}`
-    - Es: `1001_08/2025`, `1012_12/2024`, `DM10_01/2025`
+  - **CODICI RAVVEDIMENTO** (esclusi dal confronto):
+    - Ravvedimento: 8901, 8902, 8903, 8904, 8906, 8907, 8911
+    - Interessi: 1989, 1990, 1991, 1992, 1993, 1994
+    - Interessi IMU/TASI: 1507, 1508, 1509, 1510, 1511, 1512
   
-  - **Verifica temporale**: Data pagamento quietanza deve essere tra -2 e +30 giorni dalla data versamento F24
+  - **ESEMPIO**:
+    ```
+    F24: 1001 08/2025 €1000 + DM10 08/2025 €500 = €1500
+    Quietanza: 1001 08/2025 €1000 + DM10 08/2025 €500 + 8901 (ravv) €30 + 1991 (int) €20 = €1550
+    → MATCH! Flag ravveduto=true, importo_ravvedimento=€50
+    ```
   
-  - **Match ONE-TO-ONE**: Ogni quietanza può matchare un solo F24, evita duplicazioni
+  - **Campi salvati su F24 pagato**:
+    - `ravveduto: true/false`
+    - `importo_ravvedimento: €XX.XX`
+    - `codici_ravvedimento: ["8901", "1991"]`
+    - `match_tributi_trovati: X`
+    - `match_tributi_totali: Y`
 - ✅ **Nuova sezione "Noleggio Auto"** nel menu Dipendenti
   - **Backend**: `/app/app/routers/noleggio.py` - Estrae automaticamente dati veicoli dalle fatture XML
   - **Frontend**: `/app/frontend/src/pages/NoleggioAuto.jsx` - Stile Corrispettivi.jsx
