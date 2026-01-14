@@ -568,6 +568,115 @@ export default function NoleggioAuto() {
           </div>
         </div>
       )}
+
+      {/* Modal Aggiungi Veicolo (per LeasePlan o altri senza targa in fattura) */}
+      {showAddVeicolo && (
+        <div style={{ 
+          position: 'fixed', 
+          inset: 0, 
+          background: 'rgba(0,0,0,0.5)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{ 
+            background: 'white', 
+            borderRadius: 12, 
+            padding: 24, 
+            width: '100%', 
+            maxWidth: 500
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 18 }}>➕ Aggiungi Veicolo</h2>
+              <button onClick={() => setShowAddVeicolo(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+              Usa questo form per aggiungere veicoli di fornitori che non includono la targa nelle fatture (es: LeasePlan).
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: '500', marginBottom: 4 }}>Targa *</label>
+                <input 
+                  type="text"
+                  value={nuovoVeicolo.targa}
+                  onChange={(e) => setNuovoVeicolo({...nuovoVeicolo, targa: e.target.value.toUpperCase()})}
+                  placeholder="Es: AB123CD"
+                  maxLength={7}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 14, fontFamily: 'monospace' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: '500', marginBottom: 4 }}>Fornitore *</label>
+                <select
+                  value={nuovoVeicolo.fornitore_piva}
+                  onChange={(e) => setNuovoVeicolo({...nuovoVeicolo, fornitore_piva: e.target.value})}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 14 }}
+                >
+                  <option value="">-- Seleziona Fornitore --</option>
+                  {fornitori.map(f => (
+                    <option key={f.piva} value={f.piva}>
+                      {f.nome} {!f.targa_in_fattura ? '⚠️' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: '500', marginBottom: 4 }}>Marca</label>
+                  <input 
+                    type="text"
+                    value={nuovoVeicolo.marca}
+                    onChange={(e) => setNuovoVeicolo({...nuovoVeicolo, marca: e.target.value})}
+                    placeholder="Es: BMW"
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: '500', marginBottom: 4 }}>Modello</label>
+                  <input 
+                    type="text"
+                    value={nuovoVeicolo.modello}
+                    onChange={(e) => setNuovoVeicolo({...nuovoVeicolo, modello: e.target.value})}
+                    placeholder="Es: X3 xDrive"
+                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: '500', marginBottom: 4 }}>Numero Contratto</label>
+                <input 
+                  type="text"
+                  value={nuovoVeicolo.contratto}
+                  onChange={(e) => setNuovoVeicolo({...nuovoVeicolo, contratto: e.target.value})}
+                  placeholder="Numero contratto noleggio"
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 14 }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
+              <button 
+                onClick={() => setShowAddVeicolo(false)}
+                style={{ padding: '10px 16px', background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: '600' }}
+              >
+                Annulla
+              </button>
+              <button 
+                onClick={handleAddVeicolo}
+                style={{ padding: '10px 16px', background: '#2563eb', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: '600' }}
+              >
+                ➕ Aggiungi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
