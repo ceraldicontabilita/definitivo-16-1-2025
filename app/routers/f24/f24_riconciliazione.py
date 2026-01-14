@@ -911,20 +911,30 @@ async def upload_quietanze_multiplo(
             is_match = tributi_trovati == len(tributi_f24_principali)
             
             if is_match:
-                # MATCH TROVATO! Aggiorna F24 come pagato
+                # MATCH TROVATO! 
+                saldo_f24 = f24.get("totali", {}).get("saldo_netto", 0)
+                is_ravveduto = len(codici_ravv) > 0
+                
+                # Aggiorna F24 come pagato
+                update_data = {
+                    "status": "pagato",
+                    "quietanza_id": file_id,
+                    "protocollo_quietanza": protocollo,
+                    "data_pagamento_quietanza": data_pagamento,
+                    "riconciliato_quietanza": True,
+                    "match_tributi_trovati": tributi_trovati,
+                    "match_tributi_totali": len(tributi_f24_principali),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                if is_ravveduto:
+                    update_data["ravveduto"] = True
+                    update_data["importo_ravvedimento"] = round(importo_ravv, 2)
+                    update_data["codici_ravvedimento"] = codici_ravv
+                
                 await db[COLL_F24_COMMERCIALISTA].update_one(
                     {"id": f24["id"]},
-                    {"$set": {
-                        "status": "pagato",
-                        "quietanza_id": file_id,
-                        "protocollo_quietanza": protocollo,
-                        "data_pagamento_quietanza": data_pagamento,
-                        "match_score": score,
-                        "match_percentage": match_percentage,
-                        "differenza_importo": round(saldo_f24 - saldo_quietanza, 2),
-                        "riconciliato_quietanza": True,
-                        "updated_at": datetime.now(timezone.utc).isoformat()
-                    }}
+                    {"$set": update_data}
                 )
                 
                 # Aggiorna quietanza con F24 associato
@@ -938,10 +948,9 @@ async def upload_quietanze_multiplo(
                     "f24_filename": f24.get("file_name"),
                     "importo_f24": saldo_f24,
                     "importo_quietanza": saldo_quietanza,
-                    "differenza": round(saldo_f24 - saldo_quietanza, 2),
-                    "match_score": score,
-                    "match_percentage": round(match_percentage, 1),
-                    "chiavi_comuni": list(chiavi_comuni)[:5]
+                    "tributi_matchati": f"{tributi_trovati}/{len(tributi_f24_principali)}",
+                    "ravveduto": is_ravveduto,
+                    "importo_ravvedimento": round(importo_ravv, 2) if is_ravveduto else 0
                 })
                 
                 risultati["totale_matchati"] += 1
