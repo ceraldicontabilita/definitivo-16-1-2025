@@ -303,6 +303,7 @@ async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
             veicoli[targa][categoria].append({
                 "data": invoice_date,
                 "numero_fattura": invoice_number,
+                "fattura_id": invoice.get("id"),  # ID per link "Vedi Fattura"
                 "fornitore": supplier,
                 "voci": [{"descrizione": desc, "importo": importo}],
                 "imponibile": round(importo, 2),
