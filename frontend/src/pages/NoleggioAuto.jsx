@@ -372,12 +372,11 @@ export default function NoleggioAuto() {
                 <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Targa</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Veicolo</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Fornitore</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Contratto</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600', fontSize: 13 }}>Driver</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>📋 Canoni</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>🛣️ Pedaggio</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>⚠️ Verbali</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>📄 Bollo</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>🔧 Riparazioni</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '600', fontSize: 13 }}>TOTALE</th>
                   <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: '600', fontSize: 13 }}>Azioni</th>
                 </tr>
@@ -397,16 +396,18 @@ export default function NoleggioAuto() {
                     <td style={{ padding: '12px 16px', fontWeight: '600', fontFamily: 'monospace', color: '#2563eb' }}>{v.targa}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ fontWeight: '500' }}>{v.marca} {v.modello || '-'}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{v.fornitore_noleggio?.split(' ').slice(0, 2).join(' ') || '-'}</div>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <div style={{ fontSize: 13 }}>{v.fornitore_noleggio?.split(' ')[0] || '-'}</div>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: 12, fontFamily: 'monospace', color: '#6b7280' }}>
+                      {v.contratto || v.codice_cliente || '-'}
                     </td>
                     <td style={{ padding: '12px 16px', fontSize: 13, color: v.driver ? 'inherit' : '#9ca3af' }}>
                       {v.driver || "Non assegnato"}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', color: '#4caf50' }}>{formatEuro(v.totale_canoni)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#2196f3' }}>{formatEuro(v.totale_pedaggio)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', color: '#f44336' }}>{formatEuro(v.totale_verbali)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#9c27b0' }}>{formatEuro(v.totale_bollo)}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#795548' }}>{formatEuro(v.totale_riparazioni)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 'bold', color: '#1e3a5f' }}>{formatEuro(v.totale_generale)}</td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <button 
