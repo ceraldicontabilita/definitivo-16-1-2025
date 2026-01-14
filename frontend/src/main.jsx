@@ -121,6 +121,7 @@ const DipendenteLibroUnico = lazy(() => import("./pages/DipendenteLibroUnico.jsx
 const DipendenteLibretti = lazy(() => import("./pages/DipendenteLibretti.jsx"));
 const DipendenteAcconti = lazy(() => import("./pages/DipendenteAcconti.jsx"));
 const TFR = lazy(() => import("./pages/TFR.jsx"));
+const NoleggioAuto = lazy(() => import("./pages/NoleggioAuto.jsx"));
 
 // === FISCO & TRIBUTI ===
 const IVA = lazy(() => import("./pages/IVA.jsx"));
