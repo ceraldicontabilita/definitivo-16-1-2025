@@ -423,6 +423,8 @@ async def get_veicoli(
             veicolo["modello"] = salvato.get("modello") or veicolo.get("modello", "")
             veicolo["marca"] = salvato.get("marca") or veicolo.get("marca", "")
             veicolo["contratto"] = salvato.get("contratto") or veicolo.get("contratto")
+            veicolo["codice_cliente"] = salvato.get("codice_cliente") or veicolo.get("codice_cliente")
+            veicolo["centro_fatturazione"] = salvato.get("centro_fatturazione")
             veicolo["data_inizio"] = salvato.get("data_inizio")
             veicolo["data_fine"] = salvato.get("data_fine")
             veicolo["note"] = salvato.get("note")
