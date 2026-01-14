@@ -835,10 +835,28 @@ async def upload_quietanze_multiplo(
         risultati["totale_caricati"] += 1
         
         # ============================================
-        # MATCHING AUTOMATICO CON F24 COMMERCIALISTA
+        # MATCHING AUTOMATICO CON F24 COMMERCIALISTA (v2)
         # ============================================
         
-        # Cerca F24 da pagare con codici tributo corrispondenti
+        def estrai_chiavi_tributo_v2(doc: dict) -> set:
+            """Estrae set di chiavi (codice_periodo) da un documento."""
+            chiavi = set()
+            for sezione in ["sezione_erario", "sezione_regioni", "sezione_tributi_locali"]:
+                for item in doc.get(sezione, []):
+                    codice = item.get("codice_tributo", "")
+                    periodo = item.get("periodo_riferimento", "").strip()
+                    if codice:
+                        chiavi.add(f"{codice}_{periodo}")
+            for item in doc.get("sezione_inps", []):
+                causale = item.get("causale", "")
+                periodo = item.get("periodo_riferimento", "").strip()
+                if causale:
+                    chiavi.add(f"{causale}_{periodo}")
+            return chiavi
+        
+        chiavi_quietanza_full = estrai_chiavi_tributo_v2(parsed)
+        
+        # Cerca F24 da pagare con codici tributo + periodo corrispondenti
         f24_da_pagare = await db[COLL_F24_COMMERCIALISTA].find({
             "status": "da_pagare",
             "riconciliato": False
@@ -847,39 +865,35 @@ async def upload_quietanze_multiplo(
         f24_matchati = []
         
         for f24 in f24_da_pagare:
-            # Estrai codici tributo dall'F24
-            codici_f24 = set()
-            for t in f24.get("sezione_erario", []):
-                if t.get("codice_tributo"):
-                    codici_f24.add(t["codice_tributo"])
-            for t in f24.get("sezione_inps", []):
-                if t.get("causale"):
-                    codici_f24.add(t["causale"])
-            for t in f24.get("sezione_regioni", []):
-                if t.get("codice_tributo"):
-                    codici_f24.add(t["codice_tributo"])
-            for t in f24.get("sezione_tributi_locali", []):
-                if t.get("codice_tributo"):
-                    codici_f24.add(t["codice_tributo"])
+            chiavi_f24 = estrai_chiavi_tributo_v2(f24)
             
-            # Calcola match
-            codici_comuni = codici_f24.intersection(codici_quietanza)
-            
-            if len(codici_comuni) == 0:
+            if not chiavi_f24:
                 continue
             
-            # Match se almeno 80% dei codici coincidono
-            match_percentage = (len(codici_comuni) / max(len(codici_f24), 1)) * 100
+            # Calcola match per chiavi (codice + periodo)
+            chiavi_comuni = chiavi_f24.intersection(chiavi_quietanza_full)
+            match_percentage = (len(chiavi_comuni) / len(chiavi_f24)) * 100 if chiavi_f24 else 0
             
             saldo_f24 = f24.get("totali", {}).get("saldo_netto", 0)
             differenza = abs(saldo_f24 - saldo_quietanza)
             
-            # Match considerato valido se:
-            # - Match codici >= 80% OPPURE
-            # - Differenza importo < €1 (stesso importo = stesso F24)
-            is_match = match_percentage >= 80 or differenza < 1
+            # SCORING migliorato:
+            # - 100% match chiavi + diff < €1: MATCH PERFETTO
+            # - >= 90% match chiavi + diff < €5: MATCH OTTIMO
+            # - >= 80% match chiavi + diff < €10: MATCH BUONO
+            # - >= 70% match chiavi + diff < €20: MATCH ACCETTABILE
             
-            if is_match:
+            score = 0
+            if match_percentage == 100 and differenza < 1:
+                score = 100
+            elif match_percentage >= 90 and differenza < 5:
+                score = 90
+            elif match_percentage >= 80 and differenza < 10:
+                score = 80
+            elif match_percentage >= 70 and differenza < 20:
+                score = 70
+            
+            if score >= 70:
                 # MATCH TROVATO! Aggiorna F24 come pagato
                 await db[COLL_F24_COMMERCIALISTA].update_one(
                     {"id": f24["id"]},
