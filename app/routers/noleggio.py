@@ -388,7 +388,8 @@ async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
                     "voci": dati["voci"],
                     "imponibile": imponibile,
                     "iva": iva,
-                    "totale": totale
+                    "totale": totale,
+                    "pagato": invoice.get("pagato", False)
                 }
                 
                 # Aggiungi metadata per verbali
