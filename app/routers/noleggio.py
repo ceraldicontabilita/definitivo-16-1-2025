@@ -495,7 +495,11 @@ async def get_veicoli(
                 
                 for categoria, dati in linee_per_cat.items():
                     imponibile = round(dati["imponibile"], 2)
-                    iva = round(imponibile * 0.22, 2)
+                    # Calcola IVA in base all'aliquota reale (bollo è esente)
+                    if categoria == "bollo":
+                        iva = 0
+                    else:
+                        iva = round(imponibile * 0.22, 2)
                     record = {
                         "data": fattura["invoice_date"],
                         "numero_fattura": fattura["invoice_number"],
@@ -504,7 +508,8 @@ async def get_veicoli(
                         "voci": dati["voci"],
                         "imponibile": imponibile,
                         "iva": iva,
-                        "totale": round(imponibile + iva, 2)
+                        "totale": round(imponibile + iva, 2),
+                        "pagato": fattura.get("pagato", False)
                     }
                     if categoria == "verbali" and dati["metadata"]:
                         record["numero_verbale"] = dati["metadata"].get("numero_verbale")
