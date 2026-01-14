@@ -140,7 +140,7 @@ export default function NoleggioAuto() {
       </div>
 
       {/* Azioni */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         <button 
           onClick={fetchVeicoli}
           style={{ 
@@ -156,6 +156,32 @@ export default function NoleggioAuto() {
         >
           🔄 Aggiorna
         </button>
+        <button 
+          onClick={() => setShowAddVeicolo(true)}
+          style={{ 
+            padding: '10px 20px',
+            background: '#2563eb',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            cursor: 'pointer',
+            fontWeight: '600'
+          }}
+          data-testid="noleggio-add-btn"
+        >
+          ➕ Aggiungi Veicolo
+        </button>
+        {fattureNonAssociate > 0 && (
+          <span style={{ 
+            padding: '8px 16px', 
+            background: '#fef3c7', 
+            color: '#92400e', 
+            borderRadius: 8,
+            fontSize: 13
+          }}>
+            ⚠️ {fattureNonAssociate} fatture non associate (es: LeasePlan)
+          </span>
+        )}
       </div>
 
       {err && (
