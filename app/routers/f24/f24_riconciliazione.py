@@ -1001,27 +1001,27 @@ async def riconcilia_tutto() -> Dict[str, Any]:
     """
     Riassegna automaticamente tutte le quietanze agli F24.
     
-    ALGORITMO MIGLIORATO v2:
+    ALGORITMO v3 - CONFRONTO PER SINGOLO CODICE TRIBUTO:
     
-    1. Per ogni F24 da pagare, costruisce una "chiave univoca":
-       - Codici tributo + Periodo di riferimento (es: "1001_01/2024", "1012_12/2024")
-       - Data versamento (per verificare coerenza temporale)
-       - Importo totale
+    Per ogni F24:
+    1. Estrae lista codici tributo con: codice, periodo, importo_debito
+    2. Cerca quietanza che contenga TUTTI questi codici con stesso periodo e importo
+    3. Se quietanza ha codici EXTRA (ravvedimento 8901, interessi 1991, etc.) → OK, è ravvedimento
+    4. Match = TUTTI i codici F24 presenti in quietanza
+    5. Se importo quietanza > importo F24 → flag "ravveduto"
     
-    2. Per ogni quietanza, costruisce la stessa chiave
-    
-    3. Match PRIORITARIO per:
-       a) Codici tributo + periodo IDENTICI (100% match) E differenza importo < €5
-       b) Se non trova, codici tributo + periodo >= 90% match E differenza importo < €10
-       c) Se ravvedimento: stesso codice + periodo, importo maggiorato
-    
-    4. Verifica TEMPORALE:
-       - Data pagamento quietanza >= Data versamento F24 (max +30 giorni)
-       - Evita match di F24 futuri con quietanze passate
-    
-    5. Match ONE-TO-ONE: ogni quietanza può matchare UN solo F24
+    CODICI RAVVEDIMENTO (da ignorare nel confronto):
+    - 8901, 8902, 8903, 8904, 8906, 8907, 8911 (ravvedimento)
+    - 1989, 1990, 1991, 1992, 1993, 1994 (interessi)
     """
     db = Database.get_db()
+    
+    # Codici ravvedimento/interessi da escludere dal confronto principale
+    CODICI_RAVVEDIMENTO = {
+        '8901', '8902', '8903', '8904', '8906', '8907', '8911',  # Ravvedimento
+        '1989', '1990', '1991', '1992', '1993', '1994',  # Interessi
+        '1507', '1508', '1509', '1510', '1511', '1512',  # Interessi IMU/TASI
+    }
     
     # Recupera tutti gli F24 da pagare
     f24_da_pagare = await db[COLL_F24_COMMERCIALISTA].find(
@@ -1037,75 +1037,133 @@ async def riconcilia_tutto() -> Dict[str, Any]:
     
     risultati = {
         "f24_riconciliati": 0,
+        "f24_ravveduti": 0,
         "f24_non_riconciliati": 0,
         "quietanze_usate": 0,
-        "quietanze_non_usate": 0,
         "dettaglio_match": [],
         "warning": []
     }
     
     quietanze_usate = set()
     
-    def estrai_chiavi_tributo(doc: dict) -> set:
-        """Estrae set di chiavi (codice_periodo) da un documento F24/Quietanza."""
-        chiavi = set()
+    def estrai_tributi_dettaglio(doc: dict) -> list:
+        """
+        Estrae lista di tributi con dettaglio completo.
+        Returns: [{"codice": "1001", "periodo": "08/2025", "importo": 500.00}, ...]
+        """
+        tributi = []
         
         for sezione in ["sezione_erario", "sezione_regioni", "sezione_tributi_locali"]:
             for item in doc.get(sezione, []):
                 codice = item.get("codice_tributo", "")
-                periodo = item.get("periodo_riferimento", "").strip()
-                if codice:
-                    chiavi.add(f"{codice}_{periodo}")
+                if not codice:
+                    continue
+                tributi.append({
+                    "codice": codice,
+                    "periodo": item.get("periodo_riferimento", "").strip(),
+                    "importo": float(item.get("importo_debito", 0) or item.get("importo", 0) or 0),
+                    "sezione": sezione
+                })
         
         for item in doc.get("sezione_inps", []):
             causale = item.get("causale", "")
-            periodo = item.get("periodo_riferimento", "").strip()
-            if causale:
-                chiavi.add(f"{causale}_{periodo}")
-        
-        for item in doc.get("sezione_inail", []):
-            codice = item.get("codice_sede", "") or item.get("codice", "")
-            if codice:
-                chiavi.add(f"INAIL_{codice}")
-        
-        return chiavi
-    
-    def parse_data(data_str: str) -> datetime:
-        """Converte stringa data in datetime."""
-        if not data_str:
-            return None
-        for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]:
-            try:
-                return datetime.strptime(data_str[:10], fmt)
-            except:
+            if not causale:
                 continue
-        return None
+            tributi.append({
+                "codice": causale,
+                "periodo": item.get("periodo_riferimento", "").strip(),
+                "importo": float(item.get("importo_debito", 0) or item.get("importo", 0) or 0),
+                "sezione": "sezione_inps"
+            })
+        
+        return tributi
     
-    def verifica_coerenza_temporale(data_versamento: str, data_pagamento: str) -> bool:
+    def confronta_tributi(tributi_f24: list, tributi_quietanza: list) -> dict:
         """
-        Verifica che la data pagamento sia coerente con la data versamento.
-        La quietanza deve essere pagata DOPO o lo stesso giorno del versamento,
-        ma non più di 30 giorni dopo (per evitare match errati).
+        Confronta i tributi dell'F24 con quelli della quietanza.
+        
+        Match = TUTTI i codici F24 (esclusi ravvedimento) sono presenti in quietanza
+        con stesso periodo e stesso importo (tolleranza €0.50).
+        
+        Returns: {
+            "match": bool,
+            "tributi_trovati": int,
+            "tributi_f24": int,
+            "ravveduto": bool,
+            "importo_ravvedimento": float,
+            "codici_ravvedimento": list
+        }
         """
-        dv = parse_data(data_versamento)
-        dp = parse_data(data_pagamento)
+        # Filtra tributi F24 escludendo codici ravvedimento (che non dovrebbero esserci)
+        tributi_f24_principali = [
+            t for t in tributi_f24 
+            if t["codice"] not in CODICI_RAVVEDIMENTO
+        ]
         
-        if not dv or not dp:
-            return True  # Se manca una data, non blocchiamo il match
+        # Crea lookup per quietanza: chiave = (codice, periodo)
+        quietanza_lookup = {}
+        codici_ravv_trovati = []
+        importo_ravv = 0
         
-        diff_giorni = (dp - dv).days
+        for t in tributi_quietanza:
+            key = (t["codice"], t["periodo"])
+            quietanza_lookup[key] = t["importo"]
+            
+            # Traccia codici ravvedimento
+            if t["codice"] in CODICI_RAVVEDIMENTO:
+                codici_ravv_trovati.append(t["codice"])
+                importo_ravv += t["importo"]
         
-        # La quietanza deve essere pagata tra -2 e +30 giorni dalla scadenza
-        # (-2 per tolleranza errori di parsing date)
-        return -2 <= diff_giorni <= 30
+        # Verifica che ogni tributo F24 sia presente in quietanza
+        tributi_trovati = 0
+        tributi_mancanti = []
+        
+        for t in tributi_f24_principali:
+            key = (t["codice"], t["periodo"])
+            
+            if key in quietanza_lookup:
+                importo_quietanza = quietanza_lookup[key]
+                diff = abs(t["importo"] - importo_quietanza)
+                
+                # Tolleranza €0.50 per arrotondamenti
+                if diff <= 0.50:
+                    tributi_trovati += 1
+                else:
+                    tributi_mancanti.append({
+                        "codice": t["codice"],
+                        "periodo": t["periodo"],
+                        "importo_f24": t["importo"],
+                        "importo_quietanza": importo_quietanza,
+                        "diff": diff
+                    })
+            else:
+                tributi_mancanti.append({
+                    "codice": t["codice"],
+                    "periodo": t["periodo"],
+                    "importo_f24": t["importo"],
+                    "importo_quietanza": 0,
+                    "diff": t["importo"]
+                })
+        
+        # Match = TUTTI i tributi F24 trovati in quietanza
+        is_match = tributi_trovati == len(tributi_f24_principali) and len(tributi_f24_principali) > 0
+        
+        return {
+            "match": is_match,
+            "tributi_trovati": tributi_trovati,
+            "tributi_f24": len(tributi_f24_principali),
+            "tributi_mancanti": tributi_mancanti,
+            "ravveduto": len(codici_ravv_trovati) > 0,
+            "importo_ravvedimento": round(importo_ravv, 2),
+            "codici_ravvedimento": codici_ravv_trovati
+        }
     
-    # FASE 1: Match esatto per chiavi tributo + periodo
+    # FASE 1: Match per singoli tributi
     for f24 in f24_da_pagare:
-        chiavi_f24 = estrai_chiavi_tributo(f24)
+        tributi_f24 = estrai_tributi_dettaglio(f24)
         saldo_f24 = f24.get("totali", {}).get("saldo_netto", 0)
-        data_versamento = f24.get("dati_generali", {}).get("data_versamento", "")
         
-        if not chiavi_f24:
+        if not tributi_f24:
             risultati["warning"].append({
                 "f24_id": f24["id"],
                 "messaggio": "F24 senza codici tributo identificabili"
@@ -1113,81 +1171,57 @@ async def riconcilia_tutto() -> Dict[str, Any]:
             continue
         
         best_match = None
-        best_score = 0
-        best_diff = float('inf')
         
         for quietanza in quietanze:
             if quietanza["id"] in quietanze_usate:
                 continue
             
-            chiavi_quietanza = estrai_chiavi_tributo(quietanza)
+            tributi_quietanza = estrai_tributi_dettaglio(quietanza)
             saldo_quietanza = quietanza.get("saldo", 0) or quietanza.get("totali", {}).get("saldo_netto", 0)
-            data_pagamento = quietanza.get("data_pagamento", "")
             
-            if not chiavi_quietanza:
+            if not tributi_quietanza:
                 continue
             
-            # Calcola intersezione chiavi
-            chiavi_comuni = chiavi_f24.intersection(chiavi_quietanza)
-            match_percentage = (len(chiavi_comuni) / len(chiavi_f24)) * 100 if chiavi_f24 else 0
+            # Confronta tributi
+            confronto = confronta_tributi(tributi_f24, tributi_quietanza)
             
-            # Calcola differenza importo
-            diff_importo = abs(saldo_f24 - saldo_quietanza)
-            
-            # Verifica coerenza temporale
-            if not verifica_coerenza_temporale(data_versamento, data_pagamento):
-                continue
-            
-            # SCORING:
-            # - Match 100% chiavi + diff < €1: score = 100
-            # - Match >= 90% chiavi + diff < €5: score = 90
-            # - Match >= 80% chiavi + diff < €10: score = 80
-            # - Match >= 70% chiavi + diff < €20: score = 70
-            
-            score = 0
-            
-            if match_percentage == 100 and diff_importo < 1:
-                score = 100
-            elif match_percentage >= 90 and diff_importo < 5:
-                score = 90
-            elif match_percentage >= 80 and diff_importo < 10:
-                score = 80
-            elif match_percentage >= 70 and diff_importo < 20:
-                score = 70
-            elif match_percentage >= 60 and diff_importo < 50:
-                # Possibile ravvedimento (importo maggiorato)
-                score = 60
-            
-            # Se score migliore, aggiorna best match
-            if score > best_score or (score == best_score and diff_importo < best_diff):
-                best_score = score
-                best_diff = diff_importo
+            if confronto["match"]:
                 best_match = {
                     "quietanza": quietanza,
-                    "score": score,
-                    "match_percentage": match_percentage,
-                    "diff_importo": diff_importo,
-                    "chiavi_comuni": list(chiavi_comuni)[:10]
+                    "confronto": confronto,
+                    "saldo_quietanza": saldo_quietanza
                 }
+                break  # Primo match valido
         
-        # Se trovato match valido (score >= 70), associa
-        if best_match and best_match["score"] >= 70:
+        # Se trovato match, aggiorna
+        if best_match:
             quietanza = best_match["quietanza"]
+            confronto = best_match["confronto"]
+            
+            # Flag ravveduto
+            is_ravveduto = confronto["ravveduto"]
             
             # Aggiorna F24 come pagato
+            update_data = {
+                "status": "pagato",
+                "quietanza_id": quietanza["id"],
+                "protocollo_quietanza": quietanza.get("protocollo_telematico"),
+                "data_pagamento_quietanza": quietanza.get("data_pagamento"),
+                "riconciliato_quietanza": True,
+                "match_tributi_trovati": confronto["tributi_trovati"],
+                "match_tributi_totali": confronto["tributi_f24"],
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if is_ravveduto:
+                update_data["ravveduto"] = True
+                update_data["importo_ravvedimento"] = confronto["importo_ravvedimento"]
+                update_data["codici_ravvedimento"] = confronto["codici_ravvedimento"]
+                risultati["f24_ravveduti"] += 1
+            
             await db[COLL_F24_COMMERCIALISTA].update_one(
                 {"id": f24["id"]},
-                {"$set": {
-                    "status": "pagato",
-                    "quietanza_id": quietanza["id"],
-                    "protocollo_quietanza": quietanza.get("protocollo_telematico"),
-                    "data_pagamento_quietanza": quietanza.get("data_pagamento"),
-                    "match_score": best_match["score"],
-                    "match_percentage": best_match["match_percentage"],
-                    "differenza_importo": round(saldo_f24 - (quietanza.get("saldo", 0) or 0), 2),
-                    "riconciliato_quietanza": True,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }}
+                {"$set": update_data}
             )
             
             # Aggiorna quietanza
@@ -1203,11 +1237,11 @@ async def riconcilia_tutto() -> Dict[str, Any]:
                 "f24_id": f24["id"],
                 "f24_filename": f24.get("file_name"),
                 "quietanza_id": quietanza["id"],
-                "score": best_match["score"],
-                "match_percentage": best_match["match_percentage"],
+                "tributi_matchati": f"{confronto['tributi_trovati']}/{confronto['tributi_f24']}",
                 "importo_f24": saldo_f24,
-                "importo_quietanza": quietanza.get("saldo", 0),
-                "differenza": round(best_match["diff_importo"], 2)
+                "importo_quietanza": best_match["saldo_quietanza"],
+                "ravveduto": is_ravveduto,
+                "importo_ravvedimento": confronto["importo_ravvedimento"] if is_ravveduto else 0
             })
         else:
             risultati["f24_non_riconciliati"] += 1
@@ -1219,34 +1253,18 @@ async def riconcilia_tutto() -> Dict[str, Any]:
     # Pulisci vecchi alert
     await db[COLL_F24_ALERTS].delete_many({"tipo": "quietanza_senza_match"})
     
-    # Crea alert per quietanze non matchate
-    for quietanza in quietanze:
-        if quietanza["id"] not in quietanze_usate:
-            saldo = quietanza.get("saldo", 0)
-            if saldo > 0:  # Solo se ha un importo significativo
-                alert = {
-                    "id": str(uuid.uuid4()),
-                    "tipo": "quietanza_senza_match",
-                    "quietanza_id": quietanza["id"],
-                    "message": f"Quietanza {quietanza.get('filename', 'N/A')} (€{saldo:.2f}) non corrisponde a nessun F24",
-                    "importo": saldo,
-                    "protocollo": quietanza.get("protocollo_telematico"),
-                    "status": "pending",
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                }
-                await db[COLL_F24_ALERTS].insert_one(alert)
-    
     return {
         "success": True,
         "riepilogo": {
             "f24_totali": len(f24_da_pagare),
             "f24_riconciliati": risultati["f24_riconciliati"],
+            "f24_ravveduti": risultati["f24_ravveduti"],
             "f24_non_riconciliati": risultati["f24_non_riconciliati"],
             "quietanze_totali": len(quietanze),
             "quietanze_usate": risultati["quietanze_usate"],
             "quietanze_non_usate": risultati["quietanze_non_usate"]
         },
-        "dettaglio_match": risultati["dettaglio_match"][:20],  # Primi 20
+        "dettaglio_match": risultati["dettaglio_match"][:20],
         "warning": risultati["warning"][:10]
     }
 
