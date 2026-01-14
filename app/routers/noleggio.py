@@ -229,25 +229,54 @@ async def scan_fatture_noleggio(anno: Optional[int] = None) -> Dict[str, Any]:
                     "totale_generale": 0
                 }
             
-            # Estrai modello dalla descrizione
-            modello_patterns = [
-                (r'(STELVIO[^,]*)', "Alfa Romeo"),
-                (r'(GIULIA[^,]*)', "Alfa Romeo"),
-                (r'(X[1-7]\s*xDrive[^,]*)', "BMW"),
-                (r'(SERIE\s*\d+[^,]*)', "BMW"),
-                (r'(CLIO|CAPTUR|MEGANE|KADJAR|SCENIC)', "Renault"),
-                (r'(500[XLCS]?|PANDA|TIPO|PUNTO|DUCATO)', "Fiat"),
-                (r'(GOLF|POLO|TIGUAN|PASSAT|T-ROC)', "Volkswagen"),
-                (r'(A[1-8]|Q[2-8])', "Audi"),
-                (r'(CLASSE\s*[A-Z]|GLA|GLC|GLE)', "Mercedes"),
-                (r'(YARIS|COROLLA|RAV4|AYGO)', "Toyota"),
-                (r'(QASHQAI|JUKE|MICRA)', "Nissan"),
-            ]
-            for pattern, marca in modello_patterns:
-                mm = re.search(pattern, desc, re.IGNORECASE)
-                if mm and not veicoli[targa]["modello"]:
-                    veicoli[targa]["modello"] = mm.group(1).strip().upper()
-                    veicoli[targa]["marca"] = marca
+            # Estrai modello COMPLETO dalla descrizione
+            # Cerca pattern tipo "MARCA MODELLO Diesel/Benzina ..." dopo la targa
+            if not veicoli[targa]["modello"]:
+                # Pattern generico: cerca dopo la targa fino a keyword di stop
+                modello_match = re.search(
+                    rf'{targa}\s+(.+?)(?:\s+Canone|\s+Rifatturazione|\s+Serviz|\s+Locazione|\s+-\s+|$)',
+                    desc, re.IGNORECASE
+                )
+                if modello_match:
+                    modello_raw = modello_match.group(1).strip()
+                    # Pulisci il modello
+                    modello_raw = re.sub(r'\s+', ' ', modello_raw)
+                    if len(modello_raw) > 5:
+                        veicoli[targa]["modello"] = modello_raw.title()
+                
+                # Pattern specifici per marca
+                marca_patterns = [
+                    (r'(STELVIO[^,\n]{0,50})', "Alfa Romeo"),
+                    (r'(GIULIA[^,\n]{0,50})', "Alfa Romeo"),
+                    (r'(TONALE[^,\n]{0,50})', "Alfa Romeo"),
+                    (r'(X[1-7]\s*[SsDd]?[Rr]?[Ii]?[Vv]?[Ee]?[^,\n]{0,40})', "BMW"),
+                    (r'(SERIE\s*\d+[^,\n]{0,40})', "BMW"),
+                    (r'(CX-?\d+[^,\n]{0,50})', "Mazda"),
+                    (r'(MAZDA\s+[^,\n]{0,50})', "Mazda"),
+                    (r'(CLIO|CAPTUR|MEGANE|KADJAR|SCENIC|ARKANA)', "Renault"),
+                    (r'(500[XLCS]?|PANDA|TIPO|PUNTO|DUCATO|DOBLO)', "Fiat"),
+                    (r'(GOLF|POLO|TIGUAN|PASSAT|T-ROC|T-CROSS|ID\.\d)', "Volkswagen"),
+                    (r'(A[1-8]|Q[2-8]|E-TRON)', "Audi"),
+                    (r'(CLASSE\s*[A-Z]|GLA|GLC|GLE|GLB|CLA)', "Mercedes"),
+                    (r'(YARIS|COROLLA|RAV4|AYGO|C-HR)', "Toyota"),
+                    (r'(QASHQAI|JUKE|MICRA|LEAF|ARIYA)', "Nissan"),
+                    (r'(PEUGEOT\s*\d+|208|308|508|2008|3008|5008)', "Peugeot"),
+                    (r'(CITROEN\s*C\d|C3|C4|C5)', "Citroen"),
+                    (r'(OPEL\s*\w+|CORSA|ASTRA|MOKKA|CROSSLAND)', "Opel"),
+                    (r'(HYUNDAI\s*\w+|TUCSON|KONA|i\d+)', "Hyundai"),
+                    (r'(KIA\s*\w+|SPORTAGE|NIRO|CEED)', "Kia"),
+                ]
+                for pattern, marca in marca_patterns:
+                    mm = re.search(pattern, desc, re.IGNORECASE)
+                    if mm and not veicoli[targa]["marca"]:
+                        modello_estratto = mm.group(1).strip()
+                        # Pulisci modello
+                        modello_estratto = re.sub(r'\s+', ' ', modello_estratto)
+                        if "MAZDA" in modello_estratto.upper():
+                            modello_estratto = modello_estratto.upper().replace("MAZDA ", "")
+                        veicoli[targa]["modello"] = modello_estratto.title()
+                        veicoli[targa]["marca"] = marca
+                        break
             
             # Estrai importi
             prezzo_unitario = float(linea.get("prezzo_unitario") or linea.get("PrezzoUnitario") or 0)
