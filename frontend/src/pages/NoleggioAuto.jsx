@@ -75,6 +75,21 @@ export default function NoleggioAuto() {
     }
   };
 
+  const handleAddVeicolo = async () => {
+    if (!nuovoVeicolo.targa || !nuovoVeicolo.fornitore_piva) {
+      setErr('Targa e Fornitore sono obbligatori');
+      return;
+    }
+    try {
+      await api.post('/api/noleggio/associa-fornitore', nuovoVeicolo);
+      setShowAddVeicolo(false);
+      setNuovoVeicolo({ targa: '', marca: '', modello: '', fornitore_piva: '', contratto: '' });
+      fetchVeicoli();
+    } catch (e) {
+      setErr('Errore: ' + (e.response?.data?.detail || e.message));
+    }
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(prev => ({ ...prev, [section]: !prev[section] }));
   };
