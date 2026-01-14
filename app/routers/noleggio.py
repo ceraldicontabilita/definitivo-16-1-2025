@@ -116,31 +116,9 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
     if is_nota_credito or "nota credito" in desc_lower or "nota di credito" in desc_lower:
         importo_finale = -abs(importo)
     
-    # STEP 1: CANONI - Controlla PRIMA se è un canone (priorità alta)
-    # Ma NON se contiene "nota credito" senza "canone"
-    if any(kw in desc_lower for kw in ["canone", "locazione", "noleggio"]):
-        # Controlla se è una nota credito per canone (deve restare canoni ma negativo)
-        return ("canoni", importo_finale, metadata)
-    
-    # STEP 2: BOLLO - Tasse automobilistiche (PRIMA di costi extra!)
-    # Include "tassa di proprietà" che è il bollo auto
-    # ESCLUDI "Imposta di bollo" che è il bollo fiscale sulle fatture (€2)
-    if any(kw in desc_lower for kw in ["bollo", "tassa automobilistic", "tasse auto", 
-                                        "tassa di propriet", "imposta provincial", 
-                                        "ipt", "superbollo"]):
-        # Escludi il bollo fiscale sulle fatture
-        if "imposta di bollo" in desc_lower and importo <= 2.1:
-            return ("canoni", importo_finale, metadata)  # Trattalo come costo accessorio
-        return ("bollo", importo_finale, metadata)
-    
-    # STEP 3: PEDAGGIO - Gestione pedaggi e telepass
-    if any(kw in desc_lower for kw in ["pedaggio", "telepass", "autostrad", 
-                                        "gestione multe", "spese gestione"]):
-        return ("pedaggio", importo_finale, metadata)
-    
-    # STEP 4: VERBALI - Multe e sanzioni
-    if any(kw in desc_lower for kw in ["verbale", "multa", "sanzione", "contravvenzione",
-                                        "infrazione", "codice strada", "rinotifica"]):
+    # STEP 1: VERBALI - Multe e sanzioni (alta priorità)
+    if any(kw in desc_lower for kw in ["verbale nr", "verbale n.", "multa", "sanzione", 
+                                        "contravvenzione", "infrazione", "codice strada"]):
         # Estrai numero e data verbale
         num_verbale = estrai_numero_verbale(descrizione)
         data_verbale = estrai_data_verbale(descrizione)
@@ -150,30 +128,45 @@ def categorizza_spesa(descrizione: str, importo: float, is_nota_credito: bool = 
             metadata["data_verbale"] = data_verbale
         return ("verbali", importo_finale, metadata)
     
-    # STEP 5: COSTI EXTRA - Penalità e addebiti (ma NON "addebito tassa" che è bollo)
-    if any(kw in desc_lower for kw in ["penalità", "penale", "commissione", "mora", "ritardo"]):
-        return ("costi_extra", importo_finale, metadata)
-    # "addebito" solo se NON è tassa
-    if "addebito" in desc_lower and "tassa" not in desc_lower:
-        return ("costi_extra", importo_finale, metadata)
-    
-    # STEP 6: RIPARAZIONI - Pattern specifici (parole chiare)
-    riparazioni_keywords_sicure = [
-        "sinistro", "danni", "danno", "carrozzeria", "riparaz", "ripristino", 
-        "sostituz", "paraurti", "parafango", "cofano", "portiera", "specchietto",
-        "retrovisore", "fanale", "faro", "parabrezza", "vetro", "ammortizzatore",
-        "freno", "freni", "disco", "pastiglie", "sospensione", "cambio", "frizione"
+    # STEP 2: RIPARAZIONI - Sinistri e danni (prima di canoni perché contiene "penalità")
+    riparazioni_keywords = [
+        "sinistro", "rca passivo", "ard passivo", "danni al veicolo",
+        "carrozzeria", "riparaz", "ripristino", "paraurti", "parafango", 
+        "cofano", "portiera", "specchietto", "retrovisore", "fanale", 
+        "faro", "parabrezza", "vetro", "ammortizzatore", "montante",
+        "sedili", "rifatturazione 015", "danni"
     ]
-    if any(kw in desc_lower for kw in riparazioni_keywords_sicure):
+    if any(kw in desc_lower for kw in riparazioni_keywords):
         return ("riparazioni", importo_finale, metadata)
     
-    # STEP 7: CANONI (altri pattern)
-    if any(kw in desc_lower for kw in ["servizio", "servizi", "rifatturazione", 
-                                        "conguaglio", "chilometr", "km", "finanziario",
-                                        "assistenza operativa", "rateo"]):
-        return ("canoni", importo_finale, metadata)
+    # STEP 3: BOLLO - Tasse automobilistiche
+    bollo_keywords = [
+        "bollo", "tassa automobilistic", "tasse auto", "tassa di propriet",
+        "addebito bollo", "imposta provincial", "ipt", "superbollo",
+        "rifatturazione (002) tasse"
+    ]
+    if any(kw in desc_lower for kw in bollo_keywords):
+        # Escludi il bollo fiscale sulle fatture (€2)
+        if "imposta di bollo" in desc_lower and importo <= 2.1:
+            return ("canoni", importo_finale, metadata)
+        return ("bollo", importo_finale, metadata)
     
-    # Default: canoni
+    # STEP 4: PEDAGGIO - Gestione pedaggi e telepass
+    if any(kw in desc_lower for kw in ["pedaggio", "telepass", "autostrad", 
+                                        "spese gestione multe", "rifatturazione 011"]):
+        return ("pedaggio", importo_finale, metadata)
+    
+    # STEP 5: COSTI EXTRA - Penalità varie, chiavi, stato d'uso
+    costi_extra_keywords = [
+        "penale stato d'uso", "doppie chiavi", "penalità", "penale",
+        "commissione", "mora", "ritardo", "rifatturazione 008"
+    ]
+    if any(kw in desc_lower for kw in costi_extra_keywords):
+        # Ma non se è sinistro (già gestito sopra)
+        if "sinistro" not in desc_lower:
+            return ("costi_extra", importo_finale, metadata)
+    
+    # STEP 6: CANONI - Default per tutto il resto (locazione, servizi, conguagli, etc.)
     return ("canoni", importo_finale, metadata)
 
 
