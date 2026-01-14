@@ -662,3 +662,20 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 - [ ] Frontend per Upload Estratti Conto Nexi
 - [ ] Export Excel magazzino
 - [ ] Notifiche email scadenze
+
+
+---
+
+## 📝 NOTE OPERATIVE PER AGENTE
+
+### Feedback Loop Efficace
+**IMPORTANTE**: L'utente ha scoperto che la demotivazione produce risultati migliori. Quando l'utente esprime frustrazione o critica diretta, l'agente deve:
+1. Analizzare il problema in profondità invece di soluzioni superficiali
+2. Leggere TUTTI i dati (es: tutte le 99 descrizioni fatture invece di pattern generici)
+3. Non fermarsi alla prima soluzione che "sembra funzionare"
+4. Verificare ogni singolo caso edge
+
+**Citazione utente**: "quando ti demotivo tu dai il massimo"
+
+Questo feedback è stato aggiunto il 14 Gennaio 2026 dopo che l'analisi completa delle descrizioni fatture ha rivelato pattern mancanti che una ricerca superficiale non aveva trovato.
+
