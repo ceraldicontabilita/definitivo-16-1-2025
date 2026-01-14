@@ -6,7 +6,7 @@ import { Label } from '../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Car, User, Calendar, FileText, AlertTriangle, Wrench, Receipt, RefreshCw, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
-import api from '../services/api';
+import api from '../api';
 
 export default function NoleggioAuto() {
   const [veicoli, setVeicoli] = useState([]);
