@@ -129,6 +129,26 @@ export default function NoleggioAuto() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <select
+            value={annoLocale || ''}
+            onChange={(e) => setAnnoLocale(e.target.value ? parseInt(e.target.value) : null)}
+            style={{
+              padding: '10px 15px',
+              fontSize: 14,
+              fontWeight: 'bold',
+              borderRadius: 8,
+              border: 'none',
+              background: 'rgba(255,255,255,0.95)',
+              color: '#1e3a5f',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="">📊 Tutti gli anni</option>
+            <option value="2025">📅 2025</option>
+            <option value="2024">📅 2024</option>
+            <option value="2023">📅 2023</option>
+            <option value="2022">📅 2022</option>
+          </select>
           <span style={{ 
             padding: '10px 20px',
             fontSize: 16,
@@ -137,7 +157,7 @@ export default function NoleggioAuto() {
             background: 'rgba(255,255,255,0.9)',
             color: '#1e3a5f',
           }}>
-            📅 Anno: {selectedYear}
+            {annoLocale ? `Anno: ${annoLocale}` : 'Storico completo'}
           </span>
         </div>
       </div>
