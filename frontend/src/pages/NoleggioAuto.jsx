@@ -13,6 +13,10 @@ export default function NoleggioAuto() {
   const [drivers, setDrivers] = useState([]);
   const [editingVeicolo, setEditingVeicolo] = useState(null);
   const [expandedSection, setExpandedSection] = useState({});
+  const [fornitori, setFornitori] = useState([]);
+  const [showAddVeicolo, setShowAddVeicolo] = useState(false);
+  const [nuovoVeicolo, setNuovoVeicolo] = useState({ targa: '', marca: '', modello: '', fornitore_piva: '', contratto: '' });
+  const [fattureNonAssociate, setFattureNonAssociate] = useState(0);
 
   const categorie = [
     { key: 'canoni', label: 'Canoni', icon: '📋', color: '#4caf50' },
