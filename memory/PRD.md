@@ -168,6 +168,9 @@ GET /api/fatture/{id}/entita-correlate
 4. PRIMA NOTA
    └──► Crea movimento in prima_nota_banca
         (tipo: uscita, categoria: Fornitori)
+        PRIMA NOTA
+   └──► Crea movimento in prima_nota_cassa
+        (tipo: entrate, uscita, categoria: Fornitori)
    
 5. SCADENZIARIO
    └──► Crea scadenza in scadenziario_fornitori
@@ -184,7 +187,7 @@ GET /api/fatture/{id}/entita-correlate
 
 ## 📱 PAGINE RESPONSIVE
 
-Tutte le pagine principali supportano layout mobile:
+Tutte le pagine3 supportano layout mobile:
 
 | Pagina | Desktop | Mobile |
 |--------|---------|--------|
@@ -508,6 +511,5 @@ L'algoritmo di riconciliazione NON trova molti match automatici perché:
 
 ### P3 - Priorità Bassa
 - [ ] Frontend per Upload Estratti Conto Nexi
-- [ ] Sezione HACCP
 - [ ] Export Excel magazzino
 - [ ] Notifiche email scadenze
