@@ -113,7 +113,11 @@ def estrai_numero_assegno(descrizione: str) -> Optional[str]:
         if match:
             return match.group(1)
     return None
-    return result
+
+
+def is_prelievo_assegno(descrizione: str) -> bool:
+    """Verifica se è un prelievo assegno."""
+    return "PRELIEVO ASSEGNO" in descrizione.upper() or "PREL. ASS." in descrizione.upper()
 
 
 def is_incasso_pos(descrizione: str) -> bool:
