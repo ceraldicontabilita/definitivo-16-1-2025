@@ -1572,3 +1572,138 @@ async def processa_tutti_documenti() -> Dict[str, Any]:
             "estratti_bnl_processati": risultati.get("estratti_bnl", {}).get("processati", 0)
         }
     }
+
+
+
+@router.post("/reimporta-da-filesystem")
+async def reimporta_documenti_da_filesystem(
+    force: bool = Query(False, description="Forza reimportazione anche se esistenti nel DB")
+) -> Dict[str, Any]:
+    """
+    Scansiona la cartella /app/documents e reimporta tutti i documenti nel database.
+    Utile quando il database è stato resettato ma i file sono ancora su disco.
+    """
+    import hashlib
+    import uuid
+    
+    db = Database.get_db()
+    
+    # Categorie e sottocartelle
+    category_dirs = {
+        "Buste Paga": "busta_paga",
+        "Estratti Conto": "estratto_conto", 
+        "F24": "f24",
+        "Fatture": "fattura",
+        "Altri": "altro"
+    }
+    
+    importati = []
+    saltati = []
+    errori = []
+    
+    base_path = Path("/app/documents")
+    
+    for dir_name, category in category_dirs.items():
+        dir_path = base_path / dir_name
+        if not dir_path.exists():
+            continue
+        
+        for file_path in dir_path.iterdir():
+            if not file_path.is_file():
+                continue
+            
+            # Salta file di sistema
+            if file_path.name.startswith('.'):
+                continue
+            
+            filename = file_path.name
+            filepath = str(file_path)
+            
+            # Calcola hash per controllo duplicati
+            try:
+                with open(filepath, 'rb') as f:
+                    file_hash = hashlib.md5(f.read()).hexdigest()
+            except Exception as e:
+                errori.append({"file": filename, "errore": f"Impossibile leggere file: {e}"})
+                continue
+            
+            # Controlla se già esiste nel DB
+            existing = await db["documents_inbox"].find_one({
+                "$or": [
+                    {"filepath": filepath},
+                    {"file_hash": file_hash}
+                ]
+            })
+            
+            if existing and not force:
+                saltati.append(filename)
+                continue
+            
+            # Ricategorizza automaticamente in base al nome
+            final_category = category
+            filename_lower = filename.lower()
+            
+            if "bnl" in filename_lower:
+                final_category = "estratto_conto"
+            elif "nexi" in filename_lower:
+                final_category = "estratto_conto"
+            elif "paypal" in filename_lower:
+                final_category = "estratto_conto"
+            elif "paga" in filename_lower or "cedolino" in filename_lower:
+                final_category = "busta_paga"
+            elif "f24" in filename_lower:
+                final_category = "f24"
+            
+            # Crea record documento
+            doc_record = {
+                "id": str(uuid.uuid4()),
+                "filename": filename,
+                "filepath": filepath,
+                "category": final_category,
+                "category_label": {
+                    "estratto_conto": "Estratti Conto",
+                    "busta_paga": "Buste Paga",
+                    "f24": "F24",
+                    "fattura": "Fatture",
+                    "altro": "Altri"
+                }.get(final_category, "Altri"),
+                "status": "nuovo",
+                "processed": False,
+                "file_hash": file_hash,
+                "file_size": file_path.stat().st_size,
+                "downloaded_at": datetime.now(timezone.utc).isoformat(),
+                "source": "filesystem_import"
+            }
+            
+            try:
+                if existing and force:
+                    await db["documents_inbox"].update_one(
+                        {"_id": existing["_id"]},
+                        {"$set": doc_record}
+                    )
+                else:
+                    await db["documents_inbox"].insert_one(dict(doc_record))
+                
+                importati.append({
+                    "file": filename,
+                    "categoria": final_category
+                })
+            except Exception as e:
+                errori.append({"file": filename, "errore": str(e)})
+    
+    # Statistiche per categoria
+    by_category = {}
+    for doc in importati:
+        cat = doc["categoria"]
+        by_category[cat] = by_category.get(cat, 0) + 1
+    
+    return {
+        "success": True,
+        "importati": len(importati),
+        "saltati": len(saltati),
+        "errori_count": len(errori),
+        "per_categoria": by_category,
+        "dettagli": importati[:50] if len(importati) > 50 else importati,
+        "errori": errori if errori else None,
+        "messaggio": f"Importati {len(importati)} documenti dal filesystem"
+    }
