@@ -16,31 +16,33 @@ logger = logging.getLogger(__name__)
 class PayslipPDFParser:
     """Parser per PDF delle buste paga italiane (formato Zucchetti/standard)."""
     
-    # Pattern per estrarre dati - MIGLIORATI
+    # Pattern per estrarre dati - MIGLIORATI per formato CSC/Zucchetti
     PATTERNS = {
         'codice_fiscale': r'[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]',
-        'retribuzione_tfr': r'Retribuzione\s+utile\s+T\.?F\.?R\.?\s*[:\s]*([0-9.,]+)',
-        'netto_mese': r'NETTO\s*(?:DEL\s*)?MESE\s*[:\s€]*([0-9.,]+)',
-        'totale_competenze': r'TOTALE\s*COMPETENZE\s*[:\s€]*([0-9.,]+)',
-        'totale_trattenute': r'TOTALE\s*TRATTENUTE\s*[:\s€]*([0-9.,]+)',
+        'retribuzione_tfr': r'(?:Retribuzione\s+utile\s+T\.?F\.?R\.?|_RE_T_R_I_B_UZ_I_O_N_E_\s*T\.?F\.?R\.?)\s*[:\s_]*(?:\d+[,.]?\d*%?)?\s*([0-9.,]+)\+?',
+        'netto_mese': r'(?:NETTO\s*(?:DEL\s*)?MESE|NETTO\s*IN\s*BUSTA|NETTO\s*DA\s*PAGARE)\s*[:\s€]*([0-9.,]+)',
+        'totale_competenze': r'(?:_?TO_?T_?A_?L_?E_?\s*_?C_?O_?M_?P_?E_?T_?E_?N_?Z_?E_?|TOTALE\s*COMPETENZE)\s*[:\s€_]*([0-9.,]+)',
+        'totale_trattenute': r'(?:TOTALE\s*TRATTENUTE|_?TO_?TA_?LE_?\s*TR_?AT_?TE_?NU_?TE_?)\s*[:\s€_]*([0-9.,]+)',
         'periodo': r'Periodo\s+di\s+riferimento[:\s]*(\w+\s+\d{4})',
-        'mese_anno': r'(Gennaio|Febbraio|Marzo|Aprile|Maggio|Giugno|Luglio|Agosto|Settembre|Ottobre|Novembre|Dicembre)\s+(\d{4})',
+        'mese_anno': r'(GENNAIO|FEBBRAIO|MARZO|APRILE|MAGGIO|GIUGNO|LUGLIO|AGOSTO|SETTEMBRE|OTTOBRE|NOVEMBRE|DICEMBRE)\s+(\d{4})',
         # NUOVI PATTERN
-        'ore_ordinarie': r'(?:Ore\s*ordinarie|ORE)[:\s]*(\d+(?:[.,]\d+)?)',
-        'ore_straordinarie': r'(?:Ore\s*straordinarie|straordinarie)[:\s]*(\d+(?:[.,]\d+)?)',
-        'ore_lavorate_tabella': r'(\d+)\s+(\d+)\s+(\d+(?:[.,]\d+)?)\s+(?:ORE|ore)',  # Pattern per tabella ore
-        'paga_base': r'PAGA\s*BASE[:\s]*([0-9.,]+)',
-        'contingenza': r'CONTING\.?[:\s]*([0-9.,]+)',
-        'livello': r"(\d+'?\s*Livello|\d+°\s*Livello|Livello\s*\d+)",
-        'qualifica': r'(CAMERIERE|CUOCO|BARISTA|AIUTO CUOCO|LAVAPIATTI|PIZZAIOLO|COMMIS|CHEF|RECEPTIONIST)',
-        'part_time': r'Part\s*Time\s*(\d+)[,.]?(\d*)\s*%',
+        'ore_ordinarie': r'(?:Ore\s*ordinarie|ORE\s*ORD|ore\s*ord)[:\s]*(\d+(?:[.,]\d+)?)',
+        'ore_straordinarie': r'(?:Ore\s*straordinarie|straordinarie|ORE\s*STRAORD)[:\s]*(\d+(?:[.,]\d+)?)',
+        'ore_lavorate_tabella': r'(\d+)\s+(\d+)\s+(\d+(?:[.,]\d+)?)\s+(?:ORE|ore)',
+        'paga_base': r'(?:PAGA\s*BASE|\d\)\s*PAGA\s*BASE)[:\s]*([0-9.,]+)',
+        'contingenza': r'(?:CONTINGENZA|CONTING\.?|\d\)\s*CONTINGENZA)[:\s]*([0-9.,]+)',
+        'livello': r"(\d+'?\s*Livello|\d+°\s*Livello|Livello\s*\d+|\d+\s*LIV)",
+        'qualifica': r'(CAMERIERE|CUOCO|BARISTA|AIUTO CUOCO|LAVAPIATTI|PIZZAIOLO|COMMIS|CHEF|RECEPTIONIST|BANCONIERE|ADDETTO)',
+        'part_time': r'(?:Part\s*Time|%P\.?T\.?)\s*(\d+)[,.]?(\d*)\s*%?',
         'iban': r'IT[0-9]{2}[A-Z][0-9]{10}[0-9A-Z]{12}',
-        'ferie_maturate': r'Ferie[:\s]*([0-9.,]+)\s+([0-9.,]+)\s+([0-9.,]+)',  # Residuo, Maturato, Goduto
+        'ferie_maturate': r'(?:Ferie|Mat\.)\s*([0-9.,]+)\+?\s*(?:God\.)\s*([0-9.,]+)',
         'permessi': r'Permessi[:\s]*([0-9.,]+)\s+([0-9.,]+)',
         'tfr_quota_anno': r'Quota\s*anno[:\s]*([0-9.,]+)',
         'tfr_fondo': r'T\.?F\.?R\.?\s*F\.?do[:\s]*([0-9.,]+)',
-        'matricola': r'Matricola[:\s]*(\d+)|Nr\.\s*(\d+)',
-        'data_assunzione': r'Data\s*Assunzione[:\s]*(\d{2}[-/]\d{2}[-/]\d{4})',
+        'matricola': r'(?:Matricola|Mat\.)[:\s]*(\d+)|Nr\.\s*(\d+)',
+        'data_assunzione': r'(?:Data\s*Assunzione|DATA\s*ASSUNZIONE)[:\s]*(\d{2}[-/]\d{2}[-/]\d{4})',
+        # Pattern per nome dipendente nel formato CSC
+        'nome_dopo_data': r'\d{2}/\d{2}/\d{4}\s+([A-Z][A-Z\s]+[A-Z])\s+\d{2}/\d{2}/\d{4}',
     }
     
     MESI_MAP = {
