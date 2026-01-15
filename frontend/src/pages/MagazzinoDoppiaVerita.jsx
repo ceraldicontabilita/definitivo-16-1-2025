@@ -96,8 +96,7 @@ export default function MagazzinoDoppiaVerita() {
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1f2937', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Package size={32} />
-          Magazzino Doppia Verità
+          📦 Magazzino Doppia Verità
         </h1>
         <p style={{ color: '#6b7280', margin: 0 }}>
           Confronto giacenze teoriche vs reali - Tracciamento differenze inventariali
