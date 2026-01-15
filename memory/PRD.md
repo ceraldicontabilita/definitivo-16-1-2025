@@ -14,11 +14,14 @@
 - **FEATURE**: Nuovo endpoint `/api/documenti/sync-buste-paga` per processare buste paga PDF
 - **FEATURE**: Parser buste paga migliorato per supportare formati CSC e Zucchetti
 - **FEATURE**: Aggiunta MAPPA STRUTTURALE SISTEMA nel PRD con diagrammi flusso dati
+- **FEATURE**: Riconciliazione automatica transazioni carta (endpoint `/api/operazioni-da-confermare/carta/*`)
+- **FEATURE**: Standardizzazione UI - Convertite 4 pagine (DashboardRiconciliazione, RiconciliazioneSmart, MagazzinoDoppiaVerita) da Tailwind/Shadcn a style inline
 - **VERIFICATO**: Connessione IMAP Gmail funzionante
 - **VERIFICATO**: 46 F24 importati automaticamente dalle email
 - **VERIFICATO**: 17 estratti conto Nexi processati con 148 transazioni
 - **VERIFICATO**: 111 cedolini importati con dati corretti (netto, competenze, trattenute)
 - **VERIFICATO**: Prima nota salari aggiornata automaticamente (1373 movimenti)
+- **VERIFICATO**: 7 transazioni carta riconciliate automaticamente con fatture
 
 ### 14 Gennaio 2026
 - **FIX**: Importate 247 fatture XML dei fornitori noleggio (ALD, ARVAL, Leasys)
