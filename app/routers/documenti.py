@@ -1090,3 +1090,202 @@ async def sync_estratti_conto() -> Dict[str, Any]:
         "errori": errori if errori else None,
         "messaggio": f"Processati {len(processati)} estratti conto" if processati else "Nessun estratto conto processato"
     }
+
+
+
+@router.post("/sync-buste-paga")
+async def sync_buste_paga() -> Dict[str, Any]:
+    """
+    Processa tutte le buste paga PDF dalla inbox.
+    Estrae: dipendente, netto, lordo, periodo, ore, ferie, TFR.
+    Salva in payslips e aggiorna prima_nota_salari.
+    """
+    db = Database.get_db()
+    
+    # Trova buste paga non processate
+    docs = await db["documents_inbox"].find(
+        {"category": "busta_paga", "processed": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    if not docs:
+        return {
+            "success": True,
+            "message": "Nessuna busta paga da processare",
+            "processati": 0,
+            "errori": []
+        }
+    
+    from app.services.payslip_pdf_parser import PayslipPDFParser
+    import uuid
+    
+    processati = []
+    errori = []
+    
+    # Cache dipendenti per matching
+    dipendenti = {}
+    async for dip in db["employees"].find({}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1, "codice_fiscale": 1}):
+        cf = dip.get("codice_fiscale", "").upper()
+        if cf:
+            dipendenti[cf] = dip
+        nome_completo = f"{dip.get('cognome', '')} {dip.get('nome', '')}".upper().strip()
+        if nome_completo:
+            dipendenti[nome_completo] = dip
+    
+    for doc in docs:
+        filepath = doc.get("filepath")
+        filename = doc.get("filename", "")
+        
+        if not filepath or not os.path.exists(filepath):
+            errori.append({"file": filename, "errore": "File non trovato"})
+            continue
+        
+        try:
+            # Usa il parser
+            parser = PayslipPDFParser(filepath)
+            parsed_pages = parser.parse()
+            
+            if not parsed_pages:
+                errori.append({"file": filename, "errore": "Nessun dato estratto"})
+                continue
+            
+            # Processa ogni pagina (ogni pagina può essere un cedolino diverso)
+            cedolini_salvati = 0
+            for page_data in parsed_pages:
+                # Cerca dipendente per CF o nome
+                cf = page_data.get("codice_fiscale", "").upper()
+                nome = page_data.get("nome_dipendente", "").upper()
+                
+                dipendente_match = dipendenti.get(cf) or dipendenti.get(nome)
+                dipendente_id = dipendente_match.get("id") if dipendente_match else None
+                
+                cedolino_id = str(uuid.uuid4())
+                
+                cedolino_record = {
+                    "id": cedolino_id,
+                    "dipendente_id": dipendente_id,
+                    "dipendente_nome": page_data.get("nome_dipendente"),
+                    "codice_fiscale": cf,
+                    "mese": page_data.get("mese"),
+                    "anno": page_data.get("anno"),
+                    "netto_mese": page_data.get("netto_mese", 0),
+                    "totale_competenze": page_data.get("totale_competenze", 0),
+                    "totale_trattenute": page_data.get("totale_trattenute", 0),
+                    "retribuzione_utile_tfr": page_data.get("retribuzione_utile_tfr", 0),
+                    "ore_ordinarie": page_data.get("ore_ordinarie", 0),
+                    "ore_straordinarie": page_data.get("ore_straordinarie", 0),
+                    "paga_base": page_data.get("paga_base", 0),
+                    "livello": page_data.get("livello"),
+                    "qualifica": page_data.get("qualifica"),
+                    "part_time_percent": page_data.get("part_time_percent", 100),
+                    "ferie": page_data.get("ferie", {}),
+                    "permessi": page_data.get("permessi", {}),
+                    "tfr_quota_anno": page_data.get("tfr_quota_anno", 0),
+                    "iban": page_data.get("iban"),
+                    "matricola": page_data.get("matricola"),
+                    "filename": filename,
+                    "filepath": filepath,
+                    "page_number": page_data.get("page_number", 1),
+                    "email_source": {
+                        "subject": doc.get("email_subject"),
+                        "from": doc.get("email_from"),
+                        "date": doc.get("email_date")
+                    },
+                    "source": "email_sync",
+                    "import_date": datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Controlla duplicati (stesso dipendente, stesso mese/anno)
+                existing = await db["payslips"].find_one({
+                    "codice_fiscale": cf,
+                    "mese": page_data.get("mese"),
+                    "anno": page_data.get("anno")
+                })
+                
+                if not existing:
+                    await db["payslips"].insert_one(dict(cedolino_record))
+                    cedolini_salvati += 1
+                    
+                    # Crea anche movimento in prima_nota_salari se c'è un netto
+                    netto = page_data.get("netto_mese", 0)
+                    if netto > 0 and dipendente_id:
+                        movimento_id = str(uuid.uuid4())
+                        mese = page_data.get("mese", 1)
+                        anno = page_data.get("anno", 2025)
+                        
+                        # Data fine mese
+                        import calendar
+                        ultimo_giorno = calendar.monthrange(anno, mese)[1]
+                        data_movimento = f"{anno}-{mese:02d}-{ultimo_giorno:02d}"
+                        
+                        movimento = {
+                            "id": movimento_id,
+                            "cedolino_id": cedolino_id,
+                            "dipendente_id": dipendente_id,
+                            "dipendente_nome": page_data.get("nome_dipendente"),
+                            "data": data_movimento,
+                            "mese": mese,
+                            "anno": anno,
+                            "importo": netto,
+                            "tipo": "stipendio",
+                            "descrizione": f"Stipendio {mese:02d}/{anno}",
+                            "riconciliato": False,
+                            "bonifico_id": None,
+                            "source": "busta_paga_sync",
+                            "created_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        # Controlla se esiste già
+                        existing_mov = await db["prima_nota_salari"].find_one({
+                            "dipendente_id": dipendente_id,
+                            "mese": mese,
+                            "anno": anno
+                        })
+                        
+                        if not existing_mov:
+                            await db["prima_nota_salari"].insert_one(dict(movimento))
+            
+            if cedolini_salvati > 0:
+                # Aggiorna stato documento
+                await db["documents_inbox"].update_one(
+                    {"id": doc["id"]},
+                    {"$set": {
+                        "status": "processato",
+                        "processed": True,
+                        "processed_to": "payslips",
+                        "cedolini_estratti": cedolini_salvati,
+                        "processed_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                processati.append({
+                    "file": filename,
+                    "cedolini": cedolini_salvati,
+                    "dipendente": parsed_pages[0].get("nome_dipendente") if parsed_pages else "N/A",
+                    "periodo": f"{parsed_pages[0].get('mese', '?')}/{parsed_pages[0].get('anno', '?')}" if parsed_pages else "N/A"
+                })
+            else:
+                # Tutto duplicato
+                await db["documents_inbox"].update_one(
+                    {"id": doc["id"]},
+                    {"$set": {
+                        "status": "processato",
+                        "processed": True,
+                        "processed_to": "payslips",
+                        "nota": "Duplicato - già presente",
+                        "processed_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+        except Exception as e:
+            logger.error(f"Errore parsing busta paga {filename}: {e}")
+            errori.append({"file": filename, "errore": str(e)})
+    
+    return {
+        "success": True,
+        "processati": len(processati),
+        "errori_count": len(errori),
+        "dettagli": processati,
+        "errori": errori if errori else None,
+        "messaggio": f"Processate {len(processati)} buste paga" if processati else "Nessuna nuova busta paga processata"
+    }
