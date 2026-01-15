@@ -11,6 +11,13 @@
   - `Documenti.jsx` - Rimossi componenti Shadcn (Card, Button) e icone Lucide  
   - `PrimaNota.jsx` - Mantenuto già con stili inline, rimossi riferimenti a componenti UI esterni
 - **VERIFICATO**: Tutte le pagine caricate correttamente con nuovo stile uniforme
+- **FEATURE**: Implementato sistema automazione completa (`/app/app/services/automazione_completa.py`):
+  - Email Aruba → Operazioni da Confermare (fornitore, numero fattura, importo)
+  - Upload XML Fatture → Aggiorna automaticamente Magazzino + Ricette (food cost)
+  - Completa operazioni confermate quando arriva XML corrispondente
+  - API `/api/operazioni-da-confermare/conferma-batch` per conferma multipla Cassa/Banca
+  - API `/api/operazioni-da-confermare/aruba-pendenti` per lista operazioni pendenti
+- **INTEGRATO**: Monitor email (ogni 10 min) ora include anche scarico notifiche Aruba
 - L'intera applicazione ora usa esclusivamente stili inline (NO Tailwind/Shadcn)
 
 ### 15 Gennaio 2026 (Sessione 2)
