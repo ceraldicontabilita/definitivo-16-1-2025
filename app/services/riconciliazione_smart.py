@@ -440,54 +440,6 @@ async def analizza_movimento(movimento: Dict[str, Any]) -> Dict[str, Any]:
         
         return result
     
-    # 3.5. Check PRELIEVO ASSEGNO
-    numero_assegno = estrai_numero_assegno(descrizione)
-    if numero_assegno:
-        result["tipo"] = "prelievo_assegno"
-        result["categoria_suggerita"] = "Pagamento Assegno"
-        result["numero_assegno"] = numero_assegno
-        
-        # Cerca l'assegno nella collezione
-        assegno = await db.assegni.find_one(
-            {"numero": {"$regex": numero_assegno[-8:]}},  # Ultime 8 cifre per match più flessibile
-            {"_id": 0}
-        )
-        
-        if assegno:
-            result["assegno"] = {
-                "id": assegno.get("id"),
-                "numero": assegno.get("numero"),
-                "importo": assegno.get("importo"),
-                "stato": assegno.get("stato"),
-                "beneficiario": assegno.get("beneficiario"),
-                "data_emissione": assegno.get("data_emissione")
-            }
-            
-            # Verifica match importo
-            importo_assegno = assegno.get("importo") or 0
-            if abs(importo_assegno - abs(importo)) < 0.01:
-                result["associazione_automatica"] = True
-                result["richiede_conferma"] = False
-                result["suggerimenti"] = [{
-                    "tipo": "assegno",
-                    "id": assegno.get("id"),
-                    "numero": assegno.get("numero"),
-                    "importo": importo_assegno,
-                    "beneficiario": assegno.get("beneficiario"),
-                    "fattura_collegata": assegno.get("fattura_collegata"),
-                    "descrizione": f"Assegno N. {assegno.get('numero')} - {assegno.get('beneficiario', 'N/A')}"
-                }]
-            else:
-                # Importo diverso - richiede conferma
-                result["richiede_conferma"] = True
-                result["note"] = f"Importo assegno €{importo_assegno:.2f} vs movimento €{abs(importo):.2f}"
-        else:
-            # Assegno non trovato nella collezione
-            result["note"] = f"Assegno N. {numero_assegno} non trovato nel registro assegni"
-            result["richiede_conferma"] = True
-        
-        return result
-    
     # 4. Check stipendi (VOSTRA DISPOSIZIONE + nome)
     nome_beneficiario = estrai_nome_beneficiario(descrizione)
     if nome_beneficiario:
