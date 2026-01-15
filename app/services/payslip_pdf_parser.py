@@ -216,9 +216,17 @@ class PayslipPDFParser:
         
         # Fallback: cerca pattern specifici per formato CSC
         if competenze == 0:
-            comp_match = re.search(r'TOTALE\s*COMPETENZE[^\d]*([0-9.,]+)', text_clean, re.IGNORECASE)
+            # Pattern per formato con underscore nell'importo
+            comp_match = re.search(r'_?TO_?T_?A_?L_?E_?\s*_?C_?O_?M_?P_?E_?T_?E_?N_?Z_?E_?[_\s]*([0-9_.,]+)\+?', text, re.IGNORECASE)
             if comp_match:
-                competenze = self._parse_italian_number(comp_match.group(1))
+                # Rimuovi underscore dall'importo
+                importo_str = comp_match.group(1).replace('_', '')
+                competenze = self._parse_italian_number(importo_str)
+            else:
+                # Pattern semplice
+                comp_match = re.search(r'TOTALE\s*COMPETENZE[^\d]*([0-9.,]+)', text_clean, re.IGNORECASE)
+                if comp_match:
+                    competenze = self._parse_italian_number(comp_match.group(1))
         
         if trattenute == 0:
             tratt_match = re.search(r'TOTALE\s*TRATTENUTE[^\d]*([0-9.,]+)', text_clean, re.IGNORECASE)
