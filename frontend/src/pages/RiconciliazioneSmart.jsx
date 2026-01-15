@@ -534,7 +534,7 @@ export default function RiconciliazioneSmart() {
                         {config.icon} {TIPO_LABELS[mov.tipo]?.split(' ')[0]}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-                        {mov.associazione_automatica && <span style={{ padding: '4px 8px', background: '#dcfce7', color: '#166534', borderRadius: '6px', fontSize: '10px', fontWeight: 600' }}>✓ AUTO</span>}
+                        {mov.associazione_automatica && <span style={{ padding: '4px 8px', background: '#dcfce7', color: '#166534', borderRadius: '6px', fontSize: '10px', fontWeight: 600 }}>✓ AUTO</span>}
                         {isExpanded ? '▲' : '▼'}
                       </div>
                     </div>
