@@ -9,6 +9,7 @@ const TIPO_COLORS = {
   commissione_bancaria: { bg: '#e0e7ff', color: '#3730a3', icon: '🏦' },
   stipendio: { bg: '#dcfce7', color: '#166534', icon: '👤' },
   f24: { bg: '#fee2e2', color: '#991b1b', icon: '📄' },
+  prelievo_assegno: { bg: '#fef3c7', color: '#92400e', icon: '📝' },
   fattura_sdd: { bg: '#dbeafe', color: '#1e40af', icon: '🔄' },
   fattura_bonifico: { bg: '#f3e8ff', color: '#7c3aed', icon: '📑' },
   non_riconosciuto: { bg: '#f1f5f9', color: '#475569', icon: '❓' }
@@ -18,6 +19,7 @@ const TIPO_LABELS = {
   incasso_pos: 'Incasso POS',
   commissione_pos: 'Commissione POS',
   commissione_bancaria: 'Commissione Bancaria',
+  prelievo_assegno: 'Prelievo Assegno',
   stipendio: 'Stipendio',
   f24: 'Pagamento F24',
   fattura_sdd: 'Addebito SDD',
