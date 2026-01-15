@@ -94,6 +94,37 @@ async def sync_immediato() -> Dict[str, Any]:
     return result
 
 
+@router.get("/telegram/status")
+async def telegram_status() -> Dict[str, Any]:
+    """Verifica se Telegram è configurato."""
+    from app.services.telegram_notifications import is_configured, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+    
+    configured = is_configured()
+    
+    return {
+        "configurato": configured,
+        "bot_token_presente": bool(TELEGRAM_BOT_TOKEN),
+        "chat_id_presente": bool(TELEGRAM_CHAT_ID),
+        "istruzioni": None if configured else "Aggiungi TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID nel file .env"
+    }
+
+
+@router.post("/telegram/test")
+async def telegram_test() -> Dict[str, Any]:
+    """Invia un messaggio di test su Telegram."""
+    from app.services.telegram_notifications import test_connection
+    
+    result = await test_connection()
+    
+    if not result.get("configured"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Telegram non configurato. Aggiungi TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID in .env"
+        )
+    
+    return result
+
+
 @router.get("/lista")
 async def lista_documenti(
     categoria: Optional[str] = Query(None, description="Filtra per categoria"),
