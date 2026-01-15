@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns3:FileMetadati xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" xmlns:ns3="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fattura/messaggi/v1.0" versione="1.0">
+    <IdentificativoSdI>16337189893</IdentificativoSdI>
+    <NomeFile>IT01879020517A2025_ivRQl.xml.p7m</NomeFile>
+    <Hash>40f4c92d21fe0ef0ec50c18b59e905758ce486868b8ac5194c92649f8343e186</Hash>
+    <CodiceDestinatario>0000000</CodiceDestinatario>
+    <Formato>FPR12</Formato>
+    <TentativiInvio>1</TentativiInvio>
+    <MessageId>39422316234</MessageId>
+</ns3:FileMetadati>

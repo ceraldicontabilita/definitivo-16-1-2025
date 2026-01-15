@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<postacert tipo="posta-certificata" errore="nessuno">
+    <intestazione>
+        <mittente>sdi26@pec.fatturapa.it</mittente>
+        <destinatari tipo="certificato">ceraldiantonietta@legalmail.it</destinatari>
+        <risposte>sdi26@pec.fatturapa.it</risposte>
+        <oggetto>Invio File 16337189893</oggetto>
+    </intestazione>
+    <dati>
+        <gestore-emittente>InfoCert S.p.A.</gestore-emittente>
+        <data zona="+0100">
+            <giorno>30/12/2025</giorno>
+            <ora>12:11:26</ora>
+        </data>
+        <identificativo>510E2EDC.0019B3AC.6EF4A9C4.974EC98D.posta-certificata@legalmail.it</identificativo>
+        <msgid>7590840531772027.1767093086079@pec.fatturapa.it</msgid>
+        <ricevuta tipo="breve" />
+    </dati>
+</postacert>
+
