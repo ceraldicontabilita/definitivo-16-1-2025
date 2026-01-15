@@ -18,10 +18,80 @@ from app.services.email_document_downloader import (
     CATEGORIES,
     get_document_content
 )
+from app.services.email_monitor_service import (
+    start_monitor, stop_monitor, get_monitor_status, run_full_sync
+)
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# ============================================================
+# ENDPOINT MONITOR EMAIL
+# ============================================================
+
+@router.post("/monitor/start")
+async def avvia_monitor(
+    intervallo_minuti: int = Query(10, ge=1, le=60, description="Intervallo in minuti")
+) -> Dict[str, Any]:
+    """
+    Avvia il monitoraggio automatico della posta.
+    Default: controlla ogni 10 minuti.
+    """
+    db = Database.get_db()
+    intervallo_secondi = intervallo_minuti * 60
+    
+    started = start_monitor(db, intervallo_secondi)
+    
+    return {
+        "success": started,
+        "message": f"Monitor avviato (ogni {intervallo_minuti} minuti)" if started else "Monitor già in esecuzione",
+        "status": get_monitor_status()
+    }
+
+
+@router.post("/monitor/stop")
+async def ferma_monitor() -> Dict[str, Any]:
+    """Ferma il monitoraggio automatico."""
+    stopped = stop_monitor()
+    return {
+        "success": stopped,
+        "message": "Monitor fermato",
+        "status": get_monitor_status()
+    }
+
+
+@router.get("/monitor/status")
+async def stato_monitor() -> Dict[str, Any]:
+    """Ritorna lo stato del monitor email."""
+    db = Database.get_db()
+    
+    # Conta documenti nel DB
+    total_docs = await db["documents_inbox"].count_documents({})
+    processed_docs = await db["documents_inbox"].count_documents({"processed": True})
+    
+    status = get_monitor_status()
+    status["database"] = {
+        "documenti_totali": total_docs,
+        "documenti_processati": processed_docs,
+        "documenti_da_processare": total_docs - processed_docs
+    }
+    
+    return status
+
+
+@router.post("/monitor/sync-now")
+async def sync_immediato() -> Dict[str, Any]:
+    """
+    Esegue immediatamente un ciclo completo di sincronizzazione:
+    1. Scarica nuovi documenti dalla posta
+    2. Ricategorizza documenti nelle cartelle corrette
+    3. Processa tutti i nuovi documenti
+    """
+    db = Database.get_db()
+    result = await run_full_sync(db)
+    return result
 
 
 @router.get("/lista")
