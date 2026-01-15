@@ -349,6 +349,89 @@ async def elimina_operazione(operazione_id: str) -> Dict[str, Any]:
     return {"success": True, "deleted": operazione_id}
 
 
+@router.post("/conferma-batch")
+async def conferma_operazioni_batch(
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, Any]:
+    """
+    Conferma multiple operazioni in batch con lo stesso metodo.
+    
+    Body:
+    {
+        "operazione_ids": ["id1", "id2", ...],
+        "metodo": "cassa" | "banca",
+        "note": "Nota opzionale"
+    }
+    """
+    from app.services.automazione_completa import conferma_operazione_multipla
+    
+    db = Database.get_db()
+    
+    operazione_ids = data.get("operazione_ids", [])
+    metodo = data.get("metodo", "")
+    note = data.get("note")
+    
+    if not operazione_ids:
+        raise HTTPException(status_code=400, detail="operazione_ids richiesto")
+    
+    if metodo not in ["cassa", "banca"]:
+        raise HTTPException(status_code=400, detail="metodo deve essere 'cassa' o 'banca'")
+    
+    result = await conferma_operazione_multipla(db, operazione_ids, metodo, note)
+    
+    return {
+        "success": True,
+        "confermate": result["confermate"],
+        "errori": result["errori"],
+        "prima_nota_ids": result["prima_nota_ids"],
+        "messaggio": f"Confermate {result['confermate']} operazioni in {metodo.upper()}"
+    }
+
+
+@router.get("/aruba-pendenti")
+async def lista_aruba_pendenti(
+    anno: Optional[int] = Query(None, description="Filtra per anno"),
+    limit: int = Query(100, ge=1, le=500)
+) -> Dict[str, Any]:
+    """
+    Lista operazioni da Aruba pendenti (non ancora confermate).
+    Queste sono le fatture rilevate dalle email Aruba che attendono
+    la decisione dell'utente su Cassa o Banca.
+    """
+    db = Database.get_db()
+    
+    query = {
+        "fonte": "aruba_email",
+        "stato": {"$ne": "confermato"}
+    }
+    if anno:
+        query["anno"] = anno
+    
+    operazioni = await db["operazioni_da_confermare"].find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # Statistiche
+    totale = len(operazioni)
+    totale_importo = sum(op.get("importo", 0) for op in operazioni)
+    
+    # Raggruppa per stato
+    per_stato = {}
+    for op in operazioni:
+        stato = op.get("stato", "da_confermare")
+        per_stato[stato] = per_stato.get(stato, 0) + 1
+    
+    return {
+        "operazioni": operazioni,
+        "stats": {
+            "totale": totale,
+            "totale_importo": totale_importo,
+            "per_stato": per_stato
+        }
+    }
+
+
 @router.get("/check-fattura-esistente")
 async def check_fattura_esistente(
     fornitore: str = Query(...),
