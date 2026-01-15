@@ -128,20 +128,27 @@ async def ricategorizza_documenti(db) -> Dict[str, Any]:
 async def processa_nuovi_documenti(db) -> Dict[str, Any]:
     """
     Processa automaticamente i documenti non ancora elaborati.
-    Salva anche nel riepilogo_cedolini per confronto con prima nota.
+    
+    FLUSSO COMPLETO CEDOLINI:
+    1. Parsing PDF
+    2. Crea/aggiorna anagrafica dipendente
+    3. Salva in riepilogo_cedolini
+    4. Crea movimento prima_nota_salari
+    5. Riconcilia automaticamente con estratto conto
     """
     results = {
         "buste_paga": 0,
-        "riepilogo_cedolini": 0,
+        "anagrafiche_create": 0,
+        "prima_nota_create": 0,
+        "riconciliati": 0,
         "estratti_nexi": 0,
         "estratti_bnl": 0,
         "errori": []
     }
     
-    # 1. Processa buste paga con nuovo parser migliorato
+    # 1. Processa buste paga con FLUSSO COMPLETO
     try:
-        from app.parsers.payslip_parser_v2 import parse_payslip_pdf
-        import uuid
+        from app.services.cedolini_manager import processa_tutti_cedolini_pdf
         
         docs = await db["documents_inbox"].find(
             {"category": "busta_paga", "processed": {"$ne": True}},
@@ -150,6 +157,40 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
         
         for doc in docs:
             filepath = doc.get("filepath")
+            filename = doc.get("filename", "")
+            
+            if not filepath or not os.path.exists(filepath):
+                continue
+            
+            try:
+                # Usa il nuovo manager completo
+                res = await processa_tutti_cedolini_pdf(
+                    db=db,
+                    filepath=filepath,
+                    filename=filename
+                )
+                
+                if res.get("success"):
+                    results["buste_paga"] += res.get("cedolini_processati", 0)
+                    results["anagrafiche_create"] += res.get("anagrafiche_create", 0)
+                    results["prima_nota_create"] += res.get("prima_nota_create", 0)
+                    results["riconciliati"] += res.get("riconciliati", 0)
+                    
+                    # Marca come processato
+                    await db["documents_inbox"].update_one(
+                        {"id": doc["id"]},
+                        {"$set": {
+                            "processed": True,
+                            "processed_at": datetime.now(timezone.utc).isoformat(),
+                            "cedolini_estratti": res.get("cedolini_processati", 0)
+                        }}
+                    )
+                else:
+                    for err in res.get("errori", []):
+                        results["errori"].append(f"{filename}: {err}")
+                        
+            except Exception as e:
+                results["errori"].append(f"Busta paga {filename}: {e}")
             if not filepath or not os.path.exists(filepath):
                 continue
             
