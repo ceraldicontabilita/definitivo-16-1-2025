@@ -142,7 +142,7 @@ export default function MagazzinoDoppiaVerita() {
             gap: '8px',
             border: '1px solid #fecaca'
           }}>
-            <AlertTriangle size={18} color="#dc2626" />
+            <span style={{ fontSize: 18 }}>⚠️</span>
             <span style={{ color: '#b91c1c', fontWeight: 500 }}>
               {stats.prodotti_con_differenze} prodotti con differenze inventariali
             </span>
@@ -158,7 +158,7 @@ export default function MagazzinoDoppiaVerita() {
             gap: '8px',
             border: '1px solid #fde047'
           }}>
-            <AlertTriangle size={18} color="#ca8a04" />
+            <span style={{ fontSize: 18 }}>⚠️</span>
             <span style={{ color: '#a16207', fontWeight: 500 }}>
               {stats.prodotti_scorte_basse} prodotti con scorte basse
             </span>
@@ -169,7 +169,7 @@ export default function MagazzinoDoppiaVerita() {
       {/* Filtri - Responsive */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: '150px', maxWidth: '300px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>🔍</span>
           <input
             type="text"
             placeholder="Cerca prodotto..."
