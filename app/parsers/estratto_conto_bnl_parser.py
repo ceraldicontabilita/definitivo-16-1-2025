@@ -304,87 +304,88 @@ class EstrattoContoBNLParser:
         lines = text.split('\n')
         in_dettaglio = False
         current_carta = None
+        current_titolare = None
         
-        for i, line in enumerate(lines):
-            line_clean = line.strip()
+        i = 0
+        while i < len(lines):
+            line_clean = lines[i].strip()
             
             # Rileva inizio sezione DETTAGLIO OPERAZIONI
             if "DETTAGLIO OPERAZIONI" in line_clean:
                 in_dettaglio = True
+                i += 1
                 continue
             
             # Rileva carta attiva
             if "CARTA BNL BUSINESS n." in line_clean:
-                # Estrai numero carta e titolare
-                match = re.search(r'CARTA BNL BUSINESS n\.\s*([\d\*\s]+)\s+([A-Z\s]+)', line_clean)
+                match = re.search(r'CARTA BNL BUSINESS n\.\s*([\d\*\s]+)', line_clean)
                 if match:
-                    current_carta = {
-                        "numero": match.group(1).strip(),
-                        "titolare": match.group(2).strip()
-                    }
+                    current_carta = match.group(1).strip()
+                    # Il titolare è sulla riga successiva
+                    if i + 1 < len(lines):
+                        next_line = lines[i + 1].strip()
+                        if next_line and not re.match(r'\d{2}\.\d{2}\.\d{4}', next_line):
+                            current_titolare = next_line
+                i += 1
                 continue
             
-            # Fine sezione
-            if in_dettaglio and ("PAGAMENTO" in line_clean or "BANCA NAZIONALE" in line_clean):
-                if "TRAMITE" in line_clean:
-                    continue
+            # Fine sezione - Saldo carta
+            if in_dettaglio and line_clean.startswith("Saldo CARTA"):
                 in_dettaglio = False
+                i += 1
                 continue
             
             if in_dettaglio:
-                # Pattern: DD.MM.YYYY DD.MM.YYYY NUMERO DESCRIZIONE IMPORTO
-                # Es: "12.04.2022 13.04.2022 745168 PAYPAL SPOTIFY 35314369001 SE 15,99"
-                
-                # Pattern con due date e importo alla fine
-                match = re.match(
-                    r'^(\d{2}\.\d{2}\.\d{4})\s+(\d{2}\.\d{2}\.\d{4})\s+(\d+)\s+(.+?)\s+([\d.,]+)$',
-                    line_clean
-                )
-                
-                if match:
-                    data_operazione = match.group(1)
-                    data_contabile = match.group(2)
-                    num_riferimento = match.group(3)
-                    descrizione = match.group(4).strip()
-                    importo = self._parse_amount(match.group(5))
+                # Cerca pattern: data operazione (DD.MM.YYYY)
+                if re.match(r'^\d{2}\.\d{2}\.\d{4}$', line_clean):
+                    data_operazione = line_clean
                     
-                    self.transactions.append({
-                        "data": self._parse_date(data_operazione.replace(".", "/")),
-                        "data_contabile": self._parse_date(data_contabile.replace(".", "/")),
-                        "numero_riferimento": num_riferimento,
-                        "descrizione": descrizione,
-                        "importo": -abs(importo),  # Sempre negativo per carta
-                        "tipo": "addebito",
-                        "banca": "BNL",
-                        "tipo_carta": "BNL Business",
-                        "carta_numero": current_carta.get("numero") if current_carta else None,
-                        "carta_titolare": current_carta.get("titolare") if current_carta else None
-                    })
-                    continue
-                
-                # Pattern alternativo senza numero riferimento
-                match2 = re.match(
-                    r'^(\d{2}\.\d{2}\.\d{4})\s+(\d{2}\.\d{2}\.\d{4})\s+(.+?)\s+([\d.,]+)$',
-                    line_clean
-                )
-                
-                if match2:
-                    data_operazione = match2.group(1)
-                    data_contabile = match2.group(2)
-                    descrizione = match2.group(3).strip()
-                    importo = self._parse_amount(match2.group(4))
+                    # Leggi le righe successive
+                    data_contabile = None
+                    num_riferimento = None
+                    descrizione = None
+                    importo = None
                     
-                    self.transactions.append({
-                        "data": self._parse_date(data_operazione.replace(".", "/")),
-                        "data_contabile": self._parse_date(data_contabile.replace(".", "/")),
-                        "descrizione": descrizione,
-                        "importo": -abs(importo),
-                        "tipo": "addebito",
-                        "banca": "BNL",
-                        "tipo_carta": "BNL Business",
-                        "carta_numero": current_carta.get("numero") if current_carta else None,
-                        "carta_titolare": current_carta.get("titolare") if current_carta else None
-                    })
+                    # Riga +1: data contabile
+                    if i + 1 < len(lines):
+                        next_line = lines[i + 1].strip()
+                        if re.match(r'^\d{2}\.\d{2}\.\d{4}$', next_line):
+                            data_contabile = next_line
+                    
+                    # Riga +2: numero riferimento
+                    if i + 2 < len(lines):
+                        next_line = lines[i + 2].strip()
+                        if re.match(r'^\d+$', next_line):
+                            num_riferimento = next_line
+                    
+                    # Riga +3: descrizione
+                    if i + 3 < len(lines):
+                        descrizione = lines[i + 3].strip()
+                    
+                    # Riga +4: importo
+                    if i + 4 < len(lines):
+                        next_line = lines[i + 4].strip()
+                        if re.match(r'^[\d.,]+$', next_line):
+                            importo = self._parse_amount(next_line)
+                    
+                    # Se abbiamo i dati essenziali, crea transazione
+                    if data_operazione and descrizione and importo is not None:
+                        self.transactions.append({
+                            "data": self._parse_date(data_operazione.replace(".", "/")),
+                            "data_contabile": self._parse_date(data_contabile.replace(".", "/")) if data_contabile else None,
+                            "numero_riferimento": num_riferimento,
+                            "descrizione": descrizione,
+                            "importo": -abs(importo),  # Sempre negativo per carta
+                            "tipo": "addebito",
+                            "banca": "BNL",
+                            "tipo_carta": "BNL Business",
+                            "carta_numero": current_carta,
+                            "carta_titolare": current_titolare
+                        })
+                        i += 4  # Salta le righe già processate
+                        continue
+            
+            i += 1
     
     def _parse_date(self, date_str: str) -> str:
         """Converte una data in formato ISO."""
