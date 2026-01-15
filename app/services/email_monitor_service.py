@@ -154,16 +154,20 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
                 continue
             
             try:
-                parser = PayslipPDFParser(filepath)
-                parsed = parser.parse()
+                # Usa nuovo parser migliorato
+                cedolini = parse_payslip_pdf(pdf_path=filepath)
                 
-                if parsed:
-                    for page_data in parsed:
-                        cf = page_data.get("codice_fiscale", "").upper()
-                        mese = page_data.get("mese")
-                        anno = page_data.get("anno")
+                if cedolini:
+                    for ced in cedolini:
+                        cf = ced.get("codice_fiscale", "").upper()
+                        mese = ced.get("mese")
+                        anno = ced.get("anno")
+                        netto = ced.get("netto_mese", 0)
                         
-                        # Controlla duplicati
+                        if not cf or not mese or not anno or netto == 0:
+                            continue
+                        
+                        # 1. Salva in payslips (per compatibilità)
                         existing = await db["payslips"].find_one({
                             "codice_fiscale": cf,
                             "mese": mese,
@@ -173,18 +177,42 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
                         if not existing:
                             record = {
                                 "id": str(uuid.uuid4()),
-                                "dipendente_nome": page_data.get("nome_dipendente"),
+                                "dipendente_nome": ced.get("nome_dipendente"),
                                 "codice_fiscale": cf,
                                 "mese": mese,
                                 "anno": anno,
-                                "netto_mese": page_data.get("netto_mese", 0),
-                                "totale_competenze": page_data.get("totale_competenze", 0),
-                                "totale_trattenute": page_data.get("totale_trattenute", 0),
+                                "netto_mese": netto,
+                                "totale_competenze": ced.get("lordo", 0),
+                                "totale_trattenute": ced.get("totale_trattenute", 0),
                                 "filename": doc.get("filename"),
                                 "import_date": datetime.now(timezone.utc).isoformat()
                             }
                             await db["payslips"].insert_one(dict(record))
                             results["buste_paga"] += 1
+                        
+                        # 2. Salva/aggiorna in riepilogo_cedolini (NUOVO!)
+                        riepilogo_record = {
+                            "nome_dipendente": ced.get("nome_dipendente"),
+                            "codice_fiscale": cf,
+                            "mese": mese,
+                            "anno": anno,
+                            "periodo_competenza": f"{mese:02d}/{anno}",
+                            "netto_mese": netto,
+                            "lordo": ced.get("lordo", 0),
+                            "totale_trattenute": ced.get("totale_trattenute", 0),
+                            "detrazioni_fiscali": ced.get("detrazioni_fiscali", 0),
+                            "iban": ced.get("iban"),
+                            "filename": doc.get("filename"),
+                            "formato": ced.get("formato_rilevato"),
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        
+                        await db["riepilogo_cedolini"].update_one(
+                            {"codice_fiscale": cf, "mese": mese, "anno": anno},
+                            {"$set": riepilogo_record},
+                            upsert=True
+                        )
+                        results["riepilogo_cedolini"] += 1
                     
                     # Marca come processato
                     await db["documents_inbox"].update_one(
