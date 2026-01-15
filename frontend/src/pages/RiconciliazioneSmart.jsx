@@ -484,8 +484,7 @@ export default function RiconciliazioneSmart() {
                 gap: '8px'
               }}
             >
-              <Zap size={18} />
-              Proponi Riconciliazione Auto ({analisi?.stats?.auto_riconciliabili || 0})
+              ⚡ Proponi Riconciliazione Auto ({analisi?.stats?.auto_riconciliabili || 0})
             </button>
           </div>
 
@@ -535,8 +534,8 @@ export default function RiconciliazioneSmart() {
                         {config.icon} {TIPO_LABELS[mov.tipo]?.split(' ')[0]}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-                        {mov.associazione_automatica && <span style={{ padding: '4px 8px', background: '#dcfce7', color: '#166534', borderRadius: '6px', fontSize: '10px', fontWeight: 600 }}>✓ AUTO</span>}
-                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        {mov.associazione_automatica && <span style={{ padding: '4px 8px', background: '#dcfce7', color: '#166534', borderRadius: '6px', fontSize: '10px', fontWeight: 600' }}>✓ AUTO</span>}
+                        {isExpanded ? '▲' : '▼'}
                       </div>
                     </div>
 
@@ -545,7 +544,7 @@ export default function RiconciliazioneSmart() {
                       <div style={{ padding: '12px 16px 16px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                         {mov.dipendente && (
                           <div style={{ marginBottom: '12px', padding: '10px', background: '#dcfce7', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Users size={18} style={{ color: '#166534' }} />
+                            <span style={{ fontSize: 18 }}>👥</span>
                             <div>
                               <div style={{ fontWeight: 600, color: '#166534' }}>Dipendente trovato: {mov.dipendente.nome}</div>
                               <div style={{ fontSize: '11px', color: '#15803d' }}>ID: {mov.dipendente.id}</div>
