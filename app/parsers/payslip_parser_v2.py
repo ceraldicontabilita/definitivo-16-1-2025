@@ -102,31 +102,48 @@ class PayslipParserMultiFormat:
                 return match.group(1).strip()
         
         elif formato == "zucchetti_s" or formato == "zucchetti":
-            # Cerca dopo "Codicesdipendente" o simile
-            match = re.search(r'(?:COGNOME|Cognome).*?([A-Z][A-Z]+\s+[A-Z][A-Z]+)', text)
-            if match:
-                return match.group(1).strip()
-            # Pattern alternativo
+            # Pattern Zucchetti: cerca "000XXXX COGNOME NOME CF"
             cf = self._extract_cf(text)
             if cf:
-                # Cerca nome prima del CF
-                pattern = re.compile(r'([A-Z][A-Z]+\s+[A-Z][A-Z]+)\s+' + cf)
+                # Cerca il pattern con codice dipendente prima del nome
+                pattern = re.compile(r'(\d{7})\s+([A-Z][A-Z]+\s+[A-Z][A-Z]+)\s+' + cf)
                 match = pattern.search(text)
                 if match:
-                    return match.group(1).strip()
+                    return match.group(2).strip()
+                
+                # Pattern alternativo: COGNOME NOME su riga separata prima del CF
+                lines = text.split('\n')
+                for i, line in enumerate(lines):
+                    if cf in line:
+                        # Guarda le righe precedenti per il nome
+                        for j in range(max(0, i-3), i):
+                            prev_line = lines[j].strip()
+                            # Cerca riga con solo nome (2-3 parole maiuscole)
+                            if re.match(r'^[A-Z][A-Z]+\s+[A-Z][A-Z]+\s*$', prev_line):
+                                return prev_line.strip()
+                        # Cerca nella stessa riga
+                        before_cf = line[:line.index(cf)]
+                        words = re.findall(r'[A-Z]{2,}', before_cf)
+                        if len(words) >= 2:
+                            # Prendi le ultime 2 parole come cognome nome
+                            return ' '.join(words[-2:])
         
         # Pattern generico: cerca CF e nome vicino
         cf = self._extract_cf(text)
         if cf:
-            # Cerca nella riga con il CF
             lines = text.split('\n')
-            for line in lines:
+            for i, line in enumerate(lines):
                 if cf in line:
+                    # Cerca pattern COGNOME NOME CF
+                    match = re.search(r'([A-Z][A-Z]+\s+[A-Z][A-Z]+)\s+' + cf, line)
+                    if match:
+                        return match.group(1).strip()
+                    
                     # Estrai parole maiuscole prima del CF
                     before_cf = line[:line.index(cf)]
-                    words = re.findall(r'[A-Z][A-Za-z]+', before_cf)
+                    words = re.findall(r'[A-Z]{2,}', before_cf)
                     if len(words) >= 2:
-                        return ' '.join(words[-2:]).upper()
+                        return ' '.join(words[-2:])
         
         return None
     
