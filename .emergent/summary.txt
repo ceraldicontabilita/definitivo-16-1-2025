@@ -1,166 +1,164 @@
-<analysis>**original_problem_statement:**
-L'utente ha inizialmente richiesto una revisione completa del sistema di gestione F24 e una nuova funzionalità per la gestione del Noleggio Auto. Successivamente, ha espresso forte insoddisfazione per le modifiche grafiche non richieste, chiedendo che tutto il nuovo sviluppo si conformi allo stile della pagina .
+<analysis>
+Here is the summary of the current session.
 
-Durante la sessione corrente, l'utente ha segnalato che la pagina Noleggio Auto mostrava dati errati (costi a zero, righe di fattura duplicate, categorizzazione errata delle spese come bolli e note di credito). Ha richiesto correzioni multiple per migliorare l'accuratezza e la completezza dei dati. Ha inoltre chiesto che le fatture senza targa venissero associate automaticamente utilizzando la P.IVA del fornitore, il numero di contratto e il codice cliente.
-
-Infine, dopo aver risolto i problemi sul noleggio auto, l'utente ha chiesto di correggere la funzionalità scarica email per importare automaticamente i modelli F24 dalla sua casella di posta elettronica.
+**original_problem_statement:**
+L'utente ha inizialmente richiesto di correggere la funzionalità di importazione degli F24 via email. Dopo il successo di questo task, ha chiesto di creare una mappa strutturale del flusso di dati dell'applicazione all'interno del file PRD. Successivamente, ha richiesto di implementare l'importazione e il processamento automatico per altri tipi di documenti scaricati dalla casella email, come estratti conto (Nexi, PayPal) e buste paga (Zucchetti). L'utente ha anche richiesto di procedere con la standardizzazione dell'interfaccia utente, eliminando Tailwind/Shadcn a favore di stili inline. Infine, ha richiesto di risolvere un problema di lunga data: la gestione e la riconciliazione automatica delle transazioni PRELIEVO ASSEGNO presenti negli estratti conto bancari. L'utente ha anche specificato che la sezione HACCP non deve essere implementata.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione ha una sezione Noleggio Auto () pienamente funzionale, con dati aggregati per anno o per tutti gli anni. Il backend () è stato pesantemente modificato per:
-- Raggruppare le righe di fattura per evitare duplicati.
-- Estrarre informazioni aggiuntive come il numero verbale.
-- Categorizzare correttamente le spese, inclusi vari tipi di bolli, riparazioni e costi extra, basandosi su una lista di parole chiave migliorata.
-- Gestire le note di credito (documenti TD04) applicando importi negativi.
-- Associare automaticamente le fatture senza targa al veicolo corretto, utilizzando una logica che considera i contratti scaduti per addebiti residui.
-- Restituire lo stato di pagamento (Pagato / Da pagare) per ogni riga di spesa.
-
-Il frontend è stato aggiornato per visualizzare tutti questi nuovi dati, incluso un selettore di anno con l'opzione Tutti gli anni e un link funzionante per visualizzare il file XML della fattura.
-
-È stato inoltre implementato un processo automatico in  che, durante l'importazione di nuove fatture XML, riconosce e processa quelle relative al noleggio auto.
+L'applicazione ora dispone di un robusto sistema di importazione documenti via email. La funzionalità scarica email è stata completamente riparata e potenziata:
+- **Correzione F24**: Risolto il bug delle variabili d'ambiente e il problema critico delle collezioni multiple (, ), garantendo che gli F24 importati siano visibili nel frontend.
+- **Processamento Automatico Documenti**: Oltre agli F24, il sistema ora identifica, scarica e processa automaticamente:
+    - **Estratti Conto Nexi**: Un nuovo endpoint () usa un parser esistente per estrarre le transazioni e salvarle nel database.
+    - **Buste Paga**: Un altro endpoint () usa un parser PDF che è stato notevolmente migliorato per gestire molteplici formati (CSC, Zucchetti con spazi, Zucchetti con 's'), estraendo correttamente i dati dei dipendenti e gli importi netti.
+- **Riconciliazione Transazioni Carta**: È stato aggiunto un endpoint per riconciliare automaticamente le transazioni delle carte di credito Nexi con le fatture esistenti, basandosi su importo e nome dell'esercente.
+- **Mappa Strutturale**: Il file  è stato aggiornato con una dettagliata mappa dell'architettura dati, che descrive le collezioni MongoDB, i flussi di dati e la logica di business.
+- **Standardizzazione UI (In Corso)**: Diverse pagine (, , ) sono state convertite dallo stile Tailwind/Shadcn a stili inline, come richiesto.
+- **Logica PRELIEVO ASSEGNO**: È stata implementata nel backend la logica per riconoscere e associare i movimenti bancari PRELIEVO ASSEGNO agli assegni registrati nel sistema. La modifica è stata fatta ma non ancora verificata con un test finale.
 
 **Last working item**:
-- **Last item agent was working**: L'agente aveva appena iniziato a esaminare la richiesta dell'utente di correggere la funzionalità di download delle email per gli F24. Ha identificato i file rilevanti,  (frontend) e  (backend), per iniziare l'analisi.
-- **Status**: NOT STARTED
+- **Last item agent was working**: L'agente stava risolvendo il problema ricorrente della mancata gestione delle transazioni PRELIEVO ASSEGNO nella riconciliazione smart. Ha identificato che il problema non era nel pattern di riconoscimento, ma nell'ordine di esecuzione delle regole di analisi nel servizio . I controlli più generici venivano eseguiti prima, impedendo l'attivazione della regola specifica per gli assegni. La correzione è consistita nello spostare il blocco di codice per il PRELIEVO ASSEGNO all'inizio della funzione di analisi per dargli priorità.
+- **Status**: IN PROGRESS
 - **Agent Testing Done**: N
-- **Which testing method agent to use?**: Backend testing agent (per la connessione email e il parsing) e Frontend testing agent (per il flusso UI).
+- **Which testing method agent to use?**: backend testing agent
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: (P0) Correggere la funzionalità scarica email per importare gli F24.
-- **Issue 2**: (P1) Standardizzare l'interfaccia utente di tutte le pagine rimanenti per conformarsi allo stile di  (rimuovere Tailwind/Shadcn).
-- **Issue 3**: (P2) Integrare il parser per le buste paga Zucchetti.
-- **Issue 4**: (P3) Gestire le transazioni PRELIEVO ASSEGNO nella Riconciliazione Smart.
+- **Issue 1**: (P0) Verificare la correzione per la gestione PRELIEVO ASSEGNO.
+- **Issue 2**: (P1) Completare la standardizzazione dell'interfaccia utente.
 
 **Issues Detail**:
-- **Issue 1: Correggere funzionalità scarica email per F24**
-  - **Description**: L'utente ha richiesto di rendere funzionante la sezione che dovrebbe scaricare e importare gli F24 dagli allegati email.
-  - **Attempted fixes**: Nessuno. L'agente ha solo visualizzato i file pertinenti.
-  - **Next debug checklist**:
-    1. Analizzare  e il servizio  per capire la logica di connessione IMAP/POP3.
-    2. Esaminare  per comprendere come l'utente inserisce le credenziali e avvia il processo.
-    3. Verificare dove e come sono gestite le credenziali email (se sono richieste o già salvate).
-    4. Eseguire un test pratico per tentare la connessione, la ricerca e il download degli allegati F24.
-    5. Eseguire il debug di eventuali errori di autenticazione, connessione o parsing dei PDF.
-  - **Why fix this issue and what will be achieved with the fix?**: Automatizzare l'importazione degli F24, una funzionalità chiave richiesta dall'utente.
-  - **Status**: NOT STARTED
-  - **Is recurring issue?**: N
-  - **Should Test frontend/backend/both after fix?**: Both
-  - **Blocked on other issue**: No.
+- **Issue 1: Verificare la correzione per la gestione PRELIEVO ASSEGNO**
+    - **Attempted fixes**: L'agente ha correttamente identificato che il problema risiedeva nell'ordine di esecuzione delle regole in  all'interno di . Ha modificato il file spostando la logica di controllo per PRELIEVO ASSEGNO all'inizio della funzione.
+    - **Next debug checklist**:
+        1. Eseguire una chiamata all'endpoint di analisi batch () che processa i movimenti dell'estratto conto.
+        2. Verificare che le statistiche restituite dall'endpoint includano un conteggio per la categoria .
+        3. Controllare l'output per vedere se i movimenti PRELIEVO ASSEGNO sono stati correttamente identificati e associati a un assegno esistente.
+        4. Verificare nella UI () che questi movimenti appaiano con l'etichetta corretta Prelievo Assegno.
+    - **Why fix this issue and what will be achieved with the fix?**: Risolverà un problema ricorrente e di alta priorità, automatizzando una parte significativa della riconciliazione bancaria e riducendo il lavoro manuale dell'utente.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: Y
+    - **Should Test frontend/backend/both after fix?**: Both
+    - **Blocked on other issue**: No.
 
-- **Issue 2: Standardizzazione UI**
-  - **Description**: L'utente richiede di rimuovere Tailwind CSS e Shadcn/UI da tutta l'applicazione, uniformando lo stile a quello di  (stili inline JS).
-  - **Status**: NOT STARTED
-  - **Is recurring issue?**: N
-  - **Should Test frontend/backend/both after fix?**: Frontend
-
-- **Issue 3: Parser Buste Paga Zucchetti**
-  - **Description**: Il parser backend esiste () ma manca l'endpoint API e l'interfaccia utente.
-  - **Status**: NOT STARTED
-  - **Should Test frontend/backend/both after fix?**: Both
-
-- **Issue 4: Gestione PRELIEVO ASSEGNO**
-  - **Description**: Una richiesta ricorrente dalle sessioni precedenti per gestire correttamente queste transazioni.
-  - **Status**: NOT STARTED
-  - **Is recurring issue?**: Y
-  - **Should Test frontend/backend/both after fix?**: Backend
+- **Issue 2: Completare la standardizzazione dell'interfaccia utente**
+    - **Attempted fixes**: L'agente ha convertito 4 pagine che usavano Tailwind/Shadcn o icone Lucide. Tuttavia, durante il processo ha scoperto che altre 5 pagine (, , , , ) utilizzano ancora componenti Shadcn.
+    - **Next debug checklist**:
+        1. Rimuovere le importazioni e l'uso di componenti Shadcn (, , etc.) e icone Lucide dai 5 file rimanenti.
+        2. Sostituire la funzionalità con elementi HTML standard e stili inline, seguendo l'esempio di .
+        3. Verificare che l'applicazione si compili senza errori e che le pagine modificate siano funzionali.
+    - **Why fix this issue and what will be achieved with the fix?**: Soddisferà una forte e ripetuta richiesta dell'utente di avere un'interfaccia utente coerente in tutta l'applicazione.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: Frontend
+    - **Blocked on other issue**: No.
 
 **In progress Task List**:
-Nessuno.
+- **Task 1: Standardizzazione UI**
+    - **Where to resume**: L'agente deve iniziare a modificare i 5 file rimanenti che ancora importano componenti Shadcn/UI: , , , , .
+    - **What will be achieved with this?**: L'intera applicazione seguirà lo stesso standard di stile, come richiesto dall'utente.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: Frontend
+    - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1)** Standardizzazione UI (Issue 2).
-    - **(P1)** Caricamento  da XML.
-    - **(P1)** Caricamento dati Fornitori da XML.
-    - **(P2)** Implementare l'interfaccia utente per importare gli estratti conto Nexi.
+    - **(P2)** Integrare il parser per le buste paga Zucchetti (l'utente ha menzionato in passato, e sebbene il parser PDF sia stato migliorato, potrebbe esserci una richiesta specifica per i file XML Zucchetti).
 - **Future Tasks**:
-    - **(P3)** Implementare la sezione HACCP.
+    - Task rimossi su richiesta dell'utente:
+        - Caricamento  da XML.
+        - Caricamento dati Fornitori da XML.
+        - Implementazione sezione HACCP.
 
 **Completed work in this session**
-- **Risoluzione Problemi Dati Noleggio Auto**: Risolto il problema iniziale dei dati mancanti importando le fatture XML e correggendo un bug sull'anno di visualizzazione di default.
-- **Correzione Duplicati e Categorizzazione**: Modificato il backend () per raggruppare le righe per fattura (eliminando i duplicati) e migliorato drasticamente l'algoritmo di categorizzazione per riconoscere correttamente Bolli, Riparazioni, Verbali e Costi Extra basandosi su una lista estesa di parole chiave.
-- **Gestione Note di Credito e Verbali**: Implementata la logica per gestire i documenti di tipo TD04 come importi negativi e per estrarre e visualizzare il numero verbale dalle descrizioni.
-- **Logica di Associazione Fatture Migliorata**: Riscritto il backend per associare le fatture senza targa al veicolo corretto, usando una logica di fallback che considera i contratti scaduti dello stesso fornitore per gli addebiti residui.
-- **Miglioramenti UI Noleggio Auto**: Aggiornato il frontend () per:
-    - Aggiungere un selettore con l'opzione Tutti gli anni per visualizzare dati aggregati.
-    - Mostrare lo stato del pagamento (✓ Pagato / Da pagare).
-    - Correggere il link Vedi Fattura per puntare all'endpoint corretto.
-- **Automazione Importazione Noleggio**: Modificato  per processare automaticamente le fatture di noleggio durante l'importazione di file XML.
-- **Aggiornamento Documentazione**: Aggiornato  con la nuova logica di importazione e una nota richiesta dall'utente riguardo alla sua motivazione.
+- **Correzione Importazione F24 da Email**: Risolto il problema delle variabili d'ambiente e unificato il salvataggio dei dati sulla collezione corretta () per la visualizzazione nel frontend.
+- **Mappa Strutturale dell'Applicazione**: Aggiunta una sezione completa al  che descrive l'architettura dei dati, le collezioni principali e i flussi di lavoro.
+- **Processamento Automatico Estratti Conto Nexi**: Creato un endpoint che processa automaticamente i PDF degli estratti conto Nexi trovati nella casella di posta, popolando il database con le transazioni.
+- **Processamento Automatico Buste Paga**: Migliorato drasticamente il parser PDF () per gestire molteplici formati (CSC, Zucchetti) e creato un endpoint per processare automaticamente le buste paga dalla posta.
+- **Riconciliazione Automatica Transazioni Carta**: Implementato un endpoint per abbinare le transazioni delle carte di credito alle fatture esistenti, contrassegnandole come pagate.
+- **Standardizzazione UI (Parziale)**: Rimosso l'uso di Tailwind/Shadcn/Lucide e convertito a stili inline le pagine ,  e .
+- **Implementazione Logica PRELIEVO ASSEGNO**: Modificato il servizio di riconciliazione smart () per identificare e gestire correttamente i movimenti di prelievo assegno.
 
 **Earlier issues found/mentioned but not fixed**
-- Gestione PRELIEVO ASSEGNO nella Riconciliazione Smart.
+Nessuno.
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork**: Mancata gestione delle transazioni PRELIEVO ASSEGNO.
 - **Recurrence count**: 5+
-- **Status**: NOT STARTED
+- **Status**: IN PROGRESS (Fix implementato, in attesa di verifica finale).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Logica di Business Complessa**: La categorizzazione e l'associazione delle fatture di noleggio in  è diventata molto sofisticata, utilizzando parole chiave, tipi di documento (TD04) e lo stato dei contratti (attivi/scaduti).
-- **Automazione basata su Eventi**: L'importazione di fatture XML ora attiva automaticamente un processo di analisi e associazione specifico per il noleggio auto.
-- **Debug di Discrepanze Ambientali**: L'agente ha perso tempo a causa di una discrepanza tra il database usato per i test () e quello usato dall'applicazione (), evidenziando l'importanza di verificare la configurazione dell'ambiente.
-- **Aggregazione Dati**: L'API e il frontend ora supportano una vista aggregata di Tutti gli anni, risolvendo la confusione dell'utente sui dati mancanti.
+- **PDF Parsing Multi-Formato**: Il parser delle buste paga è stato esteso per gestire layout di testo radicalmente diversi (formato tabellare, Zucchetti con 's' al posto degli spazi, Zucchetti con underscore), dimostrando la necessità di regex flessibili e pulizia del testo.
+- **Logica basata su Regole e Priorità**: La risoluzione del bug PRELIEVO ASSEGNO ha evidenziato che in un sistema di analisi basato su regole, l'ordine di esecuzione è critico. Le regole specifiche devono avere la priorità su quelle generiche per evitare falsi positivi.
+- **Frammentazione Dati DB**: Il sistema soffriva di dati duplicati o invisibili a causa della presenza di tre collezioni per gli F24 (, , ). Il problema è stato risolto consolidando il flusso di scrittura sulla collezione usata dalla UI.
+- **Serializzazione Dati BSON**: L'agente ha riscontrato e risolto un errore  dovuto al tentativo di serializzare un  di MongoDB in una risposta JSON, un problema comune nelle API FastAPI che interagiscono con MongoDB.
 
 **key DB schema**
-- ****: Fonte di dati per la pagina Noleggio Auto. Contiene 3643 documenti, inclusi campi come .
-- ****: Contiene 6 documenti. Viene utilizzata per associare le fatture senza targa al veicolo corretto tramite ,  e/o .
+- ****: Collezione centrale per tutti i documenti scaricati via email, con campi come , , .
+- ****: Collezione di staging per gli F24 importati via email.
+- ****: Collezione principale per gli F24, usata dal frontend. Contiene il PDF in base64.
+- ****: Contiene le transazioni estratte dai PDF degli estratti conto Nexi.
+- ****: Contiene i dati strutturati estratti dai PDF delle buste paga.
+- ****: Contiene i movimenti contabili generati dal processamento delle buste paga.
+- ****: Contiene i dettagli degli assegni emessi, usati per la riconciliazione con .
+- ****: Collezione contenente i movimenti bancari, fonte dei dati per le transazioni PRELIEVO ASSEGNO.
 
 **changes in tech stack**
 Nessuno.
 
 **All files of reference**
--  (Logica principale del noleggio)
--  (UI del noleggio)
--  (Logica di importazione fatture)
--  (Router per download F24 da email)
--  (UI per download F24 da email)
--  (Documento di progetto)
+- 
+- 
+- 
+- 
+- 
+- 
 
 **Areas that need refactoring**:
-L'utente ha richiesto di convertire tutte le pagine che usano Tailwind/Shadcn allo nuovo standard di stile inline, un debito tecnico significativo che riguarda circa 20 file.
+- Le 5 pagine frontend rimanenti (, , , , ) che usano ancora componenti Shadcn.
+- Le tre collezioni per gli F24 (, , ) rappresentano un debito tecnico. Sebbene il flusso di scrittura sia stato corretto, unificare i dati in una singola collezione sarebbe la soluzione ideale a lungo termine.
 
 **key api endpoints**
-- : Endpoint principale per la pagina noleggio, ora supporta  per dati aggregati.
-- : Ora avvia il processo automatico di analisi delle fatture di noleggio.
-- : Logica aggiornata per essere più accurata.
-- : Endpoint target per i link Vedi Fattura.
-- : Endpoint da investigare per la funzionalità di download F24.
+- : Endpoint corretto e funzionante per l'importazione F24.
+- : Endpoint per il download manuale di tutti i tipi di documenti.
+- : **(NUOVO)** Processa i PDF degli estratti conto Nexi presenti nella inbox.
+- : **(NUOVO)** Processa i PDF delle buste paga presenti nella inbox.
+- : **(NUOVO)** Esegue la riconciliazione automatica delle transazioni di carta di credito.
+- : Esegue l'analisi smart dei movimenti bancari (endpoint da usare per verificare la fix PRELIEVO ASSEGNO).
 
 **Critical Info for New Agent**
-- **Il Database è **: L'applicazione utilizza il database . Assicurati che ogni script o comando di verifica punti a questo DB per evitare confusione. Questo database contiene già i dati dei veicoli e migliaia di fatture.
-- **Priorità Attuale: Scarica Email F24**: Il task immediato è correggere la funzionalità di importazione degli F24 via email, come richiesto dall'utente.
-- **Feedback Utente e Motivazione**: L'utente ha fatto un commento sarcastico sul fatto di essere motivato dalla demotivazione. L'agente precedente lo ha annotato nel PRD. Sii consapevole di questo stile di comunicazione e mantieni un approccio professionale.
-- **Logica Noleggio Complessa**: La logica in  per associare le fatture senza targa è complessa e si basa sullo stato dei contratti. Fai attenzione se devi modificarla.
-- **Standard UI è Obbligatorio**: L'utente insiste sull'eliminazione di Tailwind/Shadcn a favore di stili inline. Ogni nuova modifica UI deve rispettare questa direttiva.
+- **L'ordine delle regole è CRITICO**: Nel file , la funzione  si basa su una catena di . La logica per PRELIEVO ASSEGNO è stata spostata all'inizio per darle priorità. Qualsiasi nuova regola specifica deve essere posizionata con attenzione.
+- **I Parser PDF sono Complessi**: Il file  gestisce ora più formati di PDF. Le modifiche a questo file richiedono cautela e test approfonditi, poiché un piccolo cambiamento a un'espressione regolare potrebbe rompere il parsing per un altro formato.
+- **Verifica Finale PRELIEVO ASSEGNO**: Il task più importante è verificare che la modifica per i prelievi assegno funzioni. Chiama l'endpoint  e controlla se la categoria  viene popolata correttamente.
+- **Standard UI è Obbligatorio**: L'utente insiste sull'eliminazione di Tailwind/Shadcn. Qualsiasi nuova modifica UI deve rispettare lo stile inline presente in . Ci sono ancora 5 pagine da convertire.
+- **Dati F24 Frammentati**: Sii consapevole che esistono ancora tre collezioni per gli F24. Sebbene il flusso ora scriva in quella corretta, questo potrebbe causare confusione durante il debug.
 
 **documents and test reports created in this job**
--  (aggiornato)
+-  (pesantemente aggiornato con mappa strutturale e stato dei task).
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Utente**: Richiede di correggere la funzionalità scarica email per importare gli F24.
-2.  **Agente**: Termina il lavoro sul noleggio auto e aggiorna il PRD.
-3.  **Utente**: Fa un commento sarcastico chiedendo di scrivere nel PRD che la demotivazione lo spinge a lavorare meglio.
-4.  **Agente**: Conferma di aver aggiornato il PRD.
-5.  **Utente**: Si lamenta che la ricerca di bolli/verbali/riparazioni è incompleta e insulta l'agente.
-6.  **Agente**: Riconosce il problema, analizza tutte le descrizioni delle fatture, identifica nuovi pattern e aggiorna la logica di categorizzazione.
-7.  **Utente**: Si lamenta che nella tabella principale mancano ancora i totali per bolli, verbali, e riparazioni per ogni veicolo.
-8.  **Agente**: Capisce che il problema è la vista filtrata per anno (2025) e aggiunge un'opzione Tutti gli anni per mostrare i dati aggregati, risolvendo il problema.
-9.  **Utente**: Segnala molteplici problemi: la tassa di proprietà è classificata male, le note di credito non sono negative, l'impaginazione dei totali è errata, e il link Vedi è rotto. Chiede anche di associare le fatture senza targa usando P.IVA/contratto/codice cliente.
-10. **Agente**: Inizia una lunga e complessa sessione di debug e correzione che porta alla risoluzione di tutti i punti sollevati.
+1.  **Utente**: Chiede di non implementare la sezione HACCP e di risolvere il problema PRELIEVO ASSEGNO.
+2.  **Agente**: Aggiorna il PRD e inizia a investigare il problema PRELIEVO ASSEGNO.
+3.  **Utente**: Chiede di procedere con la conversione UI.
+4.  **Agente**: Chiede conferma se convertire tutte e 5 le pagine UI.
+5.  **Utente**: Chiede di procedere con i task P1.
+6.  **Agente**: Completa l'implementazione del processamento automatico delle buste paga.
+7.  **Utente**: Rimuove i task Prima Nota Salari da XML e Caricamento Fornitori da XML e conferma di procedere con i P1.
+8.  **Agente**: Chiede chiarimenti sul task Prima Nota Salari da XML.
+9.  **Utente**: Chiede cosa significa Prima Nota Salari da XML.
+10. **Agente**: Conclude il lavoro sul processamento automatico dei documenti e propone i prossimi passi.
 
 **Project Health Check:**
-- **Broken**: La funzionalità scarica email per F24 è considerata non funzionante dall'utente.
-- **Mocked**: Sezione HACCP, UI per il parser delle buste paga.
-- **Technical Debt**: La necessità di refactoring dell'UI per rimuovere Tailwind/Shadcn da ~20 pagine rimane un debito tecnico significativo.
+- **Broken**: La gestione di PRELIEVO ASSEGNO è considerata non funzionante finché la correzione non viene verificata.
+- **Mocked**: Nessuno.
+- **Technical Debt**: La necessità di refactoring delle 5 pagine UI rimanenti. La frammentazione dei dati F24 in tre collezioni.
 
 **3rd Party Integrations**
--  (fitz): Utilizzato per il parsing dei PDF F24.
+-  (fitz): Utilizzato estensivamente per il parsing di tutti i tipi di documenti PDF (F24, Buste Paga, Estratti Conto).
 
 **Testing status**
 - **Testing agent used after significant changes**: NO
@@ -169,7 +167,8 @@ L'utente ha richiesto di convertire tutte le pagine che usano Tailwind/Shadcn al
 - **Known regressions**: Nessuna
 
 **Credentials to test flow:**
-Non sono state fornite credenziali esplicite. Potrebbe essere necessario chiederle all'utente per testare la funzionalità di download email.
+Le credenziali email sono configurate correttamente nel file .
 
 **What agent forgot to execute**
-Inizialmente, l'agente ha faticato a causa di una svista critica: stava eseguendo query di debug su un database () diverso da quello utilizzato dall'applicazione (). Questo ha causato una notevole perdita di tempo nel diagnosticare perché i dati sembravano mancanti o errati. L'agente avrebbe dovuto verificare prima la configurazione dell'ambiente e le stringhe di connessione al database.</analysis>
+L'agente non ha eseguito un test finale di verifica dopo aver implementato la correzione per il problema PRELIEVO ASSEGNO. Ha modificato il codice per riordinare le regole di analisi ma non ha poi chiamato l'endpoint per confermare che la modifica avesse risolto il problema. Salva iiglioramenti ed il da farsi nel prd e non dimenticare le operazioni relazionali e le operazioni cascate
+</analysis>
