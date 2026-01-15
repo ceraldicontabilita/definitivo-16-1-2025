@@ -588,6 +588,7 @@ async def analizza_estratto_conto_batch(limit: int = 100, solo_non_riconciliati:
         "incasso_pos": 0,
         "commissione_pos": 0,
         "commissione_bancaria": 0,
+        "prelievo_assegno": 0,
         "stipendio": 0,
         "f24": 0,
         "fattura_sdd": 0,
