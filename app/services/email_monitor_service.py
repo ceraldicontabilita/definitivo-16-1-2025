@@ -329,9 +329,11 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
 async def run_full_sync(db) -> Dict[str, Any]:
     """
     Esegue un ciclo completo di sincronizzazione:
-    1. Scarica nuovi documenti dalla posta
+    1. Scarica nuovi documenti dalla posta (ultimo 1 giorno)
     2. Ricategorizza documenti
     3. Processa nuovi documenti
+    
+    IMPORTANTE: I duplicati vengono SEMPRE saltati (controllo hash file)
     """
     global _last_sync, _sync_stats
     
@@ -343,8 +345,8 @@ async def run_full_sync(db) -> Dict[str, Any]:
     }
     
     try:
-        # 1. Scarica email (ultimi 30 giorni)
-        results["email_sync"] = await sync_email_documents(db, giorni=30)
+        # 1. Scarica email (ultimo 1 giorno - i duplicati vengono saltati)
+        results["email_sync"] = await sync_email_documents(db, giorni=1)
         
         # 2. Ricategorizza
         results["ricategorizzazione"] = await ricategorizza_documenti(db)
