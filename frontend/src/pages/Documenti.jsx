@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../api';
-import { formatEuro } from '../lib/utils';
-import { 
-  Download, RefreshCw, Trash2, FileText, Mail, Upload, 
-  CheckCircle, AlertCircle, Folder, Eye, ArrowRight, Filter, Plus, X, Search, Loader2
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 
 const CATEGORY_COLORS = {
   f24: { bg: '#dbeafe', text: '#1e40af', icon: '📋', label: 'F24' },
@@ -43,7 +36,6 @@ export default function Documenti() {
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('');
   const [categories, setCategories] = useState({});
-  const [selectedDocs, setSelectedDocs] = useState(new Set());
   
   // Impostazioni download
   const [giorniDownload, setGiorniDownload] = useState(10); // ultimi 10 giorni
@@ -326,6 +318,39 @@ export default function Documenti() {
     });
   };
 
+  // Styles
+  const cardStyle = {
+    background: 'white',
+    borderRadius: 12,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    overflow: 'hidden'
+  };
+
+  const buttonStyle = (bg, color = 'white') => ({
+    padding: '8px 16px',
+    background: bg,
+    color: color,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: 13,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6
+  });
+
+  const smallButtonStyle = (bg, color = 'white') => ({
+    padding: '6px 12px',
+    background: bg,
+    color: color,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: '500',
+    fontSize: 12
+  });
+
   return (
     <div style={{ padding: 20, maxWidth: 1600, margin: '0 auto' }}>
       {/* Header */}
@@ -338,91 +363,74 @@ export default function Documenti() {
             Scarica automaticamente documenti dalle email e caricali nelle sezioni appropriate
           </p>
         </div>
-        <Button onClick={loadData} disabled={loading} variant="outline">
-          <RefreshCw style={{ height: 16, width: 16, marginRight: 8, animation: loading ? 'spin 1s linear infinite' : 'none' }} />
-          Aggiorna
-        </Button>
+        <button onClick={loadData} disabled={loading} style={buttonStyle('#e5e7eb', '#374151')}>
+          {loading ? '⏳' : '🔄'} Aggiorna
+        </button>
       </div>
 
       {/* Statistiche */}
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <Card>
-            <CardContent style={{ paddingTop: 16 }}>
+          <div style={cardStyle}>
+            <div style={{ padding: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e293b' }}>{stats.totale}</div>
               <div style={{ fontSize: 13, color: '#64748b' }}>Documenti Totali</div>
-            </CardContent>
-          </Card>
-          <Card style={{ background: '#dbeafe' }}>
-            <CardContent style={{ paddingTop: 16 }}>
+            </div>
+          </div>
+          <div style={{ ...cardStyle, background: '#dbeafe' }}>
+            <div style={{ padding: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e40af' }}>{stats.nuovi}</div>
               <div style={{ fontSize: 13, color: '#1e40af' }}>Da Processare</div>
-            </CardContent>
-          </Card>
-          <Card style={{ background: '#dcfce7' }}>
-            <CardContent style={{ paddingTop: 16 }}>
+            </div>
+          </div>
+          <div style={{ ...cardStyle, background: '#dcfce7' }}>
+            <div style={{ padding: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#166534' }}>{stats.processati}</div>
               <div style={{ fontSize: 13, color: '#166534' }}>Processati</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent style={{ paddingTop: 16 }}>
+            </div>
+          </div>
+          <div style={cardStyle}>
+            <div style={{ padding: 16 }}>
               <div style={{ fontSize: 32, fontWeight: 'bold', color: '#7c3aed' }}>{stats.spazio_disco_mb} MB</div>
               <div style={{ fontSize: 13, color: '#64748b' }}>Spazio Usato</div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Azione Download Email */}
-      <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #1e40af, #7c3aed)' }}>
-        <CardContent style={{ paddingTop: 24 }}>
+      <div style={{ ...cardStyle, marginBottom: 24, background: 'linear-gradient(135deg, #1e40af, #7c3aed)' }}>
+        <div style={{ padding: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', flexWrap: 'wrap', gap: 16 }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Mail size={24} />
-                Scarica Documenti da Email
+                📧 Scarica Documenti da Email
               </div>
               <div style={{ fontSize: 14, opacity: 0.9, marginTop: 4 }}>
                 Controlla la casella email e scarica automaticamente i documenti
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Button
+              <button
                 onClick={() => setShowImportSettings(!showImportSettings)}
-                variant="outline"
                 style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  color: 'white',
-                  borderColor: 'rgba(255,255,255,0.3)'
+                  ...buttonStyle('rgba(255,255,255,0.2)', 'white'),
+                  border: '1px solid rgba(255,255,255,0.3)'
                 }}
               >
-                <Filter style={{ height: 16, width: 16, marginRight: 8 }} />
-                Impostazioni
-              </Button>
-              <Button
+                ⚙️ Impostazioni
+              </button>
+              <button
                 onClick={handleDownloadFromEmail}
                 disabled={downloading}
                 style={{
-                  background: 'white',
-                  color: '#1e40af',
-                  fontWeight: 'bold',
+                  ...buttonStyle('white', '#1e40af'),
                   padding: '12px 24px'
                 }}
                 data-testid="btn-download-email"
               >
-                {downloading ? (
-                  <>
-                    <RefreshCw style={{ height: 16, width: 16, marginRight: 8, animation: 'spin 1s linear infinite' }} />
-                    Download in corso...
-                  </>
-                ) : (
-                  <>
-                    <Download style={{ height: 16, width: 16, marginRight: 8 }} />
-                    Scarica da Email
-                  </>
-                )}
-              </Button>
+                {downloading ? '⏳ Download in corso...' : '📥 Scarica da Email'}
+              </button>
             </div>
           </div>
           
@@ -512,9 +520,9 @@ export default function Documenti() {
                         fontSize: 13
                       }}
                     />
-                    <Button onClick={addCustomKeyword} variant="outline" size="sm" disabled={!nuovaParolaChiave.trim()}>
-                      <Plus style={{ height: 16, width: 16, marginRight: 4 }} /> Aggiungi
-                    </Button>
+                    <button onClick={addCustomKeyword} disabled={!nuovaParolaChiave.trim()} style={smallButtonStyle('#4f46e5')}>
+                      ➕ Aggiungi
+                    </button>
                   </div>
                   <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>
                     💡 Ogni keyword può contenere più varianti separate da virgola. Es: &quot;cartella,ader,equitalia&quot;
@@ -577,7 +585,7 @@ export default function Documenti() {
                               fontSize: 11
                             }}
                           >
-                            <X style={{ height: 12, width: 12 }} />
+                            ✕
                           </button>
                         </div>
                       ))}
@@ -603,17 +611,18 @@ export default function Documenti() {
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Popup stato download in background */}
       {downloading && taskStatus && (
-        <Card style={{ 
+        <div style={{ 
+          ...cardStyle,
           marginBottom: 24, 
           border: '2px solid #3b82f6',
           background: 'linear-gradient(135deg, #eff6ff, #dbeafe)'
         }}>
-          <CardContent style={{ paddingTop: 16 }}>
+          <div style={{ padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ 
                 width: 48, 
@@ -622,9 +631,10 @@ export default function Documenti() {
                 background: '#3b82f6',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                fontSize: 24
               }}>
-                <Loader2 style={{ height: 24, width: 24, color: 'white', animation: 'spin 1s linear infinite' }} />
+                ⏳
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 'bold', fontSize: 16, color: '#1e40af', marginBottom: 4 }}>
@@ -653,14 +663,14 @@ export default function Documenti() {
                  taskStatus.status === 'error' ? '❌ Errore' : '...'}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Filtri */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Filter size={16} color="#64748b" />
+          <span style={{ fontSize: 14, color: '#64748b' }}>🔍</span>
           <select
             value={filtroCategoria}
             onChange={(e) => setFiltroCategoria(e.target.value)}
@@ -715,22 +725,19 @@ export default function Documenti() {
       </div>
 
       {/* Lista Documenti */}
-      <Card>
-        <CardHeader>
-          <CardTitle style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText style={{ height: 20, width: 20 }} />
-            Documenti ({documents.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div style={cardStyle}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 18 }}>📄</span>
+          <h2 style={{ margin: 0, fontSize: 16 }}>Documenti ({documents.length})</h2>
+        </div>
+        <div style={{ padding: 16 }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
-              <RefreshCw style={{ margin: '0 auto 16px', animation: 'spin 1s linear infinite' }} size={32} />
-              Caricamento...
+              ⏳ Caricamento...
             </div>
           ) : documents.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
-              <Mail size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
+              <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>📧</div>
               <p>Nessun documento trovato</p>
               <p style={{ fontSize: 14 }}>Clicca &quot;Scarica da Email&quot; per iniziare</p>
             </div>
@@ -822,7 +829,7 @@ export default function Documenti() {
                               }}
                               title="Scarica file"
                             >
-                              <Download size={14} />
+                              📥
                             </button>
                             
                             {!doc.processed && (
@@ -885,7 +892,7 @@ export default function Documenti() {
                               }}
                               title="Elimina"
                             >
-                              <Trash2 size={14} />
+                              🗑️
                             </button>
                           </div>
                         </td>
@@ -896,8 +903,8 @@ export default function Documenti() {
               </table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Info credenziali */}
       <div style={{ 

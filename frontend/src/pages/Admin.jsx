@@ -1,10 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import api from "../api";
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Mail, Key, Settings, Database, Clock, Plus, Trash2, Check, X, Eye, EyeOff, RefreshCw, Download, FileText, AlertTriangle, Server, Activity } from 'lucide-react';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 
 export default function Admin() {
@@ -293,8 +288,71 @@ export default function Admin() {
 
   const fmt = (n) => n?.toLocaleString('it-IT') || '0';
 
+  // Styles
+  const tabStyle = (isActive) => ({
+    padding: '10px 16px',
+    borderRadius: 8,
+    border: 'none',
+    background: isActive ? '#4f46e5' : 'transparent',
+    color: isActive ? 'white' : '#374151',
+    cursor: 'pointer',
+    fontWeight: isActive ? 'bold' : 'normal',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8
+  });
+
+  const cardStyle = {
+    background: 'white',
+    borderRadius: 12,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    overflow: 'hidden'
+  };
+
+  const cardHeaderStyle = {
+    padding: '12px 16px',
+    borderBottom: '1px solid #e5e7eb'
+  };
+
+  const cardContentStyle = {
+    padding: 16
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid #e2e8f0',
+    borderRadius: 6,
+    fontSize: 14
+  };
+
+  const buttonStyle = (bg, color = 'white') => ({
+    padding: '8px 16px',
+    background: bg,
+    color: color,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: 13,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6
+  });
+
+  const smallButtonStyle = (bg, color = 'white') => ({
+    padding: '6px 12px',
+    background: bg,
+    color: color,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: '500',
+    fontSize: 12
+  });
+
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
+    <div style={{ padding: 'clamp(12px, 3vw, 20px)', maxWidth: 1400, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ 
         display: 'flex', 
@@ -306,7 +364,7 @@ export default function Admin() {
       }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Settings style={{ width: 24, height: 24 }} /> Amministrazione
+            ⚙️ Amministrazione
           </h1>
           <p style={{ color: '#64748b', margin: '4px 0 0 0', fontSize: 'clamp(12px, 3vw, 14px)' }}>
             Configurazione sistema, email e parametri
@@ -314,714 +372,667 @@ export default function Admin() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList style={{ marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 12, flexWrap: 'wrap' }}>
-          <TabsTrigger value="email" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Mail style={{ width: 16, height: 16, marginRight: 8 }} /> Email
-          </TabsTrigger>
-          <TabsTrigger value="keywords" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Key style={{ width: 16, height: 16, marginRight: 8 }} /> Parole Chiave
-          </TabsTrigger>
-          <TabsTrigger value="fatture" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <FileText style={{ width: 16, height: 16, marginRight: 8 }} /> Fatture
-          </TabsTrigger>
-          <TabsTrigger value="system" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Database style={{ width: 16, height: 16, marginRight: 8 }} /> Sistema
-          </TabsTrigger>
-          <TabsTrigger value="sync" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <RefreshCw style={{ width: 16, height: 16, marginRight: 8 }} /> Sincronizzazione
-          </TabsTrigger>
-          <TabsTrigger value="export" style={{ padding: '10px 16px', borderRadius: 8 }}>
-            <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Esportazioni
-          </TabsTrigger>
-        </TabsList>
+      {/* Tabs */}
+      <div style={{ marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 12, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+        <button onClick={() => setActiveTab('email')} style={tabStyle(activeTab === 'email')}>📧 Email</button>
+        <button onClick={() => setActiveTab('keywords')} style={tabStyle(activeTab === 'keywords')}>🔑 Parole Chiave</button>
+        <button onClick={() => setActiveTab('fatture')} style={tabStyle(activeTab === 'fatture')}>📄 Fatture</button>
+        <button onClick={() => setActiveTab('system')} style={tabStyle(activeTab === 'system')}>🗄️ Sistema</button>
+        <button onClick={() => setActiveTab('sync')} style={tabStyle(activeTab === 'sync')}>🔄 Sincronizzazione</button>
+        <button onClick={() => setActiveTab('export')} style={tabStyle(activeTab === 'export')}>📥 Esportazioni</button>
+      </div>
 
-        {/* TAB EMAIL */}
-        <TabsContent value="email">
-          <Card>
-            <CardHeader style={{ padding: '12px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <CardTitle style={{ fontSize: 16 }}>Account Email Configurati</CardTitle>
-                <Button size="sm" onClick={() => setShowNewForm(true)}>
-                  <Plus style={{ width: 16, height: 16, marginRight: 4 }} /> Aggiungi Email
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent style={{ padding: 16 }}>
-              {loadingEmails ? (
-                <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
-              ) : emailAccounts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Nessun account email configurato</div>
-              ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {emailAccounts.map(acc => (
-                    <div key={acc.id} style={{ 
-                      border: '1px solid #e2e8f0', 
-                      borderRadius: 8, 
-                      padding: 16, 
-                      background: acc.is_env_default ? '#f0f9ff' : '#f8fafc' 
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 14 }}>
-                            <Mail style={{ width: 16, height: 16, color: "#2563eb" }} />
-                            {acc.nome}
-                            {acc.is_env_default && (
-                              <span style={{ fontSize: 10, background: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: 4 }}>
-                                Principale (da .env)
-                              </span>
-                            )}
-                            {acc.attivo ? (
-                              <span style={{ fontSize: 10, background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 4 }}>Attivo</span>
-                            ) : (
-                              <span style={{ fontSize: 10, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: 4 }}>Disattivo</span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{acc.email}</div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <Button size="sm" variant="outline" onClick={() => testEmailConnection(acc.id)} disabled={testingConnection === acc.id}>
-                            {testingConnection === acc.id ? <RefreshCw style={{ width: 12, height: 12, animation: "spin 1s linear infinite" }} /> : 'Test'}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => { setEditingAccount({...acc}); setEditKeywordInput(''); }}>
-                            Modifica
-                          </Button>
-                          {!acc.is_env_default && (
-                            <Button size="sm" variant="outline" onClick={() => deleteEmailAccount(acc.id)} style={{ color: '#dc2626' }}>
-                              <Trash2 style={{ width: 12, height: 12 }} />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Password */}
-                      <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span>App Password:</span>
-                        <span style={{ fontFamily: 'monospace' }}>{showPassword[acc.id] ? acc.app_password : acc.app_password_masked}</span>
-                        <button 
-                          onClick={() => setShowPassword({...showPassword, [acc.id]: !showPassword[acc.id]})} 
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
-                        >
-                          {showPassword[acc.id] ? <EyeOff style={{ width: 12, height: 12 }} /> : <Eye style={{ width: 12, height: 12 }} />}
-                        </button>
-                      </div>
-                      
-                      {/* Parole chiave come tag separati */}
-                      <div style={{ fontSize: 12 }}>
-                        <span style={{ fontWeight: 500 }}>Parole Chiave:</span>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                          {(acc.parole_chiave || []).map((kw, i) => (
-                            <span key={i} style={{ 
-                              background: '#e0e7ff', 
-                              color: '#3730a3', 
-                              padding: '4px 10px', 
-                              borderRadius: 20, 
-                              fontSize: 11,
-                              fontWeight: 500
-                            }}>
-                              {kw}
+      {/* TAB EMAIL */}
+      {activeTab === 'email' && (
+        <div style={cardStyle}>
+          <div style={{ ...cardHeaderStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: 16 }}>Account Email Configurati</h3>
+            <button onClick={() => setShowNewForm(true)} style={buttonStyle('#4f46e5')}>➕ Aggiungi Email</button>
+          </div>
+          <div style={cardContentStyle}>
+            {loadingEmails ? (
+              <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
+            ) : emailAccounts.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Nessun account email configurato</div>
+            ) : (
+              <div style={{ display: 'grid', gap: 12 }}>
+                {emailAccounts.map(acc => (
+                  <div key={acc.id} style={{ 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: 8, 
+                    padding: 16, 
+                    background: acc.is_env_default ? '#f0f9ff' : '#f8fafc' 
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 14 }}>
+                          📧 {acc.nome}
+                          {acc.is_env_default && (
+                            <span style={{ fontSize: 10, background: '#dbeafe', color: '#1d4ed8', padding: '2px 8px', borderRadius: 4 }}>
+                              Principale (da .env)
                             </span>
-                          ))}
-                          {(!acc.parole_chiave || acc.parole_chiave.length === 0) && (
-                            <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Nessuna (accetta tutte le email)</span>
+                          )}
+                          {acc.attivo ? (
+                            <span style={{ fontSize: 10, background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 4 }}>Attivo</span>
+                          ) : (
+                            <span style={{ fontSize: 10, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: 4 }}>Disattivo</span>
                           )}
                         </div>
+                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{acc.email}</div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Form Nuovo Account */}
-              {showNewForm && (
-                <div style={{ marginTop: 20, borderTop: '1px solid #e2e8f0', paddingTop: 20 }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>➕ Nuovo Account Email</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Nome Account</label>
-                      <Input 
-                        value={newAccount.nome} 
-                        onChange={e => setNewAccount({...newAccount, nome: e.target.value})} 
-                        placeholder="es. Commercialista" 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Email</label>
-                      <Input 
-                        type="email" 
-                        value={newAccount.email} 
-                        onChange={e => setNewAccount({...newAccount, email: e.target.value})} 
-                        placeholder="email@esempio.com" 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>App Password</label>
-                      <Input 
-                        type="password" 
-                        value={newAccount.app_password} 
-                        onChange={e => setNewAccount({...newAccount, app_password: e.target.value})} 
-                        placeholder="Password app Google" 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Server IMAP</label>
-                      <Input 
-                        value={newAccount.imap_server} 
-                        onChange={e => setNewAccount({...newAccount, imap_server: e.target.value})} 
-                      />
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => testEmailConnection(acc.id)} disabled={testingConnection === acc.id} style={smallButtonStyle('#e5e7eb', '#374151')}>
+                          {testingConnection === acc.id ? '⏳' : 'Test'}
+                        </button>
+                        <button onClick={() => { setEditingAccount({...acc}); setEditKeywordInput(''); }} style={smallButtonStyle('#e5e7eb', '#374151')}>
+                          Modifica
+                        </button>
+                        {!acc.is_env_default && (
+                          <button onClick={() => deleteEmailAccount(acc.id)} style={smallButtonStyle('#fee2e2', '#dc2626')}>
+                            🗑️
+                          </button>
+                        )}
+                      </div>
                     </div>
                     
-                    {/* Parole Chiave - Campi separati */}
-                    <div style={{ gridColumn: 'span 2' }}>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Parole Chiave</label>
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                        <Input 
-                          value={newKeywordInput} 
-                          onChange={e => setNewKeywordInput(e.target.value)} 
-                          placeholder="Aggiungi parola chiave..." 
-                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeywordToAccount(false))}
-                        />
-                        <Button type="button" onClick={() => addKeywordToAccount(false)} size="sm">
-                          <Plus style={{ width: 16, height: 16 }} />
-                        </Button>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {(newAccount.parole_chiave || []).map((kw, i) => (
-                          <span key={i} style={{ 
-                            background: '#e0e7ff', 
-                            color: '#3730a3', 
-                            padding: '4px 10px', 
-                            borderRadius: 20, 
-                            fontSize: 11,
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6
-                          }}>
-                            {kw}
-                            <button 
-                              onClick={() => removeKeywordFromAccount(kw, false)} 
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
-                            >
-                              <X style={{ width: 12, height: 12, color: "#ef4444" }} />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                    <Button onClick={() => saveEmailAccount(newAccount)}>
-                      <Check style={{ width: 16, height: 16, marginRight: 4 }} /> Salva
-                    </Button>
-                    <Button variant="outline" onClick={() => { setShowNewForm(false); setNewKeywordInput(''); }}>
-                      <X style={{ width: 16, height: 16, marginRight: 4 }} /> Annulla
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Form Modifica Account */}
-              {editingAccount && (
-                <div style={{ marginTop: 20, borderTop: '1px solid #e2e8f0', paddingTop: 20 }}>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
-                    ✏️ Modifica Account: {editingAccount.nome}
-                    {editingAccount.is_env_default && <span style={{ fontSize: 10, color: '#64748b', marginLeft: 8 }}>(Email Principale da .env)</span>}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Nome Account</label>
-                      <Input 
-                        value={editingAccount.nome} 
-                        onChange={e => setEditingAccount({...editingAccount, nome: e.target.value})} 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Email</label>
-                      <Input 
-                        type="email" 
-                        value={editingAccount.email} 
-                        onChange={e => setEditingAccount({...editingAccount, email: e.target.value})} 
-                        disabled={editingAccount.is_env_default}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>App Password</label>
-                      <Input 
-                        type="password" 
-                        value={editingAccount.app_password || ''} 
-                        onChange={e => setEditingAccount({...editingAccount, app_password: e.target.value})} 
-                        placeholder="Lascia vuoto per non modificare" 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Attivo</label>
-                      <select 
-                        value={editingAccount.attivo ? 'true' : 'false'} 
-                        onChange={e => setEditingAccount({...editingAccount, attivo: e.target.value === 'true'})} 
-                        style={{ width: '100%', height: 36, border: '1px solid #e2e8f0', borderRadius: 6, padding: '0 8px' }}
+                    {/* Password */}
+                    <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>App Password:</span>
+                      <span style={{ fontFamily: 'monospace' }}>{showPassword[acc.id] ? acc.app_password : acc.app_password_masked}</span>
+                      <button 
+                        onClick={() => setShowPassword({...showPassword, [acc.id]: !showPassword[acc.id]})} 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
                       >
-                        <option value="true">Si</option>
-                        <option value="false">No</option>
-                      </select>
+                        {showPassword[acc.id] ? '🙈' : '👁️'}
+                      </button>
                     </div>
                     
-                    {/* Parole Chiave - Campi separati */}
-                    <div style={{ gridColumn: 'span 2' }}>
-                      <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Parole Chiave</label>
-                      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                        <Input 
-                          value={editKeywordInput} 
-                          onChange={e => setEditKeywordInput(e.target.value)} 
-                          placeholder="Aggiungi parola chiave..." 
-                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeywordToAccount(true))}
-                        />
-                        <Button type="button" onClick={() => addKeywordToAccount(true)} size="sm">
-                          <Plus style={{ width: 16, height: 16 }} />
-                        </Button>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {(editingAccount.parole_chiave || []).map((kw, i) => (
+                    {/* Parole chiave come tag separati */}
+                    <div style={{ fontSize: 12 }}>
+                      <span style={{ fontWeight: 500 }}>Parole Chiave:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                        {(acc.parole_chiave || []).map((kw, i) => (
                           <span key={i} style={{ 
                             background: '#e0e7ff', 
                             color: '#3730a3', 
                             padding: '4px 10px', 
                             borderRadius: 20, 
                             fontSize: 11,
-                            fontWeight: 500,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6
+                            fontWeight: 500
                           }}>
                             {kw}
-                            <button 
-                              onClick={() => removeKeywordFromAccount(kw, true)} 
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}
-                            >
-                              <X style={{ width: 12, height: 12, color: "#ef4444" }} />
-                            </button>
                           </span>
                         ))}
-                        {(!editingAccount.parole_chiave || editingAccount.parole_chiave.length === 0) && (
-                          <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 12 }}>Nessuna parola chiave (accetta tutte le email)</span>
+                        {(!acc.parole_chiave || acc.parole_chiave.length === 0) && (
+                          <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Nessuna (accetta tutte le email)</span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                    <Button onClick={() => saveEmailAccount(editingAccount)}>
-                      <Check style={{ width: 16, height: 16, marginRight: 4 }} /> Salva Modifiche
-                    </Button>
-                    <Button variant="outline" onClick={() => { setEditingAccount(null); setEditKeywordInput(''); }}>
-                      <X style={{ width: 16, height: 16, marginRight: 4 }} /> Annulla
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* TAB PAROLE CHIAVE GLOBALI */}
-        <TabsContent value="keywords">
-          <Card>
-            <CardHeader style={{ padding: '12px 16px' }}>
-              <CardTitle style={{ fontSize: 16 }}>Parole Chiave per Filtro Email (Globali)</CardTitle>
-            </CardHeader>
-            <CardContent style={{ padding: 16 }}>
-              <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
-                Queste parole chiave vengono usate per categorizzare automaticamente i documenti scaricati dalle email.
-              </p>
-              
-              {/* Aggiungi nuova */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                <select 
-                  value={newKeyword.categoria} 
-                  onChange={e => setNewKeyword({...newKeyword, categoria: e.target.value})} 
-                  style={{ height: 36, border: '1px solid #e2e8f0', borderRadius: 6, padding: '0 8px', minWidth: 120 }}
-                >
-                  <option value="generale">Generale</option>
-                  <option value="fatture">Fatture</option>
-                  <option value="f24">F24</option>
-                  <option value="buste_paga">Buste Paga</option>
-                </select>
-                <Input 
-                  value={newKeyword.parola} 
-                  onChange={e => setNewKeyword({...newKeyword, parola: e.target.value})} 
-                  placeholder="Nuova parola chiave..." 
-                  style={{ flex: 1 }}
-                  onKeyDown={e => e.key === 'Enter' && addParolaChiave()} 
-                />
-                <Button onClick={addParolaChiave}>
-                  <Plus style={{ width: 16, height: 16, marginRight: 4 }} /> Aggiungi
-                </Button>
+                ))}
               </div>
+            )}
 
-              {/* Lista per categoria */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-                {['generale', 'fatture', 'f24', 'buste_paga'].map(cat => (
-                  <div key={cat} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
-                    <h5 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, textTransform: 'capitalize' }}>
-                      {cat.replace('_', ' ')}
-                    </h5>
+            {/* Form Nuovo Account */}
+            {showNewForm && (
+              <div style={{ marginTop: 20, borderTop: '1px solid #e2e8f0', paddingTop: 20 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>➕ Nuovo Account Email</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Nome Account</label>
+                    <input 
+                      value={newAccount.nome} 
+                      onChange={e => setNewAccount({...newAccount, nome: e.target.value})} 
+                      placeholder="es. Commercialista" 
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Email</label>
+                    <input 
+                      type="email" 
+                      value={newAccount.email} 
+                      onChange={e => setNewAccount({...newAccount, email: e.target.value})} 
+                      placeholder="email@esempio.com" 
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>App Password</label>
+                    <input 
+                      type="password" 
+                      value={newAccount.app_password} 
+                      onChange={e => setNewAccount({...newAccount, app_password: e.target.value})} 
+                      placeholder="Password app Google" 
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Server IMAP</label>
+                    <input 
+                      value={newAccount.imap_server} 
+                      onChange={e => setNewAccount({...newAccount, imap_server: e.target.value})} 
+                      style={inputStyle}
+                    />
+                  </div>
+                  
+                  {/* Parole Chiave - Campi separati */}
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Parole Chiave</label>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                      <input 
+                        value={newKeywordInput} 
+                        onChange={e => setNewKeywordInput(e.target.value)} 
+                        placeholder="Aggiungi parola chiave..." 
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeywordToAccount(false))}
+                        style={inputStyle}
+                      />
+                      <button type="button" onClick={() => addKeywordToAccount(false)} style={smallButtonStyle('#4f46e5')}>➕</button>
+                    </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                      {(paroleChiave[cat] || []).map((kw) => (
-                        <span key={`${cat}-${kw}`} style={{ 
-                          background: '#f1f5f9', 
+                      {(newAccount.parole_chiave || []).map((kw, i) => (
+                        <span key={i} style={{ 
+                          background: '#e0e7ff', 
+                          color: '#3730a3', 
                           padding: '4px 10px', 
                           borderRadius: 20, 
                           fontSize: 11,
+                          fontWeight: 500,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 6
                         }}>
                           {kw}
                           <button 
-                            onClick={() => removeParolaChiave(cat, kw)} 
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                            data-testid={`remove-keyword-${cat}-${kw}`}
+                            onClick={() => removeKeywordFromAccount(kw, false)} 
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#ef4444' }}
                           >
-                            <X style={{ width: 12, height: 12, color: "#ef4444" }} />
+                            ✕
                           </button>
                         </span>
                       ))}
-                      {(!paroleChiave[cat] || paroleChiave[cat].length === 0) && (
-                        <span style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>Nessuna parola chiave</span>
-                      )}
                     </div>
                   </div>
-                ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                  <button onClick={() => saveEmailAccount(newAccount)} style={buttonStyle('#16a34a')}>✔️ Salva</button>
+                  <button onClick={() => { setShowNewForm(false); setNewKeywordInput(''); }} style={buttonStyle('#e5e7eb', '#374151')}>✕ Annulla</button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            )}
 
-        {/* TAB FATTURE */}
-        <TabsContent value="fatture">
-          <FattureAdminTab />
-        </TabsContent>
-
-        {/* TAB SISTEMA */}
-        <TabsContent value="system">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-            {/* Stato Sistema */}
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Server style={{ width: 16, height: 16 }} /> Stato Sistema
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                {dbStatus && (
-                  <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Stato:</span>
-                      <span style={{ fontWeight: 600, color: dbStatus.status === 'healthy' ? '#16a34a' : '#dc2626' }}>
-                        {dbStatus.status === 'healthy' ? '✅ Online' : '❌ Offline'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Database:</span>
-                      <span style={{ color: dbStatus.database === 'connected' ? '#16a34a' : '#dc2626' }}>
-                        {dbStatus.database}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Versione:</span>
-                      <span>{dbStatus.version}</span>
-                    </div>
-                    {dbStatus.timestamp && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Timestamp:</span>
-                        <span style={{ fontSize: 11 }}>{new Date(dbStatus.timestamp).toLocaleString('it-IT')}</span>
-                      </div>
-                    )}
+            {/* Form Modifica Account */}
+            {editingAccount && (
+              <div style={{ marginTop: 20, borderTop: '1px solid #e2e8f0', paddingTop: 20 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
+                  ✏️ Modifica Account: {editingAccount.nome}
+                  {editingAccount.is_env_default && <span style={{ fontSize: 10, color: '#64748b', marginLeft: 8 }}>(Email Principale da .env)</span>}
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Nome Account</label>
+                    <input 
+                      value={editingAccount.nome} 
+                      onChange={e => setEditingAccount({...editingAccount, nome: e.target.value})} 
+                      style={inputStyle}
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Scheduler HACCP */}
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Clock style={{ width: 16, height: 16 }} /> Scheduler HACCP
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                {schedulerStatus ? (
-                  <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Stato:</span>
-                      <span style={{ fontWeight: 600, color: schedulerStatus.running ? '#16a34a' : '#f59e0b' }}>
-                        {schedulerStatus.running ? '🟢 Attivo' : '🟡 Inattivo'}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Prossima esecuzione:</span>
-                      <span style={{ fontSize: 11 }}>{schedulerStatus.next_run || '-'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Ultima esecuzione:</span>
-                      <span style={{ fontSize: 11 }}>{schedulerStatus.last_run || 'Mai'}</span>
-                    </div>
-                    <Button onClick={handleTriggerHACCP} disabled={triggerLoading} size="sm" style={{ marginTop: 8 }}>
-                      {triggerLoading ? <RefreshCw style={{ width: 16, height: 16, marginRight: 4, animation: 'spin 1s linear infinite' }} /> : <Activity style={{ width: 16, height: 16, marginRight: 4 }} />}
-                      Trigger HACCP Manuale
-                    </Button>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Email</label>
+                    <input 
+                      type="email" 
+                      value={editingAccount.email} 
+                      onChange={e => setEditingAccount({...editingAccount, email: e.target.value})} 
+                      disabled={editingAccount.is_env_default}
+                      style={inputStyle}
+                    />
                   </div>
-                ) : (
-                  <div style={{ color: '#64748b', fontSize: 13 }}>Informazioni non disponibili</div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Statistiche Collections */}
-            <Card style={{ gridColumn: 'span 2' }}>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14 }}>Statistiche Database</CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                {loading ? (
-                  <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
-                ) : stats ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12 }}>
-                    {Object.entries(stats).map(([key, value]) => (
-                      <div key={key} style={{ background: '#f8fafc', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#3b82f6' }}>{fmt(value)}</div>
-                        <div style={{ fontSize: 10, color: '#64748b', textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</div>
-                      </div>
-                    ))}
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>App Password</label>
+                    <input 
+                      type="password" 
+                      value={editingAccount.app_password || ''} 
+                      onChange={e => setEditingAccount({...editingAccount, app_password: e.target.value})} 
+                      placeholder="Lascia vuoto per non modificare" 
+                      style={inputStyle}
+                    />
                   </div>
-                ) : (
-                  <div style={{ color: '#64748b' }}>Nessuna statistica disponibile</div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* TAB SINCRONIZZAZIONE */}
-        <TabsContent value="sync">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-            
-            {/* Status Sincronizzazione */}
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Activity style={{ width: 16, height: 16 }} /> Stato Sincronizzazione
-                  </CardTitle>
-                  <Button size="sm" variant="outline" onClick={loadSyncStatus} disabled={syncLoading}>
-                    <RefreshCw style={{ width: 14, height: 14 }} />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                {syncStatus ? (
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Fatture Totali</span>
-                      <span style={{ fontWeight: 600 }}>{fmt(syncStatus.fatture?.totali)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Fatture Pagate</span>
-                      <span style={{ fontWeight: 600, color: '#16a34a' }}>{fmt(syncStatus.fatture?.pagate)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Fatture → Cassa</span>
-                      <span style={{ fontWeight: 600 }}>{fmt(syncStatus.fatture?.cassa)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Fatture → Banca</span>
-                      <span style={{ fontWeight: 600 }}>{fmt(syncStatus.fatture?.banca)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Prima Nota Cassa (Entrate)</span>
-                      <span style={{ fontWeight: 600, color: '#16a34a' }}>{fmt(syncStatus.prima_nota_cassa?.entrate)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Prima Nota Cassa (Uscite)</span>
-                      <span style={{ fontWeight: 600, color: '#dc2626' }}>{fmt(syncStatus.prima_nota_cassa?.uscite)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
-                      <span style={{ color: '#64748b', fontSize: 13 }}>Corrispettivi</span>
-                      <span style={{ fontWeight: 600 }}>{fmt(syncStatus.corrispettivi)}</span>
-                    </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Attivo</label>
+                    <select 
+                      value={editingAccount.attivo ? 'true' : 'false'} 
+                      onChange={e => setEditingAccount({...editingAccount, attivo: e.target.value === 'true'})} 
+                      style={inputStyle}
+                    >
+                      <option value="true">Si</option>
+                      <option value="false">No</option>
+                    </select>
                   </div>
-                ) : (
-                  <div style={{ color: '#64748b', textAlign: 'center', padding: 20 }}>Caricamento...</div>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Verifica Corrispettivi */}
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <AlertTriangle style={{ width: 16, height: 16 }} /> Verifica Entrate {anno}
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-                  Verifica che le entrate da corrispettivi includano l&apos;IVA (Imponibile + IVA).
-                </p>
-                <Button onClick={verificaEntrateCorrette} disabled={syncLoading} style={{ width: '100%', marginBottom: 12 }}>
-                  {syncLoading ? 'Verifica in corso...' : 'Verifica Corrispettivi'}
-                </Button>
-                
-                {verificaCorrispettivi && (
-                  <div style={{ 
-                    background: verificaCorrispettivi.status === 'OK' ? '#f0fdf4' : '#fef2f2', 
-                    border: `1px solid ${verificaCorrispettivi.status === 'OK' ? '#86efac' : '#fecaca'}`,
-                    borderRadius: 8, 
-                    padding: 12,
-                    marginTop: 8
-                  }}>
-                    <div style={{ 
-                      fontWeight: 600, 
-                      color: verificaCorrispettivi.status === 'OK' ? '#16a34a' : '#dc2626',
-                      marginBottom: 8
-                    }}>
-                      {verificaCorrispettivi.status === 'OK' ? '✓ Tutti i corrispettivi sono corretti' : '⚠ Correzione necessaria'}
+                  
+                  {/* Parole Chiave - Campi separati */}
+                  <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ fontSize: 11, fontWeight: 500, display: 'block', marginBottom: 4 }}>Parole Chiave</label>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                      <input 
+                        value={editKeywordInput} 
+                        onChange={e => setEditKeywordInput(e.target.value)} 
+                        placeholder="Aggiungi parola chiave..." 
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addKeywordToAccount(true))}
+                        style={inputStyle}
+                      />
+                      <button type="button" onClick={() => addKeywordToAccount(true)} style={smallButtonStyle('#4f46e5')}>➕</button>
                     </div>
-                    <div style={{ fontSize: 12, color: '#374151' }}>
-                      <div>Movimenti: {verificaCorrispettivi.totale_movimenti}</div>
-                      <div>Corretti: {verificaCorrispettivi.corretti} | Errati: {verificaCorrispettivi.errati}</div>
-                      {verificaCorrispettivi.differenza_totale > 0 && (
-                        <div style={{ color: '#dc2626', fontWeight: 600, marginTop: 4 }}>
-                          Differenza: €{verificaCorrispettivi.differenza_totale?.toLocaleString('it-IT')}
-                        </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {(editingAccount.parole_chiave || []).map((kw, i) => (
+                        <span key={i} style={{ 
+                          background: '#e0e7ff', 
+                          color: '#3730a3', 
+                          padding: '4px 10px', 
+                          borderRadius: 20, 
+                          fontSize: 11,
+                          fontWeight: 500,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
+                        }}>
+                          {kw}
+                          <button 
+                            onClick={() => removeKeywordFromAccount(kw, true)} 
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#ef4444' }}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                      {(!editingAccount.parole_chiave || editingAccount.parole_chiave.length === 0) && (
+                        <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 12 }}>Nessuna parola chiave (accetta tutte le email)</span>
                       )}
                     </div>
-                    
-                    {verificaCorrispettivi.status !== 'OK' && (
-                      <Button 
-                        onClick={correggiCorrispettivi} 
-                        disabled={syncLoading}
-                        style={{ width: '100%', marginTop: 12, background: '#dc2626' }}
-                      >
-                        Correggi Importi (Aggiungi IVA)
-                      </Button>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                  <button onClick={() => saveEmailAccount(editingAccount)} style={buttonStyle('#16a34a')}>✔️ Salva Modifiche</button>
+                  <button onClick={() => { setEditingAccount(null); setEditKeywordInput(''); }} style={buttonStyle('#e5e7eb', '#374151')}>✕ Annulla</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB PAROLE CHIAVE GLOBALI */}
+      {activeTab === 'keywords' && (
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <h3 style={{ margin: 0, fontSize: 16 }}>Parole Chiave per Filtro Email (Globali)</h3>
+          </div>
+          <div style={cardContentStyle}>
+            <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
+              Queste parole chiave vengono usate per categorizzare automaticamente i documenti scaricati dalle email.
+            </p>
+            
+            {/* Aggiungi nuova */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              <select 
+                value={newKeyword.categoria} 
+                onChange={e => setNewKeyword({...newKeyword, categoria: e.target.value})} 
+                style={{ ...inputStyle, minWidth: 120, width: 'auto' }}
+              >
+                <option value="generale">Generale</option>
+                <option value="fatture">Fatture</option>
+                <option value="f24">F24</option>
+                <option value="buste_paga">Buste Paga</option>
+              </select>
+              <input 
+                value={newKeyword.parola} 
+                onChange={e => setNewKeyword({...newKeyword, parola: e.target.value})} 
+                placeholder="Nuova parola chiave..." 
+                style={{ ...inputStyle, flex: 1 }}
+                onKeyDown={e => e.key === 'Enter' && addParolaChiave()} 
+              />
+              <button onClick={addParolaChiave} style={buttonStyle('#4f46e5')}>➕ Aggiungi</button>
+            </div>
+
+            {/* Lista per categoria */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+              {['generale', 'fatture', 'f24', 'buste_paga'].map(cat => (
+                <div key={cat} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
+                  <h5 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, textTransform: 'capitalize' }}>
+                    {cat.replace('_', ' ')}
+                  </h5>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {(paroleChiave[cat] || []).map((kw) => (
+                      <span key={`${cat}-${kw}`} style={{ 
+                        background: '#f1f5f9', 
+                        padding: '4px 10px', 
+                        borderRadius: 20, 
+                        fontSize: 11,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}>
+                        {kw}
+                        <button 
+                          onClick={() => removeParolaChiave(cat, kw)} 
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#ef4444' }}
+                          data-testid={`remove-keyword-${cat}-${kw}`}
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                    {(!paroleChiave[cat] || paroleChiave[cat].length === 0) && (
+                      <span style={{ color: '#94a3b8', fontSize: 11, fontStyle: 'italic' }}>Nessuna parola chiave</span>
                     )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Azioni Sincronizzazione */}
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <RefreshCw style={{ width: 16, height: 16 }} /> Azioni Sincronizzazione
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16, display: 'grid', gap: 12 }}>
-                <div>
-                  <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
-                    Cerca corrispondenze tra fatture XML e pagamenti in Prima Nota Cassa.
-                  </p>
-                  <Button onClick={matchFattureCassa} disabled={syncLoading} variant="outline" style={{ width: '100%' }}>
-                    Match Fatture ↔ Cassa
-                  </Button>
                 </div>
-                
-                <div>
-                  <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
-                    Cerca corrispondenze tra fatture e movimenti estratto conto bancario.
-                  </p>
-                  <Button onClick={matchFattureBanca} disabled={syncLoading} variant="outline" style={{ width: '100%' }}>
-                    Match Fatture ↔ Banca
-                  </Button>
-                </div>
-                
-                <div>
-                  <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
-                    Imposta le fatture senza metodo pagamento a &quot;Bonifico&quot; (banca).
-                  </p>
-                  <Button onClick={impostaFattureBanca} disabled={syncLoading} variant="outline" style={{ width: '100%' }}>
-                    Fatture → Bonifico
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
+              ))}
+            </div>
           </div>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* TAB ESPORTAZIONI */}
-        <TabsContent value="export">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText style={{ width: 16, height: 16 }} /> Esporta Fatture
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-                  Esporta tutte le fatture dell&apos;anno {anno} in formato Excel.
-                </p>
-                <Button 
-                  onClick={() => window.open(`${api.defaults.baseURL}/api/exports/invoices?anno=${anno}`, '_blank')}
-                  style={{ width: '100%' }}
-                >
-                  <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Scarica Excel Fatture
-                </Button>
-              </CardContent>
-            </Card>
+      {/* TAB FATTURE */}
+      {activeTab === 'fatture' && (
+        <FattureAdminTab />
+      )}
 
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText style={{ width: 16, height: 16 }} /> Esporta Prima Nota
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-                  Esporta prima nota cassa/banca dell&apos;anno {anno}.
-                </p>
+      {/* TAB SISTEMA */}
+      {activeTab === 'system' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+          {/* Stato Sistema */}
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>🖥️ Stato Sistema</h3>
+            </div>
+            <div style={cardContentStyle}>
+              {dbStatus && (
+                <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Stato:</span>
+                    <span style={{ fontWeight: 600, color: dbStatus.status === 'healthy' ? '#16a34a' : '#dc2626' }}>
+                      {dbStatus.status === 'healthy' ? '✅ Online' : '❌ Offline'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Database:</span>
+                    <span style={{ color: dbStatus.database === 'connected' ? '#16a34a' : '#dc2626' }}>
+                      {dbStatus.database}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Versione:</span>
+                    <span>{dbStatus.version}</span>
+                  </div>
+                  {dbStatus.timestamp && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Timestamp:</span>
+                      <span style={{ fontSize: 11 }}>{new Date(dbStatus.timestamp).toLocaleString('it-IT')}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Scheduler HACCP */}
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>⏰ Scheduler HACCP</h3>
+            </div>
+            <div style={cardContentStyle}>
+              {schedulerStatus ? (
+                <div style={{ display: 'grid', gap: 8, fontSize: 13 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Stato:</span>
+                    <span style={{ fontWeight: 600, color: schedulerStatus.running ? '#16a34a' : '#f59e0b' }}>
+                      {schedulerStatus.running ? '🟢 Attivo' : '🟡 Inattivo'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Prossima esecuzione:</span>
+                    <span style={{ fontSize: 11 }}>{schedulerStatus.next_run || '-'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Ultima esecuzione:</span>
+                    <span style={{ fontSize: 11 }}>{schedulerStatus.last_run || 'Mai'}</span>
+                  </div>
+                  <button onClick={handleTriggerHACCP} disabled={triggerLoading} style={{ ...buttonStyle(triggerLoading ? '#999' : '#f59e0b'), marginTop: 8 }}>
+                    {triggerLoading ? '⏳ Esecuzione...' : '⚡ Trigger HACCP Manuale'}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ color: '#64748b', fontSize: 13 }}>Informazioni non disponibili</div>
+              )}
+            </div>
+          </div>
+
+          {/* Statistiche Collections */}
+          <div style={{ ...cardStyle, gridColumn: 'span 2' }}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14 }}>📊 Statistiche Database</h3>
+            </div>
+            <div style={cardContentStyle}>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
+              ) : stats ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12 }}>
+                  {Object.entries(stats).map(([key, value]) => (
+                    <div key={key} style={{ background: '#f8fafc', padding: 12, borderRadius: 8, textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: '#3b82f6' }}>{fmt(value)}</div>
+                      <div style={{ fontSize: 10, color: '#64748b', textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: '#64748b' }}>Nessuna statistica disponibile</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB SINCRONIZZAZIONE */}
+      {activeTab === 'sync' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+          
+          {/* Status Sincronizzazione */}
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>📊 Stato Sincronizzazione</h3>
+              <button onClick={loadSyncStatus} disabled={syncLoading} style={smallButtonStyle('#e5e7eb', '#374151')}>🔄</button>
+            </div>
+            <div style={cardContentStyle}>
+              {syncStatus ? (
                 <div style={{ display: 'grid', gap: 8 }}>
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.open(`${api.defaults.baseURL}/api/exports/prima-nota-cassa?anno=${anno}`, '_blank')}
-                    style={{ width: '100%' }}
-                  >
-                    <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Prima Nota Cassa
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.open(`${api.defaults.baseURL}/api/exports/prima-nota-banca?anno=${anno}`, '_blank')}
-                    style={{ width: '100%' }}
-                  >
-                    <Download style={{ width: 16, height: 16, marginRight: 8 }} /> Prima Nota Banca
-                  </Button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Fatture Totali</span>
+                    <span style={{ fontWeight: 600 }}>{fmt(syncStatus.fatture?.totali)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Fatture Pagate</span>
+                    <span style={{ fontWeight: 600, color: '#16a34a' }}>{fmt(syncStatus.fatture?.pagate)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Fatture → Cassa</span>
+                    <span style={{ fontWeight: 600 }}>{fmt(syncStatus.fatture?.cassa)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Fatture → Banca</span>
+                    <span style={{ fontWeight: 600 }}>{fmt(syncStatus.fatture?.banca)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Prima Nota Cassa (Entrate)</span>
+                    <span style={{ fontWeight: 600, color: '#16a34a' }}>{fmt(syncStatus.prima_nota_cassa?.entrate)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Prima Nota Cassa (Uscite)</span>
+                    <span style={{ fontWeight: 600, color: '#dc2626' }}>{fmt(syncStatus.prima_nota_cassa?.uscite)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                    <span style={{ color: '#64748b', fontSize: 13 }}>Corrispettivi</span>
+                    <span style={{ fontWeight: 600 }}>{fmt(syncStatus.corrispettivi)}</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader style={{ padding: '12px 16px' }}>
-                <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <FileText style={{ width: 16, height: 16 }} /> Documentazione API
-                </CardTitle>
-              </CardHeader>
-              <CardContent style={{ padding: 16 }}>
-                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-                  Accedi alla documentazione Swagger delle API del sistema.
-                </p>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.open(`${api.defaults.baseURL}/docs`, '_blank')}
-                  style={{ width: '100%' }}
-                >
-                  <FileText style={{ width: 16, height: 16, marginRight: 8 }} /> Apri Swagger Docs
-                </Button>
-              </CardContent>
-            </Card>
+              ) : (
+                <div style={{ color: '#64748b', textAlign: 'center', padding: 20 }}>Caricamento...</div>
+              )}
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+          
+          {/* Verifica Corrispettivi */}
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>⚠️ Verifica Entrate {anno}</h3>
+            </div>
+            <div style={cardContentStyle}>
+              <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+                Verifica che le entrate da corrispettivi includano l&apos;IVA (Imponibile + IVA).
+              </p>
+              <button onClick={verificaEntrateCorrette} disabled={syncLoading} style={{ ...buttonStyle('#4f46e5'), width: '100%', marginBottom: 12 }}>
+                {syncLoading ? 'Verifica in corso...' : 'Verifica Corrispettivi'}
+              </button>
+              
+              {verificaCorrispettivi && (
+                <div style={{ 
+                  background: verificaCorrispettivi.status === 'OK' ? '#f0fdf4' : '#fef2f2', 
+                  border: `1px solid ${verificaCorrispettivi.status === 'OK' ? '#86efac' : '#fecaca'}`,
+                  borderRadius: 8, 
+                  padding: 12,
+                  marginTop: 8
+                }}>
+                  <div style={{ 
+                    fontWeight: 600, 
+                    color: verificaCorrispettivi.status === 'OK' ? '#16a34a' : '#dc2626',
+                    marginBottom: 8
+                  }}>
+                    {verificaCorrispettivi.status === 'OK' ? '✓ Tutti i corrispettivi sono corretti' : '⚠ Correzione necessaria'}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#374151' }}>
+                    <div>Movimenti: {verificaCorrispettivi.totale_movimenti}</div>
+                    <div>Corretti: {verificaCorrispettivi.corretti} | Errati: {verificaCorrispettivi.errati}</div>
+                    {verificaCorrispettivi.differenza_totale > 0 && (
+                      <div style={{ color: '#dc2626', fontWeight: 600, marginTop: 4 }}>
+                        Differenza: €{verificaCorrispettivi.differenza_totale?.toLocaleString('it-IT')}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {verificaCorrispettivi.status !== 'OK' && (
+                    <button 
+                      onClick={correggiCorrispettivi} 
+                      disabled={syncLoading}
+                      style={{ ...buttonStyle('#dc2626'), width: '100%', marginTop: 12 }}
+                    >
+                      Correggi Importi (Aggiungi IVA)
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Azioni Sincronizzazione */}
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>🔄 Azioni Sincronizzazione</h3>
+            </div>
+            <div style={{ ...cardContentStyle, display: 'grid', gap: 12 }}>
+              <div>
+                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+                  Cerca corrispondenze tra fatture XML e pagamenti in Prima Nota Cassa.
+                </p>
+                <button onClick={matchFattureCassa} disabled={syncLoading} style={{ ...buttonStyle('#e5e7eb', '#374151'), width: '100%' }}>
+                  Match Fatture ↔ Cassa
+                </button>
+              </div>
+              
+              <div>
+                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+                  Cerca corrispondenze tra fatture e movimenti estratto conto bancario.
+                </p>
+                <button onClick={matchFattureBanca} disabled={syncLoading} style={{ ...buttonStyle('#e5e7eb', '#374151'), width: '100%' }}>
+                  Match Fatture ↔ Banca
+                </button>
+              </div>
+              
+              <div>
+                <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
+                  Imposta le fatture senza metodo pagamento a &quot;Bonifico&quot; (banca).
+                </p>
+                <button onClick={impostaFattureBanca} disabled={syncLoading} style={{ ...buttonStyle('#e5e7eb', '#374151'), width: '100%' }}>
+                  Fatture → Bonifico
+                </button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      )}
+
+      {/* TAB ESPORTAZIONI */}
+      {activeTab === 'export' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>📄 Esporta Fatture</h3>
+            </div>
+            <div style={cardContentStyle}>
+              <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+                Esporta tutte le fatture dell&apos;anno {anno} in formato Excel.
+              </p>
+              <button 
+                onClick={() => window.open(`${api.defaults.baseURL}/api/exports/invoices?anno=${anno}`, '_blank')}
+                style={{ ...buttonStyle('#4f46e5'), width: '100%' }}
+              >
+                📥 Scarica Excel Fatture
+              </button>
+            </div>
+          </div>
+
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>📄 Esporta Prima Nota</h3>
+            </div>
+            <div style={cardContentStyle}>
+              <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+                Esporta prima nota cassa/banca dell&apos;anno {anno}.
+              </p>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <button 
+                  onClick={() => window.open(`${api.defaults.baseURL}/api/exports/prima-nota-cassa?anno=${anno}`, '_blank')}
+                  style={{ ...buttonStyle('#e5e7eb', '#374151'), width: '100%' }}
+                >
+                  📥 Prima Nota Cassa
+                </button>
+                <button 
+                  onClick={() => window.open(`${api.defaults.baseURL}/api/exports/prima-nota-banca?anno=${anno}`, '_blank')}
+                  style={{ ...buttonStyle('#e5e7eb', '#374151'), width: '100%' }}
+                >
+                  📥 Prima Nota Banca
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style={cardStyle}>
+            <div style={cardHeaderStyle}>
+              <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>📄 Documentazione API</h3>
+            </div>
+            <div style={cardContentStyle}>
+              <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+                Accedi alla documentazione Swagger delle API del sistema.
+              </p>
+              <button 
+                onClick={() => window.open(`${api.defaults.baseURL}/docs`, '_blank')}
+                style={{ ...buttonStyle('#e5e7eb', '#374151'), width: '100%' }}
+              >
+                📄 Apri Swagger Docs
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1032,6 +1043,49 @@ function FattureAdminTab() {
   const [loading, setLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+
+  const cardStyle = {
+    background: 'white',
+    borderRadius: 12,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+    overflow: 'hidden'
+  };
+
+  const cardHeaderStyle = {
+    padding: '12px 16px',
+    borderBottom: '1px solid #e5e7eb'
+  };
+
+  const cardContentStyle = {
+    padding: 16
+  };
+
+  const buttonStyle = (bg, color = 'white') => ({
+    padding: '8px 16px',
+    background: bg,
+    color: color,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: 13,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+    width: '100%',
+    justifyContent: 'center'
+  });
+
+  const smallButtonStyle = (bg, color = 'white') => ({
+    padding: '6px 12px',
+    background: bg,
+    color: color,
+    border: 'none',
+    borderRadius: 6,
+    cursor: 'pointer',
+    fontWeight: '500',
+    fontSize: 12
+  });
 
   const loadFattureStats = useCallback(async () => {
     setLoading(true);
@@ -1069,13 +1123,11 @@ function FattureAdminTab() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
       {/* Stats Metodi Pagamento */}
-      <Card>
-        <CardHeader style={{ padding: '12px 16px' }}>
-          <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText style={{ width: 16, height: 16 }} /> Metodi di Pagamento Fatture
-          </CardTitle>
-        </CardHeader>
-        <CardContent style={{ padding: 16 }}>
+      <div style={cardStyle}>
+        <div style={cardHeaderStyle}>
+          <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>📄 Metodi di Pagamento Fatture</h3>
+        </div>
+        <div style={cardContentStyle}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
           ) : fattureStats ? (
@@ -1107,17 +1159,15 @@ function FattureAdminTab() {
           ) : (
             <div style={{ color: '#dc2626' }}>Errore caricamento dati</div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Azioni Massive */}
-      <Card>
-        <CardHeader style={{ padding: '12px 16px' }}>
-          <CardTitle style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Settings style={{ width: 16, height: 16 }} /> Azioni Massive
-          </CardTitle>
-        </CardHeader>
-        <CardContent style={{ padding: 16 }}>
+      <div style={cardStyle}>
+        <div style={cardHeaderStyle}>
+          <h3 style={{ margin: 0, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>⚙️ Azioni Massive</h3>
+        </div>
+        <div style={cardContentStyle}>
           <div style={{ display: 'grid', gap: 12 }}>
             <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8 }}>
               <p style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>
@@ -1126,52 +1176,49 @@ function FattureAdminTab() {
               
               {confirmAction?.type === 'set_metodo' ? (
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <Button 
-                    size="sm" 
+                  <button 
                     onClick={() => handleSetMetodoPagamento(confirmAction.metodo)}
                     disabled={updating}
-                    style={{ background: '#16a34a', flex: 1 }}
+                    style={{ ...buttonStyle('#16a34a'), flex: 1 }}
                   >
                     {updating ? '⏳ Aggiornando...' : '✓ Conferma'}
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
+                  </button>
+                  <button 
                     onClick={() => setConfirmAction(null)}
                     disabled={updating}
+                    style={smallButtonStyle('#e5e7eb', '#374151')}
                   >
                     ✕ Annulla
-                  </Button>
+                  </button>
                 </div>
               ) : (
-                <Button 
-                  size="sm" 
+                <button 
                   onClick={() => handleSetMetodoPagamento('Bonifico')}
                   disabled={loading || (fattureStats?.senza_metodo === 0)}
-                  style={{ width: '100%' }}
+                  style={buttonStyle(loading || (fattureStats?.senza_metodo === 0) ? '#ccc' : '#4f46e5')}
                 >
                   🏦 Imposta &quot;Bonifico&quot; ({fattureStats?.senza_metodo || 0} fatture)
-                </Button>
+                </button>
               )}
             </div>
             
             <div style={{ padding: 12, background: '#fef2f2', borderRadius: 8, border: '1px solid #fecaca' }}>
-              <p style={{ fontSize: 12, color: '#991b1b', marginBottom: 8 }}>
+              <p style={{ fontSize: 12, color: '#991b1b', marginBottom: 0 }}>
                 <strong>⚠️ Attenzione:</strong> Le azioni massive modificano molti record. Usa con cautela.
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Refresh */}
-      <Card style={{ gridColumn: 'span 2' }}>
-        <CardContent style={{ padding: 12, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant="outline" size="sm" onClick={loadFattureStats} disabled={loading}>
-            <RefreshCw style={{ width: 14, height: 14, marginRight: 6 }} /> Aggiorna Stats
-          </Button>
-        </CardContent>
-      </Card>
+      <div style={{ ...cardStyle, gridColumn: 'span 2' }}>
+        <div style={{ ...cardContentStyle, display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={loadFattureStats} disabled={loading} style={smallButtonStyle('#e5e7eb', '#374151')}>
+            🔄 Aggiorna Stats
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
