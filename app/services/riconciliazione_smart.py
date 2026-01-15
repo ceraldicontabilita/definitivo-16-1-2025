@@ -55,6 +55,12 @@ PATTERN_F24 = [
     r"PAG\.TO\s*TELEMATICO",
 ]
 
+# Pattern per PRELIEVO ASSEGNO
+PATTERN_PRELIEVO_ASSEGNO = [
+    r"PRELIEVO\s*ASSEGNO.*NUM:\s*(\d+)",
+    r"PREL\.?\s*ASS\.?.*NUM[:\s]*(\d+)",
+]
+
 # Pattern per SDD leasing/noleggio
 FORNITORI_LEASING = [
     ("Leasys Italia", r"Leasys\s*Italia"),
