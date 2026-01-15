@@ -228,10 +228,28 @@ class PayslipPDFParser:
                 if comp_match:
                     competenze = self._parse_italian_number(comp_match.group(1))
         
+        # Formato Zucchetti con 's' invece di spazi
+        if competenze == 0:
+            comp_match = re.search(r'TOTALEsCOMPETENZE\s*([0-9.,]+)', text, re.IGNORECASE)
+            if comp_match:
+                competenze = self._parse_italian_number(comp_match.group(1))
+        
         if trattenute == 0:
             tratt_match = re.search(r'TOTALE\s*TRATTENUTE[^\d]*([0-9.,]+)', text_clean, re.IGNORECASE)
             if tratt_match:
                 trattenute = self._parse_italian_number(tratt_match.group(1))
+        
+        # Formato Zucchetti con 's'
+        if trattenute == 0:
+            tratt_match = re.search(r'TOTALEsTRATTENUTE\s*([0-9.,]+)', text, re.IGNORECASE)
+            if tratt_match:
+                trattenute = self._parse_italian_number(tratt_match.group(1))
+        
+        # Netto formato Zucchetti
+        if netto == 0:
+            netto_match = re.search(r'NETTOsDELsMESE\s*([0-9.,]+)', text, re.IGNORECASE)
+            if netto_match:
+                netto = self._parse_italian_number(netto_match.group(1))
         
         # Se non c'è netto esplicito ma ci sono competenze e trattenute, calcolalo
         if netto == 0 and competenze > 0 and trattenute > 0:
