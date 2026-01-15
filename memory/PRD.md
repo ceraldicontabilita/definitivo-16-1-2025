@@ -5,6 +5,14 @@
 
 ## 📅 CHANGELOG RECENTE
 
+### 15 Gennaio 2026 (Sessione 3)
+- **COMPLETATO**: Standardizzazione UI - Convertite le ultime 3 pagine a stili inline:
+  - `Admin.jsx` - Rimossi componenti Shadcn (Card, Button, Input, Tabs) e icone Lucide
+  - `Documenti.jsx` - Rimossi componenti Shadcn (Card, Button) e icone Lucide  
+  - `PrimaNota.jsx` - Mantenuto già con stili inline, rimossi riferimenti a componenti UI esterni
+- **VERIFICATO**: Tutte le pagine caricate correttamente con nuovo stile uniforme
+- L'intera applicazione ora usa esclusivamente stili inline (NO Tailwind/Shadcn)
+
 ### 15 Gennaio 2026 (Sessione 2)
 - **FEATURE**: Creato parser estratti conto BNL (`/app/app/parsers/estratto_conto_bnl_parser.py`)
   - Supporta conto corrente BNL e carte di credito BNL Business
