@@ -10,8 +10,11 @@
 - **FIX**: Funzionalità "Scarica Email F24" ora funzionante
 - **FEATURE**: Sync automatico F24 salva ora sia in `f24_commercialista` che in `f24_models` (visualizzazione frontend)
 - **FEATURE**: PDF F24 salvato in base64 per visualizzazione diretta
+- **FEATURE**: Nuovo endpoint `/api/documenti/sync-estratti-conto` per processare estratti conto Nexi
+- **FEATURE**: Aggiunta MAPPA STRUTTURALE SISTEMA nel PRD con diagrammi flusso dati
 - **VERIFICATO**: Connessione IMAP Gmail funzionante
 - **VERIFICATO**: 46 F24 importati automaticamente dalle email
+- **VERIFICATO**: 17 estratti conto Nexi processati con 148 transazioni
 - **VERIFICATO**: Pagina F24 mostra 48 modelli da pagare
 
 ### 14 Gennaio 2026
