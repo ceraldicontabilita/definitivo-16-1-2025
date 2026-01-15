@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<postacert tipo="posta-certificata" errore="nessuno">
+    <intestazione>
+        <mittente>notifica.pl.napoli@pec.it</mittente>
+        <destinatari tipo="certificato">CERALDIGROUPSRL@LEGALMAIL.IT</destinatari>
+        <risposte>SGV - Servizio Notificazioni &lt;notifica.pl.napoli@pec.it&gt;</risposte>
+        <oggetto>Notifica di atto amministrativo relativo ad una sanzione amministrativa prevista dal codice della strada Atto 20250643602 del 03/12/2025 [upec8956217]</oggetto>
+    </intestazione>
+    <dati>
+        <gestore-emittente>ARUBA PEC S.p.A.</gestore-emittente>
+        <data zona="+0100">
+            <giorno>14/01/2026</giorno>
+            <ora>15:06:45</ora>
+        </data>
+        <identificativo>jpec1303.20260114150645.90175.58.1.1@pec.aruba.it</identificativo>
+        <msgid>&lt;14012026_150645_14235800_8956217@www.soes.it&gt;</msgid>
+        <ricevuta tipo="completa"/>
+    </dati>
+</postacert>
+
