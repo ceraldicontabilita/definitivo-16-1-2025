@@ -342,7 +342,56 @@ async def analizza_movimento(movimento: Dict[str, Any]) -> Dict[str, Any]:
         "richiede_conferma": True
     }
     
-    # 0. Check INCASSI POS (entrate da POS - NON sono commissioni!)
+    # 0. Check PRELIEVO ASSEGNO (deve essere controllato prima di altri pattern)
+    if is_prelievo_assegno(descrizione):
+        numero_assegno = estrai_numero_assegno(descrizione)
+        result["tipo"] = "prelievo_assegno"
+        result["categoria_suggerita"] = "Pagamento Assegno"
+        result["numero_assegno"] = numero_assegno
+        
+        if numero_assegno:
+            # Cerca l'assegno nella collezione
+            assegno = await db.assegni.find_one(
+                {"numero": {"$regex": numero_assegno[-8:]}},  # Ultime 8 cifre per match più flessibile
+                {"_id": 0}
+            )
+            
+            if assegno:
+                result["assegno"] = {
+                    "id": assegno.get("id"),
+                    "numero": assegno.get("numero"),
+                    "importo": assegno.get("importo"),
+                    "stato": assegno.get("stato"),
+                    "beneficiario": assegno.get("beneficiario"),
+                    "data_emissione": assegno.get("data_emissione")
+                }
+                
+                # Verifica match importo
+                importo_assegno = assegno.get("importo") or 0
+                if abs(importo_assegno - abs(importo)) < 0.01:
+                    result["associazione_automatica"] = True
+                    result["richiede_conferma"] = False
+                    result["suggerimenti"] = [{
+                        "tipo": "assegno",
+                        "id": assegno.get("id"),
+                        "numero": assegno.get("numero"),
+                        "importo": importo_assegno,
+                        "beneficiario": assegno.get("beneficiario"),
+                        "fattura_collegata": assegno.get("fattura_collegata"),
+                        "descrizione": f"Assegno N. {assegno.get('numero')} - {assegno.get('beneficiario', 'N/A')}"
+                    }]
+                else:
+                    # Importo diverso - richiede conferma
+                    result["richiede_conferma"] = True
+                    result["note"] = f"Importo assegno €{importo_assegno:.2f} vs movimento €{abs(importo):.2f}"
+            else:
+                # Assegno non trovato nella collezione
+                result["note"] = f"Assegno N. {numero_assegno} non trovato nel registro assegni"
+                result["richiede_conferma"] = True
+        
+        return result
+    
+    # 1. Check INCASSI POS (entrate da POS - NON sono commissioni!)
     if is_incasso_pos(descrizione) and importo > 0:
         result["tipo"] = "incasso_pos"
         result["categoria_suggerita"] = "Incasso POS"
