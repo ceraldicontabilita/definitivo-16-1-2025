@@ -2,12 +2,6 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { formatEuro } from '../lib/utils';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
-import { 
-  RefreshCw, TrendingUp, TrendingDown, Package, Calendar, 
-  ShoppingCart, BarChart3, Search, ChevronDown, ChevronUp
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
 
 export default function PrevisioniAcquisti() {
   const { anno: annoGlobale } = useAnnoGlobale();
@@ -32,7 +26,7 @@ export default function PrevisioniAcquisti() {
         const res = await api.get(`/api/previsioni-acquisti/statistiche?anno=${annoGlobale}`);
         setStatistiche(res.data.statistiche || []);
       } else {
-        const annoRif = annoGlobale - 1; // Usa anno precedente come riferimento
+        const annoRif = annoGlobale - 1;
         const res = await api.get(`/api/previsioni-acquisti/previsioni?anno_riferimento=${annoRif}&settimane_previsione=${settimanePrevisione}`);
         setPrevisioni(res.data.previsioni || []);
         setCostoTotale(res.data.costo_totale_stimato || 0);
@@ -68,6 +62,48 @@ export default function PrevisioniAcquisti() {
     if (trend === '↓') return '#dc2626';
     return '#64748b';
   };
+
+  const cardStyle = {
+    background: 'white',
+    borderRadius: 12,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden'
+  };
+
+  const cardHeaderStyle = {
+    padding: '16px 20px',
+    borderBottom: '1px solid #e2e8f0',
+    background: '#f8fafc'
+  };
+
+  const cardTitleStyle = {
+    margin: 0,
+    fontSize: 16,
+    fontWeight: 600,
+    color: '#1e293b',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8
+  };
+
+  const cardContentStyle = {
+    padding: 20
+  };
+
+  const buttonStyle = (variant = 'default') => ({
+    padding: '8px 16px',
+    borderRadius: 8,
+    border: variant === 'outline' ? '1px solid #e2e8f0' : 'none',
+    background: variant === 'outline' ? 'transparent' : (variant === 'green' ? '#059669' : '#3b82f6'),
+    color: variant === 'outline' ? '#64748b' : 'white',
+    fontWeight: 500,
+    cursor: 'pointer',
+    fontSize: 13,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6
+  });
 
   return (
     <div style={{ padding: '16px 12px', maxWidth: 1400, margin: '0 auto' }}>
@@ -147,18 +183,28 @@ export default function PrevisioniAcquisti() {
           </select>
         )}
         
-        <Button onClick={loadData} disabled={loading} variant="outline" style={{ padding: '8px 12px' }}>
-          <RefreshCw style={loading ? { animation: 'spin 1s linear infinite', height: 16, width: 16 } : { height: 16, width: 16 }} />
-        </Button>
+        <button 
+          onClick={loadData} 
+          disabled={loading} 
+          style={buttonStyle('outline')}
+          data-testid="refresh-btn"
+        >
+          🔄
+        </button>
         
-        <Button onClick={handlePopolaStorico} disabled={popolando} style={{ background: '#059669', color: 'white', padding: '8px 12px', fontSize: 12 }}>
+        <button 
+          onClick={handlePopolaStorico} 
+          disabled={popolando} 
+          style={buttonStyle('green')}
+          data-testid="popola-storico-btn"
+        >
           {popolando ? 'Popolando...' : '🔄 Popola Storico'}
-        </Button>
+        </button>
       </div>
 
       {/* Ricerca */}
       <div style={{ marginBottom: 16, position: 'relative' }}>
-        <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>🔍</span>
         <input
           type="text"
           value={searchTerm}
@@ -169,52 +215,48 @@ export default function PrevisioniAcquisti() {
             padding: '10px 12px 10px 40px',
             borderRadius: 8,
             border: '1px solid #e2e8f0',
-            fontSize: 14
+            fontSize: 14,
+            boxSizing: 'border-box'
           }}
+          data-testid="search-input"
         />
       </div>
 
       {/* Riepilogo Previsioni */}
       {activeTab === 'previsioni' && costoTotale > 0 && (
-        <Card style={{ marginBottom: 16, background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
-          <CardContent style={{ paddingTop: 16 }}>
+        <div style={{ ...cardStyle, marginBottom: 16, background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
+          <div style={{ ...cardContentStyle, paddingTop: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
               <div>
                 <div style={{ fontSize: 13, opacity: 0.9 }}>Costo stimato prossime {settimanePrevisione} settimane</div>
                 <div style={{ fontSize: 28, fontWeight: 'bold' }}>{formatEuro(costoTotale)}</div>
               </div>
-              <ShoppingCart size={40} style={{ opacity: 0.3 }} />
+              <span style={{ fontSize: 40, opacity: 0.3 }}>🛒</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Lista Prodotti */}
-      <Card>
-        <CardHeader>
-          <CardTitle style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={cardStyle}>
+        <div style={cardHeaderStyle}>
+          <h2 style={cardTitleStyle}>
             {activeTab === 'statistiche' ? (
-              <>
-                <BarChart3 style={{ height: 20, width: 20 }} />
-                Consumi {annoGlobale} vs {annoGlobale - 1}
-              </>
+              <>📊 Consumi {annoGlobale} vs {annoGlobale - 1}</>
             ) : (
-              <>
-                <Package style={{ height: 20, width: 20 }} />
-                Acquisti Previsti ({filteredData.length} prodotti)
-              </>
+              <>📦 Acquisti Previsti ({filteredData.length} prodotti)</>
             )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h2>
+        </div>
+        <div style={cardContentStyle}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
-              <RefreshCw style={{ animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} size={32} />
+              <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
               Caricamento...
             </div>
           ) : filteredData.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>
-              <Package size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
+              <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>📦</div>
               <p>Nessun dato trovato</p>
               <p style={{ fontSize: 13 }}>Clicca &quot;Popola Storico&quot; per importare i dati dalle fatture</p>
             </div>
@@ -229,6 +271,7 @@ export default function PrevisioniAcquisti() {
                     borderRadius: 8,
                     border: '1px solid #e2e8f0'
                   }}
+                  data-testid={`product-item-${idx}`}
                 >
                   <div 
                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
@@ -267,12 +310,12 @@ export default function PrevisioniAcquisti() {
                         fontSize: 12,
                         fontWeight: 'bold'
                       }}>
-                        {item.trend === '↑' ? <TrendingUp size={14} /> : (item.trend === '↓' ? <TrendingDown size={14} /> : null)}
+                        {item.trend === '↑' ? '📈' : (item.trend === '↓' ? '📉' : '')}
                         {item.variazione_pct > 0 ? '+' : ''}{item.variazione_pct}%
                       </div>
                     )}
                     
-                    {expandedId === item.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    <span style={{ marginLeft: 8 }}>{expandedId === item.id ? '▲' : '▼'}</span>
                   </div>
                   
                   {/* Dettagli espansi */}
@@ -312,8 +355,8 @@ export default function PrevisioniAcquisti() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Info */}
       <div style={{ 
