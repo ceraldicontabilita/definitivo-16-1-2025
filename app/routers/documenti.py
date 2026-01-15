@@ -626,8 +626,115 @@ async def sync_f24_automatico(
                         f24_errori.append({"file": doc["filename"], "errore": "F24 già presente nel database"})
                         continue
                     
-                    # Salva nel database
+                    # Salva nel database f24_commercialista
                     await db["f24_commercialista"].insert_one(f24_data)
+                    
+                    # Salva anche in f24_models per la visualizzazione frontend
+                    # Leggi il PDF per salvarlo base64
+                    import base64
+                    try:
+                        with open(filepath, 'rb') as pdf_file:
+                            pdf_bytes = pdf_file.read()
+                            pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+                    except:
+                        pdf_base64 = None
+                    
+                    # Converti formato tributi per f24_models
+                    tributi_erario = []
+                    for t in parsed.get("sezione_erario", []):
+                        tributi_erario.append({
+                            "codice_tributo": t.get("codice_tributo"),
+                            "codice": t.get("codice_tributo"),
+                            "rateazione": t.get("rateazione", ""),
+                            "periodo_riferimento": t.get("periodo_riferimento", ""),
+                            "anno_riferimento": t.get("anno", ""),
+                            "anno": t.get("anno", ""),
+                            "mese": t.get("mese", ""),
+                            "importo_debito": t.get("importo_debito", 0),
+                            "importo_credito": t.get("importo_credito", 0),
+                            "importo": t.get("importo_debito", 0),
+                            "descrizione": t.get("descrizione", ""),
+                            "riferimento": t.get("periodo_riferimento", "")
+                        })
+                    
+                    tributi_inps = []
+                    for t in parsed.get("sezione_inps", []):
+                        tributi_inps.append({
+                            "codice_sede": t.get("codice_sede", ""),
+                            "causale": t.get("causale", ""),
+                            "causale_contributo": t.get("causale", ""),
+                            "matricola": t.get("matricola", ""),
+                            "periodo_da": t.get("mese", ""),
+                            "periodo_a": t.get("anno", ""),
+                            "periodo_riferimento": t.get("periodo_riferimento", ""),
+                            "importo_debito": t.get("importo_debito", 0),
+                            "importo_credito": t.get("importo_credito", 0),
+                            "importo": t.get("importo_debito", 0),
+                            "descrizione": t.get("descrizione", "")
+                        })
+                    
+                    tributi_regioni = []
+                    for t in parsed.get("sezione_regioni", []):
+                        tributi_regioni.append({
+                            "codice_tributo": t.get("codice_tributo"),
+                            "codice": t.get("codice_tributo"),
+                            "codice_regione": t.get("codice_regione", ""),
+                            "codice_ente": t.get("codice_regione", ""),
+                            "periodo_riferimento": t.get("periodo_riferimento", ""),
+                            "importo_debito": t.get("importo_debito", 0),
+                            "importo_credito": t.get("importo_credito", 0),
+                            "importo": t.get("importo_debito", 0),
+                            "descrizione": t.get("descrizione", "")
+                        })
+                    
+                    tributi_imu = []
+                    for t in parsed.get("sezione_tributi_locali", []):
+                        tributi_imu.append({
+                            "codice_tributo": t.get("codice_tributo"),
+                            "codice": t.get("codice_tributo"),
+                            "codice_comune": t.get("codice_comune", ""),
+                            "codice_ente": t.get("codice_comune", ""),
+                            "periodo_riferimento": t.get("periodo_riferimento", ""),
+                            "importo_debito": t.get("importo_debito", 0),
+                            "importo_credito": t.get("importo_credito", 0),
+                            "importo": t.get("importo_debito", 0),
+                            "descrizione": t.get("descrizione", "")
+                        })
+                    
+                    totali = parsed.get("totali", {})
+                    data_scadenza = parsed.get("dati_generali", {}).get("data_versamento")
+                    
+                    f24_model_record = {
+                        "id": f24_data["id"],  # Usa lo stesso ID
+                        "data_scadenza": data_scadenza,
+                        "scadenza_display": data_scadenza,
+                        "codice_fiscale": parsed.get("dati_generali", {}).get("codice_fiscale"),
+                        "contribuente": parsed.get("dati_generali", {}).get("ragione_sociale"),
+                        "banca": parsed.get("dati_generali", {}).get("banca"),
+                        "tipo_f24": parsed.get("dati_generali", {}).get("tipo_f24", "F24"),
+                        "tributi_erario": tributi_erario,
+                        "tributi_inps": tributi_inps,
+                        "tributi_regioni": tributi_regioni,
+                        "tributi_imu": tributi_imu,
+                        "totale_debito": totali.get("totale_debito", 0),
+                        "totale_credito": totali.get("totale_credito", 0),
+                        "saldo_finale": totali.get("saldo_netto", 0) or totali.get("saldo_finale", 0),
+                        "has_ravvedimento": parsed.get("has_ravvedimento", False),
+                        "pagato": False,
+                        "filename": doc["filename"],
+                        "pdf_data": pdf_base64,
+                        "source": "email_sync",
+                        "email_source": f24_data.get("email_source"),
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    
+                    # Controlla duplicati in f24_models
+                    existing_model = await db["f24_models"].find_one({
+                        "filename": doc["filename"]
+                    })
+                    
+                    if not existing_model:
+                        await db["f24_models"].insert_one(f24_model_record)
                     
                     # Aggiorna stato documento
                     await db["documents_inbox"].update_one(
@@ -635,16 +742,16 @@ async def sync_f24_automatico(
                         {"$set": {
                             "status": "processato",
                             "processed": True,
-                            "processed_to": "f24_commercialista",
+                            "processed_to": "f24_models",
                             "processed_at": datetime.now(timezone.utc).isoformat()
                         }}
                     )
                     
                     f24_caricati.append({
                         "file": doc["filename"],
-                        "importo": f24_data.get("totali", {}).get("saldo_netto", 0),
-                        "data_scadenza": f24_data.get("dati_generali", {}).get("data_versamento", ""),
-                        "tributi": len(f24_data.get("sezione_erario", [])) + len(f24_data.get("sezione_inps", []))
+                        "importo": totali.get("saldo_netto", 0) or totali.get("saldo_finale", 0),
+                        "data_scadenza": data_scadenza or "",
+                        "tributi": len(tributi_erario) + len(tributi_inps)
                     })
                 else:
                     f24_errori.append({
