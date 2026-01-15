@@ -495,6 +495,18 @@ async def upload_fattura_xml(file: UploadFile = File(...)) -> Dict[str, Any]:
         
         warehouse_result = await auto_populate_warehouse_from_invoice(db, parsed, invoice["id"])
         
+        # === AUTOMAZIONI COMPLETE: Ricette + Operazioni da confermare ===
+        automazioni_result = None
+        try:
+            from app.services.automazione_completa import processa_fattura_con_automazioni
+            automazioni_result = await processa_fattura_con_automazioni(db, parsed, invoice["id"])
+            if automazioni_result.get("ricette", {}).get("ricette_aggiornate", 0) > 0:
+                logger.info(f"🍳 Ricette aggiornate: {automazioni_result['ricette']['ricette_aggiornate']}")
+            if automazioni_result.get("operazione", {}).get("operazione_completata"):
+                logger.info(f"✅ Operazione completata con fattura XML")
+        except Exception as e:
+            logger.warning(f"Errore automazioni: {e}")
+        
         # Popolamento automatico tracciabilità HACCP
         tracciabilita_result = {"created": 0, "skipped": 0}
         try:
