@@ -11,11 +11,14 @@
 - **FEATURE**: Sync automatico F24 salva ora sia in `f24_commercialista` che in `f24_models` (visualizzazione frontend)
 - **FEATURE**: PDF F24 salvato in base64 per visualizzazione diretta
 - **FEATURE**: Nuovo endpoint `/api/documenti/sync-estratti-conto` per processare estratti conto Nexi
+- **FEATURE**: Nuovo endpoint `/api/documenti/sync-buste-paga` per processare buste paga PDF
+- **FEATURE**: Parser buste paga migliorato per supportare formati CSC e Zucchetti
 - **FEATURE**: Aggiunta MAPPA STRUTTURALE SISTEMA nel PRD con diagrammi flusso dati
 - **VERIFICATO**: Connessione IMAP Gmail funzionante
 - **VERIFICATO**: 46 F24 importati automaticamente dalle email
 - **VERIFICATO**: 17 estratti conto Nexi processati con 148 transazioni
-- **VERIFICATO**: Pagina F24 mostra 48 modelli da pagare
+- **VERIFICATO**: 111 cedolini importati con dati corretti (netto, competenze, trattenute)
+- **VERIFICATO**: Prima nota salari aggiornata automaticamente (1373 movimenti)
 
 ### 14 Gennaio 2026
 - **FIX**: Importate 247 fatture XML dei fornitori noleggio (ALD, ARVAL, Leasys)
