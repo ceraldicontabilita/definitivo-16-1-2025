@@ -1362,6 +1362,286 @@ async def sync_buste_paga() -> Dict[str, Any]:
 
 
 
+@router.post("/riepilogo-cedolini")
+async def genera_riepilogo_cedolini(
+    riprocessa: bool = Query(False, description="Riprocessa tutti i cedolini")
+) -> Dict[str, Any]:
+    """
+    Genera/aggiorna la lista riepilogativa di tutti i cedolini.
+    
+    Salva in collezione 'riepilogo_cedolini':
+    - Nome dipendente
+    - Codice fiscale
+    - Periodo busta paga (mese/anno)
+    - Periodo competenza
+    - Netto in busta
+    - Lordo
+    - Trattenute
+    - Detrazioni
+    - IBAN
+    
+    Utile per confrontare con Prima Nota Salari.
+    """
+    db = Database.get_db()
+    
+    from app.parsers.payslip_parser_v2 import parse_payslip_pdf
+    
+    # Se riprocessa, elabora tutti i PDF delle buste paga
+    if riprocessa:
+        # Cerca tutti i file buste paga su disco
+        import glob
+        pdf_files = glob.glob("/app/documents/Buste Paga/*.pdf")
+    else:
+        # Processa solo quelli non ancora nel riepilogo
+        docs = await db["documents_inbox"].find(
+            {"category": "busta_paga"},
+            {"_id": 0, "filepath": 1, "filename": 1}
+        ).to_list(5000)
+        pdf_files = [d.get("filepath") for d in docs if d.get("filepath")]
+    
+    nuovi = 0
+    aggiornati = 0
+    errori = []
+    
+    for filepath in pdf_files:
+        if not filepath or not os.path.exists(filepath):
+            continue
+        
+        filename = os.path.basename(filepath)
+        
+        try:
+            # Usa nuovo parser migliorato
+            cedolini = parse_payslip_pdf(pdf_path=filepath)
+            
+            for ced in cedolini:
+                cf = ced.get("codice_fiscale")
+                mese = ced.get("mese")
+                anno = ced.get("anno")
+                netto = ced.get("netto_mese", 0)
+                
+                if not cf or not mese or not anno:
+                    continue
+                
+                # Salta se netto è 0 (probabilmente foglio presenze)
+                if netto == 0:
+                    continue
+                
+                # Record per riepilogo
+                record = {
+                    "nome_dipendente": ced.get("nome_dipendente"),
+                    "codice_fiscale": cf,
+                    "mese": mese,
+                    "anno": anno,
+                    "periodo_competenza": f"{mese:02d}/{anno}",
+                    "periodo_busta": f"{ced.get('periodo_competenza', '')}",
+                    "netto_mese": netto,
+                    "lordo": ced.get("lordo", 0),
+                    "totale_trattenute": ced.get("totale_trattenute", 0),
+                    "detrazioni_fiscali": ced.get("detrazioni_fiscali", 0),
+                    "tfr_quota": ced.get("tfr_quota", 0),
+                    "ore_lavorate": ced.get("ore_lavorate", 0),
+                    "iban": ced.get("iban"),
+                    "filename": filename,
+                    "filepath": filepath,
+                    "formato": ced.get("formato_rilevato"),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Upsert: aggiorna se esiste, altrimenti inserisce
+                result = await db["riepilogo_cedolini"].update_one(
+                    {
+                        "codice_fiscale": cf,
+                        "mese": mese,
+                        "anno": anno
+                    },
+                    {"$set": record},
+                    upsert=True
+                )
+                
+                if result.upserted_id:
+                    nuovi += 1
+                elif result.modified_count > 0:
+                    aggiornati += 1
+                    
+        except Exception as e:
+            errori.append({"file": filename, "errore": str(e)})
+    
+    # Statistiche finali
+    totale = await db["riepilogo_cedolini"].count_documents({})
+    
+    # Riepilogo per dipendente
+    pipeline = [
+        {"$group": {
+            "_id": "$nome_dipendente",
+            "cedolini": {"$sum": 1},
+            "totale_netto": {"$sum": "$netto_mese"}
+        }},
+        {"$sort": {"totale_netto": -1}}
+    ]
+    per_dipendente = await db["riepilogo_cedolini"].aggregate(pipeline).to_list(50)
+    
+    return {
+        "success": True,
+        "nuovi": nuovi,
+        "aggiornati": aggiornati,
+        "errori_count": len(errori),
+        "totale_riepilogo": totale,
+        "per_dipendente": per_dipendente[:15],
+        "errori": errori[:10] if errori else None,
+        "messaggio": f"Riepilogo cedolini: {nuovi} nuovi, {aggiornati} aggiornati"
+    }
+
+
+@router.get("/riepilogo-cedolini")
+async def get_riepilogo_cedolini(
+    dipendente: Optional[str] = Query(None, description="Filtra per nome dipendente"),
+    anno: Optional[int] = Query(None, description="Filtra per anno"),
+    limit: int = Query(100, ge=1, le=1000)
+) -> Dict[str, Any]:
+    """
+    Restituisce la lista riepilogativa dei cedolini.
+    
+    Campi restituiti:
+    - nome_dipendente
+    - codice_fiscale
+    - periodo_competenza (MM/YYYY)
+    - netto_mese
+    - lordo
+    - trattenute
+    - detrazioni
+    - iban
+    """
+    db = Database.get_db()
+    
+    # Costruisci filtro
+    filtro = {}
+    if dipendente:
+        filtro["nome_dipendente"] = {"$regex": dipendente, "$options": "i"}
+    if anno:
+        filtro["anno"] = anno
+    
+    # Query
+    cedolini = await db["riepilogo_cedolini"].find(
+        filtro,
+        {"_id": 0}
+    ).sort([("anno", -1), ("mese", -1), ("nome_dipendente", 1)]).limit(limit).to_list(limit)
+    
+    # Totali
+    pipeline = [
+        {"$match": filtro},
+        {"$group": {
+            "_id": None,
+            "totale_netto": {"$sum": "$netto_mese"},
+            "totale_lordo": {"$sum": "$lordo"},
+            "totale_trattenute": {"$sum": "$totale_trattenute"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    totali_result = await db["riepilogo_cedolini"].aggregate(pipeline).to_list(1)
+    totali = totali_result[0] if totali_result else {}
+    
+    return {
+        "success": True,
+        "cedolini": cedolini,
+        "totali": {
+            "numero_cedolini": totali.get("count", 0),
+            "totale_netto": totali.get("totale_netto", 0),
+            "totale_lordo": totali.get("totale_lordo", 0),
+            "totale_trattenute": totali.get("totale_trattenute", 0)
+        },
+        "filtri_applicati": {
+            "dipendente": dipendente,
+            "anno": anno
+        }
+    }
+
+
+@router.get("/confronto-cedolini-prima-nota")
+async def confronto_cedolini_prima_nota(
+    anno: Optional[int] = Query(None, description="Anno da confrontare")
+) -> Dict[str, Any]:
+    """
+    Confronta il riepilogo cedolini con la prima nota salari.
+    
+    Identifica:
+    - Cedolini senza corrispondenza in prima nota
+    - Movimenti prima nota senza cedolino
+    - Differenze di importo
+    """
+    db = Database.get_db()
+    
+    filtro = {}
+    if anno:
+        filtro["anno"] = anno
+    
+    # Carica cedolini
+    cedolini = await db["riepilogo_cedolini"].find(
+        filtro,
+        {"_id": 0, "codice_fiscale": 1, "mese": 1, "anno": 1, "netto_mese": 1, "nome_dipendente": 1}
+    ).to_list(10000)
+    
+    # Carica prima nota salari
+    prima_nota = await db["prima_nota_salari"].find(
+        filtro,
+        {"_id": 0, "dipendente_id": 1, "mese": 1, "anno": 1, "importo": 1, "dipendente_nome": 1}
+    ).to_list(10000)
+    
+    # Crea indici
+    cedolini_idx = {}
+    for c in cedolini:
+        key = f"{c.get('codice_fiscale')}_{c.get('mese')}_{c.get('anno')}"
+        cedolini_idx[key] = c
+    
+    prima_nota_idx = {}
+    for p in prima_nota:
+        # Cerca CF del dipendente
+        dip_id = p.get("dipendente_id")
+        key = f"{dip_id}_{p.get('mese')}_{p.get('anno')}"
+        prima_nota_idx[key] = p
+    
+    # Analisi differenze
+    solo_cedolini = []
+    differenze = []
+    
+    for key, ced in cedolini_idx.items():
+        cf = ced.get("codice_fiscale")
+        # Cerca corrispondenza in prima nota (per CF o per nome)
+        found = False
+        for pn_key, pn in prima_nota_idx.items():
+            if pn.get("dipendente_nome", "").upper() == ced.get("nome_dipendente", "").upper():
+                if pn.get("mese") == ced.get("mese") and pn.get("anno") == ced.get("anno"):
+                    found = True
+                    # Verifica importo
+                    diff = abs(ced.get("netto_mese", 0) - pn.get("importo", 0))
+                    if diff > 1:  # Tolleranza 1€
+                        differenze.append({
+                            "dipendente": ced.get("nome_dipendente"),
+                            "periodo": f"{ced.get('mese')}/{ced.get('anno')}",
+                            "netto_cedolino": ced.get("netto_mese"),
+                            "importo_prima_nota": pn.get("importo"),
+                            "differenza": diff
+                        })
+                    break
+        
+        if not found:
+            solo_cedolini.append({
+                "dipendente": ced.get("nome_dipendente"),
+                "periodo": f"{ced.get('mese')}/{ced.get('anno')}",
+                "netto": ced.get("netto_mese")
+            })
+    
+    return {
+        "success": True,
+        "totale_cedolini": len(cedolini),
+        "totale_prima_nota": len(prima_nota),
+        "cedolini_senza_prima_nota": len(solo_cedolini),
+        "differenze_importo": len(differenze),
+        "dettaglio_mancanti": solo_cedolini[:20],
+        "dettaglio_differenze": differenze[:20]
+    }
+
+
+
 @router.post("/sync-estratti-bnl")
 async def sync_estratti_bnl() -> Dict[str, Any]:
     """
