@@ -210,6 +210,21 @@ class PayslipPDFParser:
         competenze = self._extract_amount(text, 'totale_competenze')
         trattenute = self._extract_amount(text, 'totale_trattenute')
         
+        # Se non c'è netto esplicito ma ci sono competenze e trattenute, calcolalo
+        if netto == 0 and competenze > 0 and trattenute > 0:
+            netto = competenze - trattenute
+        
+        # Pattern alternativo per netto: cerca "LIRE : X" o pattern finale
+        if netto == 0:
+            lire_match = re.search(r'LIRE\s*:\s*([0-9.,]+)', text)
+            if lire_match:
+                # Converti lire in euro (tasso fisso 1936.27)
+                lire = self._parse_italian_number(lire_match.group(1))
+                if lire > 10000:  # Probabilmente in lire
+                    netto = round(lire / 1936.27, 2)
+                else:
+                    netto = lire
+        
         # === NUOVI DATI ESTRATTI ===
         
         # Ore lavorate
