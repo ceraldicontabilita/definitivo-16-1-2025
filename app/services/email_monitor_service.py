@@ -44,8 +44,22 @@ async def sync_email_documents(db, giorni: int = 30) -> Dict[str, Any]:
     """
     from app.services.email_document_downloader import download_documents_from_email
     
+    # Leggi credenziali email da ambiente
+    email_user = os.environ.get("EMAIL_USER")
+    email_password = os.environ.get("EMAIL_PASSWORD")
+    
+    if not email_user or not email_password:
+        logger.warning("Credenziali email non configurate")
+        return {"success": False, "error": "Credenziali email non configurate"}
+    
     try:
-        result = await download_documents_from_email(giorni=giorni)
+        result = await download_documents_from_email(
+            db=db,
+            email_user=email_user,
+            email_password=email_password,
+            since_days=giorni,
+            max_emails=200
+        )
         
         stats = result.get("stats", {})
         new_docs = stats.get("new_documents", 0)
