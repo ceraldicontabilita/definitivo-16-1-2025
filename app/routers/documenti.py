@@ -1289,3 +1289,286 @@ async def sync_buste_paga() -> Dict[str, Any]:
         "errori": errori if errori else None,
         "messaggio": f"Processate {len(processati)} buste paga" if processati else "Nessuna nuova busta paga processata"
     }
+
+
+
+@router.post("/sync-estratti-bnl")
+async def sync_estratti_bnl() -> Dict[str, Any]:
+    """
+    Processa tutti gli estratti conto BNL dalla inbox.
+    Supporta:
+    - Estratti conto corrente BNL
+    - Estratti conto carte di credito BNL Business
+    
+    I movimenti vengono salvati in estratto_conto_movimenti.
+    """
+    db = Database.get_db()
+    
+    # Cerca documenti BNL sia in "estratto_conto" che in "altro"
+    docs = await db["documents_inbox"].find(
+        {
+            "processed": {"$ne": True},
+            "$or": [
+                {"category": "estratto_conto"},
+                {"category": "altro", "filename": {"$regex": "BNL|bnl", "$options": "i"}}
+            ]
+        },
+        {"_id": 0}
+    ).to_list(200)
+    
+    if not docs:
+        return {
+            "success": True,
+            "message": "Nessun estratto conto BNL da processare",
+            "processati": 0,
+            "errori": []
+        }
+    
+    from app.parsers.estratto_conto_bnl_parser import parse_estratto_conto_bnl
+    
+    processati = []
+    errori = []
+    
+    for doc in docs:
+        filepath = doc.get("filepath")
+        filename = doc.get("filename", "")
+        
+        # Salta se non è un file BNL
+        if "BNL" not in filename.upper() and "bnl" not in filename.lower():
+            # Potrebbe essere Nexi o altro, salta
+            continue
+        
+        if not filepath or not os.path.exists(filepath):
+            errori.append({"file": filename, "errore": "File non trovato"})
+            continue
+        
+        try:
+            # Leggi contenuto PDF
+            with open(filepath, 'rb') as f:
+                pdf_content = f.read()
+            
+            # Usa parser BNL
+            result = parse_estratto_conto_bnl(pdf_content)
+            
+            if result.get("success"):
+                transazioni = result.get("transazioni", [])
+                metadata = result.get("metadata", {})
+                tipo_doc = result.get("tipo_documento", "bnl")
+                
+                import uuid
+                estratto_id = str(uuid.uuid4())
+                
+                # Determina la collezione di destinazione
+                collection_name = "estratto_conto_bnl"
+                
+                estratto_record = {
+                    "id": estratto_id,
+                    "filename": filename,
+                    "filepath": filepath,
+                    "tipo": tipo_doc,
+                    "banca": "BNL",
+                    "metadata": metadata,
+                    "totale_transazioni": len(transazioni),
+                    "totale_entrate": result.get("totale_entrate", 0),
+                    "totale_uscite": result.get("totale_uscite", 0),
+                    "email_source": {
+                        "subject": doc.get("email_subject"),
+                        "from": doc.get("email_from"),
+                        "date": doc.get("email_date")
+                    },
+                    "import_date": datetime.now(timezone.utc).isoformat(),
+                    "source": "email_sync"
+                }
+                
+                # Controlla duplicati
+                existing = await db[collection_name].find_one({
+                    "filename": filename
+                })
+                
+                if not existing:
+                    await db[collection_name].insert_one(dict(estratto_record))
+                    
+                    # Salva transazioni singole per riconciliazione
+                    for idx, trans in enumerate(transazioni):
+                        trans_record = {
+                            "id": f"{estratto_id}_{idx}",
+                            "estratto_id": estratto_id,
+                            "data": trans.get("data_contabile", trans.get("data")),
+                            "data_valuta": trans.get("data_valuta"),
+                            "descrizione": trans.get("descrizione", ""),
+                            "importo": trans.get("importo", 0),
+                            "tipo": trans.get("tipo", "movimento"),
+                            "causale_abi": trans.get("causale_abi"),
+                            "banca": "BNL",
+                            "riconciliato": False,
+                            "fattura_id": None,
+                            "created_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db["estratto_conto_movimenti"].insert_one(dict(trans_record))
+                
+                # Aggiorna stato documento e categoria se era "altro"
+                update_data = {
+                    "status": "processato",
+                    "processed": True,
+                    "processed_to": collection_name,
+                    "processed_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                # Se era in "altro", ricategorizza come "estratto_conto"
+                if doc.get("category") == "altro":
+                    update_data["category"] = "estratto_conto"
+                    update_data["category_label"] = "Estratti Conto"
+                
+                await db["documents_inbox"].update_one(
+                    {"id": doc["id"]},
+                    {"$set": update_data}
+                )
+                
+                processati.append({
+                    "file": filename,
+                    "tipo": tipo_doc,
+                    "transazioni": len(transazioni),
+                    "entrate": result.get("totale_entrate", 0),
+                    "uscite": result.get("totale_uscite", 0),
+                    "periodo": f"{metadata.get('periodo_da', '')} - {metadata.get('periodo_a', '')}"
+                })
+            else:
+                errori.append({
+                    "file": filename,
+                    "errore": result.get("error", "Parsing fallito")
+                })
+                
+        except Exception as e:
+            logger.error(f"Errore parsing BNL {filename}: {e}")
+            errori.append({"file": filename, "errore": str(e)})
+    
+    return {
+        "success": True,
+        "processati": len(processati),
+        "errori_count": len(errori),
+        "dettagli": processati,
+        "errori": errori if errori else None,
+        "messaggio": f"Processati {len(processati)} estratti conto BNL" if processati else "Nessun estratto conto BNL processato"
+    }
+
+
+@router.post("/ricategorizza-documenti")
+async def ricategorizza_documenti() -> Dict[str, Any]:
+    """
+    Ricategorizza automaticamente i documenti nella categoria 'altro'
+    che possono essere riconosciuti come altri tipi.
+    """
+    db = Database.get_db()
+    
+    # Trova documenti in "altro" non processati
+    docs = await db["documents_inbox"].find(
+        {"category": "altro", "processed": {"$ne": True}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    if not docs:
+        return {
+            "success": True,
+            "message": "Nessun documento da ricategorizzare",
+            "ricategorizzati": 0
+        }
+    
+    ricategorizzati = []
+    
+    for doc in docs:
+        filename = doc.get("filename", "").lower()
+        new_category = None
+        
+        # Riconosci BNL
+        if "bnl" in filename:
+            new_category = "estratto_conto"
+        # Riconosci estratti conto
+        elif "estratto" in filename or "conto" in filename:
+            new_category = "estratto_conto"
+        # Riconosci buste paga
+        elif "paga" in filename or "cedolino" in filename or "lul" in filename:
+            new_category = "busta_paga"
+        # Riconosci F24
+        elif "f24" in filename:
+            new_category = "f24"
+        # Riconosci PayPal
+        elif "paypal" in filename:
+            new_category = "estratto_conto"
+        
+        if new_category:
+            await db["documents_inbox"].update_one(
+                {"id": doc["id"]},
+                {"$set": {
+                    "category": new_category,
+                    "category_label": {
+                        "estratto_conto": "Estratti Conto",
+                        "busta_paga": "Buste Paga",
+                        "f24": "F24",
+                        "fattura": "Fatture"
+                    }.get(new_category, new_category.replace("_", " ").title()),
+                    "ricategorizzato_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            ricategorizzati.append({
+                "file": doc.get("filename"),
+                "da": "altro",
+                "a": new_category
+            })
+    
+    return {
+        "success": True,
+        "ricategorizzati": len(ricategorizzati),
+        "dettagli": ricategorizzati
+    }
+
+
+@router.post("/processa-tutti")
+async def processa_tutti_documenti() -> Dict[str, Any]:
+    """
+    Endpoint combinato che:
+    1. Ricategorizza i documenti
+    2. Processa buste paga
+    3. Processa estratti conto Nexi
+    4. Processa estratti conto BNL
+    """
+    risultati = {
+        "ricategorizzazione": None,
+        "buste_paga": None,
+        "estratti_nexi": None,
+        "estratti_bnl": None
+    }
+    
+    try:
+        # 1. Ricategorizza
+        risultati["ricategorizzazione"] = await ricategorizza_documenti()
+    except Exception as e:
+        risultati["ricategorizzazione"] = {"error": str(e)}
+    
+    try:
+        # 2. Buste paga
+        risultati["buste_paga"] = await sync_buste_paga()
+    except Exception as e:
+        risultati["buste_paga"] = {"error": str(e)}
+    
+    try:
+        # 3. Estratti Nexi
+        risultati["estratti_nexi"] = await sync_estratti_conto()
+    except Exception as e:
+        risultati["estratti_nexi"] = {"error": str(e)}
+    
+    try:
+        # 4. Estratti BNL
+        risultati["estratti_bnl"] = await sync_estratti_bnl()
+    except Exception as e:
+        risultati["estratti_bnl"] = {"error": str(e)}
+    
+    return {
+        "success": True,
+        "risultati": risultati,
+        "sommario": {
+            "ricategorizzati": risultati.get("ricategorizzazione", {}).get("ricategorizzati", 0),
+            "buste_paga_processate": risultati.get("buste_paga", {}).get("processati", 0),
+            "estratti_nexi_processati": risultati.get("estratti_nexi", {}).get("processati", 0),
+            "estratti_bnl_processati": risultati.get("estratti_bnl", {}).get("processati", 0)
+        }
+    }
