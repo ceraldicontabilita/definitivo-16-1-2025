@@ -104,6 +104,15 @@ def estrai_numeri_fattura(descrizione: str) -> List[str]:
         if n not in seen:
             seen.add(n)
             result.append(n)
+
+
+def estrai_numero_assegno(descrizione: str) -> Optional[str]:
+    """Estrae il numero assegno dalla descrizione PRELIEVO ASSEGNO."""
+    for pattern in PATTERN_PRELIEVO_ASSEGNO:
+        match = re.search(pattern, descrizione, re.IGNORECASE)
+        if match:
+            return match.group(1)
+    return None
     return result
 
 
