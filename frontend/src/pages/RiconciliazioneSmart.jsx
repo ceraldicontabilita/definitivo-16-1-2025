@@ -321,7 +321,7 @@ export default function RiconciliazioneSmart() {
   if (loading) {
     return (
       <div style={{ padding: '40px', textAlign: 'center' }}>
-        <RefreshCw className="animate-spin" style={{ margin: '0 auto 16px' }} />
+        <div style={{ fontSize: 32, marginBottom: 16, animation: 'spin 1s linear infinite' }}>⏳</div>
         <div>Analisi movimenti in corso...</div>
       </div>
     );
@@ -332,12 +332,11 @@ export default function RiconciliazioneSmart() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Zap size={28} style={{ color: '#f59e0b' }} />
-          Riconciliazione Smart
+          ⚡ Riconciliazione Smart
         </h1>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={loadAnalisi} disabled={loading} style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <RefreshCw size={16} /> Ricarica
+            🔄 Ricarica
           </button>
         </div>
       </div>
