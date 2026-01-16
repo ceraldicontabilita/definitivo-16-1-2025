@@ -574,6 +574,31 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
         {"$set": {"prima_nota_id": movimento_id, "prima_nota_collection": prima_nota_collection}}
     )
     
+    # 6b. SALVA NEL DIZIONARIO ELABORAZIONI per evitare duplicati futuri
+    stato_dizionario = f"inserita_{prima_nota_collection.replace('prima_nota_', '')}"
+    await db["aruba_elaborazioni"].update_one(
+        {
+            "numero_fattura": numero_fattura,
+            "fornitore": fornitore
+        },
+        {
+            "$set": {
+                "stato": stato_dizionario,
+                "prima_nota_id": movimento_id,
+                "prima_nota_collection": prima_nota_collection,
+                "metodo_pagamento": metodo_pagamento,
+                "importo": importo,
+                "data_conferma": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$setOnInsert": {
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "email_hash": operazione.get("email_hash")
+            }
+        },
+        upsert=True
+    )
+    
     # 7. CASCATA: Salva preferenza metodo pagamento fornitore (auto-apprendimento)
     fornitore_creato = False
     if fornitore:
