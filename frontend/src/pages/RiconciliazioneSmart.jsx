@@ -761,13 +761,16 @@ function MovimentoCard({ movimento, onConferma, onIgnora, processing }) {
 }
 
 // Card per movimenti manuali - riconosce se è uno stipendio dal tipo o dal nome
-function MovimentoCardManuale({ movimento, onAssociaFattura, onAssociaStipendio, onAssociaF24, onIgnora, processing }) {
+function MovimentoCardManuale({ movimento, onAssociaFattura, onAssociaStipendio, onAssociaF24, onIgnora, onConfermaStipendio, processing }) {
   const tipo = TIPO_COLORS[movimento.tipo] || TIPO_COLORS.non_riconosciuto;
   
   // Se il backend ha già identificato come stipendio, usa quello
   const sembraStipendio = movimento.tipo === 'stipendio' || 
     movimento.nome_estratto || 
     movimento.dipendente;
+  
+  // Se c'è un dipendente già associato, possiamo confermare direttamente
+  const puoConfermareDirecto = sembraStipendio && (movimento.dipendente?.id || movimento.suggerimenti?.[0]);
   
   return (
     <div style={{ padding: 16, borderBottom: '1px solid #f1f5f9', opacity: processing ? 0.5 : 1 }}>
@@ -813,14 +816,30 @@ function MovimentoCardManuale({ movimento, onAssociaFattura, onAssociaStipendio,
       </div>
       
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {/* Se è uno stipendio, mostra SOLO il bottone Stipendio */}
+        {/* Se è uno stipendio con dipendente già riconosciuto, mostra conferma diretta */}
         {sembraStipendio ? (
-          <button onClick={onAssociaStipendio} disabled={processing} style={{
-            padding: '10px 24px', background: '#10b981', color: 'white',
-            border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 13
-          }}>
-            👤 Associa Stipendio
-          </button>
+          <>
+            {puoConfermareDirecto && (
+              <button 
+                onClick={() => onConfermaStipendio && onConfermaStipendio(movimento)} 
+                disabled={processing} 
+                style={{
+                  padding: '10px 24px', background: '#059669', color: 'white',
+                  border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 13
+                }}
+                data-testid="conferma-stipendio-diretto"
+              >
+                ✓ Conferma Stipendio
+              </button>
+            )}
+            <button onClick={onAssociaStipendio} disabled={processing} style={{
+              padding: '10px 16px', background: puoConfermareDirecto ? '#f1f5f9' : '#10b981', 
+              color: puoConfermareDirecto ? '#374151' : 'white',
+              border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 13
+            }}>
+              {puoConfermareDirecto ? '🔄 Cambia Dipendente' : '👤 Associa Stipendio'}
+            </button>
+          </>
         ) : (
           <>
             <button onClick={onAssociaFattura} disabled={processing} style={{
