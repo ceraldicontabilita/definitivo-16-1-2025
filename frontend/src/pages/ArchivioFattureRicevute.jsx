@@ -160,7 +160,30 @@ export default function ArchivioFatture() {
 
   const getStatoBadge = (fattura) => {
     if (fattura.pagato) {
-      return <span style={{ padding: '4px 10px', background: '#dcfce7', color: '#16a34a', borderRadius: 6, fontSize: 12, fontWeight: '600' }}>Pagata</span>;
+      // Determina il metodo di pagamento
+      let metodo = fattura.metodo_pagamento || '';
+      let icon = '✅';
+      let label = 'Pagata';
+      
+      if (fattura.prima_nota_cassa_id || metodo.toLowerCase().includes('cassa') || metodo.toLowerCase().includes('contanti')) {
+        icon = '💵';
+        label = 'Cassa';
+      } else if (fattura.prima_nota_banca_id || metodo.toLowerCase().includes('banca') || metodo.toLowerCase().includes('bonifico')) {
+        icon = '🏦';
+        label = 'Banca';
+      } else if (metodo.toLowerCase().includes('assegno')) {
+        icon = '📝';
+        label = 'Assegno';
+      } else if (metodo.toLowerCase().includes('rid') || metodo.toLowerCase().includes('sdd')) {
+        icon = '🔄';
+        label = 'RID/SDD';
+      }
+      
+      return (
+        <span style={{ padding: '4px 10px', background: '#dcfce7', color: '#16a34a', borderRadius: 6, fontSize: 11, fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+          {icon} {label}
+        </span>
+      );
     }
     if (fattura.stato === 'anomala') {
       return <span style={{ padding: '4px 10px', background: '#fee2e2', color: '#dc2626', borderRadius: 6, fontSize: 12, fontWeight: '600' }}>Anomala</span>;
