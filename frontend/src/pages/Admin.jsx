@@ -816,11 +816,11 @@ export default function Admin() {
               {loading ? (
                 <div style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>Caricamento...</div>
               ) : stats ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8 }}>
                   {Object.entries(stats).map(([key, value]) => (
-                    <div key={key} style={{ background: '#f8fafc', padding: 12, borderRadius: 8, textAlign: 'center' }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: '#3b82f6' }}>{fmt(value)}</div>
-                      <div style={{ fontSize: 10, color: '#64748b', textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</div>
+                    <div key={key} style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: 6, textAlign: 'center' }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: '#3b82f6' }}>{fmt(value)}</div>
+                      <div style={{ fontSize: 9, color: '#64748b', textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}</div>
                     </div>
                   ))}
                 </div>
