@@ -169,7 +169,11 @@ export default function ArchivioFatture() {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      {/* Page Info Card */}
+      <div style={{ position: 'absolute', top: 0, right: 0, zIndex: 100 }}>
+        <PageInfoCard pageKey="fatture-ricevute" />
+      </div>
       
       {/* Header */}
       <div style={{ 

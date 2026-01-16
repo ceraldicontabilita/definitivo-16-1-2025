@@ -51,7 +51,11 @@ export default function Corrispettivi() {
   const totaleImponibile = totaleGiornaliero / 1.10;
 
   return (
-    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto' }}>
+    <div style={{ padding: 20, maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      {/* Page Info Card */}
+      <div style={{ position: 'absolute', top: 0, right: 0, zIndex: 100 }}>
+        <PageInfoCard pageKey="corrispettivi" />
+      </div>
       
       {/* Header */}
       <div style={{ 
