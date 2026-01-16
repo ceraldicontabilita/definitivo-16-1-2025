@@ -392,7 +392,7 @@ class TestCriticalEndpointsHealth:
             "/api/chiusura-esercizio/bilancino-verifica/2025",
             "/api/chiusura-esercizio/stato/2025",
             "/api/chiusura-esercizio/storico",
-            "/api/chiusura-esercizio/saldi-iniziali/2026"
+            "/api/chiusura-esercizio/saldi-iniziali/2025"
         ]
         
         for endpoint in endpoints:
