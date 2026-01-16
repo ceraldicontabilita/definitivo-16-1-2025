@@ -176,7 +176,9 @@ export default function RiconciliazioneSmart() {
           categoria: m.categoria
         });
         ok++;
-      } catch (e) {}
+      } catch (e) {
+        console.error('Errore conferma:', e);
+      }
     }
     
     alert(`✅ Confermati: ${ok}`);
@@ -245,7 +247,9 @@ export default function RiconciliazioneSmart() {
     setProcessing(movimento.movimento_id);
     try {
       await api.post('/api/operazioni-da-confermare/smart/ignora', { movimento_id: movimento.movimento_id });
-    } catch (e) {}
+    } catch (e) {
+      console.error('Errore ignora:', e);
+    }
     
     setData(prev => ({
       ...prev,
