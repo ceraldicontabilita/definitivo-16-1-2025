@@ -176,9 +176,9 @@ async def auto_riconcilia_f24(db, username: str) -> Dict:
                     if result.get("success"):
                         riconciliati += 1
                         # Marca movimento come riconciliato
-                        await db.bank_movements.update_one(
+                        await db.prima_nota_banca.update_one(
                             {"id": movimento.get("id")},
-                            {"$set": {"reconciled": True, "f24_id": f24.get("id")}}
+                            {"$set": {"riconciliato": True, "f24_id": f24.get("id")}}
                         )
                         break
                     else:
