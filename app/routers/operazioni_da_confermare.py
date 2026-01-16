@@ -1263,19 +1263,31 @@ async def riconcilia_manuale(
     if associazioni:
         update_data["associazioni"] = associazioni
         
-        # Marca come pagati gli elementi associati
+        # Marca come pagati gli elementi associati + CASCATA SCADENZE
         for assoc in associazioni:
             assoc_id = assoc.get("id")
             if not assoc_id:
                 continue
             
             if tipo == "fattura":
+                # Aggiorna fattura
                 await db.invoices.update_one(
                     {"id": assoc_id},
                     {"$set": {
                         "pagato": True, 
-                        "data_pagamento": movimento.get("data"),
-                        "movimento_bancario_id": movimento_id
+                        "stato_pagamento": "pagato",
+                        "data_pagamento": data_movimento,
+                        "movimento_bancario_id": movimento_id,
+                        "prima_nota_id": prima_nota_id
+                    }}
+                )
+                # CASCATA: Aggiorna scadenza collegata
+                await db.scadenze.update_many(
+                    {"fattura_id": assoc_id},
+                    {"$set": {
+                        "pagato": True,
+                        "data_pagamento": data_movimento,
+                        "prima_nota_id": prima_nota_id
                     }}
                 )
             elif tipo == "stipendio":
@@ -1283,17 +1295,31 @@ async def riconcilia_manuale(
                     {"id": assoc_id},
                     {"$set": {
                         "pagato": True, 
-                        "data_pagamento": movimento.get("data"),
-                        "movimento_bancario_id": movimento_id
+                        "data_pagamento": data_movimento,
+                        "movimento_bancario_id": movimento_id,
+                        "prima_nota_id": prima_nota_id
                     }}
                 )
+                # CASCATA: Inserisci in Prima Nota Salari
+                dipendente_nome = assoc.get("dipendente") or assoc.get("dipendente_nome", "")
+                await db.prima_nota_salari.update_one(
+                    {"cedolino_id": assoc_id},
+                    {"$set": {
+                        "importo_bonifico": abs(importo),
+                        "data_bonifico": data_movimento,
+                        "movimento_bancario_id": movimento_id,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }},
+                    upsert=False  # Non creare se non esiste
+                )
             elif tipo == "f24":
-                await db.f24.update_one(
+                await db.f24_models.update_one(
                     {"id": assoc_id},
                     {"$set": {
                         "pagato": True, 
-                        "data_pagamento": movimento.get("data"),
-                        "movimento_bancario_id": movimento_id
+                        "data_pagamento": data_movimento,
+                        "movimento_bancario_id": movimento_id,
+                        "prima_nota_id": prima_nota_id
                     }}
                 )
     
@@ -1309,14 +1335,15 @@ async def riconcilia_manuale(
             if dipendente_id:
                 bonifico_data = {
                     "id": str(uuid.uuid4()),
-                    "data": movimento.get("data"),
-                    "importo": movimento.get("importo"),
-                    "causale": movimento.get("descrizione_originale"),
-                    "beneficiario_nome": assoc.get("dipendente_nome"),
+                    "data": data_movimento,
+                    "importo": abs(importo),
+                    "causale": descrizione_originale,
+                    "beneficiario_nome": assoc.get("dipendente_nome") or assoc.get("dipendente"),
                     "tipo": "stipendio",
                     "dipendente_id": dipendente_id,
                     "cedolino_id": assoc.get("id"),
                     "movimento_bancario_id": movimento_id,
+                    "prima_nota_id": prima_nota_id,
                     "created_at": datetime.now(timezone.utc).isoformat()
                 }
                 await db.bonifici.insert_one(bonifico_data)
@@ -1324,7 +1351,10 @@ async def riconcilia_manuale(
     return {
         "success": True,
         "movimento_id": movimento_id,
+        "prima_nota_id": prima_nota_id,
+        "prima_nota_collection": prima_nota_collection,
         "tipo": tipo,
+        "importo": abs(importo),
         "associazioni": len(associazioni) if associazioni else 0
     }
 
