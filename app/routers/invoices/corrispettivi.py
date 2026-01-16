@@ -433,9 +433,9 @@ async def delete_corrispettivo(
     
     # Annulla movimento Prima Nota collegato se esiste
     if corr.get("prima_nota_id"):
-        await db["cash_movements"].update_one(
+        await db["prima_nota_cassa"].update_one(
             {"id": corr["prima_nota_id"]},
-            {"$set": {"status": "cancelled"}}
+            {"$set": {"stato": "annullato"}}
         )
     
     return {
