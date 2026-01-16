@@ -679,21 +679,29 @@ async def analizza_movimento_con_cache(movimento: Dict[str, Any], cache: Dict[st
     """
     Versione ottimizzata di analizza_movimento che usa cache pre-caricata.
     """
-    descrizione = movimento.get("descrizione") or movimento.get("causale") or ""
+    descrizione = movimento.get("descrizione_originale") or movimento.get("descrizione") or movimento.get("causale") or ""
     importo = float(movimento.get("importo") or movimento.get("amount") or 0)
     data = movimento.get("data") or movimento.get("date")
+    ragione_sociale = movimento.get("ragione_sociale") or ""
+    numero_fattura = movimento.get("numero_fattura") or ""
+    fornitore = movimento.get("fornitore") or ""
     
     result = {
         "movimento_id": movimento.get("id"),
         "data": data,
-        "descrizione": descrizione,
+        "descrizione": descrizione[:100] if descrizione else "-",
+        "descrizione_completa": descrizione,
         "importo": importo,
         "tipo": "non_riconosciuto",
         "categoria_suggerita": None,
         "suggerimenti": [],
         "associazione_automatica": False,
         "richiede_conferma": True,
-        "note": None
+        "note": None,
+        # Campi aggiuntivi per la UI
+        "ragione_sociale": ragione_sociale,
+        "numero_fattura": numero_fattura,
+        "fornitore": fornitore
     }
     
     # 0. Check PRELIEVO ASSEGNO
