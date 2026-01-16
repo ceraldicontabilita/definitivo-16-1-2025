@@ -47,7 +47,7 @@ export function useScadenzeNotifiche() {
   // Controlla scadenze
   const checkScadenze = useCallback(async () => {
     try {
-      const res = await api.get('/api/scadenzario/prossime?giorni=3');
+      const res = await api.get('/api/scadenze/prossime?giorni=3');
       const scadenze = res.data?.scadenze || res.data || [];
       
       const urgenti = scadenze.filter(s => {
