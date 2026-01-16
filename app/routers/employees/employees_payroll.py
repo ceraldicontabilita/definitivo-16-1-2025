@@ -191,9 +191,9 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     results["failed"] += 1
                     continue
                 
-                # Check/create employee
-                existing = await db[Collections.EMPLOYEES].find_one({"codice_fiscale": cf}, {"_id": 0, "id": 1, "nome_completo": 1})
+                periodo = payslip.get("periodo", "")
                 
+                # Se abbiamo già trovato il dipendente, usa quello
                 if existing:
                     emp_id = existing.get("id")
                     update = {}
@@ -207,9 +207,10 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     if payslip.get("matricola"):
                         update["matricola"] = payslip["matricola"]
                     if update:
-                        await db[Collections.EMPLOYEES].update_one({"codice_fiscale": cf}, {"$set": update})
+                        await db[Collections.EMPLOYEES].update_one({"id": emp_id}, {"$set": update})
                     is_new = False
                 else:
+                    # Crea nuovo dipendente
                     emp_id = str(uuid.uuid4())
                     await db[Collections.EMPLOYEES].insert_one({
                         "id": emp_id, "nome_completo": nome, "matricola": payslip.get("matricola", ""),
