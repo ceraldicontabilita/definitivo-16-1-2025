@@ -181,7 +181,7 @@ class TestChiusuraEsercizio:
     
     def test_saldi_iniziali(self):
         """GET /api/chiusura-esercizio/saldi-iniziali/{anno} returns carried balances"""
-        anno = 2026
+        anno = 2025  # Use 2025 which exists
         response = requests.get(f"{BASE_URL}/api/chiusura-esercizio/saldi-iniziali/{anno}")
         assert response.status_code == 200, f"Failed: {response.text}"
         
