@@ -227,16 +227,17 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
                     estratto_id = str(uuid.uuid4())
                     
                     # Salva estratto
-                    await db["estratto_conto_nexi"].insert_one({
+                    estratto_doc = {
                         "id": estratto_id,
                         "filename": doc.get("filename"),
                         "totale_transazioni": len(transactions),
                         "import_date": datetime.now(timezone.utc).isoformat()
-                    })
+                    }
+                    await db["estratto_conto_nexi"].insert_one(estratto_doc.copy())
                     
                     # Salva transazioni
                     for idx, t in enumerate(transactions):
-                        await db["estratto_conto_movimenti"].insert_one({
+                        trans_doc = {
                             "id": f"{estratto_id}_{idx}",
                             "estratto_id": estratto_id,
                             "data": t.get("data"),
@@ -244,7 +245,8 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
                             "importo": t.get("importo", 0),
                             "banca": "Nexi",
                             "created_at": datetime.now(timezone.utc).isoformat()
-                        })
+                        }
+                        await db["estratto_conto_movimenti"].insert_one(trans_doc.copy())
                     
                     results["estratti_nexi"] += 1
                     
