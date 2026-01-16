@@ -35,31 +35,23 @@ const NAV_ITEMS = [
     short: "Banca",
     isSubmenu: true,
     children: [
-      { to: "/prima-nota", label: "Prima Nota Cassa/Banca", icon: "📒" },
-      { to: "/riconciliazione-smart", label: "Riconciliazione Smart", icon: "⚡" },
+      { to: "/prima-nota", label: "📒 Prima Nota Unificata", icon: "📒", isNew: true },
+      { to: "/riconciliazione", label: "⚡ Riconciliazione Smart", icon: "⚡", isNew: true },
       { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝" },
       { to: "/archivio-bonifici", label: "Archivio Bonifici", icon: "📂" },
+      { to: "/estratto-conto", label: "Import Estratto Conto", icon: "📥" },
     ]
   },
   
-  // === DIPENDENTI / PERSONALE ===
+  // === DIPENDENTI / PERSONALE (UNIFICATO) ===
   { 
     label: "Dipendenti", 
     icon: "👥", 
     short: "Dipend.",
     isSubmenu: true,
     children: [
-      { to: "/dipendenti", label: "Anagrafica Dipendenti", icon: "👤" },
-      { to: "/dipendenti-retribuzione", label: "Retribuzione", icon: "💰" },
-      { to: "/dipendenti-progressivi", label: "Progressivi", icon: "📊" },
-      { to: "/dipendenti-bonifici", label: "Bonifici", icon: "🏦" },
-      { to: "/dipendenti-agevolazioni", label: "Agevolazioni", icon: "🎁" },
-      { to: "/dipendenti-contratti", label: "Contratti", icon: "📄" },
+      { to: "/dipendenti", label: "👥 Gestione Dipendenti", icon: "👤", isNew: true },
       { to: "/cedolini", label: "Cedolini / Buste Paga", icon: "📋" },
-      { to: "/prima-nota-salari", label: "Prima Nota Salari", icon: "💵" },
-      { to: "/dipendenti-libro-unico", label: "Libro Unico", icon: "📚" },
-      { to: "/dipendenti-libretti", label: "Libretti Sanitari", icon: "🏥" },
-      { to: "/dipendenti-acconti", label: "Acconti", icon: "💳" },
       { to: "/tfr", label: "TFR e Accantonamenti", icon: "🏢" },
       { to: "/noleggio-auto", label: "Noleggio Auto", icon: "🚗" },
     ]
