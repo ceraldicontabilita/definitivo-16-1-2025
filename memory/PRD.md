@@ -1,5 +1,5 @@
 # PRD - Azienda in Cloud ERP
-## Schema Definitivo v3.1 - Gennaio 2026 (POST-REFACTORING + REAL-TIME)
+## Schema Definitivo v3.2 - Gennaio 2026 (RELEASE CANDIDATE)
 
 ---
 
@@ -13,6 +13,39 @@
 ---
 
 ## 📅 CHANGELOG RECENTE
+
+### 16 Gennaio 2026 - RELEASE CANDIDATE v3.2 🚀
+
+#### TEST E2E FINALE - TUTTI PASSATI ✅
+- Backend: 93% (13/14 test passati)
+- Frontend: 100% (tutte le funzionalità verificate)
+- Performance API riconciliazione: ~2 secondi (ottimizzato da >5s)
+
+#### PAGEINFOCARD - IMPLEMENTATA SU TUTTE LE PAGINE
+- Prima Nota (Cassa/Banca/Salari)
+- Riconciliazione Smart
+- Gestione Dipendenti
+- Import Unificato
+- Fornitori
+- Scadenze
+- F24
+- Corrispettivi
+- Fatture Ricevute
+- Dashboard Analytics
+
+#### UPLOAD IN BACKGROUND PERSISTENTE
+- Context: `/app/frontend/src/contexts/UploadContext.jsx`
+- Component: `/app/frontend/src/components/UploadStatusBar.jsx`
+- Toggle checkbox su Import Unificato (default: ON)
+
+#### OTTIMIZZAZIONE API RICONCILIAZIONE
+- Pre-caching di dipendenti, F24, assegni, fatture, fornitori
+- Eliminato problema N+1 query
+- Tempo risposta: ~2 secondi (era >5s)
+
+#### FILTRO ANNO BACKEND CORRISPETTIVI
+- `GET /api/corrispettivi?anno=2026` filtra lato server
+- Ridotto carico frontend
 
 ### 16 Gennaio 2026 - DASHBOARD REAL-TIME & MOBILE 📡
 
