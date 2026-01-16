@@ -1,69 +1,80 @@
 <analysis>Here is the summary of the current session.
 
 **original_problem_statement:**
-L'utente ha richiesto una serie di funzionalità e miglioramenti per un'applicazione ERP. Le richieste includono:
-- Correzione e automazione dell'importazione di documenti (F24, estratti conto, buste paga, fatture Aruba) via email.
-- Migrazione del database a MongoDB Atlas.
-- Standardizzazione completa dell'interfaccia utente, rimuovendo le librerie UI esterne.
-- Risoluzione di bug critici sulla riconciliazione e rimozione di dati duplicati.
-- Creazione di un flusso di lavoro end-to-end completamente automatico per la gestione delle buste paga e delle fatture, dall'email all'aggiornamento del magazzino e delle ricette.
-- Implementazione di notifiche in tempo reale tramite Telegram per i nuovi documenti.
-- Miglioramenti specifici dell'UI per le pagine di Riconciliazione Smart e Noleggio Auto.
-- **Richiesta più recente:** Semplificare l'associazione degli stipendi, creare una vista per la gestione degli acconti dei dipendenti e ridurre le dimensioni delle card riepilogative in tutta l'applicazione per ottimizzare lo spazio.
+L'utente ha richiesto una serie di funzionalità e miglioramenti per un'applicazione ERP. Le richieste più recenti includono:
+1.  **Visualizzare/Aggiungere Acconti**: L'utente voleva una funzionalità per gestire gli acconti dei dipendenti.
+2.  **Eliminare Dashboard Riconciliazioni**: Rimuovere la pagina non necessaria dal menu e dal codice.
+3.  **Migliorare Ricerca Fatture**: Nel popup di associazione fatture, aggiungere una barra di ricerca per fornitore o importo.
+4.  **Auto-conferma Assegni**: Se l'importo di un assegno corrisponde esattamente a una fattura, confermarlo automaticamente.
+5.  **IBAN Multipli**: Permettere di salvare più IBAN per ogni dipendente.
+6.  **Sincronizzazione IBAN**: Se un IBAN viene modificato nell'anagrafica di un dipendente, deve aggiornarsi anche nei bonifici associati e viceversa.
+7.  **Aggiornamento Dati Dipendenti**: Importare e aggiornare l'anagrafica dei dipendenti utilizzando un file Excel fornito.
+8.  **Centralizzazione Database**: Migrare tutti i dati nel database  e rimuovere il vecchio database .
+9.  **Notifica Telegram non Visibile**: L'utente ha ricevuto una notifica Telegram per un'azione da confermare che non è visibile nell'interfaccia.
+10. **Storico Retribuzioni**: Nella pagina retribuzione di un dipendente, visualizzare la lista degli importi delle buste paga.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione è un ERP full-stack (React + FastAPI) con un database su MongoDB Atlas.
-- **Automazione Email**: Un servizio in background () monitora una casella di posta ogni 10 minuti, scaricando e processando automaticamente nuovi documenti (estratti conto, buste paga, fatture Aruba).
-- **Flussi Automatici**: Sono attivi flussi end-to-end che gestiscono le buste paga (dal PDF alla contabilità) e le fatture (dall'email all'aggiornamento di magazzino e ricette).
-- **Notifiche Telegram**: Il sistema è configurato per inviare notifiche Telegram all'utente ogni volta che nuovi documenti vengono elaborati.
-- **Standardizzazione UI Completata**: Tutta l'interfaccia utente è stata convertita a stili inline, rimuovendo le dipendenze da Shadcn/UI e Lucide.
-- **Riconciliazione Migliorata**: La pagina di riconciliazione smart è stata riscritta per essere più intuitiva. Ora gestisce l'auto-conferma per i pagamenti POS, permette la modifica dell'associazione per gli assegni e riconosce i pagamenti degli stipendi, mostrando solo le azioni pertinenti. I duplicati sono stati rimossi dal DB.
-- **Pagina Noleggio Auto Migliorata**: La pagina ora mostra i totali specifici per il veicolo selezionato e ordina le fatture per data.
+L'applicazione è un ERP full-stack (React + FastAPI) con un database MongoDB () centralizzato.
+- **Gestione Dipendenti**: La pagina di anagrafica () supporta IBAN multipli per ogni dipendente. I dati sono stati aggiornati tramite un file Excel.
+- **Sincronizzazione Dati**: È stata implementata una logica di sincronizzazione bidirezionale per gli IBAN tra l'anagrafica dipendenti e l'archivio dei bonifici.
+- **Pagina Acconti**: Una pagina dedicata () per la gestione degli acconti dei dipendenti è pienamente funzionante.
+- **Pagina Retribuzioni**: La pagina  ora mostra lo storico delle buste paga per il dipendente selezionato.
+- **Riconciliazione Smart**: La pagina è stata migliorata con l'auto-conferma per gli assegni e una barra di ricerca avanzata nel popup di selezione fatture. La dashboard di riconciliazione, ritenuta superflua, è stata rimossa.
+- **Database Unificato**: Il database  è stato eliminato e tutti i dati sono stati consolidati in .
+- **Notifiche Telegram**: Il sistema di notifiche è attivo, ma le azioni pendenti per le fatture Aruba non sono ancora visualizzate nell'interfaccia.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava iniziando ad analizzare la richiesta più recente dell'utente, che consiste in tre parti:
-    1.  Semplificare l'interfaccia per associare gli stipendi nella riconciliazione.
-    2.  Aggiungere una sezione per visualizzare e gestire gli acconti dei dipendenti.
-    3.  Rimpicciolire le card riepilogative in cima a tutte le pagine.
-- **Status**: NOT STARTED
+- **Last item agent was working**: L'agente stava risolvendo il problema della notifica Telegram per un'azione non visibile. Ha identificato che la causa sono le **fatture Aruba pendenti** che non vengono mostrate. Ha iniziato ad aggiungere un nuovo tab Fatture Aruba da Verificare nella pagina  per visualizzarle.
+- **Status**: IN PROGRESS
 - **Agent Testing Done**: N
 - **Which testing method agent to use?**: frontend testing agent
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: (P0) Implementare le nuove richieste di miglioramento UX/UI.
-- **Issue 2**: (P1) Risolvere un debito tecnico critico nel database.
-- **Issue 3**: (P2) Ottimizzare un endpoint API lento.
+- **Issue 1**: (P0) Mostrare le fatture Aruba pendenti nella UI.
+- **Issue 2**: (P1) Risolvere la discrepanza nell'API dei dipendenti.
+- **Issue 3**: (P2) Unificare le collezioni dei movimenti bancari.
+- **Issue 4**: (P3) Ottimizzare l'API di riconciliazione.
 
 **Issues Detail**:
-- **Issue 1: Implementare nuove richieste di miglioramento UX/UI**
+- **Issue 1: Mostrare le fatture Aruba pendenti nella UI**
     - **Next debug checklist**:
-        1.  **Associazione Stipendi**: Modificare  per semplificare il processo di associazione dei bonifici agli stipendi.
-        2.  **Gestione Acconti Dipendenti**: Modificare il  per aggiungere un nuovo tab Acconti che permetta di visualizzare e modificare gli acconti di un dipendente. Potrebbe richiedere nuovi endpoint backend.
-        3.  **Rimpicciolire Card**: Identificare uno stile comune o modificare le singole pagine (, , , etc.) per ridurre l'altezza delle card riepilogative superiori.
-    - **Why fix this issue and what will be achieved with the fix?**: Per migliorare l'usabilità dell'applicazione, rendendo le operazioni quotidiane più rapide e ottimizzando lo spazio a schermo.
-    - **Status**: NOT STARTED
+        1.  Completare l'implementazione nel file .
+        2.  Nel nuovo tab Fatture Aruba da Verificare, renderizzare la lista delle operazioni caricate nello stato .
+        3.  Creare un componente card per ogni operazione Aruba, che includa i dettagli e i pulsanti per Conferma o Rifiuta.
+        4.  Implementare gli endpoint backend e le funzioni frontend per gestire tali azioni.
+    - **Why fix this issue and what will be achieved with the fix?**: Risolverà la confusione dell'utente riguardo alle notifiche Telegram e abiliterà il flusso di approvazione per le fatture Aruba.
+    - **Status**: IN PROGRESS
     - **Is recurring issue?**: N
     - **Should Test frontend/backend/both after fix?**: Both
 
-- **Issue 2: Unificare le collezioni dei movimenti bancari**
-    - **Attempted fixes**: È stato usato uno script una tantum per copiare i dati, ma non risolve il problema alla radice.
+- **Issue 2: Risolvere la discrepanza nell'API dei dipendenti**
+    - **Attempted fixes**: L'agente ha verificato i conteggi nel DB, i filtri nel codice e riavviato i servizi, ma l'API  continua a restituire 26 record mentre il DB ne contiene 31.
     - **Next debug checklist**:
-        1.  Identificare tutti i parser che scrivono ancora nella vecchia collezione .
-        2.  Modificarli per scrivere esclusivamente nella collezione corretta .
+        1.  Aggiungere logging dettagliato all'endpoint  in  per ispezionare i dati prima che vengano serializzati e restituiti.
+        2.  Verificare i modelli Pydantic per eventuali errori di validazione che potrebbero escludere silenziosamente alcuni record.
+        3.  Confrontare la struttura dei 5 record mancanti con i 26 restituiti per identificare differenze (es. campi nulli, caratteri speciali).
+    - **Why fix this issue and what will be achieved with the fix?**: Garantisce l'integrità dei dati mostrati all'utente e previene bug derivanti da una lista di dipendenti incompleta.
+    - **Status**: NOT STARTED
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: Backend
+
+- **Issue 3: Unificare le collezioni dei movimenti bancari**
+    - **Next debug checklist**:
+        1.  Identificare tutti i parser che scrivono nella vecchia collezione .
+        2.  Modificarli per scrivere esclusivamente nella collezione .
         3.  Pianificare la migrazione definitiva dei dati e la rimozione della vecchia collezione.
-    - **Why fix this issue and what will be achieved with the fix?**: Elimina un rischio critico per l'integrità dei dati che potrebbe causare la ricomparsa di bug di riconciliazione.
+    - **Why fix this issue and what will be achieved with the fix?**: Elimina un debito tecnico critico che mette a rischio l'integrità dei dati di riconciliazione.
     - **Status**: NOT STARTED
     - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: Backend
 
-- **Issue 3: Ottimizzare API di Riconciliazione**
-    - **Attempted fixes**: L'agente ha ridotto il limite di dati richiesti dal frontend come soluzione temporanea.
+- **Issue 4: Ottimizzare API di Riconciliazione**
     - **Next debug checklist**:
         1.  Analizzare l'endpoint .
-        2.  Identificare i colli di bottiglia (query al DB, calcoli complessi).
+        2.  Identificare colli di bottiglia (query al DB, calcoli complessi).
         3.  Ottimizzare le query (es. indici MongoDB) o la logica Python per ridurre il tempo di risposta.
     - **Why fix this issue and what will be achieved with the fix?**: Rende la pagina di riconciliazione, uno strumento chiave, molto più veloce e reattiva.
     - **Status**: NOT STARTED
@@ -71,93 +82,104 @@ L'applicazione è un ERP full-stack (React + FastAPI) con un database su MongoDB
     - **Should Test frontend/backend/both after fix?**: Backend
 
 **In progress Task List**:
-Nessuno.
+- **Task 1: Completare UI per le fatture Aruba pendenti**
+    - **Where to resume**: Nel file . È già stato aggiunto lo stato, la funzione di fetch e il tab. Manca la visualizzazione della lista di fatture all'interno del tab.
+    - **What will be achieved with this?**: L'utente potrà finalmente visualizzare e gestire le fatture Aruba per cui riceve notifiche.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: Frontend
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1)** Processare le 55 buste paga rimanenti con il flusso automatico.
+    - **(P1)** Processare le 55 buste paga rimanenti con il flusso automatico per popolare gli storici.
     - **(P1)** Eseguire la riconciliazione per i movimenti manuali rimanenti (stipendi e altro).
 - **Future Tasks**:
-    - Unificazione delle collezioni del database ( vs ).
+    - Unificazione delle collezioni del database ( vs ) - tracciato come **Issue 3**.
+    - Ottimizzazione performance API di riconciliazione - tracciato come **Issue 4**.
 
 **Completed work in this session**
-- **UI Standardization**: Completata la conversione a stili inline di , , .
-- **Aruba & Warehouse/Recipe Automation**: Implementato e integrato il flusso automatico per fatture Aruba, magazzino e ricette.
-- **Telegram Notifications**: Configurato e attivato con successo il sistema di notifiche.
-- **Data Cleanup**: Identificati e rimossi 206 movimenti duplicati dal database.
-- **Riconciliazione Smart Rework**: Riscritta l'interfaccia per auto-conferma POS, modifica associazione assegni, gestione stipendi e correzione di un errore .
-- **Noleggio Auto Page Rework**: Aggiornata la pagina per mostrare dati specifici per veicolo e ordinare le fatture.
+- **Gestione IBAN**: Implementato il supporto per IBAN multipli nella pagina  e sincronizzazione automatica con l'archivio bonifici. Eseguita migrazione dati dal vecchio campo  al nuovo array .
+- **Aggiornamento Dati**: Importati e aggiornati 31 profili dipendente da un file Excel fornito dall'utente.
+- **Pulizia UI e Codice**: Rimossa la pagina  da menu, routing e codice.
+- **Miglioramenti Riconciliazione**: Aggiunta l'auto-conferma per assegni con importo esatto e una barra di ricerca per fornitore/importo nel modal di selezione fatture.
+- **Database Centralizzato**: Eseguita la migrazione della collezione  dal database  a  e rimosso il DB .
+- **Storico Retribuzioni**: Aggiunta la visualizzazione dello storico delle buste paga nella pagina .
+- **Ridimensionamento Card**: Ridotte le dimensioni delle card riepilogative in varie pagine per un look più compatto.
 
 **Earlier issues found/mentioned but not fixed**
-- Il problema architetturale della duplicazione dei dati dei movimenti bancari su due collezioni ( e ) è stato identificato ma non risolto. È tracciato come Issue 2.
-- La lentezza dell'API di riconciliazione () è stata notata ma non risolta. È tracciata come Issue 3.
+- La duplicazione dei dati dei movimenti bancari ( vs ) è un debito tecnico noto e non ancora risolto (tracciato come **Issue 3**).
+- La lentezza dell'API di riconciliazione () è nota e non ancora risolta (tracciata come **Issue 4**).
+- La discrepanza tra i dati dei dipendenti nel DB (31) e quelli restituiti dall'API (26) è stata identificata ma non risolta (tracciata come **Issue 2**).
 
 **Known issue recurrence from previous fork**
 - **Issue recurrence in previous fork**: Mancata gestione delle transazioni PRELIEVO ASSEGNO.
 - **Recurrence count**: 5+
-- **Status**: RESOLVED (La logica del fix è corretta, ma la vulnerabilità architetturale che potrebbe causarne la ricomparsa è ancora presente).
+- **Status**: RESOLVED (la logica è stata implementata, ma la vulnerabilità architetturale del DB non unificato rimane).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **External API Integration (Telegram)**: Integrazione con l'API Bot di Telegram per notifiche in tempo reale.
-- **Data Deduplication**: Script per trovare e rimuovere duplicati da una collezione MongoDB.
-- **Conditional UI Rendering**: Utilizzo avanzato di React per mostrare/nascondere dinamicamente elementi UI in base al contesto dei dati.
-- **UI Refactoring**: Sostituzione su larga scala di una libreria di componenti con stili inline.
+- **Data Synchronization**: Implementata una logica complessa per mantenere sincronizzati gli IBAN tra l'anagrafica dei dipendenti e i bonifici.
+- **Data Migration & Management**: Eseguiti script backend per migrare schemi di dati (da  a ), importare dati da file Excel e consolidare database.
+- **Dynamic UI Refactoring**: Modificati dinamicamente componenti React per aggiungere nuove funzionalità come form con campi variabili, barre di ricerca in modal e tab condizionali.
 
 **key DB schema**
-Nessuna nuova collezione creata. Il debito tecnico sulla collezione  (da eliminare) persiste.
+- ****: Il campo  (array di stringhe) è ora lo standard per gli IBAN, sostituendo il vecchio campo .
+- ****: Collezione che contiene le fatture Aruba in attesa di conferma.
+- ****: Collezione che contiene lo storico delle buste paga.
+- **Debito Tecnico**: La collezione  deve ancora essere migrata in  e rimossa.
 
 **changes in tech stack**
-- Aggiunta l'integrazione con l'**API Bot di Telegram**.
+- Nessuna nuova tecnologia, ma è stata eseguita un'importante opera di consolidamento del database.
 
 **All files of reference**
 - 
 - 
 - 
-- Pagine varie del frontend per la modifica delle card (es. ).
--  (per l'ottimizzazione dell'API).
+- 
+- 
+-  (file di riferimento per il nuovo tab)
+- 
 
 **Areas that need refactoring**:
-- **Database Collection Unification**: Priorità critica per eliminare il debito tecnico e prevenire bug futuri.
-- **Global Styles**: Creare uno stile globale per le card riepilogative per rendere le modifiche più manutenibili.
-- **API Performance**: L'endpoint  necessita di ottimizzazione per migliorare la reattività dell'interfaccia.
+- **Database Collection Unification**: La fusione di  e  è la priorità più alta per il refactoring.
+- **Component Usage**:  è stato modificato ma sembra inutilizzato; va integrato o rimosso.
+- **API Consistency**: L'endpoint  deve essere corretto per restituire tutti i record presenti nel database.
 
 **key api endpoints**
--  **(NEW)**
--  **(NEW)**
--  (Da ottimizzare)
+-  (NEW, One-off)
+-  (MODIFIED, ora )
+-  (MODIFIED, ora sincronizza IBAN a cascata)
+-  (NEW)
+-  (NEW)
 
 **Critical Info for New Agent**
-- **Priorità Utente**: La richiesta più recente (semplificazione stipendi, gestione acconti, riduzione card) è la massima priorità (P0).
-- **API Lenta**: L'endpoint di riconciliazione  è lento e impatta l'esperienza utente. Indagare e ottimizzare.
-- **Debito Tecnico Critico**: Il problema delle doppie collezioni per i movimenti bancari è una bomba a orologeria. Va risolto per garantire la stabilità a lungo termine.
-- **Telegram è Attivo**: Il sistema di notifiche è live. Qualsiasi modifica al flusso di elaborazione dei documenti deve tenere conto dell'invio della notifica.
+- **Database Unico**: La fonte di verità è il database . Non usare o fare riferimento a .
+- **Task Attuale**: La priorità è completare l'interfaccia per la gestione delle fatture Aruba pendenti in . Questo risolverà il problema segnalato dall'utente riguardo alle notifiche Telegram.
+- **Discrepanza API**: Presta attenzione al fatto che l'API  restituisce una lista incompleta di dipendenti (26 su 31). Questo è un bug da risolvere (tracciato come **Issue 2**).
 
 **documents and test reports created in this job**
 -  (aggiornato)
-- 
-- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. Richiesta notifiche Telegram.
-9.  Agente chiede credenziali.
-8.  Utente fornisce TOKEN.
-7.  Utente fornisce CHAT_ID.
-6.  Agente risolve un problema di configurazione.
-5.  Agente invia notifica di test con successo.
-4.  Utente segnala doppioni e UI complessa nella riconciliazione.
-3.  Agente risolve entrambi i problemi.
-2.  Utente chiede migliorie alla pagina Noleggio Auto.
-1.  **LATEST**: Utente chiede di semplificare l'associazione stipendi, aggiungere gestione acconti e rimpicciolire le card.
+1.  **Richiesta**: Aggiungere bottone modifica/salva in Bonifici Dipendenti, sincronizzare i dati e mostrare storico retribuzioni in pagina Retribuzione.
+2.  **Richiesta**: Aggiornare anagrafica dipendenti da file Excel fornito.
+3.  **Richiesta**: Migrare i dati da  a , eliminare il vecchio DB e usare  come unico DB.
+4.  **Segnalazione**: Ricevuta notifica Telegram per un'azione da confermare, ma non è visibile nel gestionale.
+5.  **Risposta**: L'agente ha confermato le prossime azioni.
+6.  **Richiesta**: Aggiungere bottone modifica e salvare le modifiche nel database, aggiornando tutte le pagine collegate. Inserire in  la lista delle buste paga.
+7.  **Risposta**: L'agente ha confermato le prossime azioni.
+8.  **Segnalazione**: L'utente mostra con screenshot che l'IBAN è mancante nell'anagrafica ma presente nei bonifici e chiede di automatizzare il popolamento.
+9.  **Risposta**: L'agente ha capito e si prepara a sincronizzare i dati.
+10. **Richiesta**: Salvare i dati IBAN dai bonifici all'anagrafica e, se si modifica l'anagrafica, aggiornare a cascata i dati nei bonifici.
 
 **Project Health Check:**
-- **Broken**: No.
+- **Broken**: La funzionalità di conferma delle fatture Aruba è inutilizzabile perché non visibile.
 - **Mocked**: No.
 - **Technical Debt**:
-    - **High**: Duplicazione dei dati bancari su due collezioni (, ).
-    - **Medium**: Performance dell'API di riconciliazione smart.
+    - **High**: Duplicazione delle collezioni  e .
+    - **Medium**: L'API  restituisce un set di dati incompleto.
+    - **Low**: L'API di riconciliazione smart è lenta e necessita di ottimizzazione.
 
 **3rd Party Integrations**
 -  (fitz)
@@ -169,10 +191,10 @@ Nessuna nuova collezione creata. Il debito tecnico sulla collezione  (da elimina
 - **Testing agent used after significant changes**: NO
 - **Troubleshoot agent used after agent stuck in loop**: NO
 - **Test files created**: Nessuno
-- **Known regressions**: Nessuna
+- **Known regressions**: La lista dei dipendenti mostrata nell'app è incompleta.
 
 **Credentials to test flow:**
-Le credenziali per MongoDB Atlas, email e Telegram sono configurate nel file .
+Le credenziali sono configurate nei file  del backend e sono gestite dall'ambiente.
 
 **What agent forgot to execute**
-L'agente non ha dimenticato nulla di richiesto dall'utente. Tuttavia, ha posticipato la risoluzione di due importanti problemi tecnici (debito architetturale del DB e performance dell'API), che sono stati correttamente documentati come problemi pendenti da affrontare.</analysis>
+L'agente ha posticipato la risoluzione dei problemi di debito tecnico noti (unificazione collezioni, ottimizzazione API) e non ha risolto la causa principale della discrepanza di dati dell'API dei dipendenti, documentando però correttamente i problemi come pending.</analysis>
