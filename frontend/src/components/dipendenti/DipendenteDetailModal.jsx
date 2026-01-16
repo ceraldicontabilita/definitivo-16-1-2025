@@ -259,10 +259,21 @@ function DipendenteFormAnagrafica({ dipendente, editData, setEditData, editMode 
         <label style={labelStyle}>Email</label>
         <input type="email" value={getValue('email')} onChange={(e) => handleChange('email', e.target.value)} disabled={!editMode} style={inputStyle} />
       </div>
+      
+      {/* IBAN Multipli */}
       <div style={{ gridColumn: 'span 2' }}>
-        <label style={labelStyle}>IBAN</label>
-        <input type="text" value={getValue('iban')} onChange={(e) => handleChange('iban', e.target.value.toUpperCase())} disabled={!editMode} style={{ ...inputStyle, fontFamily: 'monospace' }} />
+        <label style={labelStyle}>IBAN (puoi aggiungerne più di uno)</label>
+        <IbanMultipleInput 
+          ibans={getValue('ibans') || (getValue('iban') ? [getValue('iban')] : [])}
+          onChange={(newIbans) => {
+            handleChange('ibans', newIbans);
+            // Mantieni compatibilità con campo singolo
+            handleChange('iban', newIbans[0] || '');
+          }}
+          disabled={!editMode}
+        />
       </div>
+      
       <div>
         <label style={labelStyle}>Data Assunzione</label>
         <input type="date" value={(getValue('data_assunzione') || '').split('T')[0]} onChange={(e) => handleChange('data_assunzione', e.target.value)} disabled={!editMode} style={inputStyle} />
