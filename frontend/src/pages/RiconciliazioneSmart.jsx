@@ -128,6 +128,35 @@ export default function RiconciliazioneSmart() {
     }
   };
 
+  // Conferma diretta stipendio quando il dipendente è già riconosciuto
+  const handleConfermaStipendio = async (movimento) => {
+    const associazione = movimento.dipendente || movimento.suggerimenti?.[0];
+    if (!associazione) {
+      alert('Nessun dipendente associato. Usa "Associa Stipendio" per selezionarne uno.');
+      return;
+    }
+    
+    setProcessing(movimento.movimento_id);
+    try {
+      await api.post('/api/operazioni-da-confermare/smart/riconcilia-manuale', {
+        movimento_id: movimento.movimento_id,
+        tipo: 'stipendio',
+        associazioni: [associazione],
+        categoria: 'stipendi'
+      });
+      
+      setData(prev => ({
+        ...prev,
+        movimenti: prev.movimenti.filter(m => m.movimento_id !== movimento.movimento_id),
+        stats: { ...prev.stats, totale: prev.stats.totale - 1 }
+      }));
+    } catch (e) {
+      alert('Errore: ' + (e.response?.data?.detail || e.message));
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   // Conferma tutti i movimenti di un tipo
   const handleConfermaTipo = async (tipo) => {
     const movs = data?.movimenti?.filter(m => m.tipo === tipo && m.associazione_automatica) || [];
