@@ -121,6 +121,58 @@ export default function ImportUnificato() {
   const handleUpload = async () => {
     if (files.length === 0) return;
     
+    // Se background mode è attivo, usa il context per upload persistente
+    if (backgroundMode) {
+      files.forEach((fileInfo) => {
+        const tipo = tipoSelezionato !== 'auto' ? tipoSelezionato : fileInfo.type;
+        
+        // Determina endpoint
+        let endpoint = '/api/documenti/upload-auto';
+        switch (tipo) {
+          case 'estratto_conto': endpoint = '/api/estratto-conto-movimenti/import'; break;
+          case 'f24': endpoint = '/api/f24/upload-pdf'; break;
+          case 'quietanza_f24': endpoint = '/api/quietanze-f24/upload'; break;
+          case 'cedolino': endpoint = '/api/employees/paghe/upload-pdf'; break;
+          case 'bonifici': endpoint = '/api/archivio-bonifici/jobs/upload-excel'; break;
+          case 'fattura': endpoint = '/api/fatture/upload-xml'; break;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', fileInfo.file);
+        formData.append('tipo', tipo);
+        
+        // Aggiungi all'upload manager (continua in background)
+        addUpload({
+          fileName: fileInfo.name,
+          fileType: TIPI_DOCUMENTO.find(t => t.id === tipo)?.label || tipo,
+          endpoint,
+          formData,
+          onSuccess: (data) => {
+            setResults(prev => [...prev, {
+              file: fileInfo.name,
+              tipo,
+              status: 'success',
+              message: data?.message || 'Importato con successo',
+              details: data
+            }]);
+          },
+          onError: (error) => {
+            setResults(prev => [...prev, {
+              file: fileInfo.name,
+              tipo,
+              status: 'error',
+              message: error.response?.data?.detail || error.message
+            }]);
+          }
+        });
+      });
+      
+      // Pulisci lista file (upload delegato al context)
+      setFiles([]);
+      return;
+    }
+    
+    // Upload tradizionale (blocca la pagina)
     setUploading(true);
     setUploadProgress({ current: 0, total: files.length });
     const uploadResults = [];
@@ -139,7 +191,6 @@ export default function ImportUnificato() {
         formData.append('tipo', tipo);
 
         let endpoint = '/api/import/documento';
-        let result;
 
         // Endpoint specifici per tipo
         switch (tipo) {
@@ -169,14 +220,15 @@ export default function ImportUnificato() {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
 
-        result = {
+        const result = {
           file: fileInfo.name,
           tipo,
           status: 'success',
           message: res.data?.message || 'Importato con successo',
           details: res.data
         };
-
+        
+        uploadResults.push(result);
         setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'success' } : f));
 
       } catch (e) {
