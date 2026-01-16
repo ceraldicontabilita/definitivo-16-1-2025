@@ -396,7 +396,7 @@ async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db[COL_LOTTI].insert_one(lotto)
+        await db[COL_LOTTI].insert_one(lotto.copy())
         lotti_creati += 1
         
         lotti_dettaglio.append({
