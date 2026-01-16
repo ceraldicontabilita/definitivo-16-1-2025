@@ -266,6 +266,16 @@ export default function GestioneDipendenti() {
                 </div>
               </div>
 
+              {/* IBAN Bancari */}
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12, borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>🏦 IBAN Bancari</h3>
+                <IbanSection 
+                  ibans={formData.ibans || (formData.iban ? [formData.iban] : [])} 
+                  onChange={(newIbans) => setFormData({ ...formData, ibans: newIbans, iban: newIbans[0] || '' })}
+                  disabled={!editMode}
+                />
+              </div>
+
               {/* Lavoro */}
               <div>
                 <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12, borderBottom: '1px solid #e2e8f0', paddingBottom: 8 }}>💼 Dati Lavorativi</h3>
