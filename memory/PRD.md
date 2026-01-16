@@ -1,5 +1,5 @@
 # PRD - Azienda in Cloud ERP
-## Schema Definitivo v2.3 - Gennaio 2026
+## Schema Definitivo v3.0 - Gennaio 2026 (POST-REFACTORING)
 
 ---
 
@@ -8,11 +8,55 @@
 - Tutte le collezioni sono in `azienda_erp_db`
 - NON usare altri database (smartbiz, azienda_db, contabile sono legacy)
 - Configurato in `/app/backend/.env` come `DB_NAME="azienda_erp_db"`
-- **IMPORTANTE**: Prima di ogni operazione DB, verificare che si stia usando `azienda_erp_db`
+- **Collezione movimenti unificata**: `estratto_conto_movimenti` (7351 documenti)
 
 ---
 
 ## 📅 CHANGELOG RECENTE
+
+### 16 Gennaio 2026 - REFACTORING ARCHITETTURALE v3.0 🏗️
+
+#### DATABASE
+- **Unificato movimenti bancari**: Migrati 4244 documenti da `estratto_conto` → `estratto_conto_movimenti`
+- **Nuova collezione**: `fornitori_preferenze` per auto-apprendimento metodi pagamento
+
+#### PAGINE UNIFICATE (riduzione da 61 a ~48 pagine)
+
+1. **Gestione Dipendenti** (`/dipendenti`) - UNA SOLA PAGINA con 5 tab:
+   - 👤 Anagrafica | 📋 Contratti | 💰 Retribuzione | 🏦 Bonifici | 💵 Acconti
+   - Sostituisce: 7 pagine separate (retribuzione, progressivi, bonifici, agevolazioni, contratti, libro unico, libretti)
+   - File: `/app/frontend/src/pages/GestioneDipendentiUnificata.jsx`
+
+2. **Riconciliazione Smart** (`/riconciliazione`) - UNA SOLA PAGINA con 6 tab:
+   - 📊 Dashboard | 🏦 Banca (141) | 📝 Assegni (6) | 📄 F24 (48) | 🧾 Aruba (23) | 👤 Stipendi (53)
+   - Pulsante "Auto-Riconcilia" per confermare match automatici
+   - Totale da riconciliare: 271
+   - File: `/app/frontend/src/pages/RiconciliazioneUnificata.jsx`
+
+3. **Prima Nota** (`/prima-nota`) - UNA SOLA PAGINA con filtri:
+   - Tab: Tutti | Cassa | Banca | Salari
+   - Filtro per mese e ricerca
+   - Totali: Entrate €116.990 | Uscite €85.821 | Saldo €31.168
+   - File: `/app/frontend/src/pages/PrimaNotaUnificata.jsx`
+
+#### FLUSSI A CASCATA AUTOMATICI
+Quando si conferma un pagamento (es. fattura Aruba):
+1. ✅ Aggiorna stato operazione
+2. ✅ Crea movimento Prima Nota (Cassa/Banca)
+3. ✅ Aggiorna Scadenzario (se esiste scadenza collegata)
+4. ✅ Aggiorna stato fattura (saldata)
+5. ✅ Salva preferenza metodo pagamento fornitore (auto-apprendimento)
+
+#### AUTO-APPRENDIMENTO FORNITORI 🧠
+- Il sistema ricorda il metodo di pagamento preferito per ogni fornitore
+- Badge "🧠 Preferito: BONIFICO" sui bottoni nelle fatture Aruba
+- Collezione: `fornitori_preferenze`
+- Endpoint: `GET /api/operazioni-da-confermare/fornitore-preferenza/{fornitore}`
+
+#### MENU SEMPLIFICATO
+- **Dipendenti**: da 13 voci a 4 voci
+- **Banca & Pagamenti**: da 4 voci a 5 voci (più complete)
+- Badge "NEW" sulle pagine unificate
 
 ### 16 Gennaio 2026 (Sessione 4 - Continuazione)
 - **MIGRAZIONE DB**: Database `smartbiz` migrato e ELIMINATO
