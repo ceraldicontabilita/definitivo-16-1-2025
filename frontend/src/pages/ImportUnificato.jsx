@@ -338,6 +338,34 @@ export default function ImportUnificato() {
               </button>
             </div>
           </div>
+
+          {/* Progress Bar durante upload */}
+          {uploading && uploadProgress.total > 0 && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#f0f9ff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#0369a1' }}>
+                  📤 Caricamento in corso: {uploadProgress.current}/{uploadProgress.total}
+                </span>
+                <span style={{ fontSize: 12, color: '#64748b' }}>
+                  {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                </span>
+              </div>
+              <div style={{ 
+                height: 8, 
+                background: '#e0f2fe', 
+                borderRadius: 4, 
+                overflow: 'hidden' 
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                  background: 'linear-gradient(90deg, #0ea5e9, #3b82f6)',
+                  borderRadius: 4,
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            </div>
+          )}
           
           <div style={{ maxHeight: 400, overflow: 'auto' }}>
             {files.map((f, idx) => {
