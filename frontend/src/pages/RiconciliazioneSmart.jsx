@@ -102,7 +102,7 @@ export default function RiconciliazioneSmart() {
     
     setProcessing(op.id);
     try {
-      await api.post('/api/operazioni-da-confermare/aruba/rifiuta', {
+      await api.post('/api/operazioni-da-confermare/rifiuta-aruba', {
         operazione_id: op.id,
         motivo: 'Rifiutato manualmente'
       });
