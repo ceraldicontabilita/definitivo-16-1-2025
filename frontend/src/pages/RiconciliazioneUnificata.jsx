@@ -42,8 +42,47 @@ export default function RiconciliazioneUnificata() {
   const [currentLimit, setCurrentLimit] = useState(25);
   const [hasMore, setHasMore] = useState(true);
   
+  // Filtri avanzati
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    dataFrom: '',
+    dataTo: '',
+    importoMin: '',
+    importoMax: '',
+    search: ''
+  });
+  
   // Auto-match stats
   const [autoMatchStats, setAutoMatchStats] = useState({ matched: 0, pending: 0 });
+
+  // Applica filtri ai movimenti
+  const applyFilters = (movimenti) => {
+    return movimenti.filter(m => {
+      // Filtro data
+      if (filters.dataFrom && m.data < filters.dataFrom) return false;
+      if (filters.dataTo && m.data > filters.dataTo) return false;
+      
+      // Filtro importo
+      const importo = Math.abs(parseFloat(m.importo) || 0);
+      if (filters.importoMin && importo < parseFloat(filters.importoMin)) return false;
+      if (filters.importoMax && importo > parseFloat(filters.importoMax)) return false;
+      
+      // Filtro ricerca testo
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        const desc = (m.descrizione || '').toLowerCase();
+        const tipo = (m.tipo || '').toLowerCase();
+        if (!desc.includes(search) && !tipo.includes(search)) return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // Movimenti filtrati
+  const movimentiBancaFiltrati = applyFilters(movimentiBanca);
+  const assegniFiltrati = applyFilters(assegni);
+  const stipendiFiltrati = applyFilters(stipendiPendenti);
 
   useEffect(() => {
     loadAllData();
