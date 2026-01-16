@@ -1168,13 +1168,15 @@ async def riconcilia_manuale(
 ) -> Dict[str, Any]:
     """
     Riconcilia manualmente un movimento con elementi selezionati dall'utente.
+    CASCATA: Crea movimento in Prima Nota, aggiorna fatture/cedolini/scadenze.
     
     Body:
     {
         "movimento_id": str,
-        "tipo": "fattura" | "stipendio" | "f24" | "categoria",
+        "tipo": "fattura" | "stipendio" | "f24" | "categoria" | "incasso_pos",
         "associazioni": [{"id": str, ...}],  # Per fatture/stipendi multipli
-        "categoria": str  # Per categorizzazione semplice
+        "categoria": str,  # Per categorizzazione semplice
+        "destinazione": "banca" | "cassa"  # Dove salvare in Prima Nota (default: banca)
     }
     """
     db = Database.get_db()
@@ -1183,6 +1185,7 @@ async def riconcilia_manuale(
     tipo = data.get("tipo")
     associazioni = data.get("associazioni", [])
     categoria = data.get("categoria")
+    destinazione = data.get("destinazione", "banca")  # Default: banca
     
     if not movimento_id:
         raise HTTPException(status_code=400, detail="movimento_id richiesto")
@@ -1195,10 +1198,62 @@ async def riconcilia_manuale(
     if not movimento:
         raise HTTPException(status_code=404, detail="Movimento non trovato")
     
+    # === 1. PREPARA DATI MOVIMENTO ===
+    importo = movimento.get("importo", 0)
+    data_movimento = movimento.get("data") or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    descrizione_originale = movimento.get("descrizione_originale") or movimento.get("descrizione") or ""
+    ragione_sociale = movimento.get("ragione_sociale", "")
+    
+    # Determina se è entrata o uscita
+    tipo_movimento = "entrata" if importo > 0 else "uscita"
+    
+    # === 2. CREA MOVIMENTO IN PRIMA NOTA ===
+    prima_nota_id = str(uuid.uuid4())
+    
+    # Costruisci descrizione
+    descrizione = categoria or descrizione_originale[:100]
+    if associazioni and len(associazioni) > 0:
+        assoc = associazioni[0]
+        if assoc.get("numero"):
+            descrizione = f"Fattura {assoc.get('numero')} - {assoc.get('fornitore', ragione_sociale)}"
+        elif assoc.get("dipendente"):
+            descrizione = f"Stipendio {assoc.get('dipendente')}"
+    
+    movimento_prima_nota = {
+        "id": prima_nota_id,
+        "data": data_movimento,
+        "tipo": tipo_movimento,
+        "importo": abs(importo),
+        "descrizione": descrizione,
+        "categoria": categoria or tipo,
+        "fornitore": ragione_sociale,
+        "estratto_conto_id": movimento_id,  # COLLEGAMENTO ALL'ESTRATTO CONTO
+        "source": "riconciliazione_smart",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Aggiungi fattura_id se presente
+    if associazioni and len(associazioni) > 0:
+        movimento_prima_nota["fattura_id"] = associazioni[0].get("id")
+        movimento_prima_nota["numero_fattura"] = associazioni[0].get("numero")
+    
+    # Salva in Prima Nota Cassa o Banca
+    if destinazione == "cassa" or tipo == "incasso_pos":
+        await db.prima_nota_cassa.insert_one(movimento_prima_nota)
+        prima_nota_collection = "prima_nota_cassa"
+    else:
+        await db.prima_nota_banca.insert_one(movimento_prima_nota)
+        prima_nota_collection = "prima_nota_banca"
+    
+    logger.info(f"Creato movimento {prima_nota_id} in {prima_nota_collection}")
+    
+    # === 3. AGGIORNA ESTRATTO CONTO ===
     update_data = {
         "riconciliato": True,
         "riconciliato_auto": False,
         "tipo_riconciliazione": tipo,
+        "prima_nota_id": prima_nota_id,
+        "prima_nota_collection": prima_nota_collection,
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
