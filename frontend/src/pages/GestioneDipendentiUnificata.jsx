@@ -554,22 +554,34 @@ function TabBonifici({ bonifici, dipendente, onReload }) {
   );
 }
 
-function TabAcconti({ acconti, dipendente, onReload }) {
+function TabAcconti({ acconti: accontiData, dipendente, onReload }) {
   const [showForm, setShowForm] = useState(false);
-  const [newAcconto, setNewAcconto] = useState({ importo: '', data: '', note: '' });
+  const [newAcconto, setNewAcconto] = useState({ importo: '', data: '', note: '', tipo: 'tfr' });
   const [saving, setSaving] = useState(false);
+
+  // Gestisce sia array che oggetto strutturato
+  const accontiObj = accontiData && typeof accontiData === 'object' && !Array.isArray(accontiData) 
+    ? accontiData 
+    : { tfr_accantonato: 0, tfr_acconti: 0, tfr_saldo: 0, totale_acconti: 0, acconti: { tfr: [], ferie: [], tredicesima: [], quattordicesima: [], prestito: [] } };
+  
+  // Flatten tutti gli acconti in un array
+  const allAcconti = accontiObj.acconti 
+    ? [...(accontiObj.acconti.tfr || []), ...(accontiObj.acconti.ferie || []), ...(accontiObj.acconti.tredicesima || []), ...(accontiObj.acconti.quattordicesima || []), ...(accontiObj.acconti.prestito || [])]
+    : (Array.isArray(accontiData) ? accontiData : []);
 
   const handleAddAcconto = async () => {
     if (!newAcconto.importo) return alert('Inserisci importo');
     setSaving(true);
     try {
-      await api.post(`/api/dipendenti/${dipendente.id}/acconti`, {
+      await api.post(`/api/tfr/acconti`, {
+        dipendente_id: dipendente.id,
+        tipo: newAcconto.tipo,
         importo: parseFloat(newAcconto.importo),
         data: newAcconto.data || new Date().toISOString().split('T')[0],
         note: newAcconto.note
       });
       setShowForm(false);
-      setNewAcconto({ importo: '', data: '', note: '' });
+      setNewAcconto({ importo: '', data: '', note: '', tipo: 'tfr' });
       onReload();
     } catch (e) {
       alert('Errore: ' + (e.response?.data?.detail || e.message));
@@ -578,7 +590,7 @@ function TabAcconti({ acconti, dipendente, onReload }) {
     }
   };
 
-  const totaleAcconti = acconti.reduce((sum, a) => sum + (a.importo || 0), 0);
+  const totaleAcconti = accontiObj.totale_acconti || 0;
 
   return (
     <div>
