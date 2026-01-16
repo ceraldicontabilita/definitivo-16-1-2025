@@ -306,7 +306,7 @@ export default function DashboardAnalytics() {
   }
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
+    <div style={{ padding: 'clamp(12px, 3vw, 20px)', position: 'relative' }}>
       {/* CSS per animazione pulse */}
       <style>{`
         @keyframes pulse {
@@ -314,6 +314,11 @@ export default function DashboardAnalytics() {
           50% { opacity: 0.5; }
         }
       `}</style>
+      
+      {/* Page Info Card */}
+      <div style={{ position: 'absolute', top: 0, right: 20, zIndex: 100 }}>
+        <PageInfoCard pageKey="analytics" />
+      </div>
       
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
