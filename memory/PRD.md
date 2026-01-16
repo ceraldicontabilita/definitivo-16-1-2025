@@ -1,5 +1,5 @@
 # PRD - Azienda in Cloud ERP
-## Schema Definitivo v3.2 - Gennaio 2026 (RELEASE CANDIDATE)
+## Schema Definitivo v3.3 - Gennaio 2026 (PRODUCTION)
 
 ---
 
@@ -13,6 +13,36 @@
 ---
 
 ## 📅 CHANGELOG RECENTE
+
+### 16 Gennaio 2026 - RELEASE v3.3 🚀
+
+#### CRUD ACCONTI DIPENDENTI - COMPLETATO ✅
+- Endpoint `POST /api/tfr/acconti` - Crea acconto
+- Endpoint `PUT /api/tfr/acconti/{id}` - Modifica acconto (NUOVO)
+- Endpoint `DELETE /api/tfr/acconti/{id}` - Elimina acconto
+- Frontend: Pulsanti modifica/elimina nella tabella acconti
+- Frontend: Modal di modifica con form completo
+- File modificati:
+  - `/app/app/routers/tfr.py` (aggiunto PUT)
+  - `/app/frontend/src/pages/GestioneDipendentiUnificata.jsx`
+
+#### IMPORT FORNITORI EXCEL - COMPLETATO ✅
+- Importati 253 fornitori dal file `ReportFornitori.xls`
+- 240 con metodo pagamento impostato
+- 107 con email
+- Aggiunto tipo "Fornitori" in Import Unificato
+- Endpoint: `POST /api/suppliers/upload-excel`
+
+#### RIMOZIONE PAGINA /ESTRATTO-CONTO - COMPLETATO ✅
+- Rimossa rotta da `main.jsx`
+- Rimosso link dal menu in `App.jsx`
+- File `EstrattoContoImport.jsx` ancora presente ma non raggiungibile
+
+#### PRIMA NOTA MIGLIORATA ✅
+- Aggiunte card statistiche: Corrispettivi, POS, Versamenti, Pagamenti Fornitori
+- Tabella con colonne: Data, T(ipo), Cat., Descrizione, DARE, AVERE, Saldo, Fattura, Azioni
+- Saldo progressivo calcolato
+- Pulsanti modifica/elimina per ogni movimento
 
 ### 16 Gennaio 2026 - RELEASE CANDIDATE v3.2 🚀
 
