@@ -854,14 +854,14 @@ async def check_fattura_esistente(
     """
     db = Database.get_db()
     
-    # Cerca in cash_movements
-    in_cassa = await db["cash_movements"].find_one({
+    # Cerca in prima_nota_cassa
+    in_cassa = await db["prima_nota_cassa"].find_one({
         "numero_fattura": numero_fattura,
         "fornitore": {"$regex": fornitore[:20], "$options": "i"}
     })
     
-    # Cerca in bank_movements
-    in_banca = await db["bank_movements"].find_one({
+    # Cerca in prima_nota_banca
+    in_banca = await db["prima_nota_banca"].find_one({
         "numero_fattura": numero_fattura,
         "fornitore": {"$regex": fornitore[:20], "$options": "i"}
     })
