@@ -800,8 +800,9 @@ function DipendenteAccontiTab({ dipendente, editData, setEditData, editMode }) {
       return;
     }
     
+    const timestamp = Date.now();
     const newAcconto = {
-      id: Date.now().toString(),
+      id: `acc_${timestamp}_${Math.random().toString(36).substring(7)}`,
       data: nuovoAcconto.data,
       importo: parseFloat(nuovoAcconto.importo),
       note: nuovoAcconto.note || '',
