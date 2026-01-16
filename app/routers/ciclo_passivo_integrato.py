@@ -302,7 +302,7 @@ async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee:
                 "categoria": detect_centro_costo(fornitore, descrizione),
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
-            await db[COL_MAGAZZINO].insert_one(nuovo_prodotto)
+            await db[COL_MAGAZZINO].insert_one(nuovo_prodotto.copy())
         
         # Aggiorna giacenza
         await db[COL_MAGAZZINO].update_one(
@@ -336,7 +336,7 @@ async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee:
             "note": f"Carico da fattura {numero_documento or fattura_id[:8]}",
             "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db[COL_MOVIMENTI_MAG].insert_one(movimento)
+        await db[COL_MOVIMENTI_MAG].insert_one(movimento.copy())
         movimenti_creati += 1
         
         # Calcola data scadenza di default se non presente
