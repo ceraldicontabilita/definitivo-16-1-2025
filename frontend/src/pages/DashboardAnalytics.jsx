@@ -144,10 +144,37 @@ export default function DashboardAnalytics() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [activeView, setActiveView] = useState('overview');
+  
+  // WebSocket per aggiornamenti real-time
+  const { 
+    kpiData: liveKpi, 
+    isConnected: wsConnected, 
+    lastUpdate: wsLastUpdate,
+    requestRefresh 
+  } = useWebSocketDashboard(anno, true);
 
   useEffect(() => {
     loadStats();
   }, [anno]);
+  
+  // Aggiorna KPI quando arrivano dati WebSocket
+  useEffect(() => {
+    if (liveKpi && stats) {
+      setStats(prev => ({
+        ...prev,
+        kpi: {
+          ...prev.kpi,
+          fatturato: liveKpi.fatturato ?? prev.kpi.fatturato,
+          entrate: liveKpi.entrate ?? prev.kpi.entrate,
+          uscite: liveKpi.uscite ?? prev.kpi.uscite,
+          cashFlow: liveKpi.cashFlow ?? prev.kpi.cashFlow,
+          numDipendenti: liveKpi.numDipendenti ?? prev.kpi.numDipendenti,
+          numF24: liveKpi.numF24 ?? prev.kpi.numF24,
+          scadenzeUrgenti: liveKpi.scadenzeUrgenti ?? 0
+        }
+      }));
+    }
+  }, [liveKpi]);
 
   const loadStats = async () => {
     setLoading(true);
