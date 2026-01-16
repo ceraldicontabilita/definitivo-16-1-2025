@@ -132,6 +132,40 @@ def calcola_detrazioni_lavoro(reddito_annuo: float) -> float:
 # ENDPOINT
 # ============================================
 
+@router.get("")
+async def lista_cedolini(
+    anno: Optional[int] = None,
+    mese: Optional[int] = None,
+    dipendente_id: Optional[str] = None,
+    limit: int = 100
+) -> Dict[str, Any]:
+    """
+    Lista tutti i cedolini con filtri opzionali.
+    """
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["anno"] = anno
+    if mese:
+        query["mese"] = mese
+    if dipendente_id:
+        query["dipendente_id"] = dipendente_id
+    
+    cedolini = await db["cedolini"].find(
+        query,
+        {"_id": 0}
+    ).sort([("anno", -1), ("mese", -1)]).limit(limit).to_list(limit)
+    
+    total = await db["cedolini"].count_documents(query)
+    
+    return {
+        "cedolini": cedolini,
+        "total": total,
+        "filters": {"anno": anno, "mese": mese, "dipendente_id": dipendente_id}
+    }
+
+
 @router.post("/stima", response_model=CedolinoStima)
 async def calcola_stima_cedolino(input_data: CedolinoInput) -> CedolinoStima:
     """
