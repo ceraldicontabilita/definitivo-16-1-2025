@@ -141,8 +141,8 @@ class Collections:
     HACCP_TEMPERATURES = "haccp_temperatures"
     LIBRETTI_SANITARI = "libretti_sanitari"
     
-    # Cash & Bank
-    CASH_MOVEMENTS = "cash_movements"
+    # Cash & Bank - USE prima_nota_cassa/prima_nota_banca as canonical names
+    CASH_MOVEMENTS = "prima_nota_cassa"  # Changed from cash_movements
     BANK_STATEMENTS = "bank_statements"
     
     # Accounting
