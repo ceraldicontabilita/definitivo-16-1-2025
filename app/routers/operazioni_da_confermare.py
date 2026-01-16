@@ -444,7 +444,7 @@ class RifiutaArubaRequest(BaseModel):
     motivo: Optional[str] = None
 
 
-@router.post("/aruba/conferma")
+@router.post("/conferma-aruba")
 async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, Any]:
     """
     Conferma un'operazione Aruba pendente e la segna come confermata.
