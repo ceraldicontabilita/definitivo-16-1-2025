@@ -924,17 +924,58 @@ function MovimentoCardManuale({ movimento, onAssociaFattura, onAssociaStipendio,
   );
 }
 
-// Modal per cambiare fattura/stipendio/f24
+// Modal per cambiare fattura/stipendio/f24 CON RICERCA
 function ModalCambiaFattura({ movimento, tipo, results, onSelect, onClose }) {
-  const safeResults = Array.isArray(results) ? results : [];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [localResults, setLocalResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  
+  // Usa i risultati passati o quelli della ricerca locale
+  const displayResults = searchQuery.trim() ? localResults : (Array.isArray(results) ? results : []);
   
   const tipoConfig = {
-    fattura: { title: '🧾 Seleziona Fattura', empty: 'Nessuna fattura trovata' },
-    stipendio: { title: '👤 Seleziona Stipendio', empty: 'Nessuno stipendio trovato' },
-    f24: { title: '📄 Seleziona F24', empty: 'Nessun F24 trovato' }
+    fattura: { title: '🧾 Seleziona Fattura', empty: 'Nessuna fattura trovata', searchPlaceholder: 'Cerca per fornitore o importo...' },
+    stipendio: { title: '👤 Seleziona Stipendio', empty: 'Nessuno stipendio trovato', searchPlaceholder: 'Cerca per nome dipendente...' },
+    f24: { title: '📄 Seleziona F24', empty: 'Nessun F24 trovato', searchPlaceholder: 'Cerca per codice tributo...' }
   };
   
   const config = tipoConfig[tipo] || tipoConfig.fattura;
+  
+  // Ricerca fatture
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setLocalResults([]);
+      return;
+    }
+    
+    setSearching(true);
+    try {
+      // Cerca per fornitore o per importo numerico
+      const isNumeric = !isNaN(parseFloat(query));
+      let url = '';
+      
+      if (tipo === 'fattura') {
+        if (isNumeric) {
+          url = `/api/operazioni-da-confermare/smart/cerca-fatture?importo=${query}`;
+        } else {
+          url = `/api/operazioni-da-confermare/smart/cerca-fatture?fornitore=${encodeURIComponent(query)}`;
+        }
+      } else if (tipo === 'stipendio') {
+        url = `/api/operazioni-da-confermare/smart/cerca-stipendi?nome=${encodeURIComponent(query)}`;
+      } else if (tipo === 'f24') {
+        url = `/api/operazioni-da-confermare/smart/cerca-f24?codice=${encodeURIComponent(query)}`;
+      }
+      
+      const res = await api.get(url);
+      setLocalResults(res.data?.results || res.data || []);
+    } catch (e) {
+      console.error('Errore ricerca:', e);
+      setLocalResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
   
   return (
     <div style={{
@@ -945,7 +986,7 @@ function ModalCambiaFattura({ movimento, tipo, results, onSelect, onClose }) {
     }} onClick={onClose}>
       <div style={{
         background: 'white', borderRadius: 16,
-        width: '100%', maxWidth: 600, maxHeight: '80vh', overflow: 'hidden'
+        width: '100%', maxWidth: 650, maxHeight: '85vh', overflow: 'hidden'
       }} onClick={e => e.stopPropagation()}>
         
         <div style={{ padding: 20, borderBottom: '1px solid #e5e7eb', background: '#f8fafc' }}>
@@ -958,59 +999,117 @@ function ModalCambiaFattura({ movimento, tipo, results, onSelect, onClose }) {
           <div style={{ marginTop: 8, fontSize: 13, color: '#64748b' }}>
             Movimento: {new Date(movimento.data).toLocaleDateString('it-IT')} - {formatEuro(movimento.importo)}
           </div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>
             {movimento.descrizione?.substring(0, 60)}...
+          </div>
+          
+          {/* BARRA DI RICERCA */}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder={config.searchPlaceholder}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                paddingLeft: 40,
+                border: '2px solid #e5e7eb',
+                borderRadius: 8,
+                fontSize: 14,
+                outline: 'none',
+                transition: 'border-color 0.2s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              autoFocus
+            />
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 18 }}>
+              {searching ? '⏳' : '🔍'}
+            </span>
           </div>
         </div>
         
         <div style={{ maxHeight: 400, overflow: 'auto' }}>
-          {safeResults.length === 0 ? (
+          {displayResults.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
-              {config.empty} con importo simile
+              <div style={{ fontSize: 32, marginBottom: 8 }}>
+                {searchQuery.trim() ? '🔍' : '💡'}
+              </div>
+              {searchQuery.trim() 
+                ? `${config.empty} per "${searchQuery}"` 
+                : 'Usa la barra di ricerca sopra per trovare fatture per fornitore o importo'}
             </div>
           ) : (
-            safeResults.map((item, idx) => (
-              <div 
-                key={idx}
-                onClick={() => onSelect(item)}
-                style={{
-                  padding: 16, borderBottom: '1px solid #f1f5f9',
-                  cursor: 'pointer', transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f0fdf4'}
-                onMouseLeave={e => e.currentTarget.style.background = 'white'}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>
-                      {item.beneficiario || item.fornitore || item.supplier_name || item.dipendente || item.tipo_tributo || 'N/A'}
+            displayResults.map((item, idx) => {
+              // Calcola la differenza di importo per evidenziare i match esatti
+              const itemImporto = item.importo || item.total_amount || item.netto_pagare || 0;
+              const diffImporto = Math.abs(Math.abs(movimento.importo) - Math.abs(itemImporto));
+              const isExactMatch = diffImporto < 0.01;
+              
+              return (
+                <div 
+                  key={idx}
+                  onClick={() => onSelect(item)}
+                  style={{
+                    padding: 16, borderBottom: '1px solid #f1f5f9',
+                    cursor: 'pointer', transition: 'background 0.2s',
+                    background: isExactMatch ? '#f0fdf4' : 'white',
+                    borderLeft: isExactMatch ? '4px solid #10b981' : 'none'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = isExactMatch ? '#dcfce7' : '#f8fafc'}
+                  onMouseLeave={e => e.currentTarget.style.background = isExactMatch ? '#f0fdf4' : 'white'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {item.beneficiario || item.fornitore || item.supplier_name || item.dipendente || item.tipo_tributo || 'N/A'}
+                        {isExactMatch && <span style={{ background: '#10b981', color: 'white', fontSize: 10, padding: '2px 6px', borderRadius: 4 }}>MATCH ESATTO</span>}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>
+                        {item.numero_fattura || item.invoice_number 
+                          ? `Fatt. ${item.numero_fattura || item.invoice_number}`
+                          : item.codice_tributo
+                            ? `Tributo: ${item.codice_tributo}`
+                            : item.mese_riferimento
+                              ? `Mese: ${item.mese_riferimento}`
+                              : '-'
+                        }
+                        {item.data_fattura && ` del ${new Date(item.data_fattura).toLocaleDateString('it-IT')}`}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>
-                      {item.numero_fattura || item.invoice_number 
-                        ? `Fatt. ${item.numero_fattura || item.invoice_number}`
-                        : item.codice_tributo
-                          ? `Tributo: ${item.codice_tributo}`
-                          : item.mese_riferimento
-                            ? `Mese: ${item.mese_riferimento}`
-                            : '-'
-                      }
-                      {item.data_fattura && ` del ${new Date(item.data_fattura).toLocaleDateString('it-IT')}`}
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: 16, color: isExactMatch ? '#059669' : '#374151' }}>
+                        {formatEuro(itemImporto)}
+                      </div>
+                      {!isExactMatch && diffImporto > 0 && (
+                        <div style={{ fontSize: 10, color: '#f59e0b' }}>
+                          Diff: {formatEuro(diffImporto)}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div style={{ fontWeight: 'bold', fontSize: 16, color: '#059669' }}>
-                    {formatEuro(item.importo || item.total_amount || item.netto_pagare || 0)}
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
         
-        <div style={{ padding: 16, borderTop: '1px solid #e5e7eb', textAlign: 'right' }}>
+        <div style={{ padding: 16, borderTop: '1px solid #e5e7eb', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 12, color: '#64748b' }}>
+            {displayResults.length} risultati
+          </div>
           <button onClick={onClose} style={{
             padding: '10px 20px', background: '#f1f5f9',
-            border: 'none', borderRadius: 6, cursor: 'pointer'
+            border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold'
+          }}>
+            Chiudi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
           }}>
             Annulla
           </button>
