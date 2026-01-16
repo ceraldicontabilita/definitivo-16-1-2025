@@ -490,15 +490,14 @@ async def invia_fatture_cassa(data: Dict[str, Any] = Body(...)) -> Dict[str, Any
     # Log the send
     db = Database.get_db()
     log_doc = {
-    await db["commercialista_log"].insert_one(log_doc.copy())
-    # REMOVED: 
         "tipo": "fatture_cassa",
         "anno": anno,
         "mese": mese,
         "email": email,
         "data_invio": datetime.now(timezone.utc).isoformat(),
         "success": success
-    })
+    }
+    await db["commercialista_log"].insert_one(log_doc.copy())
     
     return {
         "success": success,
