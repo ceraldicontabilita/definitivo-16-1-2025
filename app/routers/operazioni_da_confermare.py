@@ -5,6 +5,7 @@ Include funzionalità di Riconciliazione Smart per estratto conto.
 """
 
 from fastapi import APIRouter, Query, HTTPException, Body
+from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 import os
