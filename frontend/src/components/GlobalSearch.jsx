@@ -72,7 +72,7 @@ export default function GlobalSearch() {
     // Navigate based on result type
     switch (result.tipo) {
       case 'fattura':
-        navigate(`/fatture?search=${result.id}`);
+        navigate(`/fatture-ricevute?search=${result.id}`);
         break;
       case 'fornitore':
         navigate(`/fornitori?search=${result.id}`);
