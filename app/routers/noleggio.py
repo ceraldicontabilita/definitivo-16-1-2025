@@ -811,6 +811,14 @@ async def update_veicolo(
     """
     db = Database.get_db()
     
+    # CONTROLLO ATOMICO: Verifica che il driver_id esista se viene passato
+    if data.get("driver_id"):
+        dipendente = await db["dipendenti"].find_one({"id": data["driver_id"]}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1})
+        if not dipendente:
+            raise HTTPException(status_code=400, detail=f"Dipendente con ID {data['driver_id']} non trovato")
+        # Imposta automaticamente il nome completo del driver
+        data["driver"] = f"{dipendente.get('nome', '')} {dipendente.get('cognome', '')}".strip()
+    
     update_data = {
         "targa": targa.upper(),
         "updated_at": datetime.now(timezone.utc)
