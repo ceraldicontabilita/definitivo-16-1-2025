@@ -1602,6 +1602,68 @@ async def disassocia_bonifico(bonifico_id: str):
     return {"success": True, "bonifico_id": bonifico_id}
 
 
+@router.post("/sync-iban-anagrafica")
+async def sync_iban_bonifici_to_anagrafica():
+    """
+    Sincronizza gli IBAN dai bonifici all'anagrafica dipendenti.
+    Se un bonifico è associato a un dipendente e ha un IBAN beneficiario,
+    lo aggiunge all'array ibans del dipendente (se non già presente).
+    """
+    db = Database.get_db()
+    
+    # Trova tutti i bonifici con dipendente_id e IBAN beneficiario
+    bonifici = await db.bonifici_transfers.find(
+        {
+            "dipendente_id": {"$exists": True, "$ne": None},
+            "beneficiario.iban": {"$exists": True, "$ne": None, "$ne": ""}
+        },
+        {"dipendente_id": 1, "beneficiario.iban": 1, "_id": 0}
+    ).to_list(10000)
+    
+    # Raggruppa IBAN per dipendente
+    iban_per_dipendente = {}
+    for bon in bonifici:
+        dip_id = bon.get("dipendente_id")
+        iban = bon.get("beneficiario", {}).get("iban")
+        if dip_id and iban and len(iban) >= 15:
+            if dip_id not in iban_per_dipendente:
+                iban_per_dipendente[dip_id] = set()
+            iban_per_dipendente[dip_id].add(iban.upper().replace(" ", ""))
+    
+    aggiornati = 0
+    for dip_id, new_ibans in iban_per_dipendente.items():
+        # Leggi IBAN esistenti del dipendente
+        dipendente = await db.employees.find_one({"id": dip_id}, {"ibans": 1, "iban": 1, "_id": 0})
+        if not dipendente:
+            continue
+        
+        existing_ibans = set(dipendente.get("ibans", []))
+        if dipendente.get("iban"):
+            existing_ibans.add(dipendente["iban"].upper().replace(" ", ""))
+        
+        # Combina vecchi e nuovi IBAN
+        all_ibans = existing_ibans.union(new_ibans)
+        
+        # Aggiorna solo se ci sono nuovi IBAN
+        if all_ibans != existing_ibans:
+            await db.employees.update_one(
+                {"id": dip_id},
+                {"$set": {
+                    "ibans": list(all_ibans)[:3],  # Max 3 IBAN
+                    "iban": list(all_ibans)[0] if all_ibans else "",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            aggiornati += 1
+    
+    return {
+        "success": True,
+        "dipendenti_aggiornati": aggiornati,
+        "totale_bonifici_analizzati": len(bonifici),
+        "dipendenti_con_iban": len(iban_per_dipendente)
+    }
+
+
 # =============================================================================
 # ASSOCIAZIONE BONIFICI ↔ PRIMA NOTA SALARI
 # =============================================================================
