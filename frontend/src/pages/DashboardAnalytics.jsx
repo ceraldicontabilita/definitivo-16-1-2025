@@ -146,7 +146,12 @@ export default function DashboardAnalytics() {
       ];
       const dipendenti = dipendentiRes.data || [];
       const f24 = f24Res.data || [];
-      const corrispettivi = corrispettiviRes.data || [];
+      // Filtra corrispettivi per anno selezionato
+      const corrispettiviAll = corrispettiviRes.data || [];
+      const corrispettivi = corrispettiviAll.filter(c => {
+        const dataCorr = c.data || '';
+        return dataCorr.startsWith(String(anno));
+      });
 
       // Calcola KPI - usa corrispettivi come fatturato se fatture sono vuote
       const fatturatoFatture = fatture.reduce((sum, f) => sum + (parseFloat(f.importo_totale || f.totale) || 0), 0);
