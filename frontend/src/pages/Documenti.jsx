@@ -370,30 +370,22 @@ export default function Documenti() {
 
       {/* Statistiche */}
       {stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, marginBottom: 24 }}>
-          <div style={cardStyle}>
-            <div style={{ padding: 16 }}>
-              <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e293b' }}>{stats.totale}</div>
-              <div style={{ fontSize: 13, color: '#64748b' }}>Documenti Totali</div>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 20 }}>
+          <div style={{ ...cardStyle, padding: '10px 12px' }}>
+            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#1e293b' }}>{stats.totale}</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>Documenti Totali</div>
           </div>
-          <div style={{ ...cardStyle, background: '#dbeafe' }}>
-            <div style={{ padding: 16 }}>
-              <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e40af' }}>{stats.nuovi}</div>
-              <div style={{ fontSize: 13, color: '#1e40af' }}>Da Processare</div>
-            </div>
+          <div style={{ ...cardStyle, background: '#dbeafe', padding: '10px 12px' }}>
+            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#1e40af' }}>{stats.nuovi}</div>
+            <div style={{ fontSize: 11, color: '#1e40af' }}>Da Processare</div>
           </div>
-          <div style={{ ...cardStyle, background: '#dcfce7' }}>
-            <div style={{ padding: 16 }}>
-              <div style={{ fontSize: 32, fontWeight: 'bold', color: '#166534' }}>{stats.processati}</div>
-              <div style={{ fontSize: 13, color: '#166534' }}>Processati</div>
-            </div>
+          <div style={{ ...cardStyle, background: '#dcfce7', padding: '10px 12px' }}>
+            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#166534' }}>{stats.processati}</div>
+            <div style={{ fontSize: 11, color: '#166534' }}>Processati</div>
           </div>
-          <div style={cardStyle}>
-            <div style={{ padding: 16 }}>
-              <div style={{ fontSize: 32, fontWeight: 'bold', color: '#7c3aed' }}>{stats.spazio_disco_mb} MB</div>
-              <div style={{ fontSize: 13, color: '#64748b' }}>Spazio Usato</div>
-            </div>
+          <div style={{ ...cardStyle, padding: '10px 12px' }}>
+            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#7c3aed' }}>{stats.spazio_disco_mb} MB</div>
+            <div style={{ fontSize: 11, color: '#64748b' }}>Spazio Usato</div>
           </div>
         </div>
       )}
