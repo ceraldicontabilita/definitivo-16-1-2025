@@ -938,6 +938,65 @@ function ArubaTab({ fatture, onConferma, processing, fornitori = [], onRefresh }
     }
   }, [fatture]);
 
+  // Filtra fatture
+  const fattureFiltrate = filtroFornitore 
+    ? fatture.filter(f => f.fornitore?.toLowerCase().includes(filtroFornitore.toLowerCase()))
+    : fatture;
+
+  // Toggle selezione
+  const toggleSelezione = (id) => {
+    setSelezionate(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Seleziona/Deseleziona tutte
+  const toggleTutte = () => {
+    if (selezionate.size === fattureFiltrate.length) {
+      setSelezionate(new Set());
+    } else {
+      setSelezionate(new Set(fattureFiltrate.map(f => f.id)));
+    }
+  };
+
+  // Conferma batch
+  const confermaBatch = async () => {
+    if (selezionate.size === 0) {
+      alert('Seleziona almeno una fattura');
+      return;
+    }
+
+    setSalvandoBatch(true);
+    try {
+      const operazioni = Array.from(selezionate).map(id => ({
+        operazione_id: id,
+        metodo_pagamento: metodoBatch
+      }));
+
+      const res = await api.post('/api/operazioni-da-confermare/conferma-batch', { operazioni });
+      
+      if (res.data.successo > 0) {
+        alert(`✅ ${res.data.successo} fatture confermate!`);
+        setSelezionate(new Set());
+        if (onRefresh) onRefresh();
+      }
+      
+      if (res.data.errori > 0) {
+        console.error('Errori batch:', res.data.dettagli);
+      }
+    } catch (e) {
+      alert('Errore conferma batch: ' + (e.response?.data?.detail || e.message));
+    } finally {
+      setSalvandoBatch(false);
+    }
+  };
+
   if (fatture.length === 0) {
     return (
       <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8' }}>
