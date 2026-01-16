@@ -75,6 +75,39 @@ Quando si conferma un pagamento (es. fattura Aruba):
 
 ### 16 Gennaio 2026 - REFACTORING COMPLETO TESTATO ✅
 
+### 16 Gennaio 2026 - Sessione 5 (COMPLETATA) ✅
+
+#### Nuove Funzionalità:
+1. **Import Unificato** (`/import-unificato`)
+   - ✅ Pagina unica per upload di tutti i tipi di documenti
+   - ✅ Riconoscimento automatico del tipo: Estratto Conto, F24, Quietanza F24, Cedolini, Bonifici, Fatture XML
+   - ✅ Drag & drop con selezione multipla
+   - ✅ Endpoint backend `/api/documenti/upload-auto` con auto-detect
+   - ✅ Aggiunto al menu Strumenti
+
+#### Ottimizzazioni Performance:
+- **API Riconciliazione**: Ridotto limit da 200 a 25 per velocizzare caricamento (da 20s a ~2.5s)
+
+#### Pulizia Codice Legacy:
+- ✅ Rimosse route legacy dal main.jsx (prima-nota-legacy, dipendenti-legacy, etc.)
+- ✅ Rimosse 11 import lazy non utilizzati
+- ✅ Route consolidate: da 61 pagine a ~48 pagine attive
+
+#### Stato Finale Pagine Unificate:
+
+1. **Gestione Dipendenti** (`/dipendenti`) - ✅ Testato
+   - 27 dipendenti con tutti i tab funzionanti
+
+2. **Riconciliazione Smart** (`/riconciliazione`) - ✅ Testato
+   - 96 operazioni totali da riconciliare
+   - Caricamento in ~3 secondi
+
+3. **Prima Nota** (`/prima-nota`) - ✅ Testato
+   - 120 movimenti, totali corretti
+
+4. **Import Unificato** (`/import-unificato`) - ✅ Nuovo
+   - Tutti i tipi di documento supportati
+
 #### Pagine Unificate Testate e Funzionanti:
 
 1. **Gestione Dipendenti** (`/dipendenti`)
