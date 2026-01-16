@@ -14,12 +14,16 @@
     - `NoleggioAuto.jsx`: Card categorie (padding 10px 12px, fontSize 16)
     - `Documenti.jsx`: Card statistiche (padding 10px 12px, fontSize 20)
     - `Admin.jsx`: Card statistiche DB (padding 8px 10px, fontSize 16)
+- **COMPLETATO**: Ulteriori miglioramenti Riconciliazione Smart:
+  - **Dashboard Riconciliazione RIMOSSA**: Eliminata pagina `/dashboard-riconciliazione` e link dal menu
+  - **Auto-conferma Assegni**: Gli assegni con importo esatto uguale alla fattura associata vengono confermati automaticamente (solo i casi dubbi rimangono)
+  - **Ricerca nel Modal Fatture**: Aggiunta barra di ricerca nel popup selezione fattura per cercare per **nome fornitore** o **importo**. Mostra anche la differenza di importo e evidenzia i "MATCH ESATTO"
 - **FILES MODIFICATI**:
-  - `/app/frontend/src/pages/RiconciliazioneSmart.jsx`
-  - `/app/frontend/src/components/dipendenti/DipendenteDetailModal.jsx`
-  - `/app/frontend/src/pages/NoleggioAuto.jsx`
-  - `/app/frontend/src/pages/Documenti.jsx`
-  - `/app/frontend/src/pages/Admin.jsx`
+  - `/app/frontend/src/pages/RiconciliazioneSmart.jsx` - Auto-conferma assegni + modal con ricerca
+  - `/app/frontend/src/main.jsx` - Rimossa route DashboardRiconciliazione
+  - `/app/frontend/src/App.jsx` - Rimosso link menu DashboardRiconciliazione
+- **FILES ELIMINATI**:
+  - `/app/frontend/src/pages/DashboardRiconciliazione.jsx`
 
 ### 15 Gennaio 2026 (Sessione 3)
 - **COMPLETATO**: Standardizzazione UI - Convertite le ultime 3 pagine a stili inline:
