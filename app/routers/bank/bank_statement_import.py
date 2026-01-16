@@ -736,7 +736,7 @@ async def import_bank_statement(
         })
         
         # Salva nella collection estratto_conto per il confronto
-        await db[COLLECTION_ESTRATTO_CONTO].insert_one({
+        estratto_doc = {
             "id": movement["id"],
             "data": movement["data"],
             "descrizione": movement["descrizione"],
@@ -746,7 +746,8 @@ async def import_bank_statement(
             "statement_id": statement_id,
             "source": "estratto_conto_import",
             "created_at": now
-        })
+        }
+        await db[COLLECTION_ESTRATTO_CONTO].insert_one(estratto_doc.copy())
     
     # Summary message
     if results["reconciled"] > 0:
