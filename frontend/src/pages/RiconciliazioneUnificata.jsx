@@ -126,11 +126,12 @@ export default function RiconciliazioneUnificata() {
     setLoading(true);
     try {
       // Carica tutto in parallelo - limit ridotto per performance
-      const [smartRes, arubaRes, f24Res, stipendiRes] = await Promise.all([
+      const [smartRes, arubaRes, f24Res, stipendiRes, assegniRes] = await Promise.all([
         api.get(`/api/operazioni-da-confermare/smart/analizza?limit=${limit}`).catch(() => ({ data: { movimenti: [], stats: {} } })),
         api.get('/api/operazioni-da-confermare/aruba-pendenti').catch(() => ({ data: { operazioni: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-f24').catch(() => ({ data: { f24: [] } })),
-        api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } }))
+        api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } })),
+        api.get('/api/assegni?stato=emesso').catch(() => ({ data: [] })) // Assegni non incassati
       ]);
 
       const movimenti = smartRes.data?.movimenti || [];
@@ -139,7 +140,22 @@ export default function RiconciliazioneUnificata() {
       
       // Separa per tipo
       setMovimentiBanca(movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)));
-      setAssegni(movimenti.filter(m => m.tipo === 'prelievo_assegno'));
+      
+      // Usa assegni dall'API diretta se disponibili, altrimenti dai movimenti
+      const assegniDaMovimenti = movimenti.filter(m => m.tipo === 'prelievo_assegno');
+      const assegniDaApi = (assegniRes.data || []).map(a => ({
+        movimento_id: a.id,
+        data: a.data_emissione,
+        descrizione: `Assegno N. ${a.numero} - ${a.beneficiario || 'N/D'}`,
+        importo: -(a.importo || 0),
+        tipo: 'prelievo_assegno',
+        numero_assegno: a.numero,
+        assegno: a,
+        fornitore: a.beneficiario,
+        suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
+      }));
+      setAssegni(assegniDaApi.length > 0 ? assegniDaApi : assegniDaMovimenti);
+      
       setStipendiPendenti(movimenti.filter(m => m.tipo === 'stipendio'));
       setFattureAruba(arubaRes.data?.operazioni || []);
       setF24Pendenti(f24Res.data?.f24 || []);
@@ -148,7 +164,7 @@ export default function RiconciliazioneUnificata() {
       setStats({
         totale: movimenti.length,
         banca: movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)).length,
-        assegni: movimenti.filter(m => m.tipo === 'prelievo_assegno').length,
+        assegni: assegniDaApi.length > 0 ? assegniDaApi.length : assegniDaMovimenti.length,
         f24: (f24Res.data?.f24 || []).length,
         aruba: (arubaRes.data?.operazioni || []).length,
         stipendi: movimenti.filter(m => m.tipo === 'stipendio').length,
