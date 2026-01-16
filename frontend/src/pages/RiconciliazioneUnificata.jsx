@@ -698,10 +698,3 @@ const metodoBtn = (bg, color, isPreferred = false) => ({
   fontSize: 13,
   boxShadow: isPreferred ? '0 0 0 2px rgba(16, 185, 129, 0.2)' : 'none'
 });
-  color: color,
-  border: 'none',
-  borderRadius: 6,
-  fontWeight: 600,
-  cursor: 'pointer',
-  fontSize: 13
-});
