@@ -355,7 +355,8 @@ async def get_bank_pending_invoices(
     }
     
     invoices = await db[Collections.INVOICES].find(
-        query
+        query,
+        {"_id": 0}
     ).sort("invoice_date", 1).to_list(100)
     
     # Format
