@@ -1,0 +1,78 @@
+{
+  "summary": "Completed testing of ObjectId serialization fixes and cascade operations. Fixed bug in noleggio.py where driver lookup used wrong collection ('dipendenti' instead of 'employees'). All 16 backend tests pass. Frontend pages /ciclo-passivo and /noleggio-auto load correctly with statistics.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_objectid_and_cascata.py",
+    "/app/test_reports/pytest/pytest_objectid_cascata.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED: noleggio.py was using db['dipendenti'] instead of db['employees'] for driver lookup - this caused driver validation to always fail"
+  ],
+  "updated_files": [
+    "/app/app/routers/noleggio.py - Changed db['dipendenti'] to db['employees'] in get_drivers() and update_veicolo() functions"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "100% (2/2 pages tested and working)"
+  },
+  "test_credentials": "N/A - no auth required",
+  "seed_data_creation": "N/A",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All ObjectId serialization fixes verified working. The .copy() pattern is correctly applied to all insert_one calls in ciclo_passivo_integrato.py. Driver validation in noleggio.py now works correctly after fixing the collection name.",
+  "features_tested": {
+    "objectid_serialization": {
+      "status": "✅ VERIFIED",
+      "details": "All main endpoints return valid JSON without ObjectId errors: /api/noleggio/veicoli, /api/operazioni-da-confermare/lista, /api/dipendenti, /api/suppliers, /api/invoices, /api/prima-nota/banca, /api/prima-nota/cassa, /api/warehouse/products"
+    },
+    "driver_validation_noleggio": {
+      "status": "✅ FIXED & VERIFIED",
+      "details": "PUT /api/noleggio/veicoli/{targa} now correctly validates driver_id against employees collection. Invalid driver_id returns 400 error, valid driver_id succeeds."
+    },
+    "duplicate_prevention_operazioni": {
+      "status": "✅ VERIFIED",
+      "details": "POST /api/operazioni-da-confermare/{id}/conferma correctly prevents duplicates - returns 'già confermata' message on second attempt"
+    },
+    "ciclo_passivo_page": {
+      "status": "✅ WORKING",
+      "details": "Page loads with statistics: 100 Scadenze Aperte, €43,240.03 Debito Aperto, 20 Scadenze Saldate, €14,702.57 Totale Pagato. Import XML workflow visible."
+    },
+    "noleggio_auto_page": {
+      "status": "✅ WORKING",
+      "details": "Page loads with 6 vehicles, driver assignments visible (Vincenzo Ceraldi, Antonietta Ceraldi, Valerio Ceraldi), cost breakdown by category (Canoni €79,153.06, Pedaggio €160, Verbali €215, Bollo €2,544.74, Costi Extra €1,408, Riparazioni €1,360)"
+    },
+    "noleggio_drivers_endpoint": {
+      "status": "✅ FIXED & VERIFIED",
+      "details": "/api/noleggio/drivers now returns 27 drivers from employees collection (was returning 0 before fix)"
+    }
+  },
+  "bug_fixes_applied": [
+    {
+      "file": "/app/app/routers/noleggio.py",
+      "issue": "get_drivers() and update_veicolo() were using db['dipendenti'] collection which doesn't exist",
+      "fix": "Changed to db['employees'] collection which is the correct collection used by /api/dipendenti endpoint",
+      "lines_changed": "794-795, 817-818"
+    }
+  ],
+  "tests_executed": {
+    "backend_pytest": {
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "test_file": "/app/tests/test_objectid_and_cascata.py"
+    },
+    "frontend_playwright": {
+      "pages_tested": ["/ciclo-passivo", "/noleggio-auto"],
+      "all_passed": true
+    }
+  }
+}
