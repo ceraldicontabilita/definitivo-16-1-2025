@@ -242,42 +242,44 @@ async def conferma_operazione(
     elif metodo == "banca":
         # Prima Nota Banca
         movimento = {
-            "id": f"bank_{operazione_id}",
-            "type": "uscita",
-            "amount": operazione["importo"],
-            "description": f"Fattura {operazione['numero_fattura']} - {operazione['fornitore']}",
-            "category": "fattura_fornitore",
-            "date": datetime.now(timezone.utc).isoformat(),
-            "anno": anno_fiscale,
-            "fornitore": operazione["fornitore"],
-            "numero_fattura": operazione["numero_fattura"],
-            "data_fattura": operazione["data_documento"],
-            "fonte": "operazione_confermata",
-            "operazione_id": operazione_id,
-            "provvisorio": True
+            "id": str(uuid.uuid4()),
+            "data": data_documento,
+            "tipo": "uscita",
+            "importo": importo,
+            "descrizione": f"Fattura {numero_fattura} - {fornitore}",
+            "categoria": "Pagamento fornitore",
+            "fornitore": fornitore,
+            "numero_fattura": numero_fattura,
+            "fattura_id": fattura_id,
+            "data_fattura": data_documento,
+            "metodo_pagamento": "bonifico",
+            "operazione_aruba_id": operazione_id,
+            "source": "operazione_confermata",
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db["bank_movements"].insert_one(movimento)
+        await db["prima_nota_banca"].insert_one(movimento)
         prima_nota_id = movimento["id"]
         
     elif metodo == "assegno":
         # Prima Nota Banca + Gestione Assegni
         movimento = {
-            "id": f"bank_{operazione_id}",
-            "type": "uscita",
-            "amount": operazione["importo"],
-            "description": f"Assegno n.{numero_assegno} - Fattura {operazione['numero_fattura']} - {operazione['fornitore']}",
-            "category": "assegno_emesso",
-            "date": datetime.now(timezone.utc).isoformat(),
-            "anno": anno_fiscale,
-            "fornitore": operazione["fornitore"],
-            "numero_fattura": operazione["numero_fattura"],
-            "data_fattura": operazione["data_documento"],
+            "id": str(uuid.uuid4()),
+            "data": data_documento,
+            "tipo": "uscita",
+            "importo": importo,
+            "descrizione": f"Assegno n.{numero_assegno} - Fattura {numero_fattura} - {fornitore}",
+            "categoria": "Assegno emesso",
+            "fornitore": fornitore,
+            "numero_fattura": numero_fattura,
+            "fattura_id": fattura_id,
+            "data_fattura": data_documento,
             "numero_assegno": numero_assegno,
-            "fonte": "operazione_confermata",
-            "operazione_id": operazione_id,
-            "provvisorio": True
+            "metodo_pagamento": "assegno",
+            "operazione_aruba_id": operazione_id,
+            "source": "operazione_confermata",
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db["bank_movements"].insert_one(movimento)
+        await db["prima_nota_banca"].insert_one(movimento)
         prima_nota_id = movimento["id"]
         
         # Gestione Assegni - con numero fattura e fornitore
@@ -289,15 +291,15 @@ async def conferma_operazione(
             assegno_ids = []
             for idx, ass in enumerate(assegni_da_inserire):
                 assegno = {
-                    "id": f"check_{operazione_id}_{idx}",
-                    "type": "emesso",
-                    "amount": ass.get("importo"),
-                    "beneficiary": operazione["fornitore"],
-                    "check_number": ass.get("numero_assegno") or numero_assegno,
-                    "bank": "",
-                    "due_date": operazione["data_documento"],
-                    "status": "pending",
-                    "description": f"Fattura {operazione['numero_fattura']} ({idx+1}/{len(assegni_da_inserire)})",
+                    "id": str(uuid.uuid4()),
+                    "tipo": "emesso",
+                    "importo": ass.get("importo"),
+                    "beneficiario": fornitore,
+                    "numero": ass.get("numero_assegno") or numero_assegno,
+                    "banca": "",
+                    "data_scadenza": data_documento,
+                    "stato": "pending",
+                    "descrizione": f"Fattura {numero_fattura} ({idx+1}/{len(assegni_da_inserire)})",
                     "numero_fattura": operazione["numero_fattura"],  # Campo aggiunto
                     "fornitore": operazione["fornitore"],  # Campo aggiunto
                     "operazione_id": operazione_id,
