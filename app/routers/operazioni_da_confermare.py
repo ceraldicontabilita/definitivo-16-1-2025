@@ -575,6 +575,7 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
     )
     
     # 7. CASCATA: Salva preferenza metodo pagamento fornitore (auto-apprendimento)
+    fornitore_creato = False
     if fornitore:
         await db["fornitori_preferenze"].update_one(
             {"fornitore_normalizzato": fornitore.upper().strip()[:50]},
@@ -589,6 +590,32 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
             },
             upsert=True
         )
+        
+        # 8. CASCATA: Crea fornitore in anagrafica se non esiste
+        # Cerca se esiste già un fornitore con denominazione simile
+        fornitore_esistente = await db["fornitori"].find_one({
+            "$or": [
+                {"denominazione": {"$regex": f"^{fornitore[:30]}", "$options": "i"}},
+                {"ragione_sociale": {"$regex": f"^{fornitore[:30]}", "$options": "i"}}
+            ]
+        })
+        
+        if not fornitore_esistente:
+            # Crea nuovo fornitore con dati base (da completare con XML)
+            nuovo_fornitore = {
+                "id": str(uuid4()),
+                "denominazione": fornitore.strip(),
+                "ragione_sociale": fornitore.strip(),
+                "metodo_pagamento": metodo_pagamento,
+                "source": "aruba_import",
+                "dati_incompleti": True,  # Flag per indicare che mancano dati
+                "note": f"Creato automaticamente da operazione Aruba del {data_documento}",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db["fornitori"].insert_one(nuovo_fornitore)
+            fornitore_creato = True
+            logger.info(f"Fornitore '{fornitore}' creato automaticamente da operazione Aruba")
     
     return {
         "success": True,
@@ -598,7 +625,8 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
         "cascata": {
             "scadenza_aggiornata": scadenza_aggiornata,
             "fattura_aggiornata": fattura_aggiornata,
-            "preferenza_salvata": bool(fornitore)
+            "preferenza_salvata": bool(fornitore),
+            "fornitore_creato": fornitore_creato
         },
         "messaggio": f"Operazione confermata in {prima_nota_collection}"
     }
