@@ -1186,7 +1186,7 @@ function IbanMultipleInput({ ibans = [], onChange, disabled }) {
       )}
       
       <div style={{ fontSize: 10, color: '#9ca3af' }}>
-        💡 Puoi aggiungere fino a 3 IBAN. L'IBAN principale sarà usato per i bonifici stipendio.
+        💡 Puoi aggiungere fino a 3 IBAN. L&apos;IBAN principale sarà usato per i bonifici stipendio.
       </div>
     </div>
   );
