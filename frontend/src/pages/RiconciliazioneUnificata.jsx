@@ -46,9 +46,9 @@ export default function RiconciliazioneUnificata() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      // Carica tutto in parallelo
+      // Carica tutto in parallelo - limit ridotto per performance
       const [smartRes, arubaRes, f24Res, stipendiRes] = await Promise.all([
-        api.get('/api/operazioni-da-confermare/smart/analizza?limit=200').catch(() => ({ data: { movimenti: [], stats: {} } })),
+        api.get('/api/operazioni-da-confermare/smart/analizza?limit=50').catch(() => ({ data: { movimenti: [], stats: {} } })),
         api.get('/api/operazioni-da-confermare/aruba-pendenti').catch(() => ({ data: { operazioni: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-f24').catch(() => ({ data: { f24: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } }))
