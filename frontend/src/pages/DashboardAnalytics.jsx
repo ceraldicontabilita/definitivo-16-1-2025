@@ -129,20 +129,20 @@ export default function DashboardAnalytics() {
       // Carica dati da vari endpoint - usa endpoint che hanno dati reali
       const [fattureRes, cassaRes, bancaRes, salariRes, dipendentiRes, f24Res, corrispettiviRes] = await Promise.all([
         api.get(`/api/fatture-ricevute/lista?anno=${anno}`).catch(() => ({ data: { fatture: [] } })),
-        api.get(`/api/prima-nota/cassa?anno=${anno}`).catch(() => ({ data: [] })),
-        api.get(`/api/prima-nota/banca?anno=${anno}`).catch(() => ({ data: [] })),
-        api.get(`/api/prima-nota/salari?anno=${anno}`).catch(() => ({ data: [] })),
+        api.get(`/api/prima-nota/cassa?anno=${anno}`).catch(() => ({ data: { movimenti: [] } })),
+        api.get(`/api/prima-nota/banca?anno=${anno}`).catch(() => ({ data: { movimenti: [] } })),
+        api.get(`/api/prima-nota/salari?anno=${anno}`).catch(() => ({ data: { movimenti: [] } })),
         api.get('/api/dipendenti').catch(() => ({ data: [] })),
         api.get('/api/f24').catch(() => ({ data: [] })),
         api.get('/api/corrispettivi').catch(() => ({ data: [] }))
       ]);
 
       const fatture = fattureRes.data?.fatture || fattureRes.data || [];
-      // Combina movimenti da tutte le fonti
+      // Combina movimenti da tutte le fonti - usa .movimenti se presente
       const movimenti = [
-        ...(cassaRes.data || []),
-        ...(bancaRes.data || []),
-        ...(salariRes.data || [])
+        ...(cassaRes.data?.movimenti || cassaRes.data || []),
+        ...(bancaRes.data?.movimenti || bancaRes.data || []),
+        ...(salariRes.data?.movimenti || salariRes.data || [])
       ];
       const dipendenti = dipendentiRes.data || [];
       const f24 = f24Res.data || [];
