@@ -432,6 +432,137 @@ async def lista_aruba_pendenti(
     }
 
 
+@router.post("/aruba/conferma")
+async def conferma_operazione_aruba(
+    operazione_id: str = Body(..., embed=False, alias="operazione_id"),
+    metodo_pagamento: str = Body(..., embed=False, alias="metodo_pagamento"),
+    numero_assegno: Optional[str] = Body(None, embed=False, alias="numero_assegno")
+) -> Dict[str, Any]:
+    """
+    Conferma un'operazione Aruba pendente e la segna come confermata.
+    
+    - metodo_pagamento: 'cassa', 'bonifico', 'assegno'
+    - numero_assegno: opzionale, richiesto se metodo_pagamento è 'assegno'
+    """
+    db = Database.get_db()
+    
+    # Trova l'operazione
+    operazione = await db["operazioni_da_confermare"].find_one(
+        {"id": operazione_id},
+        {"_id": 0}
+    )
+    
+    if not operazione:
+        raise HTTPException(status_code=404, detail="Operazione non trovata")
+    
+    if operazione.get("stato") == "confermato":
+        raise HTTPException(status_code=400, detail="Operazione già confermata")
+    
+    # Aggiorna lo stato
+    update_data = {
+        "stato": "confermato",
+        "metodo_pagamento_confermato": metodo_pagamento,
+        "confirmed_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if numero_assegno:
+        update_data["numero_assegno_confermato"] = numero_assegno
+    
+    await db["operazioni_da_confermare"].update_one(
+        {"id": operazione_id},
+        {"$set": update_data}
+    )
+    
+    # Crea il movimento in prima nota
+    movimento_id = str(uuid.uuid4())
+    importo = float(operazione.get("importo", 0) or operazione.get("netto_pagare", 0))
+    
+    if metodo_pagamento == "cassa":
+        # Movimento cassa
+        movimento = {
+            "id": movimento_id,
+            "data": operazione.get("data_documento", datetime.now().strftime("%Y-%m-%d")),
+            "tipo": "uscita",
+            "importo": importo,
+            "descrizione": f"Fattura {operazione.get('numero_fattura', '')} - {operazione.get('fornitore', '')}",
+            "categoria": "Fornitori",
+            "fornitore": operazione.get("fornitore"),
+            "numero_fattura": operazione.get("numero_fattura"),
+            "operazione_aruba_id": operazione_id,
+            "source": "aruba_conferma",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db["prima_nota_cassa"].insert_one(movimento)
+        prima_nota_collection = "prima_nota_cassa"
+    else:
+        # Movimento banca (bonifico o assegno)
+        movimento = {
+            "id": movimento_id,
+            "data": operazione.get("data_documento", datetime.now().strftime("%Y-%m-%d")),
+            "tipo": "uscita",
+            "importo": importo,
+            "descrizione": f"Fattura {operazione.get('numero_fattura', '')} - {operazione.get('fornitore', '')}",
+            "categoria": "Fornitori",
+            "fornitore": operazione.get("fornitore"),
+            "numero_fattura": operazione.get("numero_fattura"),
+            "metodo_pagamento": metodo_pagamento,
+            "numero_assegno": numero_assegno if metodo_pagamento == "assegno" else None,
+            "operazione_aruba_id": operazione_id,
+            "source": "aruba_conferma",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db["prima_nota_banca"].insert_one(movimento)
+        prima_nota_collection = "prima_nota_banca"
+    
+    # Aggiorna riferimento prima nota nell'operazione
+    await db["operazioni_da_confermare"].update_one(
+        {"id": operazione_id},
+        {"$set": {"prima_nota_id": movimento_id, "prima_nota_collection": prima_nota_collection}}
+    )
+    
+    return {
+        "success": True,
+        "operazione_id": operazione_id,
+        "metodo_pagamento": metodo_pagamento,
+        "prima_nota_id": movimento_id,
+        "messaggio": f"Operazione confermata in {prima_nota_collection}"
+    }
+
+
+@router.post("/aruba/rifiuta")
+async def rifiuta_operazione_aruba(
+    operazione_id: str = Body(..., embed=False, alias="operazione_id"),
+    motivo: Optional[str] = Body(None, embed=False, alias="motivo")
+) -> Dict[str, Any]:
+    """
+    Rifiuta un'operazione Aruba (es. duplicata o non valida).
+    """
+    db = Database.get_db()
+    
+    operazione = await db["operazioni_da_confermare"].find_one(
+        {"id": operazione_id},
+        {"_id": 0}
+    )
+    
+    if not operazione:
+        raise HTTPException(status_code=404, detail="Operazione non trovata")
+    
+    await db["operazioni_da_confermare"].update_one(
+        {"id": operazione_id},
+        {"$set": {
+            "stato": "rifiutato",
+            "motivo_rifiuto": motivo,
+            "rejected_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "operazione_id": operazione_id,
+        "messaggio": "Operazione rifiutata"
+    }
+
+
 @router.get("/check-fattura-esistente")
 async def check_fattura_esistente(
     fornitore: str = Query(...),
