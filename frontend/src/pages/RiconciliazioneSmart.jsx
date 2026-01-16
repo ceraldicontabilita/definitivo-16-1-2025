@@ -952,7 +952,7 @@ function ModalCambiaFattura({ movimento, tipo, results, onSelect, onClose }) {
     setSearching(true);
     try {
       // Cerca per fornitore o per importo numerico
-      const isNumeric = !isNaN(parseFloat(query));
+      const isNumeric = !isNaN(parseFloat(query)) && query.match(/^\d+\.?\d*$/);
       let url = '';
       
       if (tipo === 'fattura') {
@@ -962,13 +962,40 @@ function ModalCambiaFattura({ movimento, tipo, results, onSelect, onClose }) {
           url = `/api/operazioni-da-confermare/smart/cerca-fatture?fornitore=${encodeURIComponent(query)}`;
         }
       } else if (tipo === 'stipendio') {
-        url = `/api/operazioni-da-confermare/smart/cerca-stipendi?nome=${encodeURIComponent(query)}`;
+        url = `/api/operazioni-da-confermare/smart/cerca-stipendi?dipendente=${encodeURIComponent(query)}`;
       } else if (tipo === 'f24') {
         url = `/api/operazioni-da-confermare/smart/cerca-f24?codice=${encodeURIComponent(query)}`;
       }
       
       const res = await api.get(url);
-      setLocalResults(res.data?.results || res.data || []);
+      // Normalizza i risultati (l'endpoint fatture restituisce { fatture: [...] })
+      let normalizedResults = [];
+      if (tipo === 'fattura') {
+        const fatture = res.data?.fatture || [];
+        normalizedResults = fatture.map(f => ({
+          id: f.id,
+          fornitore: f.fornitore,
+          supplier_name: f.fornitore,
+          numero_fattura: f.numero,
+          invoice_number: f.numero,
+          data_fattura: f.data,
+          importo: f.importo,
+          total_amount: f.importo
+        }));
+      } else if (tipo === 'stipendio') {
+        const stipendi = res.data?.stipendi || [];
+        normalizedResults = stipendi.map(s => ({
+          id: s.id,
+          dipendente: res.data?.dipendente?.nome || 'Dipendente',
+          dipendente_id: s.dipendente_id,
+          mese_riferimento: s.periodo,
+          netto_pagare: s.netto,
+          importo: s.netto
+        }));
+      } else {
+        normalizedResults = res.data?.results || res.data || [];
+      }
+      setLocalResults(normalizedResults);
     } catch (e) {
       console.error('Errore ricerca:', e);
       setLocalResults([]);
