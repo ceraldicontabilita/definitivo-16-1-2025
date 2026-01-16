@@ -716,42 +716,89 @@ function MovimentiTab({ movimenti, onConferma, onIgnora, processing, title, empt
 function MovimentoCard({ movimento, onConferma, onIgnora, processing, showFattura }) {
   const suggerimento = movimento.suggerimenti?.[0];
   const hasMatch = movimento.associazione_automatica && suggerimento;
+  
+  // Estrai info extra dal movimento
+  const ragioneSociale = movimento.ragione_sociale || movimento.fornitore || movimento.dipendente?.nome_completo || movimento.nome_estratto;
+  const numeroFattura = movimento.numero_fattura || movimento.fattura_collegata;
+  const datiIncompleti = movimento.dati_incompleti || movimento.stato === 'vuoto';
 
   return (
     <div style={{ 
       padding: 16, 
       borderBottom: '1px solid #f1f5f9',
       opacity: processing ? 0.5 : 1,
-      background: hasMatch ? '#f0fdf4' : 'white'
+      background: hasMatch ? '#f0fdf4' : datiIncompleti ? '#fef3c7' : 'white'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ 
           width: 44, height: 44, borderRadius: 10, 
-          background: hasMatch ? '#dcfce7' : '#f1f5f9',
+          background: hasMatch ? '#dcfce7' : datiIncompleti ? '#fef3c7' : '#f1f5f9',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 20
         }}>
-          {hasMatch ? '✅' : '❓'}
+          {hasMatch ? '✅' : datiIncompleti ? '⚠️' : '❓'}
         </div>
         
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>
-            {new Date(movimento.data).toLocaleDateString('it-IT')} • {formatEuro(movimento.importo)}
+          <div style={{ fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>{movimento.data ? new Date(movimento.data).toLocaleDateString('it-IT') : 'Data N/D'}</span>
+            <span>•</span>
+            <span style={{ color: movimento.importo < 0 ? '#dc2626' : '#15803d' }}>
+              {movimento.importo ? formatEuro(Math.abs(movimento.importo)) : '€ 0,00'}
+            </span>
+            {datiIncompleti && (
+              <span style={{ 
+                fontSize: 10, 
+                padding: '2px 6px', 
+                background: '#fef3c7', 
+                color: '#92400e',
+                borderRadius: 4,
+                fontWeight: 500
+              }}>
+                DATI INCOMPLETI
+              </span>
+            )}
           </div>
+          
+          {/* Descrizione */}
           <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-            {movimento.descrizione?.substring(0, 80) || '-'}
+            {movimento.descrizione?.substring(0, 100) || movimento.descrizione_originale?.substring(0, 100) || '-'}
           </div>
-          {/* Nome fornitore/dipendente se presente */}
-          {(movimento.fornitore || movimento.dipendente?.nome_completo || movimento.nome_estratto) && (
+          
+          {/* Ragione Sociale / Fornitore */}
+          {ragioneSociale && (
             <div style={{ 
               marginTop: 4, 
               fontSize: 12, 
               fontWeight: 600,
               color: '#3b82f6'
             }}>
-              👤 {movimento.fornitore || movimento.dipendente?.nome_completo || movimento.nome_estratto}
+              👤 {ragioneSociale}
             </div>
           )}
+          
+          {/* Numero Fattura */}
+          {numeroFattura && (
+            <div style={{ 
+              marginTop: 2, 
+              fontSize: 11, 
+              color: '#8b5cf6'
+            }}>
+              📄 Fattura: {numeroFattura}
+            </div>
+          )}
+          
+          {/* Info assegno se presente */}
+          {movimento.numero_assegno && (
+            <div style={{ 
+              marginTop: 2, 
+              fontSize: 11, 
+              color: '#f59e0b'
+            }}>
+              📝 Assegno N. {movimento.numero_assegno} • Stato: {movimento.stato || 'N/D'}
+            </div>
+          )}
+          
           {hasMatch && suggerimento && (
             <div style={{ 
               marginTop: 8, 
