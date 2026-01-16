@@ -556,8 +556,6 @@ async def conferma_operazioni_batch(request: ConfermaBatchRequest) -> Dict[str, 
     return risultati
 
 
-from pydantic import BaseModel
-
 class ConfermaArubaRequest(BaseModel):
     operazione_id: str
     metodo_pagamento: str
