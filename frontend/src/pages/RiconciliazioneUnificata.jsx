@@ -935,7 +935,7 @@ function ArubaTab({ fatture, onConferma, processing }) {
               </div>
               
               {/* Bottoni metodo pagamento - evidenzia preferito */}
-              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => onConferma(op, 'cassa')}
                   disabled={processing === op.id}
@@ -957,6 +957,17 @@ function ArubaTab({ fatture, onConferma, processing }) {
                   )}
                 >
                   🏦 Bonifico {metodoPreferito === 'bonifico' && '⭐'}
+                </button>
+                <button
+                  onClick={() => onConferma(op, 'carta_credito')}
+                  disabled={processing === op.id}
+                  style={metodoBtn(
+                    metodoPreferito === 'carta_credito' ? '#dcfce7' : '#e0f2fe', 
+                    metodoPreferito === 'carta_credito' ? '#166534' : '#0369a1',
+                    metodoPreferito === 'carta_credito'
+                  )}
+                >
+                  💳 Carta/POS {metodoPreferito === 'carta_credito' && '⭐'}
                 </button>
                 <button
                   onClick={() => onConferma(op, 'assegno')}
