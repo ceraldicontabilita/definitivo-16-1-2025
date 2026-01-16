@@ -176,7 +176,17 @@ export function useWebSocketNotifications(enabled = true) {
   const wsRef = useRef(null);
 
   const getWebSocketUrl = useCallback(() => {
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+    // Usa import.meta.env per Vite
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 
+                       (typeof window !== 'undefined' ? window.REACT_APP_BACKEND_URL : '') || 
+                       '';
+    
+    // Se non c'è URL configurato, usa l'host corrente
+    if (!backendUrl) {
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      return `${protocol}://${window.location.host}/api/ws/notifications`;
+    }
+    
     const wsProtocol = backendUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = backendUrl.replace(/^https?:\/\//, '');
     return `${wsProtocol}://${wsHost}/api/ws/notifications`;
