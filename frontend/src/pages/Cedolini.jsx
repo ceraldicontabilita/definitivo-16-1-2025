@@ -114,13 +114,30 @@ export default function Cedolini() {
 
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)', color: '#1a365d' }}>
-          📋 Cedolini / Buste Paga
-        </h1>
-        <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: 'clamp(12px, 3vw, 14px)' }}>
-          Calcolo e gestione cedolini mensili - Anno {anno}
-        </p>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 'clamp(20px, 5vw, 28px)', color: '#1a365d' }}>
+            📋 Cedolini / Buste Paga
+          </h1>
+          <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: 'clamp(12px, 3vw, 14px)' }}>
+            Calcolo e gestione cedolini mensili - Anno {anno}
+          </p>
+        </div>
+        <ExportButton
+          data={cedolini}
+          columns={[
+            { key: 'dipendente_nome', label: 'Dipendente' },
+            { key: 'mese', label: 'Mese' },
+            { key: 'anno', label: 'Anno' },
+            { key: 'lordo', label: 'Lordo' },
+            { key: 'netto', label: 'Netto' },
+            { key: 'inps_dipendente', label: 'INPS Dip' },
+            { key: 'irpef', label: 'IRPEF' },
+            { key: 'stato', label: 'Stato' }
+          ]}
+          filename={`cedolini_${anno}`}
+          format="csv"
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 350px) 1fr', gap: 20 }}>
