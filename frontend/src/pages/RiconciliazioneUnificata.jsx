@@ -131,7 +131,7 @@ export default function RiconciliazioneUnificata() {
         api.get('/api/operazioni-da-confermare/aruba-pendenti').catch(() => ({ data: { operazioni: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-f24').catch(() => ({ data: { f24: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } })),
-        api.get('/api/assegni?stato=emesso').catch(() => ({ data: [] })) // Assegni non incassati
+        api.get('/api/assegni?limit=100').catch(() => ({ data: [] })) // Tutti gli assegni
       ]);
 
       const movimenti = smartRes.data?.movimenti || [];
