@@ -476,7 +476,7 @@ export default function RiconciliazioneUnificata() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               style={{
                 padding: '12px 20px',
                 background: activeTab === tab.id ? tab.color : '#f8fafc',
