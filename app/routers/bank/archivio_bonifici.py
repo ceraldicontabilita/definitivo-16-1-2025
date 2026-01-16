@@ -263,7 +263,7 @@ async def create_job() -> Dict[str, Any]:
         'errors': 0,
         'imported_files': 0,
     }
-    await db.bonifici_jobs.insert_one({**job_data})
+    await db.bonifici_jobs.insert_one({**job_data}.copy())
     return job_data
 
 
