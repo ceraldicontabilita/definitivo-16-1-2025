@@ -481,7 +481,8 @@ export default function RiconciliazioneSmart() {
       {selectedMovimento && (
         <ModalCambiaFattura
           movimento={selectedMovimento}
-          results={searchResults}
+          tipo={searchType}
+          results={Array.isArray(searchResults) ? searchResults : []}
           onSelect={handleConfermaAssociazione}
           onClose={() => { setSelectedMovimento(null); setSearchResults([]); }}
         />
