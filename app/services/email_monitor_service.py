@@ -288,18 +288,19 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
                     estratto_id = str(uuid.uuid4())
                     
                     # Salva estratto
-                    await db["estratto_conto_bnl"].insert_one({
+                    estratto_bnl_doc = {
                         "id": estratto_id,
                         "filename": doc.get("filename"),
                         "tipo": result.get("tipo_documento"),
                         "totale_transazioni": len(transactions),
                         "metadata": result.get("metadata", {}),
                         "import_date": datetime.now(timezone.utc).isoformat()
-                    })
+                    }
+                    await db["estratto_conto_bnl"].insert_one(estratto_bnl_doc.copy())
                     
                     # Salva transazioni
                     for idx, t in enumerate(transactions):
-                        await db["estratto_conto_movimenti"].insert_one({
+                        trans_bnl_doc = {
                             "id": f"{estratto_id}_{idx}",
                             "estratto_id": estratto_id,
                             "data": t.get("data_contabile", t.get("data")),
@@ -307,7 +308,8 @@ async def processa_nuovi_documenti(db) -> Dict[str, Any]:
                             "importo": t.get("importo", 0),
                             "banca": "BNL",
                             "created_at": datetime.now(timezone.utc).isoformat()
-                        })
+                        }
+                        await db["estratto_conto_movimenti"].insert_one(trans_bnl_doc.copy())
                     
                     results["estratti_bnl"] += 1
                     
