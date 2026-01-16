@@ -53,6 +53,12 @@ export default function PrimaNotaUnificata() {
     fornitore: '',
     numero_fattura: ''
   });
+  
+  // Stato per modifica
+  const [editingMov, setEditingMov] = useState(null);
+  
+  // Saldo anno precedente
+  const [saldoAnnoPrecedente, setSaldoAnnoPrecedente] = useState(0);
 
   useEffect(() => {
     if (tipoParam) setFiltroTipo(tipoParam);
@@ -60,7 +66,20 @@ export default function PrimaNotaUnificata() {
 
   useEffect(() => {
     loadMovimenti();
+    loadSaldoAnnoPrecedente();
   }, [anno]);
+
+  const loadSaldoAnnoPrecedente = async () => {
+    try {
+      // Carica il saldo finale dell'anno precedente
+      const annoPrecedente = parseInt(anno) - 1;
+      const res = await api.get(`/api/prima-nota/saldo-finale?anno=${annoPrecedente}&tipo=${filtroTipo === 'tutti' ? 'cassa' : filtroTipo}`).catch(() => ({ data: { saldo: 0 } }));
+      setSaldoAnnoPrecedente(res.data?.saldo || 0);
+    } catch (e) {
+      console.error('Errore caricamento saldo anno precedente:', e);
+      setSaldoAnnoPrecedente(0);
+    }
+  };
 
   const loadMovimenti = async () => {
     setLoading(true);
