@@ -174,6 +174,22 @@ export default function PrimaNotaUnificata() {
         >
           {showForm ? '✕ Chiudi' : '+ Nuovo Movimento'}
         </button>
+        
+        {/* Export Button */}
+        <ExportButton
+          data={movimentiFiltrati}
+          columns={[
+            { key: 'data', label: 'Data' },
+            { key: 'tipo', label: 'Tipo' },
+            { key: 'descrizione', label: 'Descrizione' },
+            { key: 'importo', label: 'Importo' },
+            { key: 'categoria', label: 'Categoria' },
+            { key: 'fornitore', label: 'Fornitore' }
+          ]}
+          filename={`prima_nota_${anno}`}
+          format="csv"
+          variant="default"
+        />
       </div>
 
       {/* Form nuovo movimento */}
