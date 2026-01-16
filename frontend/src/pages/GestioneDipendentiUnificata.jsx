@@ -145,7 +145,12 @@ export default function GestioneDipendentiUnificata() {
   });
 
   return (
-    <div style={{ padding: 'clamp(12px, 3vw, 20px)', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: 'clamp(12px, 3vw, 20px)', height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {/* Page Info Card */}
+      <div style={{ position: 'absolute', top: 0, right: 20, zIndex: 100 }}>
+        <PageInfoCard pageKey="dipendenti" />
+      </div>
+      
       {/* Header */}
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
