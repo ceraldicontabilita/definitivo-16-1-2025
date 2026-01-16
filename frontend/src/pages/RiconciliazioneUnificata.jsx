@@ -1002,6 +1002,7 @@ function ArubaTab({ fatture, onConferma, processing, fornitori = [], onRefresh }
       <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8' }}>
         <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>🧾</div>
         <div>Nessuna fattura Aruba da confermare</div>
+        <div style={{ fontSize: 12, marginTop: 8 }}>Le fatture già inserite in Prima Nota vengono automaticamente saltate</div>
       </div>
     );
   }
