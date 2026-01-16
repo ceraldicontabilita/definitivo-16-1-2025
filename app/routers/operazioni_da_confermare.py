@@ -391,6 +391,7 @@ async def conferma_operazioni_batch(
 @router.get("/aruba-pendenti")
 async def lista_aruba_pendenti(
     anno: Optional[int] = Query(None, description="Filtra per anno"),
+    fornitore: Optional[str] = Query(None, description="Filtra per fornitore"),
     limit: int = Query(100, ge=1, le=500)
 ) -> Dict[str, Any]:
     """
@@ -406,6 +407,8 @@ async def lista_aruba_pendenti(
     }
     if anno:
         query["anno"] = anno
+    if fornitore:
+        query["fornitore"] = {"$regex": fornitore, "$options": "i"}
     
     operazioni = await db["operazioni_da_confermare"].find(
         query,
@@ -422,14 +425,122 @@ async def lista_aruba_pendenti(
         stato = op.get("stato", "da_confermare")
         per_stato[stato] = per_stato.get(stato, 0) + 1
     
+    # Lista fornitori unici per filtro UI
+    fornitori_unici = list(set(op.get("fornitore", "") for op in operazioni if op.get("fornitore")))
+    fornitori_unici.sort()
+    
     return {
         "operazioni": operazioni,
         "stats": {
             "totale": totale,
             "totale_importo": totale_importo,
             "per_stato": per_stato
+        },
+        "filtri_disponibili": {
+            "fornitori": fornitori_unici[:50]  # Max 50 fornitori per UI
         }
     }
+
+
+class ConfermaBatchRequest(BaseModel):
+    operazioni: List[Dict[str, Any]]  # Lista di {operazione_id, metodo_pagamento, numero_assegno?}
+
+
+@router.post("/conferma-batch")
+async def conferma_operazioni_batch(request: ConfermaBatchRequest) -> Dict[str, Any]:
+    """
+    Conferma multiple operazioni Aruba in un'unica chiamata.
+    Molto più veloce della conferma singola.
+    """
+    db = Database.get_db()
+    
+    risultati = {
+        "successo": 0,
+        "errori": 0,
+        "dettagli": []
+    }
+    
+    for op in request.operazioni:
+        try:
+            operazione_id = op.get("operazione_id")
+            metodo = op.get("metodo_pagamento", "bonifico")
+            numero_assegno = op.get("numero_assegno")
+            
+            # Chiama la logica di conferma esistente
+            # Recupera operazione
+            operazione = await db["operazioni_da_confermare"].find_one({"id": operazione_id})
+            if not operazione:
+                risultati["errori"] += 1
+                risultati["dettagli"].append({"id": operazione_id, "errore": "Non trovata"})
+                continue
+            
+            if operazione.get("stato") == "confermato":
+                risultati["dettagli"].append({"id": operazione_id, "stato": "già confermata"})
+                continue
+            
+            # Inserisci in prima nota
+            fornitore = operazione.get("fornitore", "")
+            importo = operazione.get("importo", 0)
+            numero_fattura = operazione.get("numero_fattura", "")
+            data_documento = operazione.get("data_documento", "")
+            
+            if metodo == "cassa":
+                prima_nota_collection = "prima_nota_cassa"
+            elif metodo == "carta_credito":
+                prima_nota_collection = "prima_nota_banca"  # Carta va comunque in banca
+            else:
+                prima_nota_collection = "prima_nota_banca"
+            
+            movimento_id = f"aruba_{operazione_id}"
+            movimento = {
+                "id": movimento_id,
+                "data": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                "tipo": "uscita",
+                "importo": abs(importo),
+                "descrizione": f"Pagamento fattura {numero_fattura} - {fornitore}",
+                "fornitore": fornitore,
+                "numero_fattura": numero_fattura,
+                "data_fattura": data_documento,
+                "categoria": "Pagamento fornitore",
+                "metodo_pagamento": metodo,
+                "fonte": "aruba_batch",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db[prima_nota_collection].insert_one(movimento)
+            
+            # Aggiorna stato operazione
+            await db["operazioni_da_confermare"].update_one(
+                {"id": operazione_id},
+                {"$set": {
+                    "stato": "confermato",
+                    "metodo_pagamento": metodo,
+                    "prima_nota_id": movimento_id,
+                    "confirmed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # Salva nel dizionario
+            await db["aruba_elaborazioni"].update_one(
+                {"numero_fattura": numero_fattura, "fornitore": fornitore},
+                {
+                    "$set": {
+                        "stato": f"inserita_{prima_nota_collection.replace('prima_nota_', '')}",
+                        "prima_nota_id": movimento_id,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }
+                },
+                upsert=True
+            )
+            
+            risultati["successo"] += 1
+            risultati["dettagli"].append({"id": operazione_id, "stato": "confermata", "metodo": metodo})
+            
+        except Exception as e:
+            risultati["errori"] += 1
+            risultati["dettagli"].append({"id": op.get("operazione_id"), "errore": str(e)})
+    
+    return risultati
 
 
 from pydantic import BaseModel
