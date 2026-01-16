@@ -878,6 +878,23 @@ Tutte le pagine3 supportano layout mobile:
 
 ### 2026-01-14 - Gestione Noleggio Auto (SESSIONE ATTUALE)
 
+### 2026-01-16 - REFACTORING ARCHITETTURALE COMPLETO 🏗️
+- ✅ **Database Unificato**: Migrati 4244 documenti da `estratto_conto` a `estratto_conto_movimenti` (totale 7351)
+- ✅ **Gestione Dipendenti Unificata**: Una sola pagina `/dipendenti` con 5 tab:
+  - 👤 Anagrafica | 📋 Contratti | 💰 Retribuzione | 🏦 Bonifici | 💵 Acconti
+  - Rimosso dal menu: 9 pagine separate (retribuzione, progressivi, bonifici, agevolazioni, contratti, libro unico, libretti, acconti, prima nota salari)
+- ✅ **Riconciliazione Smart Unificata**: Una sola pagina `/riconciliazione` con 6 tab:
+  - 📊 Dashboard | 🏦 Banca | 📝 Assegni | 📄 F24 | 🧾 Fatture Aruba | 👤 Stipendi
+  - Pulsante "Auto-Riconcilia" per confermare automaticamente match esatti
+  - Dashboard con totale da riconciliare (271 movimenti)
+- ✅ **Prima Nota Unificata**: Una sola pagina `/prima-nota` con filtri:
+  - Tab: Tutti | Cassa | Banca | Salari
+  - Filtro per mese e ricerca
+  - Totali: Entrate €116.990 | Uscite €85.821 | Saldo €31.168
+- ✅ **Menu Semplificato**:
+  - Dipendenti: da 13 voci a 4 voci
+  - Banca: da 4 voci a 5 voci (più complete)
+
 ### 2026-01-16 - UI Fatture Aruba e Miglioramenti Parser
 - ✅ **UI Fatture Aruba Pendenti**: Implementata visualizzazione completa nella pagina `RiconciliazioneSmart.jsx`
   - Tab "Fatture Aruba" con conteggio operazioni pendenti
