@@ -28,6 +28,7 @@ const TIPI_DOCUMENTO = [
   { id: 'cedolino', label: '💰 Buste Paga', color: '#8b5cf6', desc: 'Cedolini e Libro Unico' },
   { id: 'bonifici', label: '🏦 Bonifici', color: '#06b6d4', desc: 'Archivio bonifici (Excel)' },
   { id: 'fattura', label: '🧾 Fatture', color: '#ec4899', desc: 'Fatture elettroniche (XML)' },
+  { id: 'fornitori', label: '👥 Fornitori', color: '#14b8a6', desc: 'Anagrafica fornitori (Excel .xls/.xlsx)' },
 ];
 
 export default function ImportUnificato() {
@@ -98,6 +99,9 @@ export default function ImportUnificato() {
     if (lower.endsWith('.xml') || lower.includes('fattura') || lower.includes('fattpa')) {
       return 'fattura';
     }
+    if (lower.includes('fornitor') || lower.includes('supplier') || lower.includes('report_fornitori') || lower.includes('reportfornitori')) {
+      return 'fornitori';
+    }
     
     // Fallback basato su estensione
     if (lower.endsWith('.xml')) return 'fattura';
@@ -135,6 +139,7 @@ export default function ImportUnificato() {
           case 'cedolino': endpoint = '/api/employees/paghe/upload-pdf'; break;
           case 'bonifici': endpoint = '/api/archivio-bonifici/jobs/upload-excel'; break;
           case 'fattura': endpoint = '/api/fatture/upload-xml'; break;
+          case 'fornitori': endpoint = '/api/suppliers/upload-excel'; break;
         }
         
         const formData = new FormData();
@@ -211,6 +216,9 @@ export default function ImportUnificato() {
             break;
           case 'fattura':
             endpoint = '/api/fatture/upload-xml';
+            break;
+          case 'fornitori':
+            endpoint = '/api/suppliers/upload-excel';
             break;
           default:
             endpoint = '/api/documenti/upload-auto';
