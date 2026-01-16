@@ -599,17 +599,6 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
         },
         "messaggio": f"Operazione confermata in {prima_nota_collection}"
     }
-        {"id": operazione_id},
-        {"$set": {"prima_nota_id": movimento_id, "prima_nota_collection": prima_nota_collection}}
-    )
-    
-    return {
-        "success": True,
-        "operazione_id": operazione_id,
-        "metodo_pagamento": metodo_pagamento,
-        "prima_nota_id": movimento_id,
-        "messaggio": f"Operazione confermata in {prima_nota_collection}"
-    }
 
 
 @router.post("/rifiuta-aruba")
