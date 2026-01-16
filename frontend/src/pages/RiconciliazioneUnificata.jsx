@@ -269,6 +269,20 @@ export default function RiconciliazioneUnificata() {
           >
             🔄 Aggiorna
           </button>
+          
+          {/* Export movimenti banca */}
+          <ExportButton
+            data={movimentiBanca}
+            columns={[
+              { key: 'data', label: 'Data' },
+              { key: 'descrizione', label: 'Descrizione' },
+              { key: 'importo', label: 'Importo' },
+              { key: 'tipo', label: 'Tipo' },
+              { key: 'stato', label: 'Stato' }
+            ]}
+            filename="riconciliazione_movimenti"
+            format="csv"
+          />
         </div>
       </div>
 
