@@ -382,10 +382,11 @@ class CorrispettiviService:
             await self.cash_movements.insert_one(movement_doc.copy())
             
             # Anche in prima_nota per compatibilità
-            await self.prima_nota.insert_one({
+            prima_nota_doc = {
                 **movement_doc,
                 "id": self._generate_id()  # ID diverso per prima_nota
-            })
+            }
+            await self.prima_nota.insert_one(prima_nota_doc.copy())
             
             return movement_id
         except Exception as e:
