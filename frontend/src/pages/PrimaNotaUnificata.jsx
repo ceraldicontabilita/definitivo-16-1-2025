@@ -703,22 +703,22 @@ export default function PrimaNotaUnificata() {
                       </td>
                       <td style={{ ...tdStyle, textAlign: 'center' }}>
                         {m.fattura_id ? (
-                          <a href={`/fatture-ricevute?search=${encodeURIComponent(m.fattura_id)}`} style={{ color: '#3b82f6', textDecoration: 'none', fontSize: 12 }}>
+                          <a href={`/fatture-ricevute/${m.fattura_id}`} style={{ color: '#3b82f6', textDecoration: 'none', fontSize: 12 }}>
                             📄 Vedi
                           </a>
                         ) : m.numero_fattura ? (
                           <a href={`/fatture-ricevute?search=${encodeURIComponent(m.numero_fattura)}`} style={{ color: '#3b82f6', textDecoration: 'none', fontSize: 12 }}>
-                            📄 Vedi
+                            📄 Cerca
                           </a>
                         ) : m.descrizione?.match(/fattura\s+(\S+)/i) ? (
                           <a 
                             href={`/fatture-ricevute?search=${encodeURIComponent(m.descrizione.match(/fattura\s+(\S+)/i)[1])}`} 
                             style={{ color: '#3b82f6', textDecoration: 'none', fontSize: 12 }}
                           >
-                            📄 Cerca
+                            🔍 Cerca
                           </a>
                         ) : m.fornitore ? (
-                          <a href={`/fatture-ricevute?fornitore=${encodeURIComponent(m.fornitore)}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: 11 }}>
+                          <a href={`/fatture-ricevute?search=${encodeURIComponent(m.fornitore)}`} style={{ color: '#64748b', textDecoration: 'none', fontSize: 11 }}>
                             🔍
                           </a>
                         ) : '-'}
