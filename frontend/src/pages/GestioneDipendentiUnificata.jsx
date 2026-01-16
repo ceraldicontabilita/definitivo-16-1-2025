@@ -100,12 +100,14 @@ export default function GestioneDipendentiUnificata() {
           break;
           
         case 'bonifici':
-          const bonRes = await api.get(`/api/archivio-bonifici?dipendente_id=${selectedDip.id}`);
-          setBonifici(Array.isArray(bonRes.data) ? bonRes.data : bonRes.data?.bonifici || []);
+          // Cerca bonifici per nome dipendente (beneficiario)
+          const nomeDip = selectedDip.nome_completo || `${selectedDip.cognome || ''} ${selectedDip.nome || ''}`.trim();
+          const bonRes = await api.get(`/api/archivio-bonifici/transfers?beneficiario=${encodeURIComponent(nomeDip)}`);
+          setBonifici(Array.isArray(bonRes.data) ? bonRes.data : []);
           break;
           
         case 'acconti':
-          const accRes = await api.get(`/api/dipendenti/acconti?dipendente_id=${selectedDip.id}`);
+          const accRes = await api.get(`/api/tfr/acconti/${selectedDip.id}`);
           setAcconti(Array.isArray(accRes.data) ? accRes.data : accRes.data?.acconti || []);
           break;
       }
