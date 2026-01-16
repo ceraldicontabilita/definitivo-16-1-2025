@@ -1098,8 +1098,17 @@ async def get_archivio_fatture(
             {"fornitore_ragione_sociale": {"$regex": search, "$options": "i"}},
             {"fornitore_partita_iva": {"$regex": search, "$options": "i"}},
             {"supplier_name": {"$regex": search, "$options": "i"}},
-            {"supplier_vat": {"$regex": search, "$options": "i"}}
+            {"supplier_vat": {"$regex": search, "$options": "i"}},
+            {"id": search},  # Ricerca per ID esatto
+            {"fattura_id": search}  # Ricerca per fattura_id esatto
         ]
+        # Se sembra un ObjectId, cerca anche per _id
+        if len(search) == 24:
+            try:
+                from bson import ObjectId
+                search_filter.append({"_id": ObjectId(search)})
+            except:
+                pass
         if "$and" in query:
             query["$and"].append({"$or": search_filter})
         elif "$or" in query:
