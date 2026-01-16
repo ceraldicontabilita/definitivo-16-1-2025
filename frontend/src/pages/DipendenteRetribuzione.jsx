@@ -93,6 +93,12 @@ export default function DipendenteRetribuzione() {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(val);
   };
 
+  const getMeseNome = (mese) => {
+    const mesi = ['', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 
+                  'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+    return mesi[mese] || '';
+  };
+
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
       <div style={{ marginBottom: 20 }}>
