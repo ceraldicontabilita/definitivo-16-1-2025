@@ -372,7 +372,7 @@ export default function ArchivioBonifici() {
             Visualizzazione e gestione bonifici bancari
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <a 
             href="/import-export"
             style={{ 
@@ -389,6 +389,21 @@ export default function ArchivioBonifici() {
           >
             📥 Importa Bonifici
           </a>
+          <button
+            onClick={handleSyncIbanToAnagrafica}
+            style={{
+              padding: "10px 20px",
+              background: "#10b981",
+              color: "white",
+              fontWeight: "bold",
+              border: "none",
+              borderRadius: 8,
+              cursor: "pointer"
+            }}
+            title="Sincronizza gli IBAN dei bonifici nell'anagrafica dipendenti"
+          >
+            🏦 Sync IBAN → Anagrafica
+          </button>
           <button
             onClick={() => { loadTransfers(); loadSummary(); loadCount(); }}
             style={{
