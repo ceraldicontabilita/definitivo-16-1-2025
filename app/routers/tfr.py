@@ -608,6 +608,55 @@ async def registra_acconto(input_data: AccontoInput) -> Dict[str, Any]:
     }
 
 
+@router.put("/acconti/{acconto_id}")
+async def modifica_acconto(acconto_id: str, input_data: dict) -> Dict[str, Any]:
+    """Modifica un acconto esistente."""
+    db = Database.get_db()
+    
+    # Trova acconto
+    acconto = await db["acconti_dipendenti"].find_one({"id": acconto_id})
+    if not acconto:
+        raise HTTPException(status_code=404, detail="Acconto non trovato")
+    
+    # Prepara aggiornamento
+    update_fields = {}
+    if "importo" in input_data:
+        vecchio_importo = acconto.get("importo", 0)
+        nuovo_importo = float(input_data["importo"])
+        update_fields["importo"] = round(nuovo_importo, 2)
+        
+        # Se è un acconto TFR, aggiorna il saldo del dipendente
+        if acconto.get("tipo") == "tfr":
+            dipendente = await db["employees"].find_one({"id": acconto["dipendente_id"]})
+            if dipendente:
+                tfr_attuale = float(dipendente.get("tfr_accantonato", 0))
+                # Ripristina il vecchio importo e sottrai il nuovo
+                nuovo_tfr = tfr_attuale + vecchio_importo - nuovo_importo
+                await db["employees"].update_one(
+                    {"id": acconto["dipendente_id"]},
+                    {"$set": {"tfr_accantonato": round(nuovo_tfr, 2)}}
+                )
+    
+    if "data" in input_data:
+        update_fields["data"] = input_data["data"]
+    if "note" in input_data:
+        update_fields["note"] = input_data["note"]
+    if "tipo" in input_data:
+        update_fields["tipo"] = input_data["tipo"]
+    
+    if update_fields:
+        await db["acconti_dipendenti"].update_one(
+            {"id": acconto_id},
+            {"$set": update_fields}
+        )
+    
+    return {
+        "success": True,
+        "messaggio": f"Acconto {acconto.get('tipo', '')} modificato",
+        "acconto_id": acconto_id
+    }
+
+
 @router.delete("/acconti/{acconto_id}")
 async def elimina_acconto(acconto_id: str) -> Dict[str, Any]:
     """Elimina un acconto."""
