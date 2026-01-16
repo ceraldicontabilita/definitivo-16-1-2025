@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../api';
 import { formatEuro } from '../lib/utils';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
@@ -13,6 +14,7 @@ import { PageInfoCard } from '../components/PageInfoCard';
  * - Tab: Banca | Assegni | F24 | Fatture Aruba | Stipendi
  * - Auto-matching intelligente
  * - Flussi a cascata automatici
+ * - URL con tab: /riconciliazione/banca, /riconciliazione/assegni, etc.
  */
 
 const TABS = [
@@ -26,10 +28,41 @@ const TABS = [
 
 export default function RiconciliazioneUnificata() {
   const { anno } = useAnnoGlobale();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Ottieni tab dall'URL (es. /riconciliazione/banca -> banca)
+  const getTabFromPath = () => {
+    const path = location.pathname;
+    const match = path.match(/\/riconciliazione\/(\w+)/);
+    if (match && TABS.find(t => t.id === match[1])) {
+      return match[1];
+    }
+    return 'dashboard';
+  };
+  
+  const [activeTab, setActiveTab] = useState(getTabFromPath());
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [processing, setProcessing] = useState(null);
+  
+  // Aggiorna URL quando cambia tab
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId === 'dashboard') {
+      navigate('/riconciliazione');
+    } else {
+      navigate(`/riconciliazione/${tabId}`);
+    }
+  };
+  
+  // Sincronizza tab con URL al mount e quando cambia URL
+  useEffect(() => {
+    const tab = getTabFromPath();
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [location.pathname]);
   
   // Dati per ogni sezione
   const [stats, setStats] = useState({});
