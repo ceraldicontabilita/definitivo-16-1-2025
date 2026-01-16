@@ -1015,21 +1015,71 @@ function ArubaTab({ fatture, onConferma, processing, fornitori = [], onRefresh }
 
   return (
     <div>
+      {/* Header con filtri e azioni batch */}
       <div style={{ padding: 16, background: '#f5f3ff', borderBottom: '1px solid #e9d5ff' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 16, color: '#7c3aed' }}>🧾 Fatture Aruba ({fatture.length})</h3>
-            <div style={{ fontSize: 12, color: '#8b5cf6', marginTop: 4 }}>
-              Conferma il metodo di pagamento • Il sistema ricorda le tue preferenze
-            </div>
-          </div>
-          <div style={{ fontWeight: 700, color: '#7c3aed', fontSize: 18 }}>
-            Totale: {formatEuro(totale)}
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 16, color: '#7c3aed' }}>🧾 Fatture Aruba ({fattureFiltrate.length})</h3>
+          <div style={{ fontWeight: 700, color: '#7c3aed' }}>Totale: {formatEuro(totale)}</div>
+        </div>
+        
+        {/* Filtro fornitore */}
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <select 
+            value={filtroFornitore}
+            onChange={e => setFiltroFornitore(e.target.value)}
+            style={{ padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: 13 }}
+          >
+            <option value="">Tutti i fornitori ({fatture.length})</option>
+            {fornitori.map(f => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+          
+          {/* Azioni batch */}
+          <button 
+            onClick={toggleTutte}
+            style={{ padding: '8px 12px', background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+          >
+            {selezionate.size === fattureFiltrate.length ? '☐ Deseleziona' : '☑ Seleziona tutte'}
+          </button>
+          
+          {selezionate.size > 0 && (
+            <>
+              <select 
+                value={metodoBatch}
+                onChange={e => setMetodoBatch(e.target.value)}
+                style={{ padding: '8px 12px', border: '1px solid #10b981', borderRadius: 6, fontSize: 13, background: '#d1fae5' }}
+              >
+                <option value="cassa">💰 Cassa</option>
+                <option value="bonifico">🏦 Bonifico</option>
+                <option value="carta_credito">💳 Carta/POS</option>
+                <option value="assegno">📝 Assegno</option>
+              </select>
+              
+              <button 
+                onClick={confermaBatch}
+                disabled={salvandoBatch}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: '#10b981', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: 6, 
+                  cursor: 'pointer', 
+                  fontWeight: 600,
+                  fontSize: 13
+                }}
+              >
+                {salvandoBatch ? '⏳' : '✅'} Conferma {selezionate.size} ({formatEuro(totaleSelezionate)})
+              </button>
+            </>
+          )}
         </div>
       </div>
+      
+      {/* Lista fatture */}
       <div style={{ maxHeight: 500, overflow: 'auto' }}>
-        {fatture.map((op, idx) => {
+        {fattureFiltrate.map((op, idx) => {
           const metodoPreferito = preferenze[op.fornitore] || op.metodo_pagamento_proposto;
           
           return (
