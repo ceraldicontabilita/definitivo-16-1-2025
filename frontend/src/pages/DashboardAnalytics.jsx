@@ -306,6 +306,14 @@ export default function DashboardAnalytics() {
 
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
+      {/* CSS per animazione pulse */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
+      
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
         <div>
@@ -316,7 +324,34 @@ export default function DashboardAnalytics() {
             Panoramica finanziaria e KPI - Anno {anno}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* Indicatore connessione WebSocket */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 12px',
+            background: wsConnected ? '#f0fdf4' : '#fef2f2',
+            borderRadius: 20,
+            fontSize: 12,
+            color: wsConnected ? '#16a34a' : '#dc2626'
+          }}>
+            <span style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: wsConnected ? '#16a34a' : '#dc2626',
+              animation: wsConnected ? 'pulse 2s infinite' : 'none'
+            }} />
+            {wsConnected ? 'Real-time' : 'Offline'}
+          </div>
+          
+          {wsLastUpdate && (
+            <span style={{ fontSize: 11, color: '#94a3b8' }}>
+              Agg: {wsLastUpdate.toLocaleTimeString('it-IT')}
+            </span>
+          )}
+          
           <ExportButton
             data={stats?.rawData?.movimenti || []}
             columns={[
@@ -331,7 +366,7 @@ export default function DashboardAnalytics() {
             variant="primary"
           />
           <button
-            onClick={loadStats}
+            onClick={() => { loadStats(); requestRefresh(); }}
             style={{
               padding: '8px 16px',
               background: '#f1f5f9',
@@ -346,6 +381,40 @@ export default function DashboardAnalytics() {
         </div>
       </div>
 
+      {/* Alert Scadenze Urgenti - mostrato solo se ci sono scadenze */}
+      {stats?.kpi?.scadenzeUrgenti > 0 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 20,
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <span style={{ fontSize: 24 }}>⚠️</span>
+          <div>
+            <strong>{stats.kpi.scadenzeUrgenti} scadenze</strong> nei prossimi 7 giorni
+          </div>
+          <button
+            onClick={() => window.location.href = '/scadenze'}
+            style={{
+              marginLeft: 'auto',
+              padding: '6px 12px',
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              borderRadius: 6,
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Visualizza →
+          </button>
+        </div>
+      )}
+
       {/* KPI Cards */}
       <div style={{ 
         display: 'grid', 
@@ -359,18 +428,21 @@ export default function DashboardAnalytics() {
           subtitle={`${stats?.kpi?.numFatture || 0} fatture emesse`}
           icon="💰"
           color="#3b82f6"
+          isLive={wsConnected}
         />
         <KPICard 
           title="Entrate" 
           value={formatEuro(stats?.kpi?.entrate || 0)} 
           icon="📈"
           color="#10b981"
+          isLive={wsConnected}
         />
         <KPICard 
           title="Uscite" 
           value={formatEuro(stats?.kpi?.uscite || 0)} 
           icon="📉"
           color="#ef4444"
+          isLive={wsConnected}
         />
         <KPICard 
           title="Cash Flow" 
@@ -378,6 +450,7 @@ export default function DashboardAnalytics() {
           subtitle={stats?.kpi?.cashFlow >= 0 ? 'Positivo' : 'Negativo'}
           icon={stats?.kpi?.cashFlow >= 0 ? '✅' : '⚠️'}
           color={stats?.kpi?.cashFlow >= 0 ? '#10b981' : '#ef4444'}
+          isLive={wsConnected}
         />
       </div>
 
