@@ -90,7 +90,7 @@ export default function GestioneDipendentiUnificata() {
           break;
           
         case 'contratti':
-          const contRes = await api.get(`/api/dipendenti/${selectedDip.id}/contratti`);
+          const contRes = await api.get(`/api/dipendenti/contratti?dipendente_id=${selectedDip.id}`);
           setContratti(contRes.data || []);
           break;
           
@@ -100,13 +100,13 @@ export default function GestioneDipendentiUnificata() {
           break;
           
         case 'bonifici':
-          const bonRes = await api.get(`/api/archivio-bonifici/dipendente/${selectedDip.id}`);
-          setBonifici(bonRes.data || []);
+          const bonRes = await api.get(`/api/archivio-bonifici?dipendente_id=${selectedDip.id}`);
+          setBonifici(Array.isArray(bonRes.data) ? bonRes.data : bonRes.data?.bonifici || []);
           break;
           
         case 'acconti':
-          const accRes = await api.get(`/api/dipendenti/${selectedDip.id}/acconti`);
-          setAcconti(accRes.data || []);
+          const accRes = await api.get(`/api/dipendenti/acconti?dipendente_id=${selectedDip.id}`);
+          setAcconti(Array.isArray(accRes.data) ? accRes.data : accRes.data?.acconti || []);
           break;
       }
     } catch (e) {
