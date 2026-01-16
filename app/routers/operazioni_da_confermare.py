@@ -603,7 +603,7 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
         if not fornitore_esistente:
             # Crea nuovo fornitore con dati base (da completare con XML)
             nuovo_fornitore = {
-                "id": str(uuid4()),
+                "id": str(uuid.uuid4()),
                 "denominazione": fornitore.strip(),
                 "ragione_sociale": fornitore.strip(),
                 "metodo_pagamento": metodo_pagamento,
