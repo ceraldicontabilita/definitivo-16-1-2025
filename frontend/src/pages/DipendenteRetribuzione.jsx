@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import { useAnnoGlobale } from '../contexts/AnnoContext';
 
 /**
  * Pagina Retribuzione Dipendenti
  * Gestione dati retributivi: paga base, contingenza, straordinari
+ * + Storico buste paga/cedolini
  */
 export default function DipendenteRetribuzione() {
+  const { anno } = useAnnoGlobale();
   const [dipendenti, setDipendenti] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDip, setSelectedDip] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({});
+  const [cedolini, setCedolini] = useState([]);
+  const [loadingCedolini, setLoadingCedolini] = useState(false);
+  const [totaliCedolini, setTotaliCedolini] = useState({ lordo: 0, netto: 0, count: 0 });
 
   useEffect(() => {
     loadDipendenti();
   }, []);
+
+  useEffect(() => {
+    if (selectedDip) {
+      loadCedolini(selectedDip.id);
+    }
+  }, [selectedDip, anno]);
 
   const loadDipendenti = async () => {
     try {
@@ -24,6 +36,25 @@ export default function DipendenteRetribuzione() {
       console.error('Errore caricamento dipendenti:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCedolini = async (dipId) => {
+    setLoadingCedolini(true);
+    try {
+      const res = await api.get(`/api/cedolini/dipendente/${dipId}?anno=${anno}`);
+      setCedolini(res.data.cedolini || []);
+      setTotaliCedolini({
+        lordo: res.data.totale_lordo || 0,
+        netto: res.data.totale_netto || 0,
+        count: res.data.totale_cedolini || 0
+      });
+    } catch (e) {
+      console.error('Errore caricamento cedolini:', e);
+      setCedolini([]);
+      setTotaliCedolini({ lordo: 0, netto: 0, count: 0 });
+    } finally {
+      setLoadingCedolini(false);
     }
   };
 
