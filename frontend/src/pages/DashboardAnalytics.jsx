@@ -126,21 +126,26 @@ export default function DashboardAnalytics() {
   const loadStats = async () => {
     setLoading(true);
     try {
-      // Carica dati da vari endpoint
-      const [fattureRes, primaNotaRes, dipendentiRes, f24Res] = await Promise.all([
-        api.get(`/api/fatture-emesse/lista?anno=${anno}`).catch(() => ({ data: { fatture: [] } })),
+      // Carica dati da vari endpoint - usa endpoint che hanno dati reali
+      const [fattureRes, primaNotaRes, dipendentiRes, f24Res, corrispettiviRes] = await Promise.all([
+        api.get(`/api/fatture-ricevute/lista?anno=${anno}`).catch(() => ({ data: { fatture: [] } })),
         api.get('/api/prima-nota').catch(() => ({ data: [] })),
         api.get('/api/dipendenti').catch(() => ({ data: [] })),
-        api.get('/api/f24').catch(() => ({ data: [] }))
+        api.get('/api/f24').catch(() => ({ data: [] })),
+        api.get('/api/corrispettivi').catch(() => ({ data: [] }))
       ]);
 
       const fatture = fattureRes.data?.fatture || fattureRes.data || [];
       const movimenti = primaNotaRes.data || [];
       const dipendenti = dipendentiRes.data || [];
       const f24 = f24Res.data || [];
+      const corrispettivi = corrispettiviRes.data || [];
 
-      // Calcola KPI
-      const fatturatoTotale = fatture.reduce((sum, f) => sum + (parseFloat(f.importo_totale) || 0), 0);
+      // Calcola KPI - usa corrispettivi come fatturato se fatture sono vuote
+      const fatturatoFatture = fatture.reduce((sum, f) => sum + (parseFloat(f.importo_totale || f.totale) || 0), 0);
+      const fatturatoCorr = corrispettivi.reduce((sum, c) => sum + (parseFloat(c.totale) || 0), 0);
+      const fatturatoTotale = fatturatoFatture + fatturatoCorr;
+      
       const entrateTotali = movimenti.filter(m => m.tipo === 'entrata').reduce((sum, m) => sum + (parseFloat(m.importo) || 0), 0);
       const usciteTotali = movimenti.filter(m => m.tipo === 'uscita').reduce((sum, m) => sum + Math.abs(parseFloat(m.importo) || 0), 0);
       const cashFlow = entrateTotali - usciteTotali;
