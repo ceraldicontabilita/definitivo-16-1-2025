@@ -647,14 +647,14 @@ async def get_invoices_by_state(
     total = await invoices_collection.count_documents(query)
     
     # Recupera fatture
-    cursor = invoices_collection.find(query).sort('invoice_date', -1).skip(skip).limit(limit)
+    cursor = invoices_collection.find(query, {"_id": 0}).sort('invoice_date', -1).skip(skip).limit(limit)
     invoices = await cursor.to_list(length=limit)
     
     # Formatta response
     result_invoices = []
     for invoice in invoices:
         result_invoices.append({
-            'id': str(invoice['_id']),
+            'id': str(invoice.get('id', '')),
             'invoice_number': invoice.get('invoice_number'),
             'invoice_date': invoice.get('invoice_date'),
             'supplier_name': invoice.get('supplier_name'),
