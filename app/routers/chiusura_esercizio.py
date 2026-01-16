@@ -342,3 +342,172 @@ async def get_storico_chiusure() -> List[Dict[str, Any]]:
     ).sort("anno", -1).to_list(100)
     
     return chiusure
+
+
+@router.post("/apertura-nuovo-esercizio")
+async def apertura_nuovo_esercizio(anno_nuovo: int) -> Dict[str, Any]:
+    """
+    Apre il nuovo esercizio riportando i saldi dall'anno precedente.
+    
+    Operazioni:
+    1. Verifica che l'anno precedente sia chiuso
+    2. Calcola i saldi finali dell'anno precedente
+    3. Crea scritture di apertura per il nuovo anno
+    4. Riporta:
+       - Saldo cassa
+       - Saldo banca
+       - Crediti clienti (fatture non pagate)
+       - Debiti fornitori (fatture da pagare)
+       - TFR accantonato
+       - Assegni in portafoglio
+    """
+    db = Database.get_db()
+    anno_precedente = anno_nuovo - 1
+    
+    # Verifica chiusura anno precedente
+    chiusura = await db["chiusure_esercizio"].find_one({"anno": anno_precedente}, {"_id": 0})
+    if not chiusura:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"L'esercizio {anno_precedente} non è ancora stato chiuso"
+        )
+    
+    # Calcola saldi da riportare
+    
+    # 1. Saldo Cassa
+    cassa_entrate = await db["prima_nota_cassa"].aggregate([
+        {"$match": {"anno": anno_precedente, "tipo": "entrata"}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]).to_list(1)
+    cassa_uscite = await db["prima_nota_cassa"].aggregate([
+        {"$match": {"anno": anno_precedente, "tipo": "uscita"}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]).to_list(1)
+    
+    saldo_cassa = (cassa_entrate[0]["totale"] if cassa_entrate else 0) - (cassa_uscite[0]["totale"] if cassa_uscite else 0)
+    
+    # 2. Saldo Banca
+    banca_entrate = await db["prima_nota_banca"].aggregate([
+        {"$match": {"anno": anno_precedente, "tipo": "entrata"}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]).to_list(1)
+    banca_uscite = await db["prima_nota_banca"].aggregate([
+        {"$match": {"anno": anno_precedente, "tipo": "uscita"}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]).to_list(1)
+    
+    saldo_banca = (banca_entrate[0]["totale"] if banca_entrate else 0) - (banca_uscite[0]["totale"] if banca_uscite else 0)
+    
+    # 3. Fatture da pagare (debiti fornitori)
+    fatture_da_pagare = await db["invoices"].aggregate([
+        {"$match": {"pagato": {"$ne": True}}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo_totale"}}}
+    ]).to_list(1)
+    debiti_fornitori = fatture_da_pagare[0]["totale"] if fatture_da_pagare else 0
+    
+    # 4. Assegni in portafoglio non incassati
+    assegni_portafoglio = await db["assegni"].aggregate([
+        {"$match": {"stato": {"$in": ["emesso", "consegnato"]}, "incassato": {"$ne": True}}},
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]).to_list(1)
+    assegni_da_incassare = assegni_portafoglio[0]["totale"] if assegni_portafoglio else 0
+    
+    # 5. TFR accantonato
+    tfr_accantonato = await db["tfr_accantonamenti"].aggregate([
+        {"$group": {"_id": None, "totale": {"$sum": "$importo"}}}
+    ]).to_list(1)
+    totale_tfr = tfr_accantonato[0]["totale"] if tfr_accantonato else 0
+    
+    # Crea scrittura di apertura
+    apertura_id = str(uuid4())
+    data_apertura = f"{anno_nuovo}-01-01"
+    
+    scrittura_apertura = {
+        "id": apertura_id,
+        "anno": anno_nuovo,
+        "data": data_apertura,
+        "tipo": "apertura_esercizio",
+        "descrizione": f"Apertura esercizio {anno_nuovo} - Riporto da {anno_precedente}",
+        "saldi_riportati": {
+            "saldo_cassa": saldo_cassa,
+            "saldo_banca": saldo_banca,
+            "debiti_fornitori": debiti_fornitori,
+            "assegni_da_incassare": assegni_da_incassare,
+            "tfr_accantonato": totale_tfr
+        },
+        "anno_precedente": anno_precedente,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db["aperture_esercizio"].insert_one(scrittura_apertura.copy())
+    
+    # Crea movimento di apertura in Prima Nota Cassa (se c'è saldo)
+    if saldo_cassa != 0:
+        movimento_cassa = {
+            "id": str(uuid4()),
+            "data": data_apertura,
+            "anno": anno_nuovo,
+            "tipo": "entrata" if saldo_cassa > 0 else "uscita",
+            "importo": abs(saldo_cassa),
+            "descrizione": f"Saldo iniziale da esercizio {anno_precedente}",
+            "categoria": "Riporto",
+            "source": "apertura_esercizio",
+            "apertura_id": apertura_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db["prima_nota_cassa"].insert_one(movimento_cassa.copy())
+    
+    # Crea movimento di apertura in Prima Nota Banca (se c'è saldo)
+    if saldo_banca != 0:
+        movimento_banca = {
+            "id": str(uuid4()),
+            "data": data_apertura,
+            "anno": anno_nuovo,
+            "tipo": "entrata" if saldo_banca > 0 else "uscita",
+            "importo": abs(saldo_banca),
+            "descrizione": f"Saldo iniziale da esercizio {anno_precedente}",
+            "categoria": "Riporto",
+            "source": "apertura_esercizio",
+            "apertura_id": apertura_id,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db["prima_nota_banca"].insert_one(movimento_banca.copy())
+    
+    logger.info(f"Apertura esercizio {anno_nuovo} completata: Cassa={saldo_cassa}, Banca={saldo_banca}")
+    
+    return {
+        "success": True,
+        "apertura_id": apertura_id,
+        "anno_nuovo": anno_nuovo,
+        "anno_precedente": anno_precedente,
+        "saldi_riportati": scrittura_apertura["saldi_riportati"],
+        "messaggio": f"Esercizio {anno_nuovo} aperto con riporto saldi da {anno_precedente}"
+    }
+
+
+@router.get("/saldi-iniziali/{anno}")
+async def get_saldi_iniziali(anno: int) -> Dict[str, Any]:
+    """
+    Restituisce i saldi iniziali riportati per un anno.
+    """
+    db = Database.get_db()
+    
+    apertura = await db["aperture_esercizio"].find_one(
+        {"anno": anno},
+        {"_id": 0}
+    )
+    
+    if apertura:
+        return {
+            "anno": anno,
+            "saldi": apertura["saldi_riportati"],
+            "data_apertura": apertura["data"],
+            "anno_provenienza": apertura.get("anno_precedente")
+        }
+    else:
+        return {
+            "anno": anno,
+            "saldi": None,
+            "messaggio": "Nessuna apertura registrata per questo anno"
+        }
+
