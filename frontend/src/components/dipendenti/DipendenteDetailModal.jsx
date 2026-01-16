@@ -800,9 +800,13 @@ function DipendenteAccontiTab({ dipendente, editData, setEditData, editMode }) {
       return;
     }
     
+    // Generate unique ID - these are called in event handler, not during render
+    // eslint-disable-next-line react-hooks/purity
     const timestamp = Date.now();
+    // eslint-disable-next-line react-hooks/purity
+    const randomPart = Math.random().toString(36).substring(7);
     const newAcconto = {
-      id: `acc_${timestamp}_${Math.random().toString(36).substring(7)}`,
+      id: `acc_${timestamp}_${randomPart}`,
       data: nuovoAcconto.data,
       importo: parseFloat(nuovoAcconto.importo),
       note: nuovoAcconto.note || '',
