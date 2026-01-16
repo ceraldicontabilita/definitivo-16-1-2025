@@ -542,7 +542,9 @@ export default function RiconciliazioneSmart() {
     try {
       const res = await api.get(`/api/operazioni-da-confermare/smart/cerca-stipendi?importo=${Math.abs(movimento.importo)}`);
       setSearchResults(res.data?.results || res.data || []);
-    } catch (e) {}
+    } catch (e) {
+      console.error('Errore cerca stipendi:', e);
+    }
   }
 
   // Helper per associazione F24
@@ -552,7 +554,9 @@ export default function RiconciliazioneSmart() {
     try {
       const res = await api.get(`/api/operazioni-da-confermare/smart/cerca-f24?importo=${Math.abs(movimento.importo)}`);
       setSearchResults(res.data?.results || res.data || []);
-    } catch (e) {}
+    } catch (e) {
+      console.error('Errore cerca f24:', e);
+    }
   }
 }
 
