@@ -579,10 +579,15 @@ function AssegnoCard({ movimento, onConferma, onCambiaFattura, onIgnora, process
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 'bold', fontSize: 14 }}>
-                  {suggerimento.fornitore || suggerimento.supplier_name || 'Fornitore'}
+                  {suggerimento.beneficiario || suggerimento.fornitore || suggerimento.supplier_name || 'Fornitore'}
                 </div>
                 <div style={{ fontSize: 12, color: '#64748b' }}>
-                  Fatt. {suggerimento.numero_fattura || suggerimento.invoice_number || '-'} 
+                  {suggerimento.numero_fattura || suggerimento.invoice_number 
+                    ? `Fatt. ${suggerimento.numero_fattura || suggerimento.invoice_number}`
+                    : suggerimento.numero 
+                      ? `Assegno N. ${suggerimento.numero}`
+                      : suggerimento.descrizione || '-'
+                  }
                   {suggerimento.data_fattura && ` del ${new Date(suggerimento.data_fattura).toLocaleDateString('it-IT')}`}
                 </div>
               </div>
