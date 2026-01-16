@@ -1007,7 +1007,11 @@ function ArubaTab({ fatture, onConferma, processing, fornitori = [], onRefresh }
     );
   }
 
-  const totale = fatture.reduce((sum, f) => sum + (f.importo || f.netto_pagare || 0), 0);
+  const totale = fattureFiltrate.reduce((sum, f) => sum + (f.importo || f.netto_pagare || 0), 0);
+  const totaleSelezionate = Array.from(selezionate)
+    .map(id => fattureFiltrate.find(f => f.id === id))
+    .filter(Boolean)
+    .reduce((sum, f) => sum + (f.importo || f.netto_pagare || 0), 0);
 
   return (
     <div>
