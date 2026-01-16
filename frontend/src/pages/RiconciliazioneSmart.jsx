@@ -760,20 +760,39 @@ function MovimentoCard({ movimento, onConferma, onIgnora, processing }) {
   );
 }
 
-// Card per movimenti manuali
+// Card per movimenti manuali - riconosce se è uno stipendio dal nome
 function MovimentoCardManuale({ movimento, onAssociaFattura, onAssociaStipendio, onAssociaF24, onIgnora, processing }) {
   const tipo = TIPO_COLORS[movimento.tipo] || TIPO_COLORS.non_riconosciuto;
+  
+  // Lista di pattern per riconoscere stipendi nella descrizione
+  const stipendioPatterns = [
+    /stipend/i,
+    /salari/i,
+    /bonifico.*dipendent/i,
+    /emolument/i,
+    /retribuz/i,
+    // Nomi propri comuni (pattern cognome nome o nome cognome)
+    /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/,  // Es: "Mario Rossi"
+    /ACCR\.\s*STIPEND/i,
+    /ACCREDITO.*STIPEND/i,
+  ];
+  
+  // Controlla se la descrizione sembra uno stipendio
+  const desc = movimento.descrizione || '';
+  const sembraStipendio = movimento.tipo === 'stipendio' || 
+    stipendioPatterns.some(p => p.test(desc)) ||
+    (desc.includes('BONIFICO') && /[A-Z]{2,}\s+[A-Z][a-z]+/.test(desc));
   
   return (
     <div style={{ padding: 16, borderBottom: '1px solid #f1f5f9', opacity: processing ? 0.5 : 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
         <div style={{ 
           width: 44, height: 44, borderRadius: 10, 
-          background: tipo.bg, 
+          background: sembraStipendio ? '#dcfce7' : tipo.bg, 
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 20
         }}>
-          {tipo.icon}
+          {sembraStipendio ? '👤' : tipo.icon}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 'bold', fontSize: 14 }}>
@@ -782,28 +801,49 @@ function MovimentoCardManuale({ movimento, onAssociaFattura, onAssociaStipendio,
           <div style={{ fontSize: 12, color: '#64748b' }}>
             {movimento.descrizione?.substring(0, 80) || '-'}
           </div>
+          {sembraStipendio && (
+            <span style={{ 
+              display: 'inline-block', marginTop: 4,
+              padding: '2px 8px', background: '#dcfce7', color: '#166534',
+              borderRadius: 4, fontSize: 10, fontWeight: 'bold'
+            }}>
+              👤 Probabile Stipendio
+            </span>
+          )}
         </div>
       </div>
       
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button onClick={onAssociaFattura} disabled={processing} style={{
-          padding: '8px 16px', background: '#3b82f6', color: 'white',
-          border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 12
-        }}>
-          🧾 Fattura
-        </button>
-        <button onClick={onAssociaStipendio} disabled={processing} style={{
-          padding: '8px 16px', background: '#10b981', color: 'white',
-          border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 12
-        }}>
-          👤 Stipendio
-        </button>
-        <button onClick={onAssociaF24} disabled={processing} style={{
-          padding: '8px 16px', background: '#f59e0b', color: 'white',
-          border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 12
-        }}>
-          📄 F24
-        </button>
+        {/* Se sembra uno stipendio, mostra SOLO il bottone Stipendio */}
+        {sembraStipendio ? (
+          <button onClick={onAssociaStipendio} disabled={processing} style={{
+            padding: '10px 24px', background: '#10b981', color: 'white',
+            border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 13
+          }}>
+            👤 Associa Stipendio
+          </button>
+        ) : (
+          <>
+            <button onClick={onAssociaFattura} disabled={processing} style={{
+              padding: '8px 16px', background: '#3b82f6', color: 'white',
+              border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 12
+            }}>
+              🧾 Fattura
+            </button>
+            <button onClick={onAssociaStipendio} disabled={processing} style={{
+              padding: '8px 16px', background: '#10b981', color: 'white',
+              border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 12
+            }}>
+              👤 Stipendio
+            </button>
+            <button onClick={onAssociaF24} disabled={processing} style={{
+              padding: '8px 16px', background: '#f59e0b', color: 'white',
+              border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', fontSize: 12
+            }}>
+              📄 F24
+            </button>
+          </>
+        )}
         <button onClick={onIgnora} disabled={processing} style={{
           padding: '8px 16px', background: '#f1f5f9', color: '#64748b',
           border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, marginLeft: 'auto'
