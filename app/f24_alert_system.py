@@ -148,12 +148,11 @@ async def auto_riconcilia_f24(db, username: str) -> Dict:
         
         # Trova movimenti bancari ultimi 90 giorni con causale F24
         data_limite = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
-        movimenti_banca = await db.bank_movements.find({
-            "user_id": username,
+        movimenti_banca = await db.prima_nota_banca.find({
             "data": {"$gte": data_limite},
-            "causale": {"$regex": "F24|tribut|erariale", "$options": "i"},
-            "importo": {"$lt": 0},  # Uscite
-            "reconciled": {"$ne": True}
+            "descrizione": {"$regex": "F24|tribut|erariale", "$options": "i"},
+            "tipo": "uscita",
+            "riconciliato": {"$ne": True}
         }).to_list(1000)
         
         for f24 in f24_non_pagati:
