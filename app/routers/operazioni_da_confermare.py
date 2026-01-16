@@ -491,6 +491,17 @@ async def conferma_operazioni_batch(request: ConfermaBatchRequest) -> Dict[str, 
             else:
                 prima_nota_collection = "prima_nota_banca"
             
+            # Cerca la fattura corrispondente per collegamento diretto
+            fattura_id = None
+            fattura = await db["invoices"].find_one({
+                "$or": [
+                    {"numero_fattura": numero_fattura},
+                    {"invoice_number": numero_fattura}
+                ]
+            }, {"_id": 0, "id": 1})
+            if fattura:
+                fattura_id = fattura.get("id")
+            
             movimento_id = f"aruba_{operazione_id}"
             movimento = {
                 "id": movimento_id,
@@ -500,6 +511,7 @@ async def conferma_operazioni_batch(request: ConfermaBatchRequest) -> Dict[str, 
                 "descrizione": f"Pagamento fattura {numero_fattura} - {fornitore}",
                 "fornitore": fornitore,
                 "numero_fattura": numero_fattura,
+                "fattura_id": fattura_id,  # Collegamento diretto alla fattura
                 "data_fattura": data_documento,
                 "categoria": "Pagamento fornitore",
                 "metodo_pagamento": metodo,
