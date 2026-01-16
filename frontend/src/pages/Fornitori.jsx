@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import Portal from '../components/Portal';
+import { PageInfoCard } from '../components/PageInfoCard';
 import { 
   Search, Edit2, Trash2, Plus, FileText, Building2, 
   Phone, Mail, MapPin, CreditCard, AlertCircle, Check,

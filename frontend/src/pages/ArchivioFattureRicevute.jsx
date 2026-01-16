@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api';
 import EtichettaLotto from '../components/EtichettaLotto';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
+import { PageInfoCard } from '../components/PageInfoCard';
 
 const MESI = [
   { value: '', label: 'Tutti i mesi' },

@@ -4,6 +4,7 @@ import { formatEuro } from '../lib/utils';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { ExportButton } from '../components/ExportButton';
 import { useWebSocketDashboard } from '../hooks/useWebSocket';
+import { PageInfoCard } from '../components/PageInfoCard';
 
 /**
  * DASHBOARD ANALYTICS - Real-time

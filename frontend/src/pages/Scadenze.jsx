@@ -3,6 +3,7 @@ import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { formatEuro } from '../lib/utils';
 import InvoiceXMLViewer from '../components/InvoiceXMLViewer';
+import { PageInfoCard } from '../components/PageInfoCard';
 
 export default function Scadenze() {
   const { anno } = useAnnoGlobale();
