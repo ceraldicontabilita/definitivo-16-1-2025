@@ -145,34 +145,48 @@ export default function RiconciliazioneUnificata() {
       const assegniDaMovimenti = movimenti.filter(m => m.tipo === 'prelievo_assegno');
       const assegniDaApi = (assegniRes.data || [])
         .filter(a => a.stato !== 'incassato') // Solo non incassati
-        .map(a => ({
-          movimento_id: a.id,
-          data: a.data_emissione,
-          descrizione: `Assegno N. ${a.numero} - ${a.beneficiario || 'N/D'}`,
-          importo: -(a.importo || 0),
-          tipo: 'prelievo_assegno',
-          numero_assegno: a.numero,
-          assegno: a,
-          fornitore: a.beneficiario,
-          suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
-        }));
+        .map(a => {
+          const hasData = a.importo && a.beneficiario && a.data_emissione;
+          return {
+            movimento_id: a.id,
+            data: a.data_emissione || a.created_at || null,
+            descrizione: a.numero 
+              ? `Assegno N. ${a.numero}${a.beneficiario ? ' - ' + a.beneficiario : ''}`
+              : a.beneficiario 
+                ? `Assegno per ${a.beneficiario}`
+                : 'Assegno da completare',
+            importo: -(Math.abs(a.importo || 0)),
+            tipo: 'prelievo_assegno',
+            numero_assegno: a.numero || null,
+            assegno: a,
+            fornitore: a.beneficiario || null,
+            stato: a.stato || 'da completare',
+            dati_incompleti: !hasData,
+            suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
+          };
+        });
       // Se non ci sono assegni da riconciliare, mostra gli ultimi incassati per riferimento
       const assegniDaMostrare = assegniDaApi.length > 0 ? assegniDaApi : 
-        (assegniRes.data || []).slice(0, 10).map(a => ({
-          movimento_id: a.id,
-          data: a.data_emissione || a.created_at || new Date().toISOString(),
-          descrizione: a.numero 
-            ? `Assegno N. ${a.numero}${a.beneficiario ? ' - ' + a.beneficiario : ''}`
-            : `Assegno ${a.beneficiario || 'da completare'}`,
-          importo: a.importo ? -(a.importo || 0) : 0,
-          tipo: 'prelievo_assegno',
-          numero_assegno: a.numero,
-          assegno: a,
-          fornitore: a.beneficiario,
-          stato: a.stato || 'vuoto',
-          dati_incompleti: !a.importo || !a.beneficiario || !a.data_emissione,
-          suggerimenti: []
-        }));
+        (assegniRes.data || []).slice(0, 10).map(a => {
+          const hasData = a.importo && a.beneficiario && a.data_emissione;
+          return {
+            movimento_id: a.id,
+            data: a.data_emissione || a.created_at || null,
+            descrizione: a.numero 
+              ? `Assegno N. ${a.numero}${a.beneficiario ? ' - ' + a.beneficiario : ''}`
+              : a.beneficiario 
+                ? `Assegno per ${a.beneficiario}`
+                : 'Assegno da completare',
+            importo: a.importo ? -(Math.abs(a.importo || 0)) : 0,
+            tipo: 'prelievo_assegno',
+            numero_assegno: a.numero || null,
+            assegno: a,
+            fornitore: a.beneficiario || null,
+            stato: a.stato || 'da completare',
+            dati_incompleti: !hasData,
+            suggerimenti: []
+          };
+        });
       setAssegni(assegniDaMostrare);
       
       setStipendiPendenti(movimenti.filter(m => m.tipo === 'stipendio'));
