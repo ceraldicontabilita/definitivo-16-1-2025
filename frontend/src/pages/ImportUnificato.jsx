@@ -37,6 +37,10 @@ export default function ImportUnificato() {
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [results, setResults] = useState([]);
   const [dragOver, setDragOver] = useState(false);
+  const [backgroundMode, setBackgroundMode] = useState(true); // Upload in background attivo di default
+  
+  // Hook per upload in background
+  const { addUpload, hasActiveUploads } = useUpload();
 
   // Gestione drag & drop
   const handleDragOver = useCallback((e) => {
