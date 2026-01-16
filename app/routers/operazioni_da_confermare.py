@@ -617,6 +617,18 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
     
     # 3. Crea il movimento in Prima Nota
     movimento_id = str(uuid.uuid4())
+    # Cerca la fattura corrispondente per collegamento diretto
+    fattura_id_collegato = None
+    fattura_lookup = await db["invoices"].find_one({
+        "$or": [
+            {"numero": numero_fattura},
+            {"invoice_number": numero_fattura},
+            {"numero_fattura": numero_fattura}
+        ]
+    }, {"_id": 0, "id": 1})
+    if fattura_lookup:
+        fattura_id_collegato = fattura_lookup.get("id")
+    
     movimento_base = {
         "id": movimento_id,
         "data": data_documento,
@@ -626,6 +638,7 @@ async def conferma_operazione_aruba(request: ConfermaArubaRequest) -> Dict[str, 
         "categoria": "Fornitori",
         "fornitore": fornitore,
         "numero_fattura": numero_fattura,
+        "fattura_id": fattura_id_collegato,  # Collegamento diretto
         "operazione_aruba_id": operazione_id,
         "source": "aruba_conferma",
         "created_at": datetime.now(timezone.utc).isoformat()
