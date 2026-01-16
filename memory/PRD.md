@@ -1,9 +1,33 @@
 # PRD - Azienda in Cloud ERP
-## Schema Definitivo v2.2 - Gennaio 2026
+## Schema Definitivo v2.3 - Gennaio 2026
+
+---
+
+## ⚠️ CONFIGURAZIONE DATABASE CENTRALIZZATO
+**DATABASE UNICO: `azienda_erp_db`**
+- Tutte le collezioni sono in `azienda_erp_db`
+- NON usare altri database (smartbiz, azienda_db, contabile sono legacy)
+- Configurato in `/app/backend/.env` come `DB_NAME="azienda_erp_db"`
+- **IMPORTANTE**: Prima di ogni operazione DB, verificare che si stia usando `azienda_erp_db`
 
 ---
 
 ## 📅 CHANGELOG RECENTE
+
+### 16 Gennaio 2026 (Sessione 4 - Continuazione)
+- **MIGRAZIONE DB**: Database `smartbiz` migrato e ELIMINATO
+  - Tutti i dati ora in `azienda_erp_db` (DB centralizzato unico)
+  - 31 dipendenti totali con IBAN aggiornati
+- **IMPORTAZIONE DIPENDENTI**: Aggiornati da file Excel
+  - 22 dipendenti aggiornati con nuovi dati (mansione, indirizzo, telefono, email, IBAN)
+  - 9 nuovi dipendenti inseriti
+  - IBAN sincronizzati tra `iban` e `ibans[]`
+- **SYNC IBAN**: Implementata sincronizzazione bidirezionale
+  - Bonifici → Anagrafica (endpoint `/api/archivio-bonifici/sync-iban-anagrafica`)
+  - Anagrafica → Bonifici (a cascata quando si modifica dipendente)
+- **PAGINA RETRIBUZIONE**: Aggiunto storico buste paga
+  - Endpoint `/api/cedolini/dipendente/{id}` per lista cedolini
+  - Mostra: Mese, Ore, Lordo, INPS, IRPEF, Netto, Stato pagamento
 
 ### 16 Gennaio 2026 (Sessione 4)
 - **COMPLETATO**: Miglioramenti UX/UI richiesti dall'utente:
