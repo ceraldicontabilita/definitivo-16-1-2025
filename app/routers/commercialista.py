@@ -1138,7 +1138,7 @@ async def schedula_export_mensile(data: Dict[str, Any] = Body(...)) -> Dict[str,
             )
             
             # Salva log
-            await db["export_log"].insert_one({
+            log_export_doc = {
                 "tipo": "report_mensile",
                 "anno": anno,
                 "mese": mese,
@@ -1149,7 +1149,8 @@ async def schedula_export_mensile(data: Dict[str, Any] = Body(...)) -> Dict[str,
                     "corrispettivi": len(corrispettivi),
                     "prima_nota": len(prima_nota)
                 }
-            })
+            }
+            await db["export_log"].insert_one(log_export_doc.copy())
             
             return {
                 "success": True,
@@ -1172,14 +1173,15 @@ async def schedula_export_mensile(data: Dict[str, Any] = Body(...)) -> Dict[str,
             }
     else:
         # Schedula per il futuro (salva in DB)
-        await db["scheduled_exports"].insert_one({
+        scheduled_doc = {
             "tipo": "report_mensile",
             "anno": anno,
             "mese": mese,
             "email": email,
             "scheduled_at": datetime.now(timezone.utc).isoformat(),
             "status": "pending"
-        })
+        }
+        await db["scheduled_exports"].insert_one(scheduled_doc.copy())
         
         return {
             "success": True,
