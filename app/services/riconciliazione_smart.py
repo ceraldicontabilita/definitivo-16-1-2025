@@ -591,19 +591,74 @@ async def analizza_estratto_conto_batch(limit: int = 100, solo_non_riconciliati:
     Analizza in batch i movimenti dell'estratto conto.
     OTTIMIZZATO: Pre-carica dati per evitare N+1 query.
     
+    CONTROLLO ATOMICO: Esclude movimenti già presenti in Prima Nota dal 2022 ad oggi.
+    
     Returns:
         Statistiche e lista di movimenti analizzati con suggerimenti
     """
     db = Database.get_db()
     
+    # === CONTROLLO ATOMICO: Pre-carica ID movimenti già elaborati ===
+    
+    # 1. Movimenti già collegati a Prima Nota Banca (tramite estratto_conto_id)
+    pn_banca_ids = await db.prima_nota_banca.distinct(
+        "estratto_conto_id",
+        {"estratto_conto_id": {"$exists": True, "$ne": None}}
+    )
+    
+    # 2. Movimenti già collegati a Prima Nota Cassa (tramite estratto_conto_id)  
+    pn_cassa_ids = await db.prima_nota_cassa.distinct(
+        "estratto_conto_id",
+        {"estratto_conto_id": {"$exists": True, "$ne": None}}
+    )
+    
+    # 3. Assegni già incassati o confermati con fattura - ottieni i numeri assegno
+    assegni_elaborati = await db.assegni.find(
+        {"$or": [
+            {"stato": "incassato"},
+            {"fattura_id": {"$exists": True, "$ne": None}, "confermato": True}
+        ]},
+        {"numero": 1, "_id": 0}
+    ).to_list(1000)
+    numeri_assegni_elaborati = set(a.get("numero", "") for a in assegni_elaborati if a.get("numero"))
+    
+    # Combina tutti gli ID da escludere
+    ids_da_escludere = set(pn_banca_ids) | set(pn_cassa_ids)
+    
+    logger.info(f"CONTROLLO ATOMICO: Escludendo {len(ids_da_escludere)} movimenti già in Prima Nota, {len(numeri_assegni_elaborati)} assegni elaborati")
+    
+    # Costruisci query con esclusioni
     query = {}
     if solo_non_riconciliati:
         query["riconciliato"] = {"$ne": True}
+    
+    # Escludi movimenti già elaborati
+    if ids_da_escludere:
+        query["id"] = {"$nin": list(ids_da_escludere)}
     
     movimenti = await db.estratto_conto_movimenti.find(
         query,
         {"_id": 0}
     ).sort("data", -1).limit(limit).to_list(limit)
+    
+    # Filtra ulteriormente: escludi movimenti di prelievo assegno se l'assegno è già elaborato
+    movimenti_filtrati = []
+    for mov in movimenti:
+        desc = (mov.get("descrizione_originale") or mov.get("descrizione") or "").upper()
+        # Se è un prelievo assegno, verifica se l'assegno è già elaborato
+        if "PRELIEVO" in desc and "ASSEGNO" in desc:
+            # Estrai numero assegno dalla descrizione
+            import re
+            match = re.search(r"NUM[:\s]*(\d+)", desc)
+            if match:
+                num_assegno = match.group(1)
+                # Cerca match con gli ultimi 8 caratteri del numero
+                if any(num_assegno[-8:] in na for na in numeri_assegni_elaborati):
+                    logger.debug(f"Escludo prelievo assegno {num_assegno} - già elaborato")
+                    continue
+        movimenti_filtrati.append(mov)
+    
+    movimenti = movimenti_filtrati
     
     # === PRE-CARICA DATI PER EVITARE N+1 ===
     
