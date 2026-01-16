@@ -133,19 +133,19 @@ export default function ImportUnificato() {
         // Endpoint specifici per tipo
         switch (tipo) {
           case 'estratto_conto':
-            endpoint = '/api/documenti/upload-estratto-conto';
+            endpoint = '/api/estratto-conto-movimenti/import';
             break;
           case 'f24':
             endpoint = '/api/f24/upload-pdf';
             break;
           case 'quietanza_f24':
-            endpoint = '/api/f24/upload-quietanza';
+            endpoint = '/api/quietanze-f24/upload';
             break;
           case 'cedolino':
             endpoint = '/api/employees/paghe/upload-pdf';
             break;
           case 'bonifici':
-            endpoint = '/api/archivio-bonifici/upload';
+            endpoint = '/api/archivio-bonifici/jobs/upload-excel';
             break;
           case 'fattura':
             endpoint = '/api/fatture/upload-xml';

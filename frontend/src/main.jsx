@@ -164,6 +164,7 @@ const Finanziaria = lazy(() => import("./pages/Finanziaria.jsx"));
 // === STRUMENTI ===
 const Documenti = lazy(() => import("./pages/Documenti.jsx"));
 const ImportExport = lazy(() => import("./pages/ImportExport.jsx"));
+const ImportUnificato = lazy(() => import("./pages/ImportUnificato.jsx"));
 const RegoleCategorizzazione = lazy(() => import("./pages/RegoleCategorizzazione.jsx"));
 const VerificaCoerenza = lazy(() => import("./pages/VerificaCoerenza.jsx"));
 const Commercialista = lazy(() => import("./pages/Commercialista.jsx"));
