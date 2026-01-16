@@ -144,7 +144,15 @@ export default function RiconciliazioneUnificata() {
       // Usa assegni dall'API diretta 
       const assegniDaMovimenti = movimenti.filter(m => m.tipo === 'prelievo_assegno');
       const assegniDaApi = (assegniRes.data || [])
-        .filter(a => a.stato !== 'incassato') // Solo non incassati
+        .filter(a => {
+          // Escludi assegni già incassati
+          if (a.stato === 'incassato') return false;
+          // Escludi assegni già associati a fattura E confermati
+          if (a.fattura_id && a.confermato) return false;
+          // Escludi assegni già in prima nota
+          if (a.prima_nota_id) return false;
+          return true;
+        })
         .map(a => {
           const hasData = a.importo && a.beneficiario && a.data_emissione;
           return {
@@ -165,19 +173,8 @@ export default function RiconciliazioneUnificata() {
             suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
           };
         });
-      // Se non ci sono assegni da riconciliare, mostra gli ultimi incassati per riferimento
-      const assegniDaMostrare = assegniDaApi.length > 0 ? assegniDaApi : 
-        (assegniRes.data || []).slice(0, 10).map(a => {
-          const hasData = a.importo && a.beneficiario && a.data_emissione;
-          return {
-            movimento_id: a.id,
-            data: a.data_emissione || a.created_at || null,
-            descrizione: a.numero 
-              ? `Assegno N. ${a.numero}${a.beneficiario ? ' - ' + a.beneficiario : ''}`
-              : a.beneficiario 
-                ? `Assegno per ${a.beneficiario}`
-                : 'Assegno da completare',
-            importo: a.importo ? -(Math.abs(a.importo || 0)) : 0,
+      // Se non ci sono assegni da riconciliare, mostra messaggio vuoto (non mostrare quelli già confermati)
+      const assegniDaMostrare = assegniDaApi;
             tipo: 'prelievo_assegno',
             numero_assegno: a.numero || null,
             assegno: a,
