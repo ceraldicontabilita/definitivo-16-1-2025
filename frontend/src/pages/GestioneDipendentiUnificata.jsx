@@ -3,6 +3,7 @@ import api from '../api';
 import { useAnnoGlobale } from '../contexts/AnnoContext';
 import { formatEuro } from '../lib/utils';
 import { ExportButton } from '../components/ExportButton';
+import { PageInfoCard } from '../components/PageInfoCard';
 
 /**
  * GESTIONE DIPENDENTI UNIFICATA
