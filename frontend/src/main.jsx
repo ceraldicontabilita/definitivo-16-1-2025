@@ -203,14 +203,17 @@ const router = createBrowserRouter([
       { path: "previsioni-acquisti", element: <LazyPage><PrevisioniAcquisti /></LazyPage> },
       
       // === BANCA & PAGAMENTI ===
-      { path: "prima-nota", element: <LazyPage><PrimaNota /></LazyPage> },
+      { path: "prima-nota", element: <LazyPage><PrimaNotaUnificata /></LazyPage> },
+      { path: "prima-nota-legacy", element: <LazyPage><PrimaNota /></LazyPage> },
+      { path: "riconciliazione", element: <LazyPage><RiconciliazioneUnificata /></LazyPage> },
       { path: "riconciliazione-smart", element: <LazyPage><RiconciliazioneSmart /></LazyPage> },
       { path: "gestione-assegni", element: <LazyPage><GestioneAssegni /></LazyPage> },
       { path: "archivio-bonifici", element: <LazyPage><ArchivioBonifici /></LazyPage> },
       { path: "estratto-conto", element: <LazyPage><EstrattoContoImport /></LazyPage> },
       
       // === DIPENDENTI ===
-      { path: "dipendenti", element: <LazyPage><GestioneDipendenti /></LazyPage> },
+      { path: "dipendenti", element: <LazyPage><GestioneDipendentiUnificata /></LazyPage> },
+      { path: "dipendenti-legacy", element: <LazyPage><GestioneDipendenti /></LazyPage> },
       { path: "dipendenti-retribuzione", element: <LazyPage><DipendenteRetribuzione /></LazyPage> },
       { path: "dipendenti-progressivi", element: <LazyPage><DipendenteProgressivi /></LazyPage> },
       { path: "dipendenti-bonifici", element: <LazyPage><DipendenteBonifici /></LazyPage> },
