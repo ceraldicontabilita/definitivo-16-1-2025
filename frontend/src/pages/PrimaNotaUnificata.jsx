@@ -275,6 +275,44 @@ export default function PrimaNotaUnificata() {
     }
   };
 
+  // Modifica movimento
+  const handleEdit = (mov) => {
+    setEditingMov({
+      ...mov,
+      importo: Math.abs(mov.importo || 0)
+    });
+  };
+  
+  // Salva modifica
+  const handleSaveEdit = async () => {
+    if (!editingMov) return;
+    
+    setSaving(true);
+    try {
+      const endpoint = editingMov._source === 'cassa' 
+        ? `/api/prima-nota/cassa/${editingMov.id}` 
+        : editingMov._source === 'salari'
+          ? `/api/prima-nota/salari/${editingMov.id}`
+          : `/api/prima-nota/banca/${editingMov.id}`;
+      
+      await api.put(endpoint, {
+        data: editingMov.data,
+        tipo: editingMov.tipo,
+        importo: parseFloat(editingMov.importo),
+        descrizione: editingMov.descrizione,
+        fornitore: editingMov.fornitore,
+        categoria: editingMov.categoria
+      });
+      
+      setEditingMov(null);
+      loadMovimenti();
+    } catch (e) {
+      alert('Errore modifica: ' + (e.response?.data?.detail || e.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Info categoria per visualizzazione
   const getCategoriaInfo = (m) => {
     const cat = (m.categoria || '').toLowerCase();
