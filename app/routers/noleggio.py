@@ -814,7 +814,8 @@ async def update_veicolo(
     
     # CONTROLLO ATOMICO: Verifica che il driver_id esista se viene passato
     if data.get("driver_id"):
-        dipendente = await db["dipendenti"].find_one({"id": data["driver_id"]}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1})
+        # Use "employees" collection (same as /api/dipendenti endpoint)
+        dipendente = await db["employees"].find_one({"id": data["driver_id"]}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1})
         if not dipendente:
             raise HTTPException(status_code=400, detail=f"Dipendente con ID {data['driver_id']} non trovato")
         # Imposta automaticamente il nome completo del driver
