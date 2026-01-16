@@ -552,7 +552,32 @@ function F24Tab({ f24 }) {
 }
 
 function ArubaTab({ fatture, onConferma, processing }) {
-  const [expandedId, setExpandedId] = useState(null);
+  const [preferenze, setPreferenze] = useState({});
+
+  // Carica preferenze per ogni fornitore
+  useEffect(() => {
+    const loadPreferenze = async () => {
+      const newPref = {};
+      for (const op of fatture) {
+        if (op.fornitore && !preferenze[op.fornitore]) {
+          try {
+            const res = await api.get(`/api/operazioni-da-confermare/fornitore-preferenza/${encodeURIComponent(op.fornitore)}`);
+            if (res.data?.found) {
+              newPref[op.fornitore] = res.data.metodo_preferito;
+            }
+          } catch (e) {
+            // Ignora errori
+          }
+        }
+      }
+      if (Object.keys(newPref).length > 0) {
+        setPreferenze(prev => ({ ...prev, ...newPref }));
+      }
+    };
+    if (fatture.length > 0) {
+      loadPreferenze();
+    }
+  }, [fatture]);
 
   if (fatture.length === 0) {
     return (
@@ -563,61 +588,104 @@ function ArubaTab({ fatture, onConferma, processing }) {
     );
   }
 
+  const totale = fatture.reduce((sum, f) => sum + (f.importo || f.netto_pagare || 0), 0);
+
   return (
     <div>
       <div style={{ padding: 16, background: '#f5f3ff', borderBottom: '1px solid #e9d5ff' }}>
-        <h3 style={{ margin: 0, fontSize: 16, color: '#7c3aed' }}>🧾 Fatture Aruba ({fatture.length})</h3>
-        <div style={{ fontSize: 12, color: '#8b5cf6', marginTop: 4 }}>
-          Conferma il metodo di pagamento per ogni fattura
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, color: '#7c3aed' }}>🧾 Fatture Aruba ({fatture.length})</h3>
+            <div style={{ fontSize: 12, color: '#8b5cf6', marginTop: 4 }}>
+              Conferma il metodo di pagamento • Il sistema ricorda le tue preferenze
+            </div>
+          </div>
+          <div style={{ fontWeight: 700, color: '#7c3aed', fontSize: 18 }}>
+            Totale: {formatEuro(totale)}
+          </div>
         </div>
       </div>
       <div style={{ maxHeight: 500, overflow: 'auto' }}>
-        {fatture.map((op, idx) => (
-          <div key={op.id || idx} style={{ 
-            padding: 16, 
-            borderBottom: '1px solid #f1f5f9',
-            opacity: processing === op.id ? 0.5 : 1
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 15 }}>{op.fornitore || 'Fornitore N/A'}</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
-                  Fatt. {op.numero_fattura} • {op.data_documento ? new Date(op.data_documento).toLocaleDateString('it-IT') : '-'}
+        {fatture.map((op, idx) => {
+          const metodoPreferito = preferenze[op.fornitore] || op.metodo_pagamento_proposto;
+          
+          return (
+            <div key={op.id || idx} style={{ 
+              padding: 16, 
+              borderBottom: '1px solid #f1f5f9',
+              opacity: processing === op.id ? 0.5 : 1
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15 }}>{op.fornitore || 'Fornitore N/A'}</div>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                    Fatt. {op.numero_fattura} • {op.data_documento ? new Date(op.data_documento).toLocaleDateString('it-IT') : '-'}
+                  </div>
+                  {metodoPreferito && (
+                    <span style={{
+                      display: 'inline-block',
+                      marginTop: 8,
+                      padding: '4px 10px',
+                      background: preferenze[op.fornitore] ? '#dcfce7' : '#dbeafe',
+                      color: preferenze[op.fornitore] ? '#166534' : '#1e40af',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      fontWeight: 600
+                    }}>
+                      {preferenze[op.fornitore] ? '🧠 Preferito' : '💡 Proposto'}: {metodoPreferito.toUpperCase()}
+                    </span>
+                  )}
                 </div>
-                {op.metodo_pagamento_proposto && (
-                  <span style={{
-                    display: 'inline-block',
-                    marginTop: 8,
-                    padding: '4px 10px',
-                    background: '#dbeafe',
-                    color: '#1e40af',
-                    borderRadius: 4,
-                    fontSize: 11,
-                    fontWeight: 600
-                  }}>
-                    💡 Proposto: {op.metodo_pagamento_proposto.toUpperCase()}
-                  </span>
-                )}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: '#059669' }}>
+                    {formatEuro(op.importo || op.netto_pagare || 0)}
+                  </div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, fontSize: 18, color: '#059669' }}>
-                  {formatEuro(op.importo || op.netto_pagare || 0)}
-                </div>
+              
+              {/* Bottoni metodo pagamento - evidenzia preferito */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button
+                  onClick={() => onConferma(op, 'cassa')}
+                  disabled={processing === op.id}
+                  style={metodoBtn(
+                    metodoPreferito === 'cassa' ? '#dcfce7' : '#fef3c7', 
+                    metodoPreferito === 'cassa' ? '#166534' : '#92400e',
+                    metodoPreferito === 'cassa'
+                  )}
+                >
+                  💰 Cassa {metodoPreferito === 'cassa' && '⭐'}
+                </button>
+                <button
+                  onClick={() => onConferma(op, 'bonifico')}
+                  disabled={processing === op.id}
+                  style={metodoBtn(
+                    metodoPreferito === 'bonifico' ? '#dcfce7' : '#dbeafe', 
+                    metodoPreferito === 'bonifico' ? '#166534' : '#1e40af',
+                    metodoPreferito === 'bonifico'
+                  )}
+                >
+                  🏦 Bonifico {metodoPreferito === 'bonifico' && '⭐'}
+                </button>
+                <button
+                  onClick={() => onConferma(op, 'assegno')}
+                  disabled={processing === op.id}
+                  style={metodoBtn(
+                    metodoPreferito === 'assegno' ? '#dcfce7' : '#f3e8ff', 
+                    metodoPreferito === 'assegno' ? '#166534' : '#7c3aed',
+                    metodoPreferito === 'assegno'
+                  )}
+                >
+                  📝 Assegno {metodoPreferito === 'assegno' && '⭐'}
+                </button>
               </div>
             </div>
-            
-            {/* Bottoni metodo pagamento */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button
-                onClick={() => onConferma(op, 'cassa')}
-                disabled={processing === op.id}
-                style={metodoBtn('#fef3c7', '#92400e')}
-              >
-                💰 Cassa
-              </button>
-              <button
-                onClick={() => onConferma(op, 'bonifico')}
-                disabled={processing === op.id}
+          );
+        })}
+      </div>
+    </div>
+  );
+}
                 style={metodoBtn('#dbeafe', '#1e40af')}
               >
                 🏦 Bonifico
