@@ -1762,7 +1762,7 @@ async def scarico_produzione_fefo(
             "data_movimento": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db[COL_MOVIMENTI_MAG].insert_one(movimento)
+        await db[COL_MOVIMENTI_MAG].insert_one(movimento.copy())
         
         # Aggiorna giacenza prodotto in magazzino
         if lotto.get("prodotto_id"):
