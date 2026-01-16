@@ -150,15 +150,21 @@ export default function DashboardAnalytics() {
       const usciteTotali = movimenti.filter(m => m.tipo === 'uscita').reduce((sum, m) => sum + Math.abs(parseFloat(m.importo) || 0), 0);
       const cashFlow = entrateTotali - usciteTotali;
 
-      // Fatturato mensile
+      // Fatturato mensile - combina fatture e corrispettivi
       const fatturatoMensile = MESI.map((mese, idx) => {
         const meseFatture = fatture.filter(f => {
-          const data = new Date(f.data_fattura || f.data);
+          const data = new Date(f.data_fattura || f.data_ricezione || f.data);
           return data.getMonth() === idx && data.getFullYear() === anno;
         });
+        const meseCorr = corrispettivi.filter(c => {
+          const data = new Date(c.data);
+          return data.getMonth() === idx && data.getFullYear() === anno;
+        });
+        const totFatt = meseFatture.reduce((sum, f) => sum + (parseFloat(f.importo_totale || f.totale) || 0), 0);
+        const totCorr = meseCorr.reduce((sum, c) => sum + (parseFloat(c.totale) || 0), 0);
         return {
           label: mese,
-          value: meseFatture.reduce((sum, f) => sum + (parseFloat(f.importo_totale) || 0), 0),
+          value: totFatt + totCorr,
           color: '#3b82f6'
         };
       });
