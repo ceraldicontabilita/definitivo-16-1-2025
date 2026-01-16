@@ -43,7 +43,6 @@ const NAV_ITEMS = [
       { to: "/riconciliazione", label: "⚡ Riconciliazione Smart", icon: "⚡", isNew: true },
       { to: "/gestione-assegni", label: "Gestione Assegni", icon: "📝" },
       { to: "/archivio-bonifici", label: "Archivio Bonifici", icon: "📂" },
-      { to: "/estratto-conto", label: "Import Estratto Conto", icon: "📥" },
     ]
   },
   
