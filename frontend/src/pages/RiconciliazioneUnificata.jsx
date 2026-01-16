@@ -160,14 +160,17 @@ export default function RiconciliazioneUnificata() {
       const assegniDaMostrare = assegniDaApi.length > 0 ? assegniDaApi : 
         (assegniRes.data || []).slice(0, 10).map(a => ({
           movimento_id: a.id,
-          data: a.data_emissione,
-          descrizione: `Assegno N. ${a.numero} - ${a.beneficiario || 'N/D'}`,
-          importo: -(a.importo || 0),
+          data: a.data_emissione || a.created_at || new Date().toISOString(),
+          descrizione: a.numero 
+            ? `Assegno N. ${a.numero}${a.beneficiario ? ' - ' + a.beneficiario : ''}`
+            : `Assegno ${a.beneficiario || 'da completare'}`,
+          importo: a.importo ? -(a.importo || 0) : 0,
           tipo: 'prelievo_assegno',
           numero_assegno: a.numero,
           assegno: a,
           fornitore: a.beneficiario,
-          stato: a.stato,
+          stato: a.stato || 'vuoto',
+          dati_incompleti: !a.importo || !a.beneficiario || !a.data_emissione,
           suggerimenti: []
         }));
       setAssegni(assegniDaMostrare);
