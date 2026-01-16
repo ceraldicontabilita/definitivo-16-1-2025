@@ -534,7 +534,7 @@ async def crea_scadenza_pagamento(db, fattura_id: str, fattura: Dict, fornitore:
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db[COL_SCADENZIARIO].insert_one(scadenza)
+    await db[COL_SCADENZIARIO].insert_one(scadenza.copy())
     logger.info(f"✅ Scadenza creata: {scadenza_id[:8]} - Scade il {data_scadenza_str}")
     
     return scadenza_id
