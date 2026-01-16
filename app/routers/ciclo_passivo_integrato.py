@@ -724,7 +724,7 @@ async def esegui_riconciliazione(db, scadenza_id: str, transazione_id: str, sour
         "data_riconciliazione": now,
         "created_at": now
     }
-    await db[COL_RICONCILIAZIONI].insert_one(riconciliazione)
+    await db[COL_RICONCILIAZIONI].insert_one(riconciliazione.copy())
     
     return {"success": True, "riconciliazione_id": riconciliazione["id"]}
 
