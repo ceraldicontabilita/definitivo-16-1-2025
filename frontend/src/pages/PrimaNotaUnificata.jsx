@@ -595,18 +595,24 @@ export default function PrimaNotaUnificata() {
       </div>
 
       {/* Riepilogo totali */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
-        <div style={{ padding: 16, background: '#dcfce7', borderRadius: 10, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: '#166534' }}>DARE (Entrate)</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#15803d' }}>{formatEuro(totali.entrate)}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        {saldoAnnoPrecedente !== 0 && (
+          <div style={{ padding: 14, background: '#f0f9ff', borderRadius: 10, textAlign: 'center' }}>
+            <div style={{ fontSize: 10, color: '#0369a1' }}>Saldo {parseInt(anno) - 1}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#0284c7' }}>{formatEuro(saldoAnnoPrecedente)}</div>
+          </div>
+        )}
+        <div style={{ padding: 14, background: '#dcfce7', borderRadius: 10, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#166534' }}>DARE (Entrate)</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#15803d' }}>{formatEuro(totali.entrate)}</div>
         </div>
-        <div style={{ padding: 16, background: '#fee2e2', borderRadius: 10, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: '#991b1b' }}>AVERE (Uscite)</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: '#dc2626' }}>{formatEuro(totali.uscite)}</div>
+        <div style={{ padding: 14, background: '#fee2e2', borderRadius: 10, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#991b1b' }}>AVERE (Uscite)</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#dc2626' }}>{formatEuro(totali.uscite)}</div>
         </div>
-        <div style={{ padding: 16, background: totali.saldo >= 0 ? '#dbeafe' : '#fef3c7', borderRadius: 10, textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: totali.saldo >= 0 ? '#1e40af' : '#92400e' }}>Saldo</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: totali.saldo >= 0 ? '#2563eb' : '#d97706' }}>{formatEuro(totali.saldo)}</div>
+        <div style={{ padding: 14, background: totali.saldo + saldoAnnoPrecedente >= 0 ? '#dbeafe' : '#fef3c7', borderRadius: 10, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: totali.saldo + saldoAnnoPrecedente >= 0 ? '#1e40af' : '#92400e' }}>Saldo Attuale</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: totali.saldo + saldoAnnoPrecedente >= 0 ? '#2563eb' : '#d97706' }}>{formatEuro(totali.saldo + saldoAnnoPrecedente)}</div>
         </div>
       </div>
 
