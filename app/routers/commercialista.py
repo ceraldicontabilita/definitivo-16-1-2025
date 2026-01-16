@@ -318,15 +318,14 @@ async def invia_prima_nota_cassa(data: Dict[str, Any] = Body(...)) -> Dict[str, 
     # Log the send
     db = Database.get_db()
     log_doc = {
-    await db["commercialista_log"].insert_one(log_doc.copy())
-    # REMOVED: 
         "tipo": "prima_nota_cassa",
         "anno": anno,
         "mese": mese,
         "email": email,
         "data_invio": datetime.now(timezone.utc).isoformat(),
         "success": success
-    })
+    }
+    await db["commercialista_log"].insert_one(log_doc.copy())
     
     return {
         "success": success,
