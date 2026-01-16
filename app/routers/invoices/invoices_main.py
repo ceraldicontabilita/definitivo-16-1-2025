@@ -742,7 +742,7 @@ async def get_invoices_by_month(
     
     query = {'month_year': month_year}
     
-    cursor = invoices_collection.find(query).sort('invoice_date', -1)
+    cursor = invoices_collection.find(query, {"_id": 0}).sort('invoice_date', -1)
     invoices = await cursor.to_list(length=1000)
     
     # Calcola statistiche mese
