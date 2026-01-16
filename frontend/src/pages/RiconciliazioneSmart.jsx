@@ -648,7 +648,7 @@ function AssegnoCard({ movimento, onConferma, onCambiaFattura, onIgnora, process
           </>
         ) : (
           <div style={{ color: '#dc2626', fontSize: 13 }}>
-            ⚠️ Nessuna fattura associata - clicca "Cambia Fattura" per associare
+            ⚠️ Nessuna fattura associata - clicca &quot;Cambia Fattura&quot; per associare
           </div>
         )}
       </div>
