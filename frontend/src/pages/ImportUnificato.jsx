@@ -114,13 +114,15 @@ export default function ImportUnificato() {
     if (files.length === 0) return;
     
     setUploading(true);
+    setUploadProgress({ current: 0, total: files.length });
     const uploadResults = [];
 
     for (let i = 0; i < files.length; i++) {
       const fileInfo = files[i];
       const tipo = tipoSelezionato !== 'auto' ? tipoSelezionato : fileInfo.type;
       
-      // Aggiorna stato
+      // Aggiorna progresso e stato
+      setUploadProgress({ current: i + 1, total: files.length });
       setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'uploading' } : f));
 
       try {
