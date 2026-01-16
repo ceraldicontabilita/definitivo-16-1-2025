@@ -144,13 +144,28 @@ export default function GestioneDipendentiUnificata() {
   return (
     <div style={{ padding: 'clamp(12px, 3vw, 20px)', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ margin: 0, fontSize: 'clamp(20px, 4vw, 26px)', color: '#1e293b' }}>
-          👥 Gestione Dipendenti
-        </h1>
-        <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 13 }}>
-          Anagrafica, contratti, retribuzioni, bonifici e acconti
-        </p>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 'clamp(20px, 4vw, 26px)', color: '#1e293b' }}>
+            👥 Gestione Dipendenti
+          </h1>
+          <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 13 }}>
+            Anagrafica, contratti, retribuzioni, bonifici e acconti
+          </p>
+        </div>
+        <ExportButton
+          data={filteredDip}
+          columns={[
+            { key: 'nome_completo', label: 'Nome' },
+            { key: 'codice_fiscale', label: 'Codice Fiscale' },
+            { key: 'data_assunzione', label: 'Data Assunzione' },
+            { key: 'qualifica', label: 'Qualifica' },
+            { key: 'livello', label: 'Livello' },
+            { key: 'status', label: 'Stato' }
+          ]}
+          filename="dipendenti"
+          format="csv"
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, flex: 1, minHeight: 0 }}>
