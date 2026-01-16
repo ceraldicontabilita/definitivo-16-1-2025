@@ -508,6 +508,7 @@ export default function RiconciliazioneSmart() {
                   onAssociaFattura={() => { setSelectedMovimento(m); setSearchType('fattura'); handleCambiaFattura(m); }}
                   onAssociaStipendio={() => handleAssociaStipendio(m)}
                   onAssociaF24={() => handleAssociaF24(m)}
+                  onConfermaStipendio={handleConfermaStipendio}
                   onIgnora={() => handleIgnora(m)}
                   processing={processing === m.movimento_id}
                 />
