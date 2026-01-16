@@ -141,20 +141,36 @@ export default function RiconciliazioneUnificata() {
       // Separa per tipo
       setMovimentiBanca(movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)));
       
-      // Usa assegni dall'API diretta se disponibili, altrimenti dai movimenti
+      // Usa assegni dall'API diretta 
       const assegniDaMovimenti = movimenti.filter(m => m.tipo === 'prelievo_assegno');
-      const assegniDaApi = (assegniRes.data || []).map(a => ({
-        movimento_id: a.id,
-        data: a.data_emissione,
-        descrizione: `Assegno N. ${a.numero} - ${a.beneficiario || 'N/D'}`,
-        importo: -(a.importo || 0),
-        tipo: 'prelievo_assegno',
-        numero_assegno: a.numero,
-        assegno: a,
-        fornitore: a.beneficiario,
-        suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
-      }));
-      setAssegni(assegniDaApi.length > 0 ? assegniDaApi : assegniDaMovimenti);
+      const assegniDaApi = (assegniRes.data || [])
+        .filter(a => a.stato !== 'incassato') // Solo non incassati
+        .map(a => ({
+          movimento_id: a.id,
+          data: a.data_emissione,
+          descrizione: `Assegno N. ${a.numero} - ${a.beneficiario || 'N/D'}`,
+          importo: -(a.importo || 0),
+          tipo: 'prelievo_assegno',
+          numero_assegno: a.numero,
+          assegno: a,
+          fornitore: a.beneficiario,
+          suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
+        }));
+      // Se non ci sono assegni da riconciliare, mostra gli ultimi incassati per riferimento
+      const assegniDaMostrare = assegniDaApi.length > 0 ? assegniDaApi : 
+        (assegniRes.data || []).slice(0, 10).map(a => ({
+          movimento_id: a.id,
+          data: a.data_emissione,
+          descrizione: `Assegno N. ${a.numero} - ${a.beneficiario || 'N/D'}`,
+          importo: -(a.importo || 0),
+          tipo: 'prelievo_assegno',
+          numero_assegno: a.numero,
+          assegno: a,
+          fornitore: a.beneficiario,
+          stato: a.stato,
+          suggerimenti: []
+        }));
+      setAssegni(assegniDaMostrare);
       
       setStipendiPendenti(movimenti.filter(m => m.tipo === 'stipendio'));
       setFattureAruba(arubaRes.data?.operazioni || []);
