@@ -84,8 +84,8 @@ function PieChart({ data }) {
   );
 }
 
-// KPI Card
-function KPICard({ title, value, subtitle, trend, color = '#3b82f6', icon = '📊' }) {
+// KPI Card con indicatore real-time
+function KPICard({ title, value, subtitle, trend, color = '#3b82f6', icon = '📊', isLive = false }) {
   const trendColor = trend > 0 ? '#10b981' : trend < 0 ? '#ef4444' : '#94a3b8';
   const trendIcon = trend > 0 ? '↑' : trend < 0 ? '↓' : '→';
   
@@ -95,8 +95,33 @@ function KPICard({ title, value, subtitle, trend, color = '#3b82f6', icon = '�
       borderRadius: 12,
       padding: 20,
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      borderLeft: `4px solid ${color}`
+      borderLeft: `4px solid ${color}`,
+      position: 'relative'
     }}>
+      {isLive && (
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          fontSize: 10,
+          color: '#10b981',
+          background: '#f0fdf4',
+          padding: '2px 6px',
+          borderRadius: 10
+        }}>
+          <span style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: '#10b981',
+            animation: 'pulse 2s infinite'
+          }} />
+          LIVE
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>{title}</div>
