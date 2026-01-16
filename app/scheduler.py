@@ -370,11 +370,84 @@ async def daily_haccp_routine():
     await check_anomalie_and_notify()
 
 
+async def sync_gmail_aruba_task():
+    """
+    Task eseguito ogni 10 minuti.
+    Scarica nuove fatture da Gmail/Aruba e notifica su Telegram.
+    """
+    from app.database import Database
+    from app.services.aruba_invoice_parser import fetch_aruba_invoices
+    from app.services.telegram_notifications import is_configured, send_telegram_notification
+    
+    logger.info("📧 [SCHEDULER] Avvio sync Gmail/Aruba...")
+    
+    try:
+        db = Database.get_db()
+        
+        # Ottieni configurazione email
+        email_config = await db["email_accounts"].find_one(
+            {"tipo": "aruba"},
+            {"_id": 0}
+        )
+        
+        if not email_config:
+            # Prova con config di default
+            email_config = await db["email_accounts"].find_one({}, {"_id": 0})
+        
+        if not email_config:
+            logger.warning("📧 [SCHEDULER] Nessun account email configurato per sync Aruba")
+            return
+        
+        email_user = email_config.get("email") or email_config.get("username")
+        email_password = email_config.get("password")
+        imap_server = email_config.get("imap_server", "imap.gmail.com")
+        
+        if not email_user or not email_password:
+            logger.warning("📧 [SCHEDULER] Credenziali email mancanti")
+            return
+        
+        # Esegui sync
+        result = await fetch_aruba_invoices(
+            email_user=email_user,
+            email_password=email_password,
+            imap_server=imap_server,
+            days_back=7,
+            auto_import=True
+        )
+        
+        nuove_operazioni = result.get("operazioni_create", 0)
+        totale_processate = result.get("emails_processate", 0)
+        
+        logger.info(f"📧 [SCHEDULER] Sync completato: {nuove_operazioni} nuove operazioni da {totale_processate} email")
+        
+        # Notifica Telegram se ci sono nuove operazioni
+        if nuove_operazioni > 0 and is_configured():
+            from datetime import datetime
+            
+            messaggio = f"""📬 *Nuove Operazioni Aruba*
+
+{nuove_operazioni} nuove fatture da confermare!
+
+📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}
+📧 Email processate: {totale_processate}
+
+👉 Vai su /operazioni-da-confermare per gestirle"""
+            
+            try:
+                await send_telegram_notification(messaggio)
+                logger.info("📱 [SCHEDULER] Notifica Telegram inviata")
+            except Exception as e:
+                logger.error(f"📱 [SCHEDULER] Errore notifica Telegram: {e}")
+        
+    except Exception as e:
+        logger.error(f"📧 [SCHEDULER] Errore sync Gmail/Aruba: {e}")
+
+
 def start_scheduler():
     """Avvia lo scheduler con i task programmati."""
-    logger.info("🚀 [SCHEDULER] Configurazione scheduler HACCP...")
+    logger.info("🚀 [SCHEDULER] Configurazione scheduler...")
     
-    # Task alle 00:01 CET ogni giorno
+    # Task HACCP alle 00:01 CET ogni giorno
     scheduler.add_job(
         daily_haccp_routine,
         CronTrigger(hour=0, minute=1),  # 00:01 UTC
@@ -383,8 +456,20 @@ def start_scheduler():
         replace_existing=True
     )
     
+    # Task Gmail/Aruba ogni 10 minuti
+    scheduler.add_job(
+        sync_gmail_aruba_task,
+        'interval',
+        minutes=10,
+        id="gmail_aruba_sync",
+        name="Sync Gmail/Aruba (ogni 10 min)",
+        replace_existing=True
+    )
+    
     scheduler.start()
-    logger.info("✅ [SCHEDULER] Scheduler HACCP avviato - Task: 00:01 (UTC)")
+    logger.info("✅ [SCHEDULER] Scheduler avviato")
+    logger.info("   - HACCP: 00:01 UTC giornaliero")
+    logger.info("   - Gmail/Aruba: ogni 10 minuti")
 
 
 def stop_scheduler():
