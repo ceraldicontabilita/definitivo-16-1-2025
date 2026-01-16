@@ -213,14 +213,15 @@ export default function DashboardAnalytics() {
           entrate: entrateTotali,
           uscite: usciteTotali,
           cashFlow,
-          numFatture: fatture.length,
+          numFatture: fatture.length + corrispettivi.length,
           numDipendenti: dipendenti.length,
-          numF24: f24.length
+          numF24: f24.length,
+          numCorrispettivi: corrispettivi.length
         },
         fatturatoMensile,
         speseCategoria,
         cashFlowMensile,
-        rawData: { fatture, movimenti, dipendenti }
+        rawData: { fatture, movimenti, dipendenti, corrispettivi }
       });
 
     } catch (e) {
