@@ -44,6 +44,14 @@
 - Saldo progressivo calcolato
 - Pulsanti modifica/elimina per ogni movimento
 
+#### CREAZIONE AUTOMATICA FORNITORI DA ARUBA/GMAIL ✅
+- Quando viene confermata un'operazione da Aruba, il sistema crea automaticamente il fornitore
+- Il fornitore viene creato con flag `dati_incompleti: true`
+- Quando si importa la fattura XML, i dati del fornitore vengono completati automaticamente
+- File modificati:
+  - `/app/app/routers/operazioni_da_confermare.py` (aggiunta creazione fornitore)
+  - `/app/app/routers/invoices/fatture_upload.py` (aggiornamento dati fornitore da XML)
+
 ### 16 Gennaio 2026 - RELEASE CANDIDATE v3.2 🚀
 
 #### TEST E2E FINALE - TUTTI PASSATI ✅
