@@ -1,179 +1,166 @@
 <analysis>**original_problem_statement:**
-L'utente ha inizialmente richiesto una serie di funzionalità, tra cui la gestione degli acconti, la rimozione di dashboard superflue e miglioramenti alla riconciliazione. Successivamente, ha segnalato diversi bug, tra cui un errore nella pagina dei cedolini (cedolini.map is not a function), problemi nei modal di associazione stipendi e F24 (descrizioni troncate, dati non caricati).
-
-Infine, l'utente ha approvato una proposta di refactoring architetturale completa per semplificare l'intera applicazione e ha richiesto di unificare la funzionalità di importazione di tutti i documenti (cedolini, estratti conto, F24, ecc.) in un'unica pagina con un singolo pulsante di upload.
+L'utente ha segnalato una serie di problemi e richieste, evolvendo durante la sessione. Le richieste principali sono:
+1.  **Bug Critico Iniziale (Risolto)**: Dati mancanti su più pagine, in particolare sulla pagina .
+2.  **Nuove Funzionalità**:
+    - Dashboard in tempo reale con aggiornamenti tramite WebSocket.
+    - Miglioramento della reattività per dispositivi mobili.
+    - Upload di file in background che non si interrompe cambiando pagina.
+    - Aggiunta di una card informativa su ogni pagina principale per descriverne funzionalità e collegamenti.
+3.  **Correzioni Bug e UX**:
+    - I tab nella pagina  non funzionavano.
+    - L'ottimizzazione dell'API di riconciliazione e l'aggiunta di un filtro per anno all'API .
+    - I link dalle card dei fornitori alla pagina delle fatture erano errati.
+    - Implementare la navigazione basata su URL per i tab interni alle pagine (es. ).
+    - Il tab  nella pagina di riconciliazione non mostrava dati.
+    - Il caricamento di file CSV di grandi dimensioni si bloccava.
+    - La riconciliazione delle fatture  non sembrava funzionare correttamente.
+    - La pagina  dei dipendenti non salvava i dati e mancava delle funzionalità di modifica/eliminazione.
+    - Rimuovere la pagina  duplicata.
+    - Chiarire e correggere il flusso di lavoro della pagina  (Import Unificato).
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'applicazione è stata sottoposta a un massiccio refactoring architetturale (v3.0).
-- **Database Unificato**: La collezione  è stata migrata e fusa nella collezione . Un script di migrazione () è stato creato e utilizzato.
-- **Pagine Unificate**: Diverse pagine separate sono state consolidate in componenti unificati basati su tab, migliorando notevolmente l'usabilità e la manutenibilità:
-    - **Gestione Dipendenti**:  sostituisce 7 pagine separate.
-    - **Riconciliazione**:  sostituisce 3 pagine.
-    - **Prima Nota**:  sostituisce 2 pagine.
-- **UI Semplificata**: Il menu di navigazione principale è stato drasticamente semplificato per riflettere la nuova architettura a pagine unificate.
-- **Bug Corretti**: Sono stati risolti i bug segnalati dall'utente, tra cui l'errore sulla pagina Cedolini e i problemi nei modal di associazione Stipendi/F24 nella pagina di riconciliazione.
-- **Parser Migliorato**: Il parser dei cedolini ora include una logica di fallback per associare i dipendenti per nome se il Codice Fiscale non viene trovato nel PDF.
-- **Test di Copertura**: È stato eseguito un test automatico su tutte le 26 pagine principali dell'applicazione, confermando che sono operative.
+L'applicazione full-stack (React + FastAPI) è stata significativamente migliorata. Le funzionalità principali esistenti sono:
+- **Correzione Dati**: Il bug critico dei fornitori è stato risolto, ora la pagina mostra 155+ record estratti correttamente dalla collezione .
+- **Dashboard Real-time**: La pagina  ora si aggiorna in tempo reale tramite WebSocket, con indicatori visivi LIVE e una migliore reattività su mobile.
+- **Reattività Mobile**: L'intera applicazione è stata resa più reattiva, con layout che si adattano a schermi di piccole dimensioni, testata su più pagine.
+- **Upload in Background**: È stato implementato un sistema di upload globale () che permette di caricare file senza interrompere la navigazione. La pagina  ora utilizza questo sistema.
+- **Page Info Cards**: Un componente informativo () è stato aggiunto a tutte le pagine principali, fornendo agli utenti una descrizione chiara delle funzionalità, delle fonti di dati e delle interconnessioni di ciascuna pagina.
+- **Correzione Tab Dipendenti**: Tutti i tab nella pagina  (Anagrafica, Contratti, Retribuzione, Bonifici, Acconti) sono stati resi funzionanti correggendo gli endpoint API chiamati dal frontend.
+- **Ottimizzazioni API**:
+    - L'API di riconciliazione () è stata ottimizzata per risolvere un problema N+1, riducendo i tempi di caricamento.
+    - L'API  ora supporta il filtraggio per anno sul backend.
+- **Routing e Navigazione**:
+    - I link rotti dalle card dei fornitori sono stati corretti per puntare a  con i parametri corretti.
+    - Le pagine  e  ora supportano URL specifici per i tab (es. ), permettendo il deep linking.
+- **Fix Riconciliazione**:
+    - Il tab  ora carica e visualizza correttamente gli assegni non ancora incassati.
+    - Il riconoscimento automatico dei tipi di movimento (assegni, POS) è stato migliorato.
+    - La pagina delle fatture ricevute ora indica il metodo di pagamento (Cassa, Banca, ecc.) se una fattura è stata pagata.
+- **Fix Critici Backend**: È stato risolto un conflitto in un'operazione MongoDB ( e  sullo stesso campo) che causava il blocco sia dei caricamenti di file CSV che della conferma delle operazioni Aruba.
 
 **Last working item**:
-- **Last item agent was working**: L'agente stava implementando la richiesta dell'utente di una pagina di Import Unificato. Ha creato il file del componente frontend  e stava per iniziare a creare l'endpoint backend corrispondente che rileverà automaticamente il tipo di documento e lo instraderà al parser corretto.
+- **Last item agent was working**: L'agente stava lavorando su un batch di richieste dell'utente:
+    1.  Rimuovere la pagina .
+    2.  Correggere il salvataggio degli acconti nella pagina  e aggiungere le funzionalità di modifica/eliminazione.
+    3.  Investigare e correggere il flusso di lavoro della pagina  ().
+    L'agente ha confermato che l'API per salvare gli acconti funziona e ha identificato il problema nel frontend. Stava per rimuovere la rotta  e implementare le funzionalità CRUD per gli acconti.
 - **Status**: IN PROGRESS
-- **Agent Testing Done**: N
-- **Which testing method agent to use?**: both
+- **Agent Testing Done**: N (per il batch di task finale)
+- **Which testing method agent to use?**: both. Prima testare le nuove API di modifica/eliminazione acconti con , poi usare lo  per verificare la rimozione della pagina , il funzionamento del form acconti e il flusso corretto della pagina di import.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: (P1) Risolvere la discrepanza nell'API dei dipendenti.
-- **Issue 2**: (P2) Ottimizzare l'API di riconciliazione.
-
-**Issues Detail**:
-- **Issue 1: Risolvere la discrepanza nell'API dei dipendenti**
-    - **Next debug checklist**:
-        1.  Aggiungere logging dettagliato all'endpoint  in  per ispezionare i dati prima della serializzazione.
-        2.  Verificare i modelli Pydantic per errori di validazione che potrebbero escludere record.
-        3.  Confrontare la struttura dei 5 record mancanti nel DB con i 26 restituiti per identificare differenze.
-    - **Why fix this issue and what will be achieved with the fix?**: Garantisce l'integrità dei dati mostrati all'utente e previene bug derivanti da una lista di dipendenti incompleta.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Backend
-    - **Blocked on other issue**: No
-
-- **Issue 2: Ottimizzare API di Riconciliazione**
-    - **Next debug checklist**:
-        1.  Analizzare l'endpoint .
-        2.  Identificare colli di bottiglia (query al DB, calcoli complessi).
-        3.  Ottimizzare le query (es. indici MongoDB) o la logica Python per ridurre il tempo di risposta.
-    - **Why fix this issue and what will be achieved with the fix?**: Rende la pagina di riconciliazione, uno strumento chiave, molto più veloce e reattiva.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: Backend
-    - **Blocked on other issue**: No
+- **Issue 1**: (P1) Il flusso di riconciliazione per le fatture Aruba, sebbene il backend sia stato corretto, non è intuitivo per l'utente, che non vede un'associazione automatica chiara. Si tratta di un problema di UX/UI da investigare.
+- **Issue 2**: (P2) Nella pagina di riconciliazione bancaria, il nome del fornitore non viene sempre estratto e visualizzato nelle card dei movimenti. La logica di matching nel servizio  necessita di ulteriori miglioramenti.
+- **Issue 3**: (P3) Nella pagina , quando si arriva da un link esterno (es. dalla pagina Fornitori), il dropdown dei filtri non pre-seleziona il fornitore corretto, anche se le fatture vengono filtrate correttamente.
 
 **In progress Task List**:
-- **Task 1: Completare la funzionalità di Import Unificato** (P0)
-    - **Where to resume**:
-        1.  Creare l'endpoint backend (es. ) nel router  o in un nuovo router dedicato.
-        2.  Questo endpoint deve ricevere un file, determinarne il tipo (estratto conto, F24, cedolino, ecc.) in base al contenuto o al nome, e invocare il parser specifico.
-        3.  Collegare il componente frontend  al nuovo endpoint, implementando la logica di upload e la visualizzazione dello stato (successo, errore, tipo di documento rilevato).
-    - **What will be achieved with this?**: L'utente potrà caricare diversi tipi di documenti da un'unica pagina, semplificando drasticamente il flusso di lavoro di importazione dati.
+- **Task 1: Implementare CRUD per Acconti Dipendenti** (P0 - HIGHEST PRIORITY)
+    - **Where to resume**: . Correggere la funzione  per far funzionare il salvataggio. Successivamente, aggiungere i pulsanti di modifica ed eliminazione nella  e creare le relative funzioni (e, se necessario, gli endpoint API  e  per ).
+    - **What will be achieved with this?**: Risolve un bug e implementa una richiesta diretta dell'utente, rendendo la gestione degli acconti TFR pienamente funzionale.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: Both
-    - **Blocked on something**: No
+    - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **(P1)** Completare tutti i tab delle pagine unificate, assicurandosi che i dati siano caricati e le azioni (modifica, salvataggio) funzionino correttamente per ogni sezione.
-    - **(P1)** Verificare e rafforzare i flussi a cascata (es. la conferma di un pagamento in riconciliazione deve aggiornare lo stato della fattura, della prima nota e le preferenze del fornitore).
-    - **(P2)** Pulizia del codice: Rimuovere le vecchie pagine React e le route legacy non più utilizzate dopo il refactoring (es. , , etc.). L'utente ha dato il via libera.
+    - **(P1)** Rimuovere la pagina . Rimuovere la rotta da  e il file .
+    - **(P1)** Correggere il flusso della pagina  (Import Unificato). Assicurarsi che i file caricati (es. cedolini) vengano processati e vadano a popolare le sezioni corrette dell'applicazione (es. la pagina ). Rivedere la logica in .
+    - **(P1)** Integrare Google Calendar per la gestione delle scadenze (richiesta originale dell'utente, posticipata).
 - **Future Tasks**:
-    - **(P2)** Risolvere la discrepanza dell'API dei dipendenti (Issue 1).
-    - **(P3)** Ottimizzare le performance dell'API di riconciliazione (Issue 2).
+    - **(P2)** Implementare grafici interattivi con drill-down nella Dashboard Analytics.
+    - **(P2)** Implementare il meccanismo di schedulazione (cron job) per l'invio automatico di report PDF ed export via email.
+    - **(P3)** Implementare il parsing parallelo dei file nel backend dell'Import Unificato per velocizzare l'elaborazione.
 
 **Completed work in this session**
-- **Refactoring Architetturale (v3.0)**:
-    - **Database**: Migrata e unificata la collezione  in .
-    - **Pagine Unificate**: Create le pagine , , e  che consolidano oltre 10 pagine precedenti.
-    - **UI/UX**: Semplificato drasticamente il menu di navigazione principale.
-- **Bug Fixes**:
-    - Risolto l'errore critico  sulla pagina  (era un problema di cache del build).
-    - Corretti i modal di associazione Stipendio e F24 nella pagina di riconciliazione, mostrando la descrizione completa e caricando correttamente i dati.
-- **Miglioramento Parser Cedolini**: Aggiunta una logica di fallback per il matching per nome quando il Codice Fiscale manca nel PDF.
-- **UI Fatture Aruba**: Completata l'interfaccia per la gestione delle fatture Aruba pendenti.
-- **Test di Sistema**: Eseguito un test automatico che ha verificato il funzionamento di 26 pagine chiave dell'applicazione.
+- Correzione bug critico: pagina Fornitori ora mostra tutti i dati.
+- Feature: Dashboard Real-time (WebSocket) implementata e funzionante.
+- Feature: Reattività mobile dell'applicazione migliorata.
+- Feature: Upload di file in background persistente tra le pagine.
+- Feature: Aggiunte card informative () a tutte le pagine principali.
+- Fix: Tutti i tab della pagina Dipendenti sono ora funzionanti.
+- Ottimizzazione: API di riconciliazione (N+1) e API corrispettivi (filtro anno).
+- Fix: Eseguito test E2E completo, risolvendo i bug emersi.
+- Fix: Corretti link, implementata navigazione a tab tramite URL.
+- Fix: Il tab  della riconciliazione ora carica i dati correttamente.
+- Fix: Risolto un errore critico del database che bloccava upload CSV e conferme Aruba.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1**: La discrepanza dell'API dei dipendenti ( restituisce 26 record invece di 31) non è stata risolta.
-- **Issue 2**: La lentezza dell'API di riconciliazione () non è stata risolta.
-
-**Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork**: Mancata gestione delle transazioni PRELIEVO ASSEGNO.
-- **Recurrence count**: 5+
-- **Status**: RESOLVED (nella sessione precedente).
+- **Issue 1**: Inefficienza dell'API di riconciliazione . Sebbene sia stato applicato un fix per il problema N+1, la logica di matching dei nomi dei fornitori dalle descrizioni delle transazioni rimane migliorabile (questo è il Pending/In progress Issue 2).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Major Refactoring**: L'applicazione è passata da un'architettura con molte pagine specifiche a un modello con poche pagine unificate e multifunzionali che usano tab e componenti dinamici.
-- **Database Migration**: Esecuzione di uno script one-off per consolidare i dati da due collezioni (, ) in una sola, eliminando il debito tecnico.
-- **Component-Driven UI**: Le nuove pagine unificate sono costruite come contenitori per tab e componenti più piccoli e riutilizzabili, rendendo il codice più pulito e manutenibile.
+- **Backend**: FastAPI, WebSockets per comunicazione real-time, PyMongo.
+- **Frontend**: React, React Hooks ( per stato globale upload), Vite. Utilizzo di  con  e  per la navigazione e il routing basato su URL.
+- **Database**: MongoDB. Risolto un problema di  con  che causava conflitti tra operatori  e .
+- **Architettura**: L'app si sta evolvendo con componenti e contesti globali (es. ) per funzionalità cross-pagina. È stato introdotto il deep linking per i tab.
 
 **key DB schema**
-- ****: È ora l'unica collezione per tutti i movimenti bancari. La collezione  è stata migrata e dovrebbe essere rimossa.
-- ****: Collezione di riferimento per i documenti F24.
-
-**changes in tech stack**
-- Nessuno.
+- ****: Fatture, contiene il metodo di pagamento ().
+- ****: Assegni, contiene uno  ('emesso', 'incassato').
+- ****: Acconti TFR, collegati a un dipendente.
+- ****: Preferenze utente, usate per la riconciliazione (causavano il bug ).
 
 **All files of reference**
-- **Nuove Pagine Unificate**:
-    - 
-    - 
-    - 
-    -  (in corso)
-- **Routing e Menu**:
-    - 
-    - 
-- **Script di Migrazione**:
-    - 
-- **Router Principali Modificati**:
-    - 
-    - 
-
-**Areas that need refactoring**:
-- **Pulizia del Codice Legacy**: Le vecchie pagine React (, , etc.) e le relative route in  devono essere rimosse per finalizzare il refactoring.
-
-**key api endpoints**
--  (da creare)
--  (presenta ancora una discrepanza sui dati)
--  (corretto per usare la collezione )
--  (corretto per restituire tutti i dipendenti)
+-  (per fix acconti)
+-  (per rimozione rotta )
+-  (per correzione flusso di lavoro)
+-  (per API acconti)
+- 
 
 **Critical Info for New Agent**
-- **Architettura Nuova**: L'intera applicazione è stata refattorizzata. Le nuove pagine che terminano con  sono la nuova base di codice. Le pagine legacy sono ancora presenti ma deprecate e da rimuovere.
-- **Database Pulito**: Il database dei movimenti bancari è stato unificato. Fai riferimento solo alla collezione .
-- **Priorità Attuale**: La priorità assoluta è completare la funzionalità di Import Unificato ( + endpoint backend) come richiesto dall'utente. Subito dopo, procedi con la pulizia delle pagine legacy.
+- L'utente è molto attento ai dettagli del flusso di lavoro e all'interfaccia utente. Le richieste recenti si concentrano sulla correzione di questi aspetti.
+- La priorità assoluta è sistemare la funzionalità degli acconti (Task 1), perché è un bug su una feature esistente.
+- Subito dopo, procedere con la pulizia richiesta dall'utente (rimozione pagina ) e la correzione del flusso di import (Task 2 e 3).
+- Il problema del  nel database era un bloccante critico. La soluzione adottata in  (separare  e  e usare ) sembra aver funzionato, ma prestare attenzione a errori simili in futuro.
+- L'utente ha mostrato frustrazione quando ha percepito che l'agente stava dimenticando le funzionalità esistenti o introducendo confusioni. È fondamentale essere precisi e riconoscere il lavoro già fatto.
 
 **documents and test reports created in this job**
--  (aggiornato con i dettagli del refactoring).
--  (script di migrazione).
+- 
+- 
+-  (aggiornato più volte)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **Richiesta**: Risolvere bug su pagina Cedolini, modal Stipendi e modal F24.
-2.  **Proposta Agente**: Piano di refactoring completo per unificare le pagine e semplificare l'architettura.
-3.  **Approvazione Utente**: Si fai tutto il refactoring, le aree prioritaria sono tutte.
-4.  **Avanzamento Agente**: Comunica il completamento del refactoring di DB e UI.
-5.  **Approvazione Utente**: Continua.
-6.  **Avanzamento Agente**: Comunica il completamento dei flussi a cascata e pulizia codice.
-7.  **Approvazione Utente**: Continua con tutto il programma di visualizzazione che hai elaborato.
-8.  **Avanzamento Agente**: Comunica il test di tutte le pagine.
-9.  **Richiesta Utente**: Procedere, testare cliccando ogni bottone e creare un Import Unificato per tutti i documenti.
-10. **Avanzamento Agente**: Comunica il risultato dei test (25/26 pagine OK, con  che è un falso negativo) e inizia a creare la pagina .
+- **10.** Richiesta di correggere il link errato () nelle card dei fornitori.
+- **9.**  Richiesta di aggiungere il metodo di pagamento nella pagina fatture e di implementare URL univoci per i tab in  e altre pagine. Segnalazione che il tab Assegni non funziona e mancano dati in Stipendi e Movimenti Bancari.
+- **8.**  Segnalazione che la riconciliazione Aruba non associa il pagamento, gli assegni non si associano in automatico e l'upload di un file CSV si blocca.
+- **7.**  Lamentela sul fatto che la pagina  non funziona come previsto (non carica le paghe in  ma in ) e richiesta di eliminare la pagina . Segnalazione che la pagina  non salva e mancano modifica/eliminazione.
+- **6.**  L'agente ha chiesto conferma del suo piano d'azione per le ultime richieste.
+- **5.**  Messaggio dell'utente in attesa.
+- **4.**  L'agente ha inviato una domanda all'utente.
+- **3.**  L'utente chiede di correggere il bug critico nella pagina  prima di procedere con le nuove implementazioni.
+- **2.**  L'utente richiede che, durante l'import, i file non vengano persi se si cambia pagina e chiede una card informativa in ogni pagina che ne descriva i collegamenti.
+- **1.**  L'utente ha risposto al riepilogo dell'agente.
 
 **Project Health Check:**
-- **Broken**: No. Un test automatico ha verificato che tutte le pagine principali sono funzionanti.
+- **Broken**:
+    - La funzionalità di salvataggio degli acconti nella pagina Dipendenti.
 - **Mocked**: No.
 - **Technical Debt**:
-    - **Medium**: L'API  restituisce un set di dati incompleto (Issue 1).
-    - **Low**: L'API di riconciliazione smart necessita di ottimizzazione delle performance (Issue 2).
-    - **Low**: Codice e componenti delle pagine legacy da rimuovere.
+    - **Medium**: La logica di matching dei fornitori nella riconciliazione smart è ancora migliorabile.
+    - **Low**: Il dropdown dei fornitori nella pagina delle fatture non si preseleziona correttamente.
 
 **3rd Party Integrations**
 -  (fitz)
 - 
 - 
+- 
+- 
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----
 - **Telegram Bot API**
+- usage: websockets [--version | <uri>]
 
 **Testing status**
-- **Testing agent used after significant changes**: NO
-- **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**:  (script one-off per testare tutte le pagine).
-- **Known regressions**: Nessuna regressione nota. I bug precedenti sono stati risolti e la nuova architettura è stata testata positivamente.
-
-**Credentials to test flow:**
-Le credenziali sono configurate nei file  e gestite dall'ambiente.
-
-**What agent forgot to execute**
-L'agente non ha dimenticato nulla di critico. Ha correttamente documentato i problemi in sospeso (discrepanza API, ottimizzazione) e si stava muovendo secondo il piano approvato dall'utente. Il prossimo passo logico è rimuovere il codice legacy dopo aver completato l'ultima richiesta dell'utente (import unificato).</analysis>
+- **Testing agent used after significant changes**: YES, è stato usato per un test E2E completo dopo l'implementazione delle PageInfoCard e delle ottimizzazioni API.
+- **Test files created**: No nuovi file di test persistenti, ma lo script di test del testing agent è stato eseguito.
+- **Known regressions**: Nessuna regressione nota. I problemi segnalati sono bug pre-esistenti o nuove richieste.</analysis>
