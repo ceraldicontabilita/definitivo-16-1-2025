@@ -181,7 +181,7 @@ export default function DashboardAnalytics() {
     try {
       // Carica dati da vari endpoint - usa endpoint che hanno dati reali
       const [fattureRes, cassaRes, bancaRes, salariRes, dipendentiRes, f24Res, corrispettiviRes] = await Promise.all([
-        api.get(`/api/fatture-ricevute/lista?anno=${anno}`).catch(() => ({ data: { fatture: [] } })),
+        api.get(`/api/fatture-ricevute/archivio?anno=${anno}`).catch(() => ({ data: { fatture: [] } })),
         api.get(`/api/prima-nota/cassa?anno=${anno}`).catch(() => ({ data: { movimenti: [] } })),
         api.get(`/api/prima-nota/banca?anno=${anno}`).catch(() => ({ data: { movimenti: [] } })),
         api.get(`/api/prima-nota/salari?anno=${anno}`).catch(() => ({ data: { movimenti: [] } })),
