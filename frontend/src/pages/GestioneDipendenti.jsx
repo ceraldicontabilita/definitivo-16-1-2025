@@ -28,6 +28,8 @@ export default function GestioneDipendenti() {
     email: '',
     mansione: '',
     data_assunzione: '',
+    iban: '',
+    ibans: [],
   });
 
   const [newDipendente, setNewDipendente] = useState({
