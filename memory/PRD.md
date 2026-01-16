@@ -892,6 +892,12 @@ Tutte le pagine3 supportano layout mobile:
   - Match su: nome completo esatto, cognome+nome, match parziale
   - Riduce significativamente gli errori "CF mancante"
 
+- ✅ **Fix Modal Riconciliazione**:
+  - Modal Stipendio: ora carica e visualizza correttamente tutti i cedolini non pagati con match per importo
+  - Modal F24: ora carica tutti gli F24 non pagati dalla collezione corretta (`f24_models`) con tributi dettagliati
+  - Descrizione completa visibile nel modal (non più troncata)
+  - Ricerca funzionante per tutti i tipi (fattura, stipendio, F24)
+
 ### 2026-01-14 - Algoritmo Riconciliazione F24-Quietanza v3
 - ✅ **Algoritmo corretto per gestire ravvedimenti operosi**
   - **File modificato**: `/app/app/routers/f24/f24_riconciliazione.py`
