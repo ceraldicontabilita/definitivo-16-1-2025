@@ -26,6 +26,7 @@ export default function RiconciliazioneUnificata() {
   const { anno } = useAnnoGlobale();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [processing, setProcessing] = useState(null);
   
   // Dati per ogni sezione
@@ -36,6 +37,10 @@ export default function RiconciliazioneUnificata() {
   const [fattureAruba, setFattureAruba] = useState([]);
   const [stipendiPendenti, setStipendiPendenti] = useState([]);
   
+  // Paginazione
+  const [currentLimit, setCurrentLimit] = useState(25);
+  const [hasMore, setHasMore] = useState(true);
+  
   // Auto-match stats
   const [autoMatchStats, setAutoMatchStats] = useState({ matched: 0, pending: 0 });
 
@@ -43,18 +48,20 @@ export default function RiconciliazioneUnificata() {
     loadAllData();
   }, [anno]);
 
-  const loadAllData = async () => {
+  const loadAllData = async (limit = 25) => {
     setLoading(true);
     try {
       // Carica tutto in parallelo - limit ridotto per performance
       const [smartRes, arubaRes, f24Res, stipendiRes] = await Promise.all([
-        api.get('/api/operazioni-da-confermare/smart/analizza?limit=25').catch(() => ({ data: { movimenti: [], stats: {} } })),
+        api.get(`/api/operazioni-da-confermare/smart/analizza?limit=${limit}`).catch(() => ({ data: { movimenti: [], stats: {} } })),
         api.get('/api/operazioni-da-confermare/aruba-pendenti').catch(() => ({ data: { operazioni: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-f24').catch(() => ({ data: { f24: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } }))
       ]);
 
       const movimenti = smartRes.data?.movimenti || [];
+      setHasMore(movimenti.length >= limit);
+      setCurrentLimit(limit);
       
       // Separa per tipo
       setMovimentiBanca(movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)));
@@ -77,6 +84,35 @@ export default function RiconciliazioneUnificata() {
       console.error('Errore caricamento:', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Carica altri movimenti
+  const loadMore = async () => {
+    const newLimit = currentLimit + 25;
+    setLoadingMore(true);
+    try {
+      const smartRes = await api.get(`/api/operazioni-da-confermare/smart/analizza?limit=${newLimit}`);
+      const movimenti = smartRes.data?.movimenti || [];
+      
+      setHasMore(movimenti.length >= newLimit);
+      setCurrentLimit(newLimit);
+      
+      setMovimentiBanca(movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)));
+      setAssegni(movimenti.filter(m => m.tipo === 'prelievo_assegno'));
+      setStipendiPendenti(movimenti.filter(m => m.tipo === 'stipendio'));
+      
+      setStats(prev => ({
+        ...prev,
+        totale: movimenti.length,
+        banca: movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)).length,
+        assegni: movimenti.filter(m => m.tipo === 'prelievo_assegno').length,
+        stipendi: movimenti.filter(m => m.tipo === 'stipendio').length,
+      }));
+    } catch (e) {
+      console.error('Errore caricamento:', e);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
