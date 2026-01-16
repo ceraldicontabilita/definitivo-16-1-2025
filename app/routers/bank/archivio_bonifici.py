@@ -1643,7 +1643,7 @@ async def sync_iban_bonifici_to_anagrafica():
     bonifici = await db.bonifici_transfers.find(
         {
             "dipendente_id": {"$exists": True, "$ne": None},
-            "beneficiario.iban": {"$exists": True, "$ne": None, "$ne": ""}
+            "beneficiario.iban": {"$exists": True, "$nin": [None, ""]}
         },
         {"dipendente_id": 1, "beneficiario.iban": 1, "_id": 0}
     ).to_list(10000)
