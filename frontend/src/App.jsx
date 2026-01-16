@@ -7,6 +7,8 @@ import F24EmailSync from "./components/F24EmailSync";
 import NotificationBell from "./components/NotificationBell";
 import ChatAI from "./components/ChatAI";
 import { NotificheScadenze } from "./components/NotificheScadenze";
+import { UploadProvider } from "./contexts/UploadContext";
+import { UploadStatusBar } from "./components/UploadStatusBar";
 
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: "📊", short: "Home" },
