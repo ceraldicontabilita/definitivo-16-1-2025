@@ -175,7 +175,7 @@ Aruba Email                 Backend                    Database
 
 ```
 /app
-├── app/                              # Backend FastAPI
+├── app/                              # Backend FastAPI (struttura legacy)
 │   ├── main.py                       # Entry point, router registration
 │   ├── database.py                   # MongoDB connection
 │   ├── config.py                     # Settings from .env
@@ -196,8 +196,13 @@ Aruba Email                 Backend                    Database
 │   │   │   ├── non_conformi.py
 │   │   │   └── ...
 │   │   │
-│   │   ├── operazioni_da_confermare.py
-│   │   ├── settings.py                        # ⭐ Logo endpoint
+│   │   ├── invoices/
+│   │   │   └── fatture_ricevute.py            # ⭐ P0 Validators
+│   │   │
+│   │   ├── suppliers.py                       # ⭐ Bulk Update, P0 Check
+│   │   ├── cedolini_riconciliazione.py        # ⭐ P0 Validator salari
+│   │   ├── operazioni_da_confermare.py        # ⭐ Batch confirm
+│   │   ├── settings.py                        # Logo endpoint
 │   │   ├── documenti.py
 │   │   ├── fatture.py
 │   │   └── ...
@@ -219,39 +224,59 @@ Aruba Email                 Backend                    Database
 ├── frontend/                         # React app
 │   ├── src/
 │   │   ├── App.jsx                   # Layout principale
-│   │   ├── main.jsx                  # Entry point
+│   │   ├── main.jsx                  # Entry point + routes
 │   │   ├── api.js                    # Axios instance
 │   │   │
 │   │   ├── pages/
 │   │   │   ├── Dashboard.jsx
-│   │   │   ├── RicettarioDinamico.jsx         # ⭐ UI ricette + AI search
-│   │   │   ├── LibroAllergeni.jsx             # ⭐ Esempio responsive
+│   │   │   ├── PrimaNota.jsx                  # ⭐ Redesigned
+│   │   │   ├── PrimaNotaSalari.jsx            # ⭐ New page
+│   │   │   ├── Fornitori.jsx                  # ⭐ Modified
+│   │   │   ├── RicettarioDinamico.jsx         # UI ricette + AI search
+│   │   │   ├── LibroAllergeni.jsx             # Esempio responsive
 │   │   │   ├── OperazioniDaConfermare.jsx
 │   │   │   ├── ArchivioBonifici.jsx
 │   │   │   └── ...
 │   │   │
 │   │   ├── components/
+│   │   │   ├── prima-nota/                    # ⭐ New modular components
 │   │   │   ├── EtichettaLotto.jsx
 │   │   │   ├── InvoiceXMLViewer.jsx
 │   │   │   └── ...
 │   │   │
+│   │   ├── stores/
+│   │   │   └── primaNotaStore.js              # ⭐ Zustand store
+│   │   │
 │   │   ├── hooks/
-│   │   │   └── useResponsive.js               # ⭐ Hook responsive
+│   │   │   └── useResponsive.js               # Hook responsive
 │   │   │
 │   │   └── styles.css                # Stili globali (sidebar, nav)
 │   │
 │   ├── public/
-│   │   ├── logo-ceraldi.png          # ⭐ Logo bianco
+│   │   ├── logo-ceraldi.png          # Logo bianco
 │   │   └── ...
 │   │
 │   └── package.json
 │
 └── memory/                           # Documentazione
-    ├── PRD.md                        # Product Requirements
-    ├── CHANGELOG.md                  # Storico modifiche
-    ├── ROADMAP.md                    # Task futuri
-    └── ARCHITECTURE.md               # Questo file
+    ├── PRD.md                        # Product Requirements ⭐ Updated
+    ├── CHANGELOG.md                  # Storico modifiche ⭐ Updated
+    ├── ROADMAP.md                    # Task futuri ⭐ Updated
+    ├── ARCHITECTURE.md               # Questo file
+    ├── SCHEMA.md                     # Schema DB completo
+    └── ...                           # Altri doc di riferimento
 ```
+
+---
+
+## ⚠️ Note Struttura
+
+**Debito Tecnico**: Coesistono due strutture backend:
+- `/app/app/` - Struttura legacy con la maggior parte della logica
+- `/app/backend/` - Nuova struttura, meno utilizzata
+
+**Hot Reload Issue**: Modifiche a `/app/app/` potrebbero non essere rilevate automaticamente.
+Usare `sudo supervisorctl restart backend` dopo le modifiche.
 
 ---
 
