@@ -261,7 +261,7 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                 payslip_id = str(uuid.uuid4())
                 mese = payslip.get("mese", "") or (str(mese_num) if mese_num else "")
                 anno = payslip.get("anno", "") or (str(anno_num) if anno_num else "")
-                # Importo busta paga: deve includere acconto + netto finale (parser gie0 calcola il totale)
+                # Importo busta paga: deve includere acconto + netto finale (parser già calcola il totale)
                 importo_busta = float(
                     payslip.get("retribuzione_netta")
                     if payslip.get("retribuzione_netta") is not None
