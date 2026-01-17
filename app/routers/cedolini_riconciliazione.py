@@ -369,3 +369,197 @@ async def import_excel_storico(file: UploadFile = File(...)) -> Dict[str, Any]:
             risultato["failed"] += 1
     
     return risultato
+
+
+
+@router.post("/migra-da-prima-nota-salari")
+async def migra_da_prima_nota_salari(
+    data: Dict[str, Any] = Body(default={})
+) -> Dict[str, Any]:
+    """
+    Migra i pagamenti stipendi dalla Prima Nota Salari ai Cedolini.
+    Prende i movimenti tipo 'uscita' (pagamenti effettuati) e li collega ai cedolini.
+    
+    Questo permette di:
+    1. Avere tutti i pagamenti nella nuova sezione Cedolini
+    2. Mantenere lo storico dei pagamenti già registrati
+    """
+    db = Database.get_db()
+    anno = data.get("anno")
+    
+    # Query per movimenti salari (uscite = pagamenti effettuati)
+    query = {"tipo": "uscita"}
+    if anno:
+        query["$or"] = [
+            {"data": {"$regex": f"^{anno}"}},
+            {"anno": anno},
+            {"anno": str(anno)}
+        ]
+    
+    # Leggi movimenti dalla Prima Nota Salari
+    movimenti = await db["prima_nota_salari"].find(query, {"_id": 0}).to_list(5000)
+    
+    risultato = {
+        "totale_movimenti": len(movimenti),
+        "cedolini_aggiornati": 0,
+        "cedolini_creati": 0,
+        "skipped": 0,
+        "errors": []
+    }
+    
+    for mov in movimenti:
+        try:
+            nome_dip = mov.get("dipendente_nome") or mov.get("nome_dipendente") or ""
+            importo = float(mov.get("importo", 0))
+            data_pag = mov.get("data", "")
+            descrizione = mov.get("descrizione", "")
+            
+            if not nome_dip or importo <= 0:
+                risultato["skipped"] += 1
+                continue
+            
+            # Estrai mese/anno dalla descrizione o data
+            mese = None
+            anno_ced = None
+            
+            # Prova a estrarre da descrizione (es. "Stipendio NOME - Ottobre 2025")
+            import re
+            mesi_map = {
+                'gennaio': 1, 'febbraio': 2, 'marzo': 3, 'aprile': 4,
+                'maggio': 5, 'giugno': 6, 'luglio': 7, 'agosto': 8,
+                'settembre': 9, 'ottobre': 10, 'novembre': 11, 'dicembre': 12
+            }
+            for mese_nome, mese_num in mesi_map.items():
+                if mese_nome in descrizione.lower():
+                    mese = mese_num
+                    # Cerca anno
+                    anno_match = re.search(r'20\d{2}', descrizione)
+                    if anno_match:
+                        anno_ced = int(anno_match.group())
+                    break
+            
+            # Se non trovato, usa data pagamento
+            if not mese and data_pag:
+                try:
+                    parts = data_pag.split("-")
+                    anno_ced = int(parts[0])
+                    mese = int(parts[1])
+                except:
+                    pass
+            
+            if not mese or not anno_ced:
+                risultato["skipped"] += 1
+                continue
+            
+            # Cerca cedolino esistente
+            cedolino = await db[COLLECTION_CEDOLINI].find_one({
+                "nome_dipendente": {"$regex": nome_dip, "$options": "i"},
+                "mese": {"$in": [mese, str(mese)]},
+                "anno": {"$in": [anno_ced, str(anno_ced)]}
+            })
+            
+            if cedolino:
+                # Aggiorna cedolino esistente con info pagamento
+                if not cedolino.get("pagato"):
+                    await db[COLLECTION_CEDOLINI].update_one(
+                        {"id": cedolino["id"]},
+                        {"$set": {
+                            "pagato": True,
+                            "importo_pagato": importo,
+                            "data_pagamento": data_pag,
+                            "metodo_pagamento": "bonifico",  # Default per salari
+                            "prima_nota_salari_id": mov.get("id"),
+                            "migrato_da_prima_nota": True,
+                            "updated_at": datetime.utcnow().isoformat()
+                        }}
+                    )
+                    risultato["cedolini_aggiornati"] += 1
+                else:
+                    risultato["skipped"] += 1
+            else:
+                # Crea nuovo cedolino già pagato
+                nuovo = {
+                    "id": str(uuid.uuid4()),
+                    "nome_dipendente": nome_dip.title(),
+                    "dipendente_id": mov.get("dipendente_id"),
+                    "mese": mese,
+                    "anno": anno_ced,
+                    "periodo": f"{mese:02d}/{anno_ced}",
+                    "netto": importo,
+                    "netto_mese": importo,
+                    "pagato": True,
+                    "importo_pagato": importo,
+                    "data_pagamento": data_pag,
+                    "metodo_pagamento": "bonifico",
+                    "prima_nota_salari_id": mov.get("id"),
+                    "migrato_da_prima_nota": True,
+                    "source": "migrazione_prima_nota_salari",
+                    "created_at": datetime.utcnow().isoformat()
+                }
+                await db[COLLECTION_CEDOLINI].insert_one(nuovo.copy())
+                risultato["cedolini_creati"] += 1
+                
+        except Exception as e:
+            risultato["errors"].append(f"{nome_dip}: {str(e)}")
+    
+    return risultato
+
+
+@router.get("/riepilogo-pagamenti")
+async def riepilogo_pagamenti_cedolini(
+    anno: Optional[int] = Query(None)
+) -> Dict[str, Any]:
+    """
+    Riepilogo pagamenti cedolini per l'anno.
+    Mostra totali per metodo pagamento e stato.
+    """
+    db = Database.get_db()
+    
+    query = {}
+    if anno:
+        query["anno"] = {"$in": [anno, str(anno)]}
+    
+    pipeline = [
+        {"$match": query},
+        {"$group": {
+            "_id": {
+                "pagato": "$pagato",
+                "metodo": "$metodo_pagamento"
+            },
+            "count": {"$sum": 1},
+            "totale_netto": {"$sum": {"$toDouble": {"$ifNull": ["$netto", "$netto_mese"]}}},
+            "totale_pagato": {"$sum": {"$toDouble": {"$ifNull": ["$importo_pagato", 0]}}}
+        }}
+    ]
+    
+    results = await db[COLLECTION_CEDOLINI].aggregate(pipeline).to_list(100)
+    
+    riepilogo = {
+        "anno": anno,
+        "totale_cedolini": 0,
+        "da_pagare": {"count": 0, "totale": 0},
+        "pagati": {
+            "contanti": {"count": 0, "totale": 0},
+            "bonifico": {"count": 0, "totale": 0},
+            "assegno": {"count": 0, "totale": 0},
+            "totale": {"count": 0, "totale": 0}
+        }
+    }
+    
+    for r in results:
+        count = r.get("count", 0)
+        totale = r.get("totale_pagato", 0) or r.get("totale_netto", 0)
+        riepilogo["totale_cedolini"] += count
+        
+        if not r["_id"].get("pagato"):
+            riepilogo["da_pagare"]["count"] += count
+            riepilogo["da_pagare"]["totale"] += totale
+        else:
+            metodo = r["_id"].get("metodo") or "bonifico"
+            if metodo in riepilogo["pagati"]:
+                riepilogo["pagati"][metodo]["count"] += count
+                riepilogo["pagati"][metodo]["totale"] += totale
+            riepilogo["pagati"]["totale"]["count"] += count
+            riepilogo["pagati"]["totale"]["totale"] += totale
+    
+    return riepilogo
