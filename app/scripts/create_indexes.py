@@ -11,8 +11,11 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+MONGO_URL = os.environ.get("MONGO_URL")
 DB_NAME = os.environ.get("DB_NAME", "azienda_erp_db")
+
+if not MONGO_URL:
+    raise ValueError("MONGO_URL environment variable is required - use MongoDB Atlas connection string")
 
 
 async def create_indexes():

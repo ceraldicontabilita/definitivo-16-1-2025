@@ -8,7 +8,10 @@ from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 
 MONGO_URL = os.environ.get('MONGO_URL')
-DB_NAME = 'azienda_erp_db'
+DB_NAME = os.environ.get('DB_NAME', 'azienda_erp_db')
+
+if not MONGO_URL:
+    raise ValueError("MONGO_URL environment variable is required - use MongoDB Atlas connection string")
 
 
 async def migrate_estratto_conto():
