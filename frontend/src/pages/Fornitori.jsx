@@ -726,7 +726,7 @@ function SupplierCard({ supplier, onEdit, onDelete, onViewInvoices, onChangeMeto
           flex: 1,
           padding: '12px',
           border: 'none',
-          borderLeft: hasPiva && hasIncomplete ? '1px solid #e5e7eb' : 'none',
+          borderLeft: hasPiva ? '1px solid #e5e7eb' : 'none',
           backgroundColor: 'transparent',
           cursor: 'pointer',
           display: 'flex',
