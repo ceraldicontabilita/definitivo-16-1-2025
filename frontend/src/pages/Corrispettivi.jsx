@@ -4,6 +4,11 @@ import { formatDateIT, formatEuro } from "../lib/utils";
 import { useAnnoGlobale } from "../contexts/AnnoContext";
 import { PageInfoCard } from '../components/PageInfoCard';
 
+/**
+ * PAGINA CORRISPETTIVI
+ * Mostra i corrispettivi dalla Prima Nota Cassa (categoria: "Corrispettivi")
+ * I corrispettivi vengono importati direttamente nella Prima Nota Cassa tramite XML
+ */
 export default function Corrispettivi() {
   const { anno: selectedYear } = useAnnoGlobale();
   const [corrispettivi, setCorrispettivi] = useState([]);
@@ -19,21 +24,72 @@ export default function Corrispettivi() {
   async function loadCorrispettivi() {
     try {
       setLoading(true);
-      const startDate = `${selectedYear}-01-01`;
-      const endDate = `${selectedYear}-12-31`;
-      const r = await api.get(`/api/corrispettivi?data_da=${startDate}&data_a=${endDate}`);
-      setCorrispettivi(Array.isArray(r.data) ? r.data : []);
+      setErr("");
+      // Carica dalla Prima Nota Cassa con filtro categoria "Corrispettivi"
+      const r = await api.get(`/api/prima-nota/cassa?anno=${selectedYear}&categoria=Corrispettivi&limit=2500`);
+      const movimenti = r.data?.movimenti || [];
+      
+      // Raggruppa per data (un corrispettivo per giorno)
+      const gruppiPerData = {};
+      movimenti.forEach(m => {
+        const data = m.data || '';
+        if (!gruppiPerData[data]) {
+          gruppiPerData[data] = {
+            id: m.id,
+            data: data,
+            totale: 0,
+            pagato_contanti: 0,
+            pagato_elettronico: 0,
+            totale_iva: 0,
+            totale_imponibile: 0,
+            matricola_rt: m.dettaglio?.matricola_rt || '',
+            movimenti: []
+          };
+        }
+        
+        const importo = Math.abs(m.importo || 0);
+        gruppiPerData[data].totale += importo;
+        gruppiPerData[data].movimenti.push(m);
+        
+        // Estrai dettagli se disponibili
+        if (m.dettaglio) {
+          gruppiPerData[data].pagato_contanti += m.dettaglio.contanti || 0;
+          gruppiPerData[data].pagato_elettronico += m.dettaglio.elettronico || 0;
+          gruppiPerData[data].totale_iva += m.dettaglio.totale_iva || 0;
+        } else {
+          // Se non ci sono dettagli, stima IVA al 10%
+          const ivaStimata = importo - (importo / 1.10);
+          gruppiPerData[data].totale_iva += ivaStimata;
+        }
+      });
+      
+      // Calcola imponibile
+      Object.values(gruppiPerData).forEach(g => {
+        g.totale_imponibile = g.totale - g.totale_iva;
+        // Se non ci sono dettagli contanti/elettronico, usa totale
+        if (g.pagato_contanti === 0 && g.pagato_elettronico === 0) {
+          g.pagato_contanti = g.totale; // Default: tutto contanti
+        }
+      });
+      
+      // Converti in array e ordina per data decrescente
+      const corrispettiviArray = Object.values(gruppiPerData).sort((a, b) => 
+        (b.data || '').localeCompare(a.data || '')
+      );
+      
+      setCorrispettivi(corrispettiviArray);
     } catch (e) {
       console.error("Error loading corrispettivi:", e);
+      setErr("Errore caricamento: " + (e.response?.data?.detail || e.message));
     } finally {
       setLoading(false);
     }
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("Eliminare questo corrispettivo?")) return;
+    if (!window.confirm("Eliminare questo corrispettivo dalla Prima Nota?")) return;
     try {
-      await api.delete(`/api/corrispettivi/${id}`);
+      await api.delete(`/api/prima-nota/cassa/${id}`);
       loadCorrispettivi();
     } catch (e) {
       setErr("Errore eliminazione: " + (e.response?.data?.detail || e.message));
