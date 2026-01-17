@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 
 async def migrate_payslips_to_cedolini():
     """Migra i record da payslips a cedolini."""
-    from app.database import Database
+    from app.database import Database, connect_db
     
+    # Inizializza connessione DB
+    await connect_db()
     db = Database.get_db()
     
     print("=" * 60)
