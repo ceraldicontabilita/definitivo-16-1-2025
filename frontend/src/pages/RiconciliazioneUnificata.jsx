@@ -142,22 +142,26 @@ export default function RiconciliazioneUnificata() {
   const loadAllData = async (limit = 50) => {
     setLoading(true);
     try {
-      // Carica in parallelo con endpoint ottimizzati
-      const [bancaRes, arubaRes, f24Res, stipendiRes, assegniRes] = await Promise.all([
-        api.get(`/api/operazioni-da-confermare/smart/banca-veloce?limit=${limit}`).catch(() => ({ data: { movimenti: [], stats: {} } })),
+      // Carica TUTTO in una sola chiamata aggregata per velocità
+      const [bancaRes, arubaRes, f24Res, stipendiRes] = await Promise.all([
+        api.get(`/api/operazioni-da-confermare/smart/banca-veloce?limit=${limit}`).catch(() => ({ data: { movimenti: [], stats: {}, assegni: [] } })),
         api.get('/api/operazioni-da-confermare/aruba-pendenti').catch(() => ({ data: { operazioni: [] } })),
         api.get('/api/operazioni-da-confermare/smart/cerca-f24').catch(() => ({ data: { f24: [] } })),
-        api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } })),
-        api.get('/api/assegni?limit=100').catch(() => ({ data: [] }))
+        api.get('/api/operazioni-da-confermare/smart/cerca-stipendi').catch(() => ({ data: { stipendi: [] } }))
       ]);
 
       const movimenti = bancaRes.data?.movimenti || [];
+      const assegniDaApi = bancaRes.data?.assegni || [];
+      
       setHasMore(movimenti.length >= limit);
       setCurrentLimit(limit);
       setStats(bancaRes.data?.stats || {});
       
-      // Movimenti banca base
-      setMovimentiBanca(movimenti);
+      // Movimenti banca (escludi prelievi assegno)
+      setMovimentiBanca(movimenti.filter(m => !m.descrizione?.toUpperCase()?.includes('PRELIEVO ASSEGNO')));
+      
+      // Assegni da riconciliare
+      setAssegni(assegniDaApi);
       
       // Usa assegni dall'API diretta 
       const assegniDaMovimenti = movimenti.filter(m => m.tipo === 'prelievo_assegno');
