@@ -560,25 +560,70 @@ async def download_documents_from_email(
             search_keywords=search_keywords
         )
         
-        # Salva nel database evitando duplicati
+        # Salva nel database evitando duplicati con logica intelligente
         new_documents = []
         duplicates = 0
+        period_duplicates = 0
         
         for doc in documents:
-            # Controlla se esiste già (per hash)
-            existing = await db["documents_inbox"].find_one({"file_hash": doc["file_hash"]})
-            if existing:
+            is_duplicate = False
+            duplicate_reason = None
+            
+            # METODO 1: Controllo hash (file identico byte per byte)
+            existing_hash = await db["documents_inbox"].find_one({"file_hash": doc["file_hash"]})
+            if existing_hash:
+                is_duplicate = True
+                duplicate_reason = "hash_identico"
+            
+            # METODO 2: Controllo periodo (stesso documento per stesso periodo)
+            # Questo è il caso: "estratto_conto.pdf" di gennaio vs "estratto_conto.pdf" di febbraio
+            # Stesso nome file ma periodi diversi → NON è un duplicato
+            # Stesso nome file E stesso periodo → È un duplicato
+            if not is_duplicate and doc.get("identificatore_periodo"):
+                existing_period = await db["documents_inbox"].find_one({
+                    "category": doc["category"],
+                    "identificatore_periodo": doc["identificatore_periodo"],
+                    # Escludi documenti con hash diverso (potrebbero essere versioni corrette)
+                    # Ma includi se il filename originale è simile
+                    "$or": [
+                        {"filename": doc["filename"]},
+                        {"filename": {"$regex": doc["filename"].replace(".pdf", "").replace(".PDF", ""), "$options": "i"}}
+                    ]
+                })
+                if existing_period:
+                    # Verifica che non sia un aggiornamento/correzione (dimensione molto diversa)
+                    size_diff = abs(existing_period.get("size_bytes", 0) - doc["size_bytes"])
+                    size_ratio = size_diff / max(existing_period.get("size_bytes", 1), doc["size_bytes"])
+                    
+                    if size_ratio < 0.1:  # Differenza < 10% = probabilmente stesso documento
+                        is_duplicate = True
+                        duplicate_reason = "stesso_periodo"
+                        period_duplicates += 1
+                        logger.info(f"⏭️ Documento {doc['filename']} periodo {doc['identificatore_periodo']} già presente, saltato")
+                    else:
+                        # Dimensione molto diversa = probabilmente versione aggiornata, accetta
+                        logger.info(f"📝 Documento {doc['filename']} periodo {doc['identificatore_periodo']} aggiornato (size diff: {size_ratio:.0%})")
+            
+            if is_duplicate:
                 duplicates += 1
                 continue
             
             # Crea copia per database (evita che insert_one modifichi l'originale con _id)
             doc_to_insert = dict(doc)
             await db["documents_inbox"].insert_one(doc_to_insert.copy())
+            
+            # Log dettagliato per documenti nuovi
+            if doc.get("identificatore_periodo"):
+                logger.info(f"✅ Nuovo documento: {doc['filename']} - Periodo: {doc.get('periodo_raw', 'N/D')} - Categoria: {doc['category']}")
+            else:
+                logger.info(f"✅ Nuovo documento: {doc['filename']} - Categoria: {doc['category']} (periodo non estratto)")
+            
             # Appendi documento senza _id per risposta JSON
             new_documents.append(doc)
         
         stats["new_documents"] = len(new_documents)
         stats["duplicates_skipped"] = duplicates
+        stats["period_duplicates"] = period_duplicates
         stats["search_keywords"] = search_keywords
         
         return {
