@@ -356,7 +356,7 @@ export default function RiconciliazioneUnificata() {
     
     setProcessing('assegna-metodi');
     try {
-      const res = await api.post('/api/riconciliazione-automatica/assegna-metodi-aruba');
+      const res = await api.post('/api/riconciliazione-auto/assegna-metodi-aruba');
       const data = res.data;
       
       alert(`✅ Assegnazione completata!\n\n` +
