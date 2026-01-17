@@ -263,6 +263,10 @@ export default function GestioneAssegni() {
 
   // FILTRO ASSEGNI LATO CLIENT
   const filteredAssegni = assegni.filter(a => {
+    // Escludi assegni sporchi (senza numero o importo null)
+    if (!a.numero || a.importo === null || a.importo === undefined) {
+      return false;
+    }
     // Filtro fornitore/beneficiario
     if (filterFornitore && !a.beneficiario?.toLowerCase().includes(filterFornitore.toLowerCase())) {
       return false;
