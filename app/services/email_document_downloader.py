@@ -175,14 +175,19 @@ def extract_document_period(content: bytes, category: str, filename: str) -> Opt
         
         text_lower = text.lower()
         
-        # Pattern comuni per periodi
-        # Formato: "GENNAIO 2026", "01/2026", "2026-01", "Mese: 01 Anno: 2026"
-        
+        # Dizionari comuni per i mesi
         mesi_it = {
             'gennaio': 1, 'febbraio': 2, 'marzo': 3, 'aprile': 4,
             'maggio': 5, 'giugno': 6, 'luglio': 7, 'agosto': 8,
             'settembre': 9, 'ottobre': 10, 'novembre': 11, 'dicembre': 12
         }
+        mesi_short = {
+            'gen': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'mag': 5, 'giu': 6,
+            'lug': 7, 'ago': 8, 'set': 9, 'ott': 10, 'nov': 11, 'dic': 12
+        }
+        
+        # Pattern comuni per periodi
+        # Formato: "GENNAIO 2026", "01/2026", "2026-01", "Mese: 01 Anno: 2026"
         
         # Pattern 1: "GENNAIO 2026" o "gennaio 2026"
         for mese_nome, mese_num in mesi_it.items():
