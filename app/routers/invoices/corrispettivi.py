@@ -166,9 +166,9 @@ async def get_corrispettivi_totals() -> Dict[str, Any]:
 @router.post("/upload-xml")
 async def upload_corrispettivo_xml(
     file: UploadFile = File(...),
-    force_update: bool = Query(False, description="Se True, sovrascrive corrispettivo esistente")
+    force_update: bool = Query(True, description="Se True, sovrascrive corrispettivo esistente")
 ) -> Dict[str, Any]:
-    """Upload singolo corrispettivo XML. Supporta aggiornamento dati esistenti con force_update=True."""
+    """Upload singolo corrispettivo XML. Di default aggiorna i dati esistenti."""
     if not file.filename.lower().endswith('.xml'):
         raise HTTPException(status_code=400, detail="Il file deve essere XML")
     
@@ -198,8 +198,6 @@ async def upload_corrispettivo_xml(
                 "corrispettivo_key": corrispettivo_key,
                 "status": {"$nin": ["deleted", "archived"]}
             })
-            if existing and not force_update:
-                raise HTTPException(status_code=409, detail=f"Corrispettivo già presente per {parsed.get('data')}. Usa force_update=true per aggiornare.")
         
         corrispettivo_data = {
             "corrispettivo_key": corrispettivo_key,
