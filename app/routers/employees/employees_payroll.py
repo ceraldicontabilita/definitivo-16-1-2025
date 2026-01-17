@@ -279,15 +279,22 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     # Calcola data fine mese (ultimo giorno del mese)
                     try:
                         import calendar
-                        ultimo_giorno = calendar.monthrange(int(anno), int(mese))[1]
-                        data_pagamento = f"{anno}-{mese.zfill(2)}-{str(ultimo_giorno).zfill(2)}"
+                        anno_int = int(anno)
+                        mese_int = int(mese)
+                        ultimo_giorno = calendar.monthrange(anno_int, mese_int)[1]
+                        data_pagamento = f"{anno_int}-{mese_int:02d}-{ultimo_giorno:02d}"
                     except (ValueError, TypeError):
-                        data_pagamento = f"{anno}-{mese.zfill(2)}-28"
+                        data_pagamento = f"{anno}-{str(mese).zfill(2)}-28"
+                    
+                    # Riferimento basato su CF + mese + anno
+                    riferimento_cedolino = f"{cf}_{mese}_{anno}"
                     
                     # Verifica se esiste già un movimento salari per questo dipendente/periodo
                     existing_salario = await db["prima_nota_salari"].find_one({
-                        "riferimento": payslip_key,
-                        "source": "payslip_import"
+                        "codice_fiscale": cf,
+                        "mese": int(mese) if mese else None,
+                        "anno": int(anno) if anno else None,
+                        "source": "cedolino_import"
                     })
                     
                     if not existing_salario:
@@ -298,13 +305,15 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                             "importo": netto,
                             "descrizione": f"Stipendio {nome} - {periodo}",
                             "categoria": "Stipendi",
-                            "riferimento": payslip_key,
-                            "payslip_id": payslip_id,
-                            "employee_id": emp_id,
+                            "riferimento": riferimento_cedolino,
+                            "cedolino_id": payslip_id,
+                            "dipendente_id": emp_id,
                             "codice_fiscale": cf,
                             "nome_dipendente": nome,
+                            "mese": int(mese) if mese else None,
+                            "anno": int(anno) if anno else None,
                             "periodo": periodo,
-                            "source": "payslip_import",
+                            "source": "cedolino_import",
                             "note": "Importato da busta paga PDF",
                             "created_at": datetime.utcnow().isoformat()
                         }
