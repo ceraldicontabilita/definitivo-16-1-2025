@@ -427,7 +427,7 @@ async def list_suppliers(
         }
     
     # 2. Aggiungi fornitori dalla collezione dedicata (sovrascrive se stesso piva)
-    saved_suppliers = await db[Collections.SUPPLIERS].find({}, {"_id": 0}).to_list(500)
+    saved_suppliers = await db[Collections.SUPPLIERS].find({}, {"_id": 0}).to_list(1000)
     for supplier in saved_suppliers:
         piva = supplier.get("partita_iva")
         if piva:
@@ -444,6 +444,32 @@ async def list_suppliers(
                 supplier["fatture_totale"] = 0
                 supplier["fatture_non_pagate"] = 0
                 suppliers_map[piva] = supplier
+    
+    # 3. Aggiungi fornitori dalla collezione "fornitori" (import XML)
+    fornitori_coll = await db["fornitori"].find({}, {"_id": 0}).to_list(1000)
+    for fornitore in fornitori_coll:
+        piva = fornitore.get("partita_iva")
+        if piva and piva not in suppliers_map:
+            suppliers_map[piva] = {
+                "id": fornitore.get("id", f"forn_{piva}"),
+                "partita_iva": piva,
+                "codice_fiscale": fornitore.get("codice_fiscale", ""),
+                "ragione_sociale": fornitore.get("ragione_sociale", "") or fornitore.get("denominazione", ""),
+                "denominazione": fornitore.get("denominazione", ""),
+                "indirizzo": fornitore.get("indirizzo", ""),
+                "cap": fornitore.get("cap", ""),
+                "comune": fornitore.get("comune", ""),
+                "provincia": fornitore.get("provincia", ""),
+                "nazione": fornitore.get("nazione", "IT"),
+                "telefono": fornitore.get("telefono", ""),
+                "email": fornitore.get("email", ""),
+                "pec": fornitore.get("pec", ""),
+                "attivo": fornitore.get("attivo", True),
+                "fatture_count": 0,
+                "fatture_totale": 0,
+                "fatture_non_pagate": 0,
+                "source": "fornitori_collection"
+            }
     
     # Converti in lista
     suppliers = list(suppliers_map.values())
