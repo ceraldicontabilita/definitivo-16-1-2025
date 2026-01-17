@@ -1177,13 +1177,6 @@ function ScadenzeWidget({ scadenze }) {
       setProcessing(false);
     }
   };
-      window.location.reload();
-    } catch (e) {
-      alert('Errore: ' + (e.response?.data?.detail || e.message));
-    } finally {
-      setProcessing(false);
-    }
-  };
   
   const urgenti = scadenze.scadenze.filter(s => s.urgente);
   
