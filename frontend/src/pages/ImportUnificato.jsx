@@ -32,7 +32,7 @@ const TIPI_DOCUMENTO = [
   { id: 'f24', label: '📄 F24', color: '#ef4444', desc: 'Modelli F24 da pagare', extension: '.pdf', endpoint: '/api/f24/upload-pdf' },
   { id: 'quietanza_f24', label: '✅ Quietanza F24', color: '#f59e0b', desc: 'Ricevute pagamento F24', extension: '.pdf', endpoint: '/api/quietanze-f24/upload' },
   { id: 'cedolino', label: '💰 Buste Paga', color: '#8b5cf6', desc: 'Cedolini e Libro Unico', extension: '.pdf', endpoint: '/api/employees/paghe/upload-pdf' },
-  { id: 'bonifici', label: '📑 Bonifici', color: '#06b6d4', desc: 'Archivio bonifici PDF/ZIP', extension: '.pdf,.zip', endpoint: '/api/archivio-bonifici/jobs/import', useBonificiJob: true },
+  { id: 'bonifici', label: '📑 Bonifici', color: '#06b6d4', desc: 'Archivio bonifici PDF/ZIP', extension: '.pdf,.zip', endpoint: '/api/archivio-bonifici/jobs', useBonificiJob: true },
   { id: 'corrispettivi', label: '🧾 Corrispettivi', color: '#84cc16', desc: 'Scontrini giornalieri Excel/XML', extension: '.xlsx,.xls,.xml', endpoint: '/api/prima-nota-auto/import-corrispettivi', endpointXml: '/api/prima-nota-auto/import-corrispettivi-xml' },
   { id: 'pos', label: '💳 Incassi POS', color: '#a855f7', desc: 'Rendiconti POS Excel', extension: '.xlsx,.xls', endpoint: '/api/prima-nota-auto/import-pos' },
   { id: 'versamenti', label: '🏧 Versamenti', color: '#14b8a6', desc: 'Versamenti in banca CSV', extension: '.csv', endpoint: '/api/prima-nota-auto/import-versamenti' },
