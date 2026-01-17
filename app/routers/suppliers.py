@@ -10,9 +10,14 @@ import logging
 import io
 
 from app.database import Database, Collections
+from app.middleware.performance import cache
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Cache key per suppliers
+SUPPLIERS_CACHE_KEY = "suppliers_list"
+SUPPLIERS_CACHE_TTL = 120  # 2 minuti
 
 # Metodi di pagamento disponibili
 PAYMENT_METHODS = {
