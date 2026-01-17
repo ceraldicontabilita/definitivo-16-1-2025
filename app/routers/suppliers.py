@@ -1179,3 +1179,141 @@ async def get_supplier_iban_from_invoices(supplier_id: str) -> Dict[str, Any]:
         "iban_da_fatture": iban_unici,
         "fatture_con_iban": fatture_con_iban[:20]  # Prime 20
     }
+
+
+
+@router.put("/{supplier_id}/metodo-pagamento")
+async def update_supplier_payment_method(
+    supplier_id: str,
+    metodo_pagamento: str = Body(..., embed=True)
+) -> Dict[str, Any]:
+    """
+    Aggiorna il metodo di pagamento di un fornitore.
+    Valori ammessi: contanti, bonifico, assegno, rid, riba
+    """
+    db = Database.get_db()
+    
+    # Valida metodo
+    metodi_validi = ["contanti", "bonifico", "assegno", "rid", "riba", "cassa", "banca"]
+    metodo_lower = metodo_pagamento.lower().strip()
+    
+    # Normalizza
+    if metodo_lower in ["cassa", "cash"]:
+        metodo_lower = "contanti"
+    elif metodo_lower in ["banca", "bank", "bon"]:
+        metodo_lower = "bonifico"
+    
+    if metodo_lower not in metodi_validi:
+        raise HTTPException(status_code=400, detail=f"Metodo non valido. Ammessi: {metodi_validi}")
+    
+    # Aggiorna
+    result = await db[Collections.SUPPLIERS].update_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]},
+        {"$set": {
+            "metodo_pagamento": metodo_lower,
+            "updated_at": datetime.utcnow().isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
+    
+    # Invalida cache
+    try:
+        await cache.delete("suppliers_list_default")
+    except:
+        pass
+    
+    return {"success": True, "metodo_pagamento": metodo_lower}
+
+
+@router.post("/aggiorna-metodi-bulk")
+async def aggiorna_metodi_pagamento_bulk(
+    data: Dict[str, Any] = Body(...)
+) -> Dict[str, Any]:
+    """
+    Aggiorna in blocco i metodi di pagamento dei fornitori.
+    
+    Input:
+    {
+        "fornitori": [
+            {"partita_iva": "12345678901", "metodo_pagamento": "bonifico"},
+            {"partita_iva": "09876543210", "metodo_pagamento": "contanti"}
+        ]
+    }
+    
+    oppure imposta un default per tutti quelli senza metodo:
+    {
+        "default_per_mancanti": "bonifico"
+    }
+    """
+    db = Database.get_db()
+    
+    risultato = {
+        "aggiornati": 0,
+        "errori": [],
+        "gia_impostati": 0
+    }
+    
+    fornitori_list = data.get("fornitori", [])
+    default_mancanti = data.get("default_per_mancanti")
+    
+    # Aggiorna fornitori specifici
+    for f in fornitori_list:
+        piva = f.get("partita_iva")
+        metodo = f.get("metodo_pagamento", "").lower().strip()
+        
+        if not piva or not metodo:
+            continue
+        
+        # Normalizza metodo
+        if metodo in ["cassa", "cash"]:
+            metodo = "contanti"
+        elif metodo in ["banca", "bank", "bon"]:
+            metodo = "bonifico"
+        
+        try:
+            result = await db[Collections.SUPPLIERS].update_one(
+                {"partita_iva": piva},
+                {"$set": {
+                    "metodo_pagamento": metodo,
+                    "updated_at": datetime.utcnow().isoformat()
+                }}
+            )
+            if result.modified_count > 0:
+                risultato["aggiornati"] += 1
+            elif result.matched_count > 0:
+                risultato["gia_impostati"] += 1
+        except Exception as e:
+            risultato["errori"].append(f"{piva}: {str(e)}")
+    
+    # Imposta default per quelli senza metodo
+    if default_mancanti:
+        metodo_default = default_mancanti.lower().strip()
+        if metodo_default in ["cassa", "cash"]:
+            metodo_default = "contanti"
+        elif metodo_default in ["banca", "bank", "bon"]:
+            metodo_default = "bonifico"
+        
+        result = await db[Collections.SUPPLIERS].update_many(
+            {"$or": [
+                {"metodo_pagamento": {"$exists": False}},
+                {"metodo_pagamento": None},
+                {"metodo_pagamento": ""},
+                {"metodo_pagamento": "N/D"}
+            ]},
+            {"$set": {
+                "metodo_pagamento": metodo_default,
+                "updated_at": datetime.utcnow().isoformat()
+            }}
+        )
+        risultato["aggiornati"] += result.modified_count
+        risultato["default_applicato"] = metodo_default
+    
+    # Invalida cache
+    try:
+        await cache.delete("suppliers_list_default")
+    except:
+        pass
+    
+    return risultato
