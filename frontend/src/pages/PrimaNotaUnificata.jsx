@@ -74,33 +74,34 @@ export default function PrimaNotaUnificata() {
 
   useEffect(() => {
     loadMovimenti();
-    loadSaldoAnnoPrecedente();
-  }, [anno]);
-
-  const loadSaldoAnnoPrecedente = async () => {
-    try {
-      // Carica il saldo finale dell'anno precedente
-      const annoPrecedente = parseInt(anno) - 1;
-      const res = await api.get(`/api/prima-nota/saldo-finale?anno=${annoPrecedente}&tipo=${filtroTipo === 'tutti' ? 'cassa' : filtroTipo}`).catch(() => ({ data: { saldo: 0 } }));
-      setSaldoAnnoPrecedente(res.data?.saldo || 0);
-    } catch (e) {
-      console.error('Errore caricamento saldo anno precedente:', e);
-      setSaldoAnnoPrecedente(0);
-    }
-  };
+  }, [anno, filtroTipo]);
 
   const loadMovimenti = async () => {
     setLoading(true);
     try {
       const [cassaRes, bancaRes, salariRes] = await Promise.all([
-        api.get(`/api/prima-nota/cassa?anno=${anno}`).catch(() => ({ data: [] })),
-        api.get(`/api/prima-nota/banca?anno=${anno}`).catch(() => ({ data: [] })),
-        api.get(`/api/prima-nota/salari?anno=${anno}`).catch(() => ({ data: [] }))
+        api.get(`/api/prima-nota/cassa?anno=${anno}`).catch(() => ({ data: { movimenti: [], saldo_precedente: 0 } })),
+        api.get(`/api/prima-nota/banca?anno=${anno}`).catch(() => ({ data: { movimenti: [], saldo_precedente: 0 } })),
+        api.get(`/api/prima-nota/salari?anno=${anno}`).catch(() => ({ data: { movimenti: [], saldo_precedente: 0 } }))
       ]);
 
       const cassa = (Array.isArray(cassaRes.data) ? cassaRes.data : cassaRes.data?.movimenti || []).map(m => ({ ...m, _source: 'cassa' }));
       const banca = (Array.isArray(bancaRes.data) ? bancaRes.data : bancaRes.data?.movimenti || []).map(m => ({ ...m, _source: 'banca' }));
       const salari = (Array.isArray(salariRes.data) ? salariRes.data : salariRes.data?.movimenti || []).map(m => ({ ...m, _source: 'salari' }));
+
+      // Imposta il saldo precedente in base al filtro attivo
+      let saldoPrec = 0;
+      if (filtroTipo === 'cassa') {
+        saldoPrec = cassaRes.data?.saldo_precedente || 0;
+      } else if (filtroTipo === 'banca') {
+        saldoPrec = bancaRes.data?.saldo_precedente || 0;
+      } else if (filtroTipo === 'salari') {
+        saldoPrec = salariRes.data?.saldo_precedente || 0;
+      } else {
+        // Per 'tutti', somma i saldi precedenti
+        saldoPrec = (cassaRes.data?.saldo_precedente || 0) + (bancaRes.data?.saldo_precedente || 0) + (salariRes.data?.saldo_precedente || 0);
+      }
+      setSaldoAnnoPrecedente(saldoPrec);
 
       const all = [...cassa, ...banca, ...salari].sort((a, b) => 
         new Date(b.data || b.data_pagamento) - new Date(a.data || a.data_pagamento)
