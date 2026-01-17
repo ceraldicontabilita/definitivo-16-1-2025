@@ -287,6 +287,137 @@ async def search_by_piva(partita_iva: str) -> Dict[str, Any]:
             raise HTTPException(status_code=500, detail=f"Errore nella ricerca: {str(e)}")
 
 
+@router.post("/aggiorna-tutti-bulk")
+async def aggiorna_fornitori_bulk() -> Dict[str, Any]:
+    """
+    Aggiorna TUTTI i fornitori con dati incompleti cercando P.IVA su fonti esterne.
+    Usa: VIES, RegistroAziende, Database locale.
+    """
+    import httpx
+    import re
+    import asyncio
+    
+    db = Database.get_db()
+    
+    # Trova fornitori con P.IVA ma dati incompleti
+    fornitori = await db[Collections.SUPPLIERS].find({
+        "partita_iva": {"$exists": True, "$ne": "", "$ne": None},
+        "$or": [
+            {"ragione_sociale": {"$in": [None, ""]}},
+            {"comune": {"$in": [None, ""]}},
+            {"indirizzo": {"$in": [None, ""]}},
+        ]
+    }, {"_id": 0, "id": 1, "partita_iva": 1, "ragione_sociale": 1}).to_list(500)
+    
+    risultato = {
+        "totale_processati": 0,
+        "aggiornati": 0,
+        "non_trovati": 0,
+        "errori": 0,
+        "dettaglio": []
+    }
+    
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        for fornitore in fornitori:
+            piva = re.sub(r'[^0-9]', '', str(fornitore.get("partita_iva", "")))
+            if len(piva) != 11:
+                continue
+                
+            risultato["totale_processati"] += 1
+            
+            try:
+                dati_trovati = {}
+                source = None
+                
+                # === FONTE 1: VIES ===
+                try:
+                    vies_url = "https://ec.europa.eu/taxation_customs/vies/rest-api/check-vat-number"
+                    vies_resp = await client.post(vies_url, json={"countryCode": "IT", "vatNumber": piva})
+                    
+                    if vies_resp.status_code == 200:
+                        vies_data = vies_resp.json()
+                        if vies_data.get("valid"):
+                            name = vies_data.get("name", "")
+                            addr = vies_data.get("address", "")
+                            if name and name != "---":
+                                dati_trovati["ragione_sociale"] = name.strip().title()
+                                source = "VIES"
+                            if addr and addr != "---":
+                                dati_trovati["indirizzo"] = addr.strip()
+                                # Parse CAP/Comune/Provincia
+                                addr_match = re.search(r'(\d{5})\s+([A-Za-z\s]+?)(?:\s+([A-Z]{2}))?$', addr)
+                                if addr_match:
+                                    dati_trovati["cap"] = addr_match.group(1)
+                                    dati_trovati["comune"] = addr_match.group(2).strip().title()
+                                    if addr_match.group(3):
+                                        dati_trovati["provincia"] = addr_match.group(3)
+                except Exception:
+                    pass
+                
+                # === FONTE 2: OpenCorporates (API gratuita) ===
+                if not dati_trovati.get("ragione_sociale"):
+                    try:
+                        oc_url = f"https://api.opencorporates.com/v0.4/companies/search?q={piva}&jurisdiction_code=it"
+                        oc_resp = await client.get(oc_url)
+                        if oc_resp.status_code == 200:
+                            oc_data = oc_resp.json()
+                            companies = oc_data.get("results", {}).get("companies", [])
+                            if companies:
+                                comp = companies[0].get("company", {})
+                                if comp.get("name"):
+                                    dati_trovati["ragione_sociale"] = comp["name"].title()
+                                    source = source or "OpenCorporates"
+                                addr = comp.get("registered_address_in_full", "")
+                                if addr and not dati_trovati.get("indirizzo"):
+                                    dati_trovati["indirizzo"] = addr
+                    except Exception:
+                        pass
+                
+                # === FONTE 3: Database locale (fatture) ===
+                if not dati_trovati.get("ragione_sociale"):
+                    invoice = await db["invoices"].find_one(
+                        {"$or": [{"supplier_vat": piva}, {"cedente_piva": piva}]},
+                        {"cedente_denominazione": 1, "supplier_name": 1}
+                    )
+                    if invoice:
+                        name = invoice.get("cedente_denominazione") or invoice.get("supplier_name")
+                        if name:
+                            dati_trovati["ragione_sociale"] = name.strip().title()
+                            source = source or "Fatture"
+                
+                # Aggiorna se trovato qualcosa
+                if dati_trovati:
+                    dati_trovati["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    dati_trovati["dati_completati_da"] = source
+                    
+                    await db[Collections.SUPPLIERS].update_one(
+                        {"id": fornitore["id"]},
+                        {"$set": dati_trovati}
+                    )
+                    risultato["aggiornati"] += 1
+                    risultato["dettaglio"].append({
+                        "piva": piva,
+                        "nome": dati_trovati.get("ragione_sociale", "N/A"),
+                        "source": source,
+                        "status": "aggiornato"
+                    })
+                else:
+                    risultato["non_trovati"] += 1
+                    
+                # Piccola pausa per non sovraccaricare i server
+                await asyncio.sleep(0.3)
+                
+            except Exception as e:
+                risultato["errori"] += 1
+                logger.warning(f"Errore bulk update {piva}: {e}")
+    
+    return {
+        "success": True,
+        "message": f"Aggiornati {risultato['aggiornati']} fornitori su {risultato['totale_processati']}",
+        **risultato
+    }
+
+
 @router.get("/payment-terms")
 async def get_payment_terms() -> List[Dict[str, Any]]:
     """Ritorna la lista dei termini di pagamento disponibili."""
