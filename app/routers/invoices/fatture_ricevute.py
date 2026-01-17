@@ -269,6 +269,20 @@ async def import_fattura_xml(file: UploadFile = File(...)):
     if fornitore_result.get("error"):
         raise HTTPException(status_code=400, detail=fornitore_result["error"])
     
+    # === VALIDATORE P0: Metodo di pagamento obbligatorio (PRD sezione validatori P0) ===
+    # Se il fornitore NON ha il metodo di pagamento valorizzato, BLOCCARE l'operazione
+    metodo_pag = fornitore_result.get("metodo_pagamento")
+    if not metodo_pag or metodo_pag in ["", "da_configurare", None]:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "FORNITORE_SENZA_METODO_PAGAMENTO",
+                "message": f"Fornitore privo di metodo di pagamento: {fornitore_result.get('ragione_sociale', '')} (P.IVA: {partita_iva})",
+                "fornitore_id": fornitore_result.get("fornitore_id"),
+                "azione_richiesta": "Configurare il metodo di pagamento in anagrafica fornitori"
+            }
+        )
+    
     # Verifica coerenza totali
     totali_coerenti = parsed.get("totali_coerenti", True)
     stato = "importata" if totali_coerenti else "anomala"
