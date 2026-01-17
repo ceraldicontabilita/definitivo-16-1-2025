@@ -419,12 +419,12 @@ async def processa_carico_magazzino(db, fattura_id: str, fornitore: Dict, linee:
 
 async def genera_scrittura_prima_nota(db, fattura_id: str, fattura: Dict, fornitore: Dict) -> str:
     """
-    Genera automaticamente il movimento in Prima Nota BANCA.
-    Le fatture passive generano movimenti in BANCA (pagamento fornitori via bonifico/assegno).
+    Genera automaticamente il movimento in Prima Nota nella collection corretta.
     
-    La struttura segue lo schema delle collezioni esistenti:
-    - prima_nota_banca per pagamenti bancari
-    - prima_nota_cassa per contanti (non usato per fatture passive)
+    LOGICA:
+    - Il metodo di pagamento viene SEMPRE dall'anagrafica fornitore (MAI dalla fattura XML)
+    - Se metodo = contanti/cassa -> prima_nota_cassa
+    - Altrimenti (bonifico, assegno, rid, riba, ecc.) -> prima_nota_banca
     """
     centro_costo = detect_centro_costo(fornitore, "")
     
@@ -433,12 +433,27 @@ async def genera_scrittura_prima_nota(db, fattura_id: str, fattura: Dict, fornit
     
     movimento_id = str(uuid.uuid4())
     
-    # Struttura movimento Prima Nota Banca
+    # DETERMINA COLLECTION in base al metodo di pagamento dall'anagrafica fornitore
+    metodo_fornitore = (fornitore.get("metodo_pagamento") or "").lower().strip()
+    
+    # Metodi che vanno in CASSA
+    metodi_cassa = ["contanti", "cassa", "cash", "contante"]
+    
+    # Determina la collection corretta
+    if metodo_fornitore in metodi_cassa:
+        collection = COL_PRIMA_NOTA_CASSA
+        collection_name = "cassa"
+    else:
+        # Default: BANCA (per bonifico, assegno, rid, riba, sepa, o non specificato)
+        collection = COL_PRIMA_NOTA_BANCA
+        collection_name = "banca"
+    
+    # Struttura movimento Prima Nota
     movimento = {
         "id": movimento_id,
         "data": data_doc,
         "tipo": "uscita",  # Fattura passiva = uscita
-        "categoria": "Fornitori",
+        "categoria": "Pagamento fornitore",
         "descrizione": f"Pagamento fattura {fattura.get('numero_documento')} - {fornitore.get('ragione_sociale', '')}",
         "importo": totale,
         
@@ -448,6 +463,9 @@ async def genera_scrittura_prima_nota(db, fattura_id: str, fattura: Dict, fornit
         "fornitore_piva": fornitore.get("partita_iva"),
         "fornitore_nome": fornitore.get("ragione_sociale"),
         "numero_documento": fattura.get("numero_documento"),
+        
+        # Metodo pagamento (per tracciabilità)
+        "metodo_pagamento": metodo_fornitore or "bonifico",
         
         # Metadati
         "centro_costo": centro_costo,
@@ -459,8 +477,8 @@ async def genera_scrittura_prima_nota(db, fattura_id: str, fattura: Dict, fornit
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db[COL_PRIMA_NOTA_BANCA].insert_one(movimento.copy())
-    logger.info(f"✅ Movimento Prima Nota Banca generato: {movimento_id[:8]}")
+    await db[collection].insert_one(movimento.copy())
+    logger.info(f"✅ Movimento Prima Nota {collection_name.upper()} generato: {movimento_id[:8]} (metodo: {metodo_fornitore or 'default:bonifico'})")
     
     return movimento_id
 
