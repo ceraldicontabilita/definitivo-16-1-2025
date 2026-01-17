@@ -1085,7 +1085,7 @@ async def import_pos(
                     continue
                 
                 # Logica ragioneria generale:
-                # POS rappresenta un incasso che finisce in banca  e8 quindi ENTRATA in prima nota BANCA.
+                # POS rappresenta un incasso che finisce in banca e8 quindi ENTRATA in prima nota BANCA.
                 movimento = {
                     "id": str(uuid.uuid4()),
                     "data": data,
