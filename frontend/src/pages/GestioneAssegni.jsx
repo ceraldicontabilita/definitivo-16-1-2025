@@ -870,15 +870,15 @@ export default function GestioneAssegni() {
                           {assegno.data_fattura && (
                             <span style={{ color: '#666' }}>({new Date(assegno.data_fattura).toLocaleDateString('it-IT')})</span>
                           )}
-                          {/* Link alla fattura */}
-                          {assegno.fattura_collegata && (
+                          {/* Link alla fattura - usa fattura_collegata o prima di fatture_collegate */}
+                          {(assegno.fattura_collegata || assegno.fatture_collegate?.[0]?.fattura_id) && (
                             <a
-                              href={`/api/fatture-ricevute/fattura/${assegno.fattura_collegata}/view-assoinvoice`}
+                              href={`/api/fatture-ricevute/fattura/${assegno.fattura_collegata || assegno.fatture_collegate?.[0]?.fattura_id}/view-assoinvoice`}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{
                                 padding: '2px 8px',
-                                background: '#2196f3',
+                                background: '#4caf50',
                                 color: 'white',
                                 borderRadius: 4,
                                 fontSize: 11,
