@@ -748,11 +748,11 @@ async def analizza_estratto_conto_batch(limit: int = 100, solo_non_riconciliati:
          "total_amount": 1, "invoice_date": 1, "pagata": 1}
     ).limit(1000).to_list(1000)
     
-    # Pre-carica fornitori con metodo pagamento
-    fornitori = await db.suppliers.find(
+    # Pre-carica fornitori con metodo pagamento (usa collection corretta)
+    fornitori = await db.fornitori.find(
         {"metodo_pagamento": {"$exists": True}},
-        {"_id": 0}
-    ).to_list(1000)
+        {"_id": 0, "partita_iva": 1, "ragione_sociale": 1, "metodo_pagamento": 1, "iban": 1}
+    ).limit(500).to_list(500)
     fornitori_map = {f.get("partita_iva", ""): f for f in fornitori}
     
     # Prepara cache per analisi
