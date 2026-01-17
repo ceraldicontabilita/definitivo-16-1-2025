@@ -194,7 +194,10 @@ async def upload_corrispettivo_xml(
         corrispettivo_key = parsed.get("corrispettivo_key", "")
         existing = None
         if corrispettivo_key:
-            existing = await db["corrispettivi"].find_one({"corrispettivo_key": corrispettivo_key})
+            existing = await db["corrispettivi"].find_one({
+                "corrispettivo_key": corrispettivo_key,
+                "status": {"$nin": ["deleted", "archived"]}
+            })
             if existing and not force_update:
                 raise HTTPException(status_code=409, detail=f"Corrispettivo già presente per {parsed.get('data')}. Usa force_update=true per aggiornare.")
         
