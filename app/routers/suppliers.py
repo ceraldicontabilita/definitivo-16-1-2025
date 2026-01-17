@@ -464,6 +464,11 @@ async def list_suppliers(
     # Ordina per numero fatture decrescente
     suppliers.sort(key=lambda x: x.get("fatture_count", 0), reverse=True)
     
+    # Salva in cache se non ci sono filtri
+    if use_cache and not search and not metodo_pagamento and attivo is None:
+        await cache.set(cache_key, suppliers, SUPPLIERS_CACHE_TTL)
+        logger.debug(f"Suppliers cache SET ({len(suppliers)} items)")
+    
     # Applica paginazione
     return suppliers[skip:skip+limit]
 
