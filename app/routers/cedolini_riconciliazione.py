@@ -389,6 +389,177 @@ async def import_excel_storico(file: UploadFile = File(...)) -> Dict[str, Any]:
     return risultato
 
 
+@router.post("/import-paghe-bonifici")
+async def import_paghe_bonifici(
+    file_paghe: UploadFile = File(..., description="File Excel paghe (NOME DIPENDENTE, MESE, ANNO, IMPORTO netto)"),
+    file_bonifici: Optional[UploadFile] = File(None, description="File Excel bonifici (NOME DIPENDENTE, MESE, ANNO, IMPORTO erogato)")
+) -> Dict[str, Any]:
+    """
+    Import combinato paghe + bonifici da due file Excel.
+    
+    - file_paghe: contiene gli importi netti delle buste paga
+    - file_bonifici: contiene gli importi effettivamente pagati via bonifico
+    
+    Il sistema:
+    1. Importa tutti i cedolini da file_paghe
+    2. Per ogni cedolino, se c'è un bonifico corrispondente (stesso nome/mese/anno), 
+       imposta metodo=bonifico e importo_pagato dal file bonifici
+    3. Se non c'è bonifico corrispondente, imposta metodo=contanti (pagato in cassa)
+    """
+    try:
+        import pandas as pd
+    except ImportError:
+        raise HTTPException(status_code=500, detail="pandas non installato")
+    
+    db = Database.get_db()
+    
+    # Mappa mesi
+    MESI_MAP = {
+        "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4, 
+        "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
+        "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12,
+        "tredicesima": 13, "quattordicesima": 14
+    }
+    
+    # Leggi file paghe
+    content_paghe = await file_paghe.read()
+    try:
+        df_paghe = pd.read_excel(io.BytesIO(content_paghe))
+    except:
+        raise HTTPException(status_code=400, detail="Errore lettura file paghe")
+    
+    # Leggi file bonifici (se presente)
+    bonifici_dict = {}
+    if file_bonifici:
+        content_bonifici = await file_bonifici.read()
+        try:
+            df_bonifici = pd.read_excel(io.BytesIO(content_bonifici))
+            df_bonifici.columns = [c.lower().strip().replace(' ', '_') for c in df_bonifici.columns]
+            
+            col_nome_b = next((c for c in df_bonifici.columns if 'nome' in c), None)
+            col_mese_b = next((c for c in df_bonifici.columns if 'mese' in c), None)
+            col_anno_b = next((c for c in df_bonifici.columns if 'anno' in c), None)
+            col_importo_b = next((c for c in df_bonifici.columns if 'importo' in c or 'erogato' in c), None)
+            
+            if col_nome_b and col_mese_b and col_anno_b and col_importo_b:
+                for _, row in df_bonifici.iterrows():
+                    try:
+                        nome = str(row[col_nome_b]).strip().upper() if pd.notna(row[col_nome_b]) else ""
+                        mese_raw = row[col_mese_b]
+                        if isinstance(mese_raw, str):
+                            mese = MESI_MAP.get(mese_raw.lower().strip(), 0)
+                        else:
+                            mese = int(mese_raw) if pd.notna(mese_raw) else 0
+                        anno = int(row[col_anno_b]) if pd.notna(row[col_anno_b]) else 0
+                        importo = float(row[col_importo_b]) if pd.notna(row[col_importo_b]) else 0
+                        
+                        if nome and mese > 0 and anno > 0 and importo > 0:
+                            key = f"{nome}_{mese}_{anno}"
+                            bonifici_dict[key] = importo
+                    except:
+                        continue
+        except:
+            pass  # Ignora errori bonifici, procedi solo con paghe
+    
+    # Normalizza colonne paghe
+    df_paghe.columns = [c.lower().strip().replace(' ', '_') for c in df_paghe.columns]
+    
+    col_nome = next((c for c in df_paghe.columns if 'nome' in c), None)
+    col_mese = next((c for c in df_paghe.columns if 'mese' in c), None)
+    col_anno = next((c for c in df_paghe.columns if 'anno' in c), None)
+    col_netto = next((c for c in df_paghe.columns if 'netto' in c or 'importo' in c), None)
+    
+    if not col_nome or not col_mese or not col_anno or not col_netto:
+        raise HTTPException(status_code=400, detail="Colonne richieste in paghe: Nome, Mese, Anno, Importo")
+    
+    risultato = {
+        "imported": 0, 
+        "skipped_duplicates": 0, 
+        "bonifici_matched": 0,
+        "contanti_assigned": 0,
+        "errors": [], 
+        "failed": 0
+    }
+    
+    for _, row in df_paghe.iterrows():
+        try:
+            nome = str(row[col_nome]).strip().upper() if pd.notna(row[col_nome]) else ""
+            
+            mese_raw = row[col_mese]
+            if isinstance(mese_raw, str):
+                mese_lower = mese_raw.lower().strip()
+                mese = MESI_MAP.get(mese_lower, 0)
+                mese_nome = mese_raw.strip().title()
+            else:
+                mese = int(mese_raw) if pd.notna(mese_raw) else 0
+                mese_nome = list(MESI_MAP.keys())[mese - 1].title() if 0 < mese <= 14 else str(mese)
+            
+            anno = int(row[col_anno]) if pd.notna(row[col_anno]) else 0
+            netto = float(row[col_netto]) if pd.notna(row[col_netto]) else 0
+            
+            if not nome or mese <= 0 or anno <= 0 or netto <= 0:
+                continue
+            
+            # Check duplicato
+            existing = await db[COLLECTION_CEDOLINI].find_one({
+                "nome_dipendente": {"$regex": nome, "$options": "i"},
+                "mese": {"$in": [mese, str(mese), mese_nome]},
+                "anno": {"$in": [anno, str(anno)]}
+            })
+            
+            if existing:
+                risultato["skipped_duplicates"] += 1
+                continue
+            
+            # Cerca bonifico corrispondente
+            key = f"{nome}_{mese}_{anno}"
+            importo_bonifico = bonifici_dict.get(key)
+            
+            if importo_bonifico and importo_bonifico > 0:
+                metodo = "bonifico"
+                importo_pagato = importo_bonifico
+                risultato["bonifici_matched"] += 1
+            else:
+                metodo = "contanti"
+                importo_pagato = netto
+                risultato["contanti_assigned"] += 1
+            
+            # Cerca dipendente
+            dipendente = await db["employees"].find_one({
+                "$or": [
+                    {"nome_completo": {"$regex": nome, "$options": "i"}},
+                    {"name": {"$regex": nome, "$options": "i"}}
+                ]
+            }, {"_id": 0, "id": 1, "codice_fiscale": 1})
+            
+            # Crea cedolino
+            cedolino = {
+                "id": str(uuid.uuid4()),
+                "nome_dipendente": nome.title(),
+                "dipendente_id": dipendente.get("id") if dipendente else None,
+                "codice_fiscale": dipendente.get("codice_fiscale") if dipendente else "",
+                "mese": mese,
+                "mese_nome": mese_nome,
+                "anno": anno,
+                "periodo": f"{mese_nome} {anno}",
+                "netto": netto,
+                "netto_mese": netto,
+                "pagato": True,
+                "importo_pagato": importo_pagato,
+                "metodo_pagamento": metodo,
+                "source": "excel_paghe_bonifici",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            await db[COLLECTION_CEDOLINI].insert_one(cedolino.copy())
+            risultato["imported"] += 1
+            
+        except Exception as e:
+            risultato["errors"].append(str(e))
+            risultato["failed"] += 1
+    
+    return risultato
+
 
 @router.post("/migra-da-prima-nota-salari")
 async def migra_da_prima_nota_salari(
