@@ -287,9 +287,9 @@ async def upload_corrispettivo_xml(
 @router.post("/upload-xml-bulk")
 async def upload_corrispettivi_xml_bulk(
     files: List[UploadFile] = File(...),
-    force_update: bool = Query(False, description="Se True, aggiorna corrispettivi esistenti invece di saltarli")
+    force_update: bool = Query(True, description="Se True, aggiorna corrispettivi esistenti invece di saltarli")
 ) -> Dict[str, Any]:
-    """Upload massivo corrispettivi XML. Con force_update=True, aggiorna i dati esistenti."""
+    """Upload massivo corrispettivi XML. Di default aggiorna i dati esistenti."""
     if not files:
         raise HTTPException(status_code=400, detail="Nessun file")
     
