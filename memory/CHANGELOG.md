@@ -2,6 +2,42 @@
 
 ## Gennaio 2026
 
+### 17 Gennaio 2026
+
+#### 🔧 Gestione Fornitori Avanzata
+- **Nuovo endpoint**: `POST /api/suppliers/update-all-incomplete` - Aggiornamento bulk fornitori con dati incompleti
+- **Nuovo endpoint**: `GET /api/suppliers/validazione-p0` - Verifica stato conformità P0 fornitori
+- **Nuovo endpoint**: `POST /api/suppliers/sync-iban` - Sincronizza IBAN dalle fatture XML esistenti
+- **Fix UI**: Risolto bug che nascondeva il pulsante "Cerca P.IVA" in `Fornitori.jsx`
+- **Risultato sync IBAN**: 17 fornitori aggiornati automaticamente, 231 ancora da completare
+
+#### ✅ Validatori P0 Bloccanti
+- **File modificato**: `/app/app/routers/invoices/fatture_ricevute.py`
+  - Blocco import fattura se fornitore senza metodo pagamento
+  - Blocco import fattura se metodo bancario senza IBAN
+- **File modificato**: `/app/app/routers/cedolini_riconciliazione.py`
+  - Blocco pagamento stipendi in contanti post giugno 2018 (Legge antiriciclaggio)
+
+#### 🎨 Refactoring UI Prima Nota
+- **Nuove pagine create**:
+  - `/app/frontend/src/pages/PrimaNota.jsx` - Redesign completo basato su progetto riferimento
+  - `/app/frontend/src/pages/PrimaNotaSalari.jsx` - Nuova pagina per gestione salari
+- **Nuovi componenti**: `/app/frontend/src/components/prima-nota/` - Componenti modulari
+- **Nuovo store**: `/app/frontend/src/stores/primaNotaStore.js` - State management con Zustand
+- **Logica DARE/AVERE**: Implementata logica contabile personalizzata per CASSA e BANCA separati
+
+#### 🐛 Bug Fixes
+- **Fix conferma multipla fatture**: Risolto errore 400 su `operazioni_da_confermare.py`
+- **Fix F24**: Corretta visualizzazione importi totali e funzionalità conferma
+- **Fix import corrispettivi XML**: Corretta estrazione pagamento elettronico
+- **Fix import cedolini Excel**: Risolti problemi parsing da `paghe.xlsx` e `bonifici dip.xlsx`
+
+#### 🔄 Automatizzazione Riconciliazione
+- Implementata logica auto-assegnazione metodi di pagamento
+- Auto-refresh riconciliazione bancaria ogni 30 minuti
+
+---
+
 ### 10 Gennaio 2026
 
 #### 🎨 Fix Logo Aziendale
