@@ -1320,6 +1320,42 @@ async def get_fattura_dettaglio(fattura_id: str):
     }
 
 
+@router.put("/fattura/{fattura_id}")
+async def update_fattura(fattura_id: str, data: Dict[str, Any]):
+    """
+    Aggiorna una fattura (es. segna come pagata).
+    """
+    db = Database.get_db()
+    
+    fattura = await db[COL_FATTURE_RICEVUTE].find_one({"id": fattura_id})
+    if not fattura:
+        raise HTTPException(status_code=404, detail="Fattura non trovata")
+    
+    # Campi aggiornabili
+    update_fields = {}
+    if "pagato" in data:
+        update_fields["pagato"] = data["pagato"]
+    if "data_pagamento" in data:
+        update_fields["data_pagamento"] = data["data_pagamento"]
+    if "metodo_pagamento" in data:
+        update_fields["metodo_pagamento"] = data["metodo_pagamento"]
+    if "riconciliato" in data:
+        update_fields["riconciliato"] = data["riconciliato"]
+    if "note" in data:
+        update_fields["note"] = data["note"]
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.utcnow().isoformat()
+        await db[COL_FATTURE_RICEVUTE].update_one(
+            {"id": fattura_id},
+            {"$set": update_fields}
+        )
+    
+    return {"success": True, "updated": list(update_fields.keys())}
+
+
+
+
 @router.get("/fornitori")
 async def get_fornitori(
     search: Optional[str] = Query(None),
