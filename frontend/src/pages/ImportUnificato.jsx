@@ -215,6 +215,11 @@ export default function ImportUnificato() {
         if (tipo === 'corrispettivi' && fileInfo.name.toLowerCase().endsWith('.xml')) {
           endpoint = tipoConfig.endpointXml || endpoint;
         }
+
+        // Bonifici: usa la pipeline a job (create job -> upload) dietro le quinte
+        if (tipo === 'bonifici' && tipoConfig.useBonificiJob) {
+          endpoint = '/api/archivio-bonifici/jobs/import';
+        }
         
         const formData = new FormData();
         formData.append('file', fileInfo.file);
