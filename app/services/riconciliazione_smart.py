@@ -196,6 +196,24 @@ def is_azienda_esclusa(nome: str) -> bool:
     return False
 
 
+def is_nome_azienda(nome: str) -> bool:
+    """Verifica se il nome sembra essere un'azienda (non un dipendente)."""
+    if not nome:
+        return False
+    nome_upper = nome.upper().strip()
+    # Suffissi aziendali
+    suffissi_aziendali = [
+        " SRL", " S.R.L.", " S.R.L", " SPA", " S.P.A.", " S.P.A",
+        " SNC", " S.N.C.", " SAS", " S.A.S.", " SCARL", " S.C.A.R.L.",
+        " COOP", " COOPERATIVE", " COOPERATIVA", " LTD", " LIMITED",
+        " GMBH", " AG", " INC", " LLC", " SAGL"
+    ]
+    for suffisso in suffissi_aziendali:
+        if nome_upper.endswith(suffisso) or f"{suffisso} " in nome_upper:
+            return True
+    return False
+
+
 def is_sdd_addebito(descrizione: str) -> bool:
     """Verifica se è un addebito diretto SDD."""
     return bool(re.search(r"ADDEBITO\s*DIRETTO\s*SDD", descrizione, re.IGNORECASE))
