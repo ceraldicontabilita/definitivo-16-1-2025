@@ -2,6 +2,17 @@
 
 ## Gennaio 2026
 
+### 17 Gennaio 2026 (Sessione 2)
+
+#### 🔍 Ricerca IBAN Automatica
+- **Nuovo endpoint**: `POST /api/suppliers/ricerca-iban-web` - Ricerca automatica IBAN da fatture XML
+- **Nuovo endpoint**: `POST /api/suppliers/ricerca-iban-singolo/{id}` - Ricerca IBAN singolo fornitore
+- **Risultato**: 41 IBAN trovati automaticamente su 223 fornitori con metodo bancario
+- **Fornitori senza IBAN**: Ridotti da 223 a 182 (miglioramento del 18%)
+- **Fonte dati**: IBAN estratti dalle fatture XML già importate (fonte più affidabile)
+
+---
+
 ### 17 Gennaio 2026
 
 #### 🔧 Gestione Fornitori Avanzata
