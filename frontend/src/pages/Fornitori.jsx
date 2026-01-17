@@ -820,8 +820,12 @@ export default function Fornitori() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const params = debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : '';
-        const res = await api.get(`/api/suppliers${params}`, {
+        const params = new URLSearchParams();
+        if (debouncedSearch) params.append('search', debouncedSearch);
+        params.append('limit', '1000');  // Carica tutti i fornitori
+        params.append('use_cache', 'false');  // Forza refresh
+        
+        const res = await api.get(`/api/suppliers?${params}`, {
           signal: controller.signal
         });
         setSuppliers(res.data);
@@ -847,8 +851,12 @@ export default function Fornitori() {
   const reloadData = useCallback(async () => {
     try {
       setLoading(true);
-      const params = debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : '';
-      const res = await api.get(`/api/suppliers${params}`);
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      params.append('limit', '1000');
+      params.append('use_cache', 'false');
+      
+      const res = await api.get(`/api/suppliers?${params}`);
       setSuppliers(res.data);
     } catch (error) {
       console.error('Error reloading suppliers:', error);
