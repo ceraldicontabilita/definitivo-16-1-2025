@@ -54,6 +54,7 @@ const NAV_ITEMS = [
     children: [
       { to: "/dipendenti", label: "👥 Gestione Dipendenti", icon: "👤", isNew: true },
       { to: "/cedolini", label: "Cedolini / Buste Paga", icon: "📋" },
+      { to: "/prima-nota-salari", label: "💰 Prima Nota Salari", icon: "💰", isNew: true },
       { to: "/tfr", label: "TFR e Accantonamenti", icon: "🏢" },
       { to: "/noleggio-auto", label: "Noleggio Auto", icon: "🚗" },
     ]
