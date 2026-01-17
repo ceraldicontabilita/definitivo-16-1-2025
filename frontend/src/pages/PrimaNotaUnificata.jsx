@@ -207,6 +207,8 @@ export default function PrimaNotaUnificata() {
     }
     
     // La direzione è determinata automaticamente dalla categoria.
+    const sourceTipo = filtroTipo === 'tutti' ? 'cassa' : filtroTipo;
+
     // Nota: POS deve finire in BANCA (non in CASSA). Se l'utente è in CASSA e seleziona POS, lo reindirizziamo.
     if (newMov.categoria === 'pos' && sourceTipo === 'cassa') {
       alert('Incasso POS va registrato in BANCA. Ti sposto in Prima Nota BANCA.');
