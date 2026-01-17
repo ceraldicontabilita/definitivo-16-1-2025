@@ -104,6 +104,39 @@ export default function CedoliniRiconciliazione() {
     }
   };
 
+  // Upload Paghe + Bonifici (due file Excel)
+  const [filePaghe, setFilePaghe] = useState(null);
+  const [fileBonifici, setFileBonifici] = useState(null);
+  
+  const handleUploadPagheBonifici = async () => {
+    if (!filePaghe) {
+      alert('Seleziona almeno il file paghe');
+      return;
+    }
+
+    setUploading(true);
+    setUploadResult(null);
+    const formData = new FormData();
+    formData.append('file_paghe', filePaghe);
+    if (fileBonifici) {
+      formData.append('file_bonifici', fileBonifici);
+    }
+
+    try {
+      const res = await api.post('/api/cedolini/import-paghe-bonifici', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUploadResult(res.data);
+      setFilePaghe(null);
+      setFileBonifici(null);
+      loadCedolini();
+    } catch (e) {
+      setUploadResult({ error: e.response?.data?.detail || e.message });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // Registra pagamento manuale
   const handlePagamentoManuale = async () => {
     if (!showManual || !pagamentoForm.importo_pagato) return;
