@@ -229,15 +229,13 @@ def extract_document_period(content: bytes, category: str, filename: str) -> Opt
         
         # Pattern 5: Per Nexi cerca date nel formato "DD MMM YYYY"
         if not period_info["mese"]:
-            mesi_short = {'gen': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'mag': 5, 'giu': 6,
-                         'lug': 7, 'ago': 8, 'set': 9, 'ott': 10, 'nov': 11, 'dic': 12}
-            for mese_short, mese_num in mesi_short.items():
-                pattern = rf'\d{{2}}\s+{mese_short}\w*\s+(\d{{4}})'
+            for mese_short_key, mese_num in mesi_short.items():
+                pattern = rf'\d{{2}}\s+{mese_short_key}\w*\s+(\d{{4}})'
                 match = re.search(pattern, text_lower)
                 if match:
                     period_info["mese"] = mese_num
                     period_info["anno"] = int(match.group(1))
-                    period_info["periodo_raw"] = f"{mese_short}_{match.group(1)}"
+                    period_info["periodo_raw"] = f"{mese_short_key}_{match.group(1)}"
                     break
         
         # Pattern 6: Per IVA cerca "LIQUIDAZIONE IVA MESE/TRIMESTRE"
