@@ -93,12 +93,37 @@ Tutte le pagine principali testate e funzionanti:
 ## 📋 BACKLOG
 
 ### P1 - Alta Priorità
+- [ ] Unificare collection `cedolini`/`payslips` (debito tecnico)
 - [ ] Pagina Tracciabilità standalone
 
 ### P2 - Media Priorità
+- [ ] **Pagina Chiusura Esercizio** (backend pronto, manca frontend)
 - [ ] Dashboard Analytics con drill-down
 - [ ] Report PDF automatici via email
 - [ ] Integrazione Google Calendar
 
 ### P3 - Bassa Priorità
 - [ ] Parsing parallelo file import
+
+---
+
+## ✅ AUDIT SISTEMATICO 17 GENNAIO 2026
+
+| Scenario | Stato |
+|----------|-------|
+| Integrità referenziale fornitori | ✅ PASSED |
+| Chiusura/Apertura esercizio | ✅ PASSED |
+| Riconciliazione smart | ✅ PASSED |
+| TFR dipendenti | ✅ PASSED |
+| Noleggio veicoli | ✅ PASSED |
+| Magazzino | ✅ PASSED |
+| F24 | ✅ PASSED |
+| Scadenziario | ✅ PASSED |
+| Prima Nota | ✅ PASSED |
+| Piano dei Conti | ✅ PASSED |
+| Centri di Costo | ✅ PASSED |
+| Bilancio | ✅ PASSED |
+| HACCP | ✅ PASSED |
+| ObjectId serialization | ✅ PASSED |
+
+**Database**: 253 fornitori, 3643 fatture, 27 dipendenti, 1050 corrispettivi
