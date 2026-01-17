@@ -314,6 +314,15 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     else (payslip.get("netto") or 0)
                 )
                 
+                # Allegato PDF: salviamo i byte originali del file caricato (non il singolo PDF estratto)
+                # NB: per upload ZIP/RAR salviamo il nome originale, ma non memorizziamo il PDF per singolo dipendente.
+                import base64
+                pdf_b64 = None
+                pdf_filename = None
+                if filename.endswith('.pdf'):
+                    pdf_b64 = base64.b64encode(content).decode('utf-8')
+                    pdf_filename = file.filename
+
                 # Save in cedolini (collection unificata)
                 cedolino_doc = {
                     "id": payslip_id,
@@ -323,17 +332,17 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     "mese": int(mese) if mese else None,
                     "anno": int(anno) if anno else None,
                     "periodo": periodo,
-                    "ore_lavorate": float(payslip.get("ore_ordinarie", 0) or 0),
-                    "lordo": float(payslip.get("retribuzione_lorda", 0) or 0),
+                    "ore_lavorate": 0.0,
+                    "lordo": 0.0,
                     # Compatibilità: molti punti UI/API usano "netto"
                     "netto": importo_busta,
                     "netto_mese": importo_busta,
                     "acconto": float(payslip.get("acconto", 0) or 0),
                     "differenza": float(payslip.get("differenza", 0) or 0),
-                    "contributi_inps": float(payslip.get("contributi_inps", 0) or 0),
-                    "qualifica": payslip.get("qualifica", ""),
                     "source": "pdf_upload",
                     "filename": file.filename,
+                    "pdf_filename": pdf_filename,
+                    "pdf_data": pdf_b64,
                     "created_at": datetime.utcnow().isoformat()
                 }
                 await db["cedolini"].insert_one(cedolino_doc.copy())
