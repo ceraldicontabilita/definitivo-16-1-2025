@@ -360,6 +360,12 @@ async def import_excel_storico(file: UploadFile = File(...)) -> Dict[str, Any]:
             elif metodo in ["check", "cheque"]:
                 metodo = "assegno"
             
+            # === VALIDATORE P0: Salari post luglio 2018 NON pagabili in contanti (PRD) ===
+            if metodo == "contanti" and (anno > 2018 or (anno == 2018 and mese >= 7)):
+                risultato["errors"].append(f"P0: {nome} {mese}/{anno} - contanti vietati post 07/2018")
+                risultato["failed"] += 1
+                continue
+            
             # Check duplicato
             existing = await db[COLLECTION_CEDOLINI].find_one({
                 "nome_dipendente": {"$regex": nome, "$options": "i"},
