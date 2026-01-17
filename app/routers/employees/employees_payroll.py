@@ -11,7 +11,7 @@ import os
 import logging
 
 from app.database import Database, Collections
-from app.parsers.payslip_parser import extract_payslips_from_pdf
+from app.parsers.payslip_parser_simple import parse_payslip_simple
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
