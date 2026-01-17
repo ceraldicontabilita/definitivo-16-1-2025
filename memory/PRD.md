@@ -12,7 +12,7 @@ Applicazione contabile avanzata per la gestione completa del ciclo passivo, atti
 1. Import fatture XML (singole, multiple, ZIP)
 2. Gestione fornitori con metodi di pagamento configurabili
 3. Scadenziario pagamenti con riconciliazione bancaria
-4. Prima nota unificata (cassa + banca)
+4. Prima nota unificata (cassa + banca) con saldi separati per anno
 5. Gestione dipendenti e cedolini
 6. Dashboard con statistiche aggregate
 7. Export PDF e Excel
@@ -21,7 +21,33 @@ Applicazione contabile avanzata per la gestione completa del ciclo passivo, atti
 
 ## What's Been Implemented
 
-### Session 2026-01-17
+### Session 2026-01-17 (Fork 2)
+
+#### ✅ P0 - Prima Nota Cassa/Banca con Saldi Separati per Anno (COMPLETATO)
+- **File modificati**: 
+  - `/app/app/routers/accounting/prima_nota.py` - Aggiunto calcolo saldo anni precedenti
+  - `/app/frontend/src/pages/PrimaNotaUnificata.jsx` - Aggiornato per mostrare riporto
+- **Funzionalità**:
+  - Collection separate `prima_nota_cassa` e `prima_nota_banca`
+  - Saldo finale = Riporto anni precedenti + Saldo anno corrente
+  - API restituisce: `saldo`, `saldo_anno`, `saldo_precedente`
+  - Colonne DARE (entrate) e AVERE (uscite) separate
+  - Saldo progressivo per ogni movimento
+
+#### ✅ P0 - Parser Cedolini Semplificato (COMPLETATO)
+- **File creato**: `/app/app/parsers/payslip_parser_simple.py`
+- **File modificato**: `/app/app/routers/employees/employees_payroll.py`
+- **Funzionalità**:
+  - Estrae SOLO: Nome dipendente, Periodo (mese/anno), Importo netto
+  - Evita duplicati (normalizzazione case-insensitive)
+  - Salva PDF allegato al cedolino
+  - Supporta PDF singoli e archivi ZIP/RAR
+- **Test**: 17 cedolini estratti correttamente da un PDF Libro Unico
+
+#### 🔧 Fix - File Corrotto prima_nota_automation.py
+- Rimossi null bytes dal file che impedivano l'avvio del backend
+
+### Session 2026-01-17 (Fork 1)
 
 #### ✅ P0 - Unificazione Pagine Ciclo Passivo (COMPLETATO)
 - **File modificati**: 
