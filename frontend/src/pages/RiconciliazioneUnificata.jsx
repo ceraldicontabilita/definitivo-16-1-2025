@@ -649,7 +649,7 @@ export default function RiconciliazioneUnificata() {
           />
         )}
         {activeTab === 'f24' && (
-          <F24Tab f24={f24Pendenti} />
+          <F24Tab f24={f24Pendenti} processing={processing} />
         )}
         {activeTab === 'aruba' && (
           <ArubaTab 
