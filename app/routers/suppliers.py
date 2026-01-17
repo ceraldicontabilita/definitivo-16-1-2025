@@ -382,22 +382,18 @@ async def list_suppliers(
     
     suppliers_map = {}  # Usa piva come chiave per deduplicare
     
-    # 1. Estrai fornitori unici da invoices (fonte principale ~175 fornitori)
-    # NOTA: Prende denominazione da fornitore.denominazione O cedente_denominazione
+    # 1. Estrai fornitori unici da invoices (fonte principale)
+    # USA supplier_vat come fonte primaria (campo standard delle fatture XML)
+    # IGNORA fornitore.partita_iva se diverso da supplier_vat (potrebbe essere errato)
     pipeline = [
-        {"$match": {"$or": [
-            {"fornitore": {"$ne": None, "$type": "object"}},
-            {"cedente_piva": {"$exists": True, "$ne": ""}}
-        ]}},
+        {"$match": {"supplier_vat": {"$exists": True, "$ne": None, "$ne": ""}}},
         {"$group": {
-            "_id": {"$ifNull": ["$fornitore.partita_iva", "$cedente_piva"]},
-            "fornitore": {"$first": "$fornitore"},
-            "cedente_denominazione": {"$first": "$cedente_denominazione"},
+            "_id": "$supplier_vat",
             "supplier_name": {"$first": "$supplier_name"},
-            "cedente_piva": {"$first": "$cedente_piva"},
+            "fornitore": {"$first": "$fornitore"},
             "fatture_count": {"$sum": 1},
-            "fatture_totale": {"$sum": {"$toDouble": {"$ifNull": ["$totale", "$importo_totale"]}}},
-            "fatture_non_pagate": {"$sum": {"$cond": [{"$ne": ["$pagato", True]}, {"$toDouble": {"$ifNull": ["$totale", "$importo_totale"]}}, 0]}}
+            "fatture_totale": {"$sum": {"$toDouble": {"$ifNull": ["$total_amount", "$totale"]}}},
+            "fatture_non_pagate": {"$sum": {"$cond": [{"$ne": ["$pagato", True]}, {"$toDouble": {"$ifNull": ["$total_amount", "$totale"]}}, 0]}}
         }},
         {"$sort": {"fatture_count": -1}}
     ]
@@ -405,27 +401,30 @@ async def list_suppliers(
     invoice_suppliers = await db["invoices"].aggregate(pipeline).to_list(500)
     
     for item in invoice_suppliers:
-        fornitore = item.get("fornitore") or {}
-        if not isinstance(fornitore, dict):
-            fornitore = {}
-            
-        piva = fornitore.get("partita_iva") or item.get("_id") or item.get("cedente_piva")
+        piva = item.get("_id")
         if not piva:
             continue
         
-        # Prende il nome dalla prima fonte disponibile
+        fornitore = item.get("fornitore") or {}
+        if not isinstance(fornitore, dict):
+            fornitore = {}
+        
+        # Prende il nome - priorità a supplier_name (campo XML), poi fornitore.denominazione
         nome = (
+            item.get("supplier_name") or 
             fornitore.get("denominazione") or 
             fornitore.get("ragione_sociale") or 
-            item.get("cedente_denominazione") or 
-            item.get("supplier_name") or 
             ""
         )
+        
+        # SKIP se non ha nome - fornitore incompleto
+        if not nome.strip():
+            continue
             
         suppliers_map[piva] = {
             "id": f"inv_{piva}",
             "partita_iva": piva,
-            "codice_fiscale": fornitore.get("codice_fiscale", ""),
+            "codice_fiscale": fornitore.get("codice_fiscale", piva),
             "ragione_sociale": nome,
             "denominazione": nome,
             "indirizzo": fornitore.get("indirizzo", ""),
