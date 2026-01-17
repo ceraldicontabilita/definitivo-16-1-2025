@@ -28,12 +28,13 @@ async def list_employees(skip: int = 0, limit: int = 10000) -> List[Dict[str, An
     for emp in employees:
         cf = emp.get("codice_fiscale")
         if cf:
-            latest = await db["payslips"].find_one({"codice_fiscale": cf}, {"_id": 0}, sort=[("created_at", -1)])
+            # Usa collection cedolini unificata
+            latest = await db["cedolini"].find_one({"codice_fiscale": cf}, {"_id": 0}, sort=[("anno", -1), ("mese", -1)])
             if latest:
-                emp["netto"] = latest.get("retribuzione_netta", 0)
-                emp["lordo"] = latest.get("retribuzione_lorda", 0)
-                emp["ore_ordinarie"] = latest.get("ore_ordinarie", 0)
-                emp["ultimo_periodo"] = latest.get("periodo", "")
+                emp["netto"] = latest.get("netto_mese", latest.get("retribuzione_netta", 0))
+                emp["lordo"] = latest.get("lordo", latest.get("retribuzione_lorda", 0))
+                emp["ore_ordinarie"] = latest.get("ore_lavorate", latest.get("ore_ordinarie", 0))
+                emp["ultimo_periodo"] = latest.get("periodo", f"{latest.get('mese', 0):02d}/{latest.get('anno', 0)}")
                 if not emp.get("role") or emp.get("role") == "-":
                     emp["role"] = latest.get("qualifica", emp.get("role", ""))
         
