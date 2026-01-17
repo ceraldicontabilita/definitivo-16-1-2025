@@ -95,7 +95,21 @@ def estrai_nome_beneficiario(descrizione: str) -> Optional[str]:
             # Pulisci il nome (rimuovi parti dopo trattino, etc.)
             nome = re.sub(r'\s+-\s+.*$', '', nome)
             nome = re.sub(r'\s+NOTPROVIDE.*$', '', nome, flags=re.IGNORECASE)
-            return nome.strip()
+            nome = nome.strip()
+            
+            # Escludi nomi che sembrano aziende
+            nome_upper = nome.upper()
+            suffissi_aziendali = [
+                " SRL", " S.R.L.", " S.R.L", " SPA", " S.P.A.", " S.P.A",
+                " SNC", " S.N.C.", " SAS", " S.A.S.", " SCARL", " S.C.A.R.L.",
+                " COOP", " COOPERATIVE", " COOPERATIVA", " LTD", " LIMITED",
+                " GMBH", " AG", " INC", " LLC", " SAGL"
+            ]
+            for suffisso in suffissi_aziendali:
+                if nome_upper.endswith(suffisso):
+                    return None  # È un'azienda, non un dipendente
+            
+            return nome
     return None
 
 
