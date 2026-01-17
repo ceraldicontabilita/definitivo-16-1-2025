@@ -94,7 +94,7 @@ async def migrate_payslips_to_cedolini():
                 "nome_dipendente": ps.get("nome_completo", f"{ps.get('cognome', '')} {ps.get('nome', '')}".strip()),
                 "mese": mese,
                 "anno": anno,
-                "periodo": f"{mese:02d}/{anno}",
+                "periodo": f"{mese:02d}/{anno}" if isinstance(mese, int) and isinstance(anno, int) else ps.get("periodo", ""),
                 # Retribuzione
                 "lordo": ps.get("retribuzione_lorda", ps.get("lordo", 0)),
                 "netto_mese": ps.get("retribuzione_netta", ps.get("netto", 0)),
