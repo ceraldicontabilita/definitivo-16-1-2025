@@ -471,34 +471,27 @@ async def crea_scadenza_pagamento(db, fattura_id: str, fattura: Dict, fornitore:
     """
     Crea scadenza nello Scadenziario Fornitori basandosi sui dati di pagamento.
     
-    IMPORTANTE: Se la fattura non specifica il metodo pagamento,
-    usa quello dall'anagrafica fornitore (dizionario fornitori).
-    Es: Fastweb = bonifico (banca), altri potrebbero essere cassa
+    IMPORTANTE: Il metodo di pagamento viene SEMPRE dall'anagrafica fornitore,
+    MAI dalla fattura XML. Motivo: una fattura può avere metodo "banca" nell'XML
+    ma essere pagata in contanti secondo l'accordo con il fornitore.
     """
     pagamento = fattura.get("pagamento", {})
     
-    # Metodo pagamento - PRIORITÀ:
-    # 1. Dalla fattura XML (se presente e valido)
-    # 2. Dall'anagrafica fornitore (dizionario fornitori)
-    # 3. Default: bonifico (MP05)
-    modalita = pagamento.get("modalita")
+    # Metodo pagamento - SOLO dall'anagrafica fornitore, MAI dalla fattura XML
+    metodo_fornitore = (fornitore.get("metodo_pagamento") or "").lower()
     
-    # Se non c'è nella fattura, cerca nell'anagrafica fornitore
-    if not modalita or modalita not in METODI_PAGAMENTO:
-        metodo_fornitore = fornitore.get("metodo_pagamento", "").lower()
-        # Mappa metodo fornitore a codice XML
-        if metodo_fornitore in ["contanti", "cassa", "cash"]:
-            modalita = "MP01"  # Contanti
-        elif metodo_fornitore in ["assegno", "check"]:
-            modalita = "MP02"  # Assegno
-        elif metodo_fornitore in ["bonifico", "banca", "bank"]:
-            modalita = "MP05"  # Bonifico
-        elif metodo_fornitore in ["rid", "addebito"]:
-            modalita = "MP09"  # RID
-        elif metodo_fornitore in ["riba"]:
-            modalita = "MP12"  # RIBA
-        else:
-            modalita = "MP05"  # Default: Bonifico
+    # Mappa metodo fornitore a codice XML per compatibilità interna
+    if metodo_fornitore in ["contanti", "cassa", "cash"]:
+        modalita = "MP01"  # Contanti
+    elif metodo_fornitore in ["assegno", "check"]:
+        modalita = "MP02"  # Assegno
+    elif metodo_fornitore in ["rid", "addebito"]:
+        modalita = "MP09"  # RID
+    elif metodo_fornitore in ["riba"]:
+        modalita = "MP12"  # RIBA
+    else:
+        # Default: Bonifico (se non specificato o sconosciuto)
+        modalita = "MP05"
     
     metodo_info = METODI_PAGAMENTO.get(modalita, METODI_PAGAMENTO["MP05"])
     
