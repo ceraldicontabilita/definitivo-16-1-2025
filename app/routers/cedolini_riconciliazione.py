@@ -304,10 +304,28 @@ async def import_excel_storico(file: UploadFile = File(...)) -> Dict[str, Any]:
     db = Database.get_db()
     risultato = {"imported": 0, "skipped_duplicates": 0, "errors": [], "failed": 0}
     
+    # Mappa mesi testuali a numeri
+    MESI_MAP = {
+        "gennaio": 1, "febbraio": 2, "marzo": 3, "aprile": 4, 
+        "maggio": 5, "giugno": 6, "luglio": 7, "agosto": 8,
+        "settembre": 9, "ottobre": 10, "novembre": 11, "dicembre": 12,
+        "tredicesima": 13, "quattordicesima": 14
+    }
+    
     for _, row in df.iterrows():
         try:
             nome = str(row[col_nome]).strip().upper() if pd.notna(row[col_nome]) else ""
-            mese = int(row[col_mese]) if pd.notna(row[col_mese]) else 0
+            
+            # Gestisci mese come testo o numero
+            mese_raw = row[col_mese] if pd.notna(row[col_mese]) else ""
+            if isinstance(mese_raw, str):
+                mese_lower = mese_raw.lower().strip()
+                mese = MESI_MAP.get(mese_lower, 0)
+                mese_nome = mese_raw.strip().title()
+            else:
+                mese = int(mese_raw) if mese_raw else 0
+                mese_nome = list(MESI_MAP.keys())[mese - 1].title() if 0 < mese <= 14 else str(mese)
+            
             anno = int(row[col_anno]) if pd.notna(row[col_anno]) else 0
             netto = float(row[col_netto]) if pd.notna(row[col_netto]) else 0
             pagato = float(row[col_pagato]) if col_pagato and pd.notna(row[col_pagato]) else netto
@@ -327,7 +345,7 @@ async def import_excel_storico(file: UploadFile = File(...)) -> Dict[str, Any]:
             # Check duplicato
             existing = await db[COLLECTION_CEDOLINI].find_one({
                 "nome_dipendente": {"$regex": nome, "$options": "i"},
-                "mese": {"$in": [mese, str(mese)]},
+                "mese": {"$in": [mese, str(mese), mese_nome]},
                 "anno": {"$in": [anno, str(anno)]}
             })
             
