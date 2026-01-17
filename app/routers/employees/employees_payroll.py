@@ -123,23 +123,69 @@ async def delete_all_payslips() -> Dict[str, Any]:
 
 @router.post("/paghe/upload-pdf")
 async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
-    """Upload PDF buste paga (LUL Zucchetti)."""
-    if not file.filename.lower().endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Il file deve essere PDF")
+    """Upload buste paga.
+
+    Supporta:
+    - PDF singolo
+    - Archivio ZIP/RAR contenente PDF (utile per upload massivo)
+    """
+    filename = (file.filename or "").lower()
+    if not (filename.endswith('.pdf') or filename.endswith('.zip') or filename.endswith('.rar')):
+        raise HTTPException(status_code=400, detail="Il file deve essere PDF, ZIP o RAR")
     
     try:
         content = await file.read()
         if not content:
             raise HTTPException(status_code=400, detail="File vuoto")
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-            tmp.write(content)
-            tmp_path = tmp.name
-        
-        try:
-            payslips = extract_payslips_from_pdf(tmp_path)
-        finally:
-            os.unlink(tmp_path)
+
+        pdf_paths = []
+        tmp_dir = None
+
+        # Salva su disco e prepara lista PDF da parsificare
+        if filename.endswith('.pdf'):
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+            pdf_paths = [tmp_path]
+        else:
+            import zipfile
+            import glob
+            import subprocess
+
+            tmp_dir = tempfile.TemporaryDirectory()
+            archive_path = os.path.join(tmp_dir.name, file.filename or 'archivio')
+            with open(archive_path, 'wb') as f:
+                f.write(content)
+
+            if filename.endswith('.zip'):
+                with zipfile.ZipFile(archive_path) as zf:
+                    zf.extractall(tmp_dir.name)
+            else:
+                # RAR: usa bsdtar (libarchive)
+                subprocess.run(['bsdtar', '-xf', archive_path, '-C', tmp_dir.name], check=True)
+
+            pdf_paths = glob.glob(os.path.join(tmp_dir.name, '**', '*.pdf'), recursive=True)
+
+        # Estrai payslips da tutti i PDF raccolti
+        payslips = []
+        for p in pdf_paths:
+            extracted = extract_payslips_from_pdf(p)
+            if extracted and len(extracted) == 1 and extracted[0].get('error'):
+                # salta singolo errore ma continua su altri file
+                continue
+            payslips.extend(extracted or [])
+
+        # cleanup temp file/directory
+        if filename.endswith('.pdf') and pdf_paths:
+            try:
+                os.unlink(pdf_paths[0])
+            except Exception:
+                pass
+        if tmp_dir is not None:
+            try:
+                tmp_dir.cleanup()
+            except Exception:
+                pass
         
         if not payslips:
             raise HTTPException(status_code=400, detail="Nessuna busta paga trovata")
