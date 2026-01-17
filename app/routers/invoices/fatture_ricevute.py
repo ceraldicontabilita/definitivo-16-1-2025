@@ -964,7 +964,8 @@ async def rielabora_integrazione_fatture(
                 "id": fornitore.get("id"),
                 "partita_iva": fornitore.get("partita_iva"),
                 "ragione_sociale": fornitore.get("ragione_sociale"),
-                "esclude_magazzino": fornitore.get("esclude_magazzino", False)
+                "esclude_magazzino": fornitore.get("esclude_magazzino", False),
+                "metodo_pagamento": fornitore.get("metodo_pagamento")  # Per routing Prima Nota
             }
             
             dettaglio = {"fattura": fattura.get("numero_documento"), "operazioni": []}
