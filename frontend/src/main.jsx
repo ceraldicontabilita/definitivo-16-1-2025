@@ -112,6 +112,7 @@ const ArchivioBonifici = lazy(() => import("./pages/ArchivioBonifici.jsx"));
 const GestioneDipendentiUnificata = lazy(() => import("./pages/GestioneDipendentiUnificata.jsx"));
 const Cedolini = lazy(() => import("./pages/Cedolini.jsx"));
 const CedoliniRiconciliazione = lazy(() => import("./pages/CedoliniRiconciliazione.jsx"));
+const PrimaNotaSalari = lazy(() => import("./pages/PrimaNotaSalari.jsx"));
 const TFR = lazy(() => import("./pages/TFR.jsx"));
 const NoleggioAuto = lazy(() => import("./pages/NoleggioAuto.jsx"));
 
