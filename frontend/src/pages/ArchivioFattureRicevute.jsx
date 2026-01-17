@@ -103,10 +103,34 @@ export default function ArchivioFatture() {
     }
   };
 
+  // Carica dati Pipeline
+  const fetchPipelineStats = async () => {
+    try {
+      const res = await api.get(`/api/ciclo-passivo/dashboard-riconciliazione?anno=${anno}`);
+      setPipelineStats(res.data);
+    } catch (err) {
+      console.error('Errore caricamento pipeline:', err);
+    }
+  };
+
+  // Carica Scadenze
+  const fetchScadenze = async () => {
+    try {
+      const res = await api.get(`/api/ciclo-passivo/scadenze?anno=${anno}&stato=aperta`);
+      setScadenze(res.data.scadenze || res.data || []);
+      setScadenzeStats(res.data.stats || null);
+    } catch (err) {
+      console.error('Errore caricamento scadenze:', err);
+    }
+  };
+
   useEffect(() => {
     fetchFatture();
     fetchStatistiche();
-  }, [fetchFatture, anno]);
+    // Carica anche dati pipeline e scadenze se tab attivo
+    if (activeTab === 'pipeline') fetchPipelineStats();
+    if (activeTab === 'scadenze') fetchScadenze();
+  }, [fetchFatture, anno, activeTab]);
 
   useEffect(() => {
     fetchFornitori();
