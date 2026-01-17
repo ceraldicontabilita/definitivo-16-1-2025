@@ -1333,3 +1333,190 @@ async def aggiorna_metodi_pagamento_bulk(
         pass
     
     return risultato
+
+
+@router.post("/correggi-nomi-mancanti")
+async def correggi_nomi_fornitori_mancanti() -> Dict[str, Any]:
+    """
+    Corregge i fornitori senza nome cercando il nome dalle fatture.
+    
+    IMPORTANTE: Un fornitore DEVE sempre avere un nome (denominazione/ragione_sociale).
+    Questo endpoint cerca nelle fatture XML il campo cedente_denominazione
+    e aggiorna i fornitori con nome mancante.
+    """
+    db = Database.get_db()
+    
+    risultato = {
+        "corretti": 0,
+        "non_trovati": [],
+        "gia_ok": 0,
+        "errori": []
+    }
+    
+    # Trova fornitori senza nome
+    cursor = db[Collections.SUPPLIERS].find({
+        "$or": [
+            {"denominazione": {"$in": [None, ""]}},
+            {"denominazione": {"$exists": False}},
+            {"ragione_sociale": {"$in": [None, ""]}},
+            {"ragione_sociale": {"$exists": False}}
+        ]
+    }, {"_id": 0})
+    
+    fornitori_senza_nome = await cursor.to_list(500)
+    
+    # Filtra solo quelli veramente senza nome
+    fornitori_senza_nome = [
+        f for f in fornitori_senza_nome 
+        if not (f.get("denominazione") or "").strip() and not (f.get("ragione_sociale") or "").strip()
+    ]
+    
+    for fornitore in fornitori_senza_nome:
+        piva = fornitore.get("partita_iva")
+        cf = fornitore.get("codice_fiscale")
+        
+        if not piva and not cf:
+            continue
+        
+        # Cerca nome nelle fatture
+        query = {}
+        if piva:
+            query = {"$or": [{"cedente_piva": piva}, {"supplier_vat": piva}]}
+        elif cf:
+            query = {"cedente_cf": cf}
+        
+        fattura = await db["invoices"].find_one(
+            query,
+            {"_id": 0, "cedente_denominazione": 1, "supplier_name": 1}
+        )
+        
+        if fattura:
+            nome = fattura.get("cedente_denominazione") or fattura.get("supplier_name")
+            if nome and nome.strip():
+                # Aggiorna fornitore
+                await db[Collections.SUPPLIERS].update_one(
+                    {"partita_iva": piva} if piva else {"codice_fiscale": cf},
+                    {"$set": {
+                        "denominazione": nome.strip(),
+                        "ragione_sociale": nome.strip(),
+                        "updated_at": datetime.utcnow().isoformat()
+                    }}
+                )
+                risultato["corretti"] += 1
+            else:
+                risultato["non_trovati"].append({"piva": piva, "cf": cf})
+        else:
+            risultato["non_trovati"].append({"piva": piva, "cf": cf})
+    
+    # Invalida cache
+    try:
+        await cache.delete("suppliers_list_default")
+    except:
+        pass
+    
+    risultato["totale_senza_nome"] = len(fornitori_senza_nome)
+    return risultato
+
+
+@router.post("/sincronizza-da-fatture")
+async def sincronizza_fornitori_da_fatture() -> Dict[str, Any]:
+    """
+    Sincronizza tutti i fornitori dalle fatture XML al database.
+    
+    Per ogni fornitore trovato nelle fatture:
+    1. Se non esiste nel DB, lo crea con tutti i dati disponibili
+    2. Se esiste ma manca il nome, lo aggiorna
+    3. Se esiste ed è completo, lo salta
+    
+    Questo garantisce che tutti i fornitori abbiano sempre un nome.
+    """
+    db = Database.get_db()
+    
+    risultato = {
+        "nuovi": 0,
+        "aggiornati": 0,
+        "gia_completi": 0,
+        "errori": []
+    }
+    
+    # Estrai tutti i fornitori unici dalle fatture
+    pipeline = [
+        {"$match": {"cedente_piva": {"$exists": True, "$ne": None, "$ne": ""}}},
+        {"$group": {
+            "_id": "$cedente_piva",
+            "denominazione": {"$first": "$cedente_denominazione"},
+            "supplier_name": {"$first": "$supplier_name"},
+            "indirizzo": {"$first": "$cedente_indirizzo"},
+            "cap": {"$first": "$cedente_cap"},
+            "comune": {"$first": "$cedente_comune"},
+            "provincia": {"$first": "$cedente_provincia"},
+            "nazione": {"$first": "$cedente_nazione"},
+            "pec": {"$first": "$cedente_pec"},
+            "codice_fiscale": {"$first": "$cedente_cf"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    
+    fornitori_fatture = await db["invoices"].aggregate(pipeline).to_list(1000)
+    
+    for f in fornitori_fatture:
+        piva = f.get("_id")
+        if not piva:
+            continue
+        
+        nome = f.get("denominazione") or f.get("supplier_name") or ""
+        if not nome.strip():
+            continue  # Salta se anche la fattura non ha il nome
+        
+        # Verifica se esiste già
+        esistente = await db[Collections.SUPPLIERS].find_one(
+            {"partita_iva": piva},
+            {"_id": 0, "denominazione": 1, "ragione_sociale": 1, "metodo_pagamento": 1}
+        )
+        
+        if esistente:
+            nome_esistente = esistente.get("denominazione") or esistente.get("ragione_sociale") or ""
+            if nome_esistente.strip():
+                risultato["gia_completi"] += 1
+                continue
+            
+            # Aggiorna nome mancante
+            await db[Collections.SUPPLIERS].update_one(
+                {"partita_iva": piva},
+                {"$set": {
+                    "denominazione": nome.strip(),
+                    "ragione_sociale": nome.strip(),
+                    "updated_at": datetime.utcnow().isoformat()
+                }}
+            )
+            risultato["aggiornati"] += 1
+        else:
+            # Crea nuovo fornitore
+            nuovo = {
+                "id": str(uuid.uuid4()),
+                "partita_iva": piva,
+                "codice_fiscale": f.get("codice_fiscale") or piva,
+                "denominazione": nome.strip(),
+                "ragione_sociale": nome.strip(),
+                "indirizzo": f.get("indirizzo") or "",
+                "cap": f.get("cap") or "",
+                "comune": f.get("comune") or "",
+                "provincia": f.get("provincia") or "",
+                "nazione": f.get("nazione") or "IT",
+                "pec": f.get("pec") or "",
+                "metodo_pagamento": "bonifico",  # Default
+                "attivo": True,
+                "source": "sincronizzazione_fatture",
+                "fatture_count": f.get("count", 0),
+                "created_at": datetime.utcnow().isoformat()
+            }
+            await db[Collections.SUPPLIERS].insert_one(nuovo.copy())
+            risultato["nuovi"] += 1
+    
+    # Invalida cache
+    try:
+        await cache.delete("suppliers_list_default")
+    except:
+        pass
+    
+    return risultato
