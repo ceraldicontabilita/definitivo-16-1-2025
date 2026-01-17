@@ -35,7 +35,8 @@ export default function Cedolini() {
     try {
       setLoadingCedolini(true);
       const res = await api.get(`/api/cedolini/dipendente/${dipId}?anno=${anno}`);
-      setCedolini(res.data || []);
+      // L'API restituisce { cedolini: [...] }
+      setCedolini(res.data?.cedolini || res.data || []);
     } catch (e) {
       setCedolini([]);
     } finally {
