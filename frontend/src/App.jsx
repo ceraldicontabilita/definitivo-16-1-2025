@@ -132,6 +132,7 @@ const NAV_ITEMS = [
       { to: "/piano-dei-conti", label: "Piano dei Conti", icon: "📒" },
       { to: "/cespiti", label: "Cespiti", icon: "🏢" },
       { to: "/finanziaria", label: "Finanziaria", icon: "💹" },
+      { to: "/chiusura-esercizio", label: "Chiusura Esercizio", icon: "📅", isNew: true },
     ]
   },
   
