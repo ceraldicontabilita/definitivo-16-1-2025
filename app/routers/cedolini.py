@@ -154,7 +154,7 @@ async def lista_cedolini(
     
     cedolini = await db["cedolini"].find(
         query,
-        {"_id": 0}
+        {"_id": 0, "pdf_data": 0}
     ).sort([("anno", -1), ("mese", -1)]).limit(limit).to_list(limit)
     
     total = await db["cedolini"].count_documents(query)
@@ -451,7 +451,7 @@ async def cedolini_dipendente(dipendente_id: str, anno: Optional[int] = None) ->
     
     cedolini = await db["cedolini"].find(
         query,
-        {"_id": 0}
+        {"_id": 0, "pdf_data": 0}
     ).sort([("anno", -1), ("mese", -1)]).to_list(500)
     
     # Calcola totali
@@ -481,6 +481,29 @@ async def cedolini_dipendente(dipendente_id: str, anno: Optional[int] = None) ->
         "totale_netto": round(totale_netto, 2),
         "cedolini": cedolini
     }
+
+
+
+@router.get("/{cedolino_id}/download")
+async def download_cedolino_pdf(cedolino_id: str):
+    """Download PDF allegato al cedolino."""
+    import base64
+    from fastapi.responses import StreamingResponse
+    import io
+
+    db = Database.get_db()
+    doc = await db["cedolini"].find_one({"id": cedolino_id}, {"_id": 0, "pdf_data": 1, "pdf_filename": 1})
+    if not doc or not doc.get("pdf_data"):
+        raise HTTPException(status_code=404, detail="PDF non disponibile")
+
+    pdf_bytes = base64.b64decode(doc["pdf_data"])
+    filename = doc.get("pdf_filename") or f"cedolino_{cedolino_id}.pdf"
+
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=\"{filename}\""},
+    )
 
 
 @router.get("/riepilogo-mensile/{anno}/{mese}")
