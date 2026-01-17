@@ -1089,7 +1089,7 @@ function ArubaTab({ fatture, onConferma, processing, fornitori = [], onRefresh, 
           <h3 style={{ margin: 0, fontSize: 16, color: '#7c3aed' }}>🧾 Fatture Aruba ({fattureFiltrate.length})</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button
-              onClick={handleAssegnaMetodiAuto}
+              onClick={onAssegnaMetodiAuto}
               disabled={processing === 'assegna-metodi'}
               style={{
                 padding: '6px 12px',
