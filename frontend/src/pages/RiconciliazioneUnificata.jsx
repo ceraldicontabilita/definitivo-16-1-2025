@@ -76,6 +76,23 @@ export default function RiconciliazioneUnificata() {
   const [currentLimit, setCurrentLimit] = useState(25);
   const [hasMore, setHasMore] = useState(true);
   
+  // Auto-refresh ogni 30 minuti
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  
+  // Timer per auto-refresh
+  useEffect(() => {
+    if (!autoRefreshEnabled) return;
+    
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refresh riconciliazione (ogni 30 min)');
+      loadAllData();
+      setLastRefresh(new Date());
+    }, 30 * 60 * 1000); // 30 minuti
+    
+    return () => clearInterval(interval);
+  }, [autoRefreshEnabled, anno]);
+  
   // Filtri avanzati
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
