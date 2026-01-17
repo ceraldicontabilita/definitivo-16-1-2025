@@ -1415,13 +1415,12 @@ function ScadenzeWidget({ scadenze }) {
               Scegli il metodo di pagamento. Il movimento verrà registrato in Prima Nota.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, justifyContent: 'center' }}>
               <button
                 onClick={() => handlePaga(pagaModal, 'cassa')}
                 disabled={processing}
                 style={{
-                  flex: 1,
-                  padding: '14px 16px',
+                  padding: '14px 24px',
                   background: processing ? '#94a3b8' : '#f59e0b',
                   color: 'white',
                   border: 'none',
@@ -1430,20 +1429,21 @@ function ScadenzeWidget({ scadenze }) {
                   fontWeight: 700,
                   cursor: processing ? 'not-allowed' : 'pointer',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 8
+                  gap: 4,
+                  minWidth: 140
                 }}
               >
-                💵 CASSA
-                <span style={{ fontSize: 11, opacity: 0.9, display: 'block' }}>(pagato subito)</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>💵 CASSA</span>
+                <span style={{ fontSize: 10, opacity: 0.9 }}>(pagato subito)</span>
               </button>
               <button
                 onClick={() => handlePaga(pagaModal, 'banca')}
                 disabled={processing}
                 style={{
-                  flex: 1,
-                  padding: '14px 16px',
+                  padding: '14px 24px',
                   background: processing ? '#94a3b8' : '#3b82f6',
                   color: 'white',
                   border: 'none',
@@ -1452,13 +1452,15 @@ function ScadenzeWidget({ scadenze }) {
                   fontWeight: 700,
                   cursor: processing ? 'not-allowed' : 'pointer',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 8
+                  gap: 4,
+                  minWidth: 140
                 }}
               >
-                🏦 BANCA
-                <span style={{ fontSize: 11, opacity: 0.9, display: 'block' }}>(da riconciliare)</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>🏦 BANCA</span>
+                <span style={{ fontSize: 10, opacity: 0.9 }}>(da riconciliare)</span>
               </button>
             </div>
 
