@@ -414,12 +414,13 @@ class EmailDocumentDownloader:
                             category = "altro"
                         
                         # NUOVO: Estrai periodo dal documento per identificazione intelligente
+                        # Applica a TUTTI i PDF, non solo categorie specifiche
                         period_info = None
-                        if ext == '.pdf' and category in ['f24', 'busta_paga', 'estratto_conto']:
+                        if ext == '.pdf':
                             try:
                                 period_info = extract_document_period(content, category, filename)
                                 if period_info:
-                                    logger.info(f"📅 Periodo estratto da {filename}: {period_info.get('periodo_raw', 'N/D')}")
+                                    logger.info(f"📅 Periodo estratto da {filename}: {period_info.get('periodo_raw', 'N/D')} (cat: {category})")
                             except Exception as e:
                                 logger.debug(f"Errore estrazione periodo: {e}")
                         
