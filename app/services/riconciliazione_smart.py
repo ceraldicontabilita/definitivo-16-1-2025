@@ -500,6 +500,9 @@ async def analizza_movimento(movimento: Dict[str, Any]) -> Dict[str, Any]:
         # IMPORTANTE: Escludi l'azienda stessa come beneficiario
         if is_azienda_esclusa(nome_beneficiario):
             nome_beneficiario = None
+        # Escludi nomi che sembrano aziende (SRL, SPA, etc.)
+        elif is_nome_azienda(nome_beneficiario):
+            nome_beneficiario = None
     
     if nome_beneficiario:
         result["tipo"] = "stipendio"
