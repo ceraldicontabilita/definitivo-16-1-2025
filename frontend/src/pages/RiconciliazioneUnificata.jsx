@@ -160,54 +160,18 @@ export default function RiconciliazioneUnificata() {
       // Movimenti banca (escludi prelievi assegno)
       setMovimentiBanca(movimenti.filter(m => !m.descrizione?.toUpperCase()?.includes('PRELIEVO ASSEGNO')));
       
-      // Assegni da riconciliare
+      // Assegni da riconciliare (già filtrati dal backend)
       setAssegni(assegniDaApi);
       
-      // Usa assegni dall'API diretta 
-      const assegniDaMovimenti = movimenti.filter(m => m.tipo === 'prelievo_assegno');
-      const assegniDaApi = (assegniRes.data || [])
-        .filter(a => {
-          // Escludi assegni già incassati
-          if (a.stato === 'incassato') return false;
-          // Escludi assegni già associati a fattura (controlla entrambi i campi)
-          if (a.fattura_id) return false;
-          if (a.fattura_collegata) return false;
-          // Escludi assegni già in prima nota
-          if (a.prima_nota_id) return false;
-          return true;
-        })
-        .map(a => {
-          const hasData = a.importo && a.beneficiario && a.data_emissione;
-          return {
-            movimento_id: a.id,
-            data: a.data_emissione || a.created_at || null,
-            descrizione: a.numero 
-              ? `Assegno N. ${a.numero}${a.beneficiario ? ' - ' + a.beneficiario : ''}`
-              : a.beneficiario 
-                ? `Assegno per ${a.beneficiario}`
-                : 'Assegno da completare',
-            importo: -(Math.abs(a.importo || 0)),
-            tipo: 'prelievo_assegno',
-            numero_assegno: a.numero || null,
-            assegno: a,
-            fornitore: a.beneficiario || null,
-            stato: a.stato || 'da completare',
-            dati_incompleti: !hasData,
-            suggerimenti: a.fattura_id ? [{ tipo: 'fattura', id: a.fattura_id }] : []
-          };
-        });
-      // Se non ci sono assegni da riconciliare, mostra messaggio vuoto (non mostrare quelli già confermati)
-      const assegniDaMostrare = assegniDaApi;
-      setAssegni(assegniDaMostrare);
-      
-      setStipendiPendenti(movimenti.filter(m => m.tipo === 'stipendio'));
+      setStipendiPendenti(stipendiRes.data?.stipendi || []);
       setFattureAruba(arubaRes.data?.operazioni || []);
       setF24Pendenti(f24Res.data?.f24 || []);
       
-      // Stats
-      setStats({
-        totale: movimenti.length,
-        banca: movimenti.filter(m => !['prelievo_assegno', 'stipendio'].includes(m.tipo)).length,
+      // Auto-match stats
+      setAutoMatchStats({
+        matched: bancaRes.data?.stats?.riconciliati || 0,
+        pending: bancaRes.data?.stats?.non_riconciliati || 0
+      });
         assegni: assegniDaApi.length > 0 ? assegniDaApi.length : assegniDaMovimenti.length,
         f24: (f24Res.data?.f24 || []).length,
         aruba: (arubaRes.data?.operazioni || []).length,
