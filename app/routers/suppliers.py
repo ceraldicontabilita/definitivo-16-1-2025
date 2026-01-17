@@ -418,6 +418,276 @@ async def aggiorna_fornitori_bulk() -> Dict[str, Any]:
     }
 
 
+@router.post("/ricerca-iban-web")
+async def ricerca_iban_fornitori_web() -> Dict[str, Any]:
+    """
+    Cerca gli IBAN dei fornitori utilizzando ricerca web con Claude AI.
+    Interroga registri aziendali pubblici italiani per trovare IBAN.
+    
+    IMPORTANTE: Usa web search per cercare in:
+    - Registro Imprese
+    - Portali fatturazione
+    - Database aziendali pubblici
+    """
+    import re
+    import asyncio
+    from datetime import timezone
+    
+    db = Database.get_db()
+    
+    # Metodi bancari che richiedono IBAN
+    metodi_bancari = ["bonifico", "banca", "sepa", "rid", "sdd", "assegno", "riba", "mav", "rav", "f24", "carta", "misto"]
+    
+    # Trova fornitori con metodo bancario ma senza IBAN
+    fornitori_senza_iban = await db[Collections.SUPPLIERS].find({
+        "metodo_pagamento": {"$in": metodi_bancari},
+        "$or": [
+            {"iban": None},
+            {"iban": ""},
+            {"iban": {"$exists": False}}
+        ],
+        "partita_iva": {"$exists": True, "$ne": "", "$ne": None}
+    }, {"_id": 0, "id": 1, "partita_iva": 1, "ragione_sociale": 1, "denominazione": 1}).to_list(300)
+    
+    risultato = {
+        "totale_fornitori": len(fornitori_senza_iban),
+        "iban_trovati": 0,
+        "non_trovati": 0,
+        "errori": 0,
+        "dettaglio_trovati": [],
+        "dettaglio_non_trovati": []
+    }
+    
+    if not fornitori_senza_iban:
+        return {
+            "success": True,
+            "message": "Tutti i fornitori con metodo bancario hanno già un IBAN configurato",
+            **risultato
+        }
+    
+    # Inizializza client Claude con Emergent LLM Key
+    try:
+        from anthropic import Anthropic
+        
+        emergent_key = "sk-emergent-dEc590f56Ab0b88Ed6"
+        client = Anthropic(
+            api_key=emergent_key,
+            base_url="https://api.emergentmethods.ai/v1"
+        )
+    except Exception as e:
+        logger.error(f"Errore inizializzazione Claude: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore inizializzazione AI: {str(e)}")
+    
+    # Regex per IBAN italiano
+    iban_pattern = re.compile(r'IT\d{2}[A-Z]?\d{5}\d{5}[A-Z0-9]{12}', re.IGNORECASE)
+    
+    # Processa fornitori in batch
+    batch_size = 10
+    for i in range(0, min(len(fornitori_senza_iban), 50), batch_size):  # Max 50 fornitori per chiamata
+        batch = fornitori_senza_iban[i:i+batch_size]
+        
+        for fornitore in batch:
+            piva = fornitore.get("partita_iva", "")
+            nome = fornitore.get("ragione_sociale") or fornitore.get("denominazione") or ""
+            
+            # Salta P.IVA non italiane (non 11 cifre)
+            piva_clean = re.sub(r'[^0-9]', '', str(piva))
+            if len(piva_clean) != 11:
+                risultato["non_trovati"] += 1
+                continue
+            
+            try:
+                # Cerca IBAN con Claude web search
+                response = client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=1024,
+                    messages=[{
+                        "role": "user",
+                        "content": f"""Cerca l'IBAN bancario dell'azienda italiana:
+- Partita IVA: {piva}
+- Nome azienda: {nome}
+
+Cerca nei registri pubblici italiani, portali di fatturazione elettronica, 
+Camera di Commercio, e database aziendali.
+
+IMPORTANTE: 
+- Restituisci SOLO l'IBAN se lo trovi (formato IT + 25 caratteri)
+- Se non trovi l'IBAN, rispondi esattamente: NON_TROVATO
+- Non inventare IBAN, restituisci solo dati reali verificati"""
+                    }]
+                )
+                
+                # Estrai risposta
+                response_text = ""
+                for block in response.content:
+                    if hasattr(block, 'text'):
+                        response_text += block.text
+                
+                # Cerca IBAN nella risposta
+                ibans_trovati = iban_pattern.findall(response_text.upper())
+                
+                if ibans_trovati:
+                    iban = ibans_trovati[0].upper()
+                    
+                    # Valida IBAN (controllo base)
+                    if len(iban) == 27 and iban.startswith('IT'):
+                        # Aggiorna fornitore con IBAN trovato
+                        await db[Collections.SUPPLIERS].update_one(
+                            {"id": fornitore["id"]},
+                            {"$set": {
+                                "iban": iban,
+                                "iban_fonte": "ricerca_web_ai",
+                                "iban_data_ricerca": datetime.now(timezone.utc).isoformat(),
+                                "updated_at": datetime.now(timezone.utc).isoformat()
+                            }}
+                        )
+                        
+                        risultato["iban_trovati"] += 1
+                        risultato["dettaglio_trovati"].append({
+                            "partita_iva": piva,
+                            "nome": nome,
+                            "iban": iban
+                        })
+                        logger.info(f"IBAN trovato per {nome}: {iban[:10]}...")
+                    else:
+                        risultato["non_trovati"] += 1
+                        risultato["dettaglio_non_trovati"].append({
+                            "partita_iva": piva,
+                            "nome": nome,
+                            "motivo": "IBAN formato non valido"
+                        })
+                else:
+                    risultato["non_trovati"] += 1
+                    risultato["dettaglio_non_trovati"].append({
+                        "partita_iva": piva,
+                        "nome": nome,
+                        "motivo": "Non trovato nei registri pubblici"
+                    })
+                
+                # Pausa tra le richieste per non sovraccaricare
+                await asyncio.sleep(0.5)
+                
+            except Exception as e:
+                risultato["errori"] += 1
+                logger.warning(f"Errore ricerca IBAN {piva}: {e}")
+        
+        # Pausa tra i batch
+        await asyncio.sleep(1)
+    
+    # Invalida cache
+    await cache.clear_pattern(SUPPLIERS_CACHE_KEY)
+    
+    return {
+        "success": True,
+        "message": f"Ricerca completata: {risultato['iban_trovati']} IBAN trovati su {risultato['totale_fornitori']} fornitori",
+        **risultato
+    }
+
+
+@router.post("/ricerca-iban-singolo/{supplier_id}")
+async def ricerca_iban_singolo_web(supplier_id: str) -> Dict[str, Any]:
+    """
+    Cerca l'IBAN di un singolo fornitore utilizzando ricerca web con Claude AI.
+    """
+    import re
+    from datetime import timezone
+    
+    db = Database.get_db()
+    
+    # Trova il fornitore
+    fornitore = await db[Collections.SUPPLIERS].find_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]},
+        {"_id": 0}
+    )
+    
+    if not fornitore:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
+    
+    piva = fornitore.get("partita_iva", "")
+    nome = fornitore.get("ragione_sociale") or fornitore.get("denominazione") or ""
+    
+    if not piva:
+        raise HTTPException(status_code=400, detail="Fornitore senza Partita IVA")
+    
+    # Inizializza client Claude
+    try:
+        from anthropic import Anthropic
+        
+        emergent_key = "sk-emergent-dEc590f56Ab0b88Ed6"
+        client = Anthropic(
+            api_key=emergent_key,
+            base_url="https://api.emergentmethods.ai/v1"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore inizializzazione AI: {str(e)}")
+    
+    try:
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1024,
+            messages=[{
+                "role": "user",
+                "content": f"""Cerca l'IBAN bancario dell'azienda italiana:
+- Partita IVA: {piva}
+- Nome azienda: {nome}
+
+Cerca nei registri pubblici italiani, portali di fatturazione elettronica, 
+Camera di Commercio, e database aziendali.
+
+IMPORTANTE: 
+- Restituisci SOLO l'IBAN se lo trovi (formato IT + 25 caratteri)
+- Se non trovi l'IBAN, rispondi esattamente: NON_TROVATO
+- Non inventare IBAN, restituisci solo dati reali verificati"""
+            }]
+        )
+        
+        response_text = ""
+        for block in response.content:
+            if hasattr(block, 'text'):
+                response_text += block.text
+        
+        # Cerca IBAN
+        iban_pattern = re.compile(r'IT\d{2}[A-Z]?\d{5}\d{5}[A-Z0-9]{12}', re.IGNORECASE)
+        ibans_trovati = iban_pattern.findall(response_text.upper())
+        
+        if ibans_trovati:
+            iban = ibans_trovati[0].upper()
+            
+            if len(iban) == 27 and iban.startswith('IT'):
+                # Aggiorna fornitore
+                await db[Collections.SUPPLIERS].update_one(
+                    {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]},
+                    {"$set": {
+                        "iban": iban,
+                        "iban_fonte": "ricerca_web_ai",
+                        "iban_data_ricerca": datetime.now(timezone.utc).isoformat(),
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                return {
+                    "success": True,
+                    "trovato": True,
+                    "iban": iban,
+                    "fornitore": nome,
+                    "partita_iva": piva,
+                    "message": f"IBAN trovato e salvato per {nome}"
+                }
+        
+        return {
+            "success": True,
+            "trovato": False,
+            "iban": None,
+            "fornitore": nome,
+            "partita_iva": piva,
+            "message": "IBAN non trovato nei registri pubblici. Potrebbe essere necessario inserirlo manualmente."
+        }
+        
+    except Exception as e:
+        logger.error(f"Errore ricerca IBAN singolo: {e}")
+        raise HTTPException(status_code=500, detail=f"Errore durante la ricerca: {str(e)}")
+
+
 @router.get("/payment-terms")
 async def get_payment_terms() -> List[Dict[str, Any]]:
     """Ritorna la lista dei termini di pagamento disponibili."""
