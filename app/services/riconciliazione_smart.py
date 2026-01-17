@@ -528,6 +528,10 @@ async def analizza_movimento(movimento: Dict[str, Any]) -> Dict[str, Any]:
             if match:
                 fornitore_nome = match.group(1).strip()
         
+        # IMPORTANTE: Escludi l'azienda stessa come fornitore
+        if fornitore_nome and is_azienda_esclusa(fornitore_nome):
+            fornitore_nome = None
+        
         if fornitore_nome:
             result["tipo"] = "fattura_sdd"
             result["categoria_suggerita"] = f"Addebito SDD - {fornitore_nome}"
