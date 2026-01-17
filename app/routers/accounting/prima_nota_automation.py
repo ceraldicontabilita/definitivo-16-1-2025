@@ -1124,26 +1124,19 @@ async def import_pos(
 
 @router.post("/import-corrispettivi-xml")
 async def import_corrispettivi_xml(
-    file: UploadFile = File(..., description="File XML corrispettivi da RT")
+    file: UploadFile = File(..., description="File XML corrispettivi da RT"),
+    force_import: bool = Query(False, description="Se True, sovrascrive corrispettivi esistenti")
 ) -> Dict[str, Any]:
     """
     Importa corrispettivi da file XML del registratore telematico.
     
-    NUOVA LOGICA (dal 2026):
-    1. I corrispettivi vengono inseriti MANUALMENTE in Prima Nota (importo lordo)
-    2. L'XML serve SOLO per popolare i dettagli IVA
+    LOGICA:
+    - Se esiste già un corrispettivo per quella data:
+      → Aggiorna i dettagli (IVA, pagamenti, ecc.)
+    - Se NON esiste:
+      → Crea nuovo movimento
     
-    COMPORTAMENTO:
-    - Se esiste già un corrispettivo per quella data in Prima Nota:
-      → Aggiorna SOLO i campi IVA (dettaglio_iva, imponibile, imposta, pagato_contanti, pagato_elettronico)
-      → NON tocca l'importo già inserito manualmente
-    - Se NON esiste corrispettivo per quella data:
-      → Crea nuovo movimento da XML (come fallback)
-    
-    Struttura XML:
-    - DataOraRilevazione: data/ora del corrispettivo
-    - DatiRT/Riepilogo: dettaglio per aliquota IVA (AliquotaIVA, Imposta, Ammontare)
-    - DatiRT/Totali: PagatoContanti, PagatoElettronico
+    Con force_import=True, sovrascrive sempre i dati esistenti.
     """
     import xml.etree.ElementTree as ET
     
@@ -1230,14 +1223,14 @@ async def import_corrispettivi_xml(
                 totale_imponibile += ammontare
                 totale_imposta += imposta
         
-        # CERCA corrispettivo esistente per quella data
+        # CERCA corrispettivo esistente per quella data in PRIMA NOTA CASSA
         existing = await db[COLLECTION_PRIMA_NOTA_CASSA].find_one({
             "data": data,
             "categoria": "Corrispettivi"
         })
         
-        if existing:
-            # AGGIORNA solo i campi IVA - NON toccare l'importo!
+        if existing and not force_import:
+            # AGGIORNA i campi IVA
             update_data = {
                 "pagato_contanti": pagato_contanti,
                 "pagato_elettronico": pagato_elettronico,
@@ -1270,13 +1263,41 @@ async def import_corrispettivi_xml(
                 **results
             }
         
+        elif existing and force_import:
+            # SOVRASCRIVE l'esistente
+            update_data = {
+                "importo": totale_xml,
+                "pagato_contanti": pagato_contanti,
+                "pagato_elettronico": pagato_elettronico,
+                "imponibile": totale_imponibile,
+                "imposta": totale_imposta,
+                "dettaglio_iva": dettaglio_iva,
+                "xml_filename": file.filename,
+                "xml_imported_at": now,
+                "iva_popolata": True,
+                "source": "xml_import_forced"
+            }
+            
+            await db[COLLECTION_PRIMA_NOTA_CASSA].update_one(
+                {"id": existing["id"]},
+                {"$set": update_data}
+            )
+            
+            results["aggiornati"] += 1
+            return {
+                "success": True,
+                "message": f"Corrispettivo del {data} sovrascritto con dati XML",
+                "azione": "sovrascritto",
+                **results
+            }
+        
         else:
-            # CREA nuovo movimento (fallback se non inserito manualmente)
+            # CREA nuovo movimento
             movimento = {
                 "id": str(uuid.uuid4()),
                 "data": data,
                 "tipo": "entrata",
-                "importo": totale_xml,  # LORDO da XML
+                "importo": totale_xml,
                 "descrizione": f"Corrispettivo giornaliero del {data}",
                 "categoria": "Corrispettivi",
                 "source": "xml_import",
@@ -1303,10 +1324,16 @@ async def import_corrispettivi_xml(
             
             return {
                 "success": True,
-                "message": f"Corrispettivo del {data} creato da XML (non era in Prima Nota)",
+                "message": f"Corrispettivo del {data} importato da XML",
                 "azione": "creato",
                 **results
             }
+        
+    except ET.ParseError as e:
+        raise HTTPException(status_code=400, detail=f"Errore parsing XML: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error importing corrispettivi XML: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         
     except ET.ParseError as e:
         raise HTTPException(status_code=400, detail=f"Errore parsing XML: {str(e)}")
