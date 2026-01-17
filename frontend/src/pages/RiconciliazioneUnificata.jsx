@@ -163,9 +163,24 @@ export default function RiconciliazioneUnificata() {
       // Assegni da riconciliare (già filtrati dal backend)
       setAssegni(assegniDaApi);
       
-      setStipendiPendenti(stipendiRes.data?.stipendi || []);
-      setFattureAruba(arubaRes.data?.operazioni || []);
-      setF24Pendenti(f24Res.data?.f24 || []);
+      const stipendi = stipendiRes.data?.stipendi || [];
+      const aruba = arubaRes.data?.operazioni || [];
+      const f24 = f24Res.data?.f24 || [];
+      
+      setStipendiPendenti(stipendi);
+      setFattureAruba(aruba);
+      setF24Pendenti(f24);
+      
+      // Aggiorna stats con tutti i conteggi
+      setStats({
+        totale: movimenti.length,
+        banca: movimenti.length,
+        assegni: assegniDaApi.length,
+        f24: f24.length,
+        aruba: aruba.length,
+        stipendi: stipendi.length,
+        fatture_da_pagare: bancaRes.data?.stats?.fatture_da_pagare || 0
+      });
       
       // Auto-match stats
       setAutoMatchStats({
