@@ -833,6 +833,9 @@ async def toggle_supplier_active(supplier_id: str) -> Dict[str, Any]:
         {"$set": {"attivo": new_status, "updated_at": datetime.utcnow().isoformat()}}
     )
     
+    # Invalida cache
+    await cache.clear_pattern(SUPPLIERS_CACHE_KEY)
+    
     return {"message": f"Fornitore {'attivato' if new_status else 'disattivato'}", "attivo": new_status}
 
 
