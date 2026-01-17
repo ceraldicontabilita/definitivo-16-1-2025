@@ -699,6 +699,13 @@ async def import_fatture_zip(file: UploadFile = File(...)):
                 risultati["errori"] += 1
                 continue
             
+            # === VALIDATORE P0: Metodo bancario richiede IBAN (PRD sezione validatori P0) ===
+            metodi_bancari = ["bonifico", "banca", "sepa", "rid", "sdd", "assegno", "misto"]
+            iban_fornitore = fornitore_result.get("iban")
+            if metodo_pag.lower() in metodi_bancari and not iban_fornitore:
+                risultati["errori"] += 1
+                continue
+            
             totali_coerenti = parsed.get("totali_coerenti", True)
             if not totali_coerenti:
                 risultati["anomale"] += 1
