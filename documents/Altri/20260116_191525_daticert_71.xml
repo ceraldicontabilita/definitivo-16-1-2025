@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<postacert tipo="posta-certificata" errore="nessuno">
+    <intestazione>
+        <mittente>sdi31@pec.fatturapa.it</mittente>
+        <destinatari tipo="certificato">ceraldiantonietta@legalmail.it</destinatari>
+        <risposte>sdi31@pec.fatturapa.it</risposte>
+        <oggetto>Invio File 16445973958</oggetto>
+    </intestazione>
+    <dati>
+        <gestore-emittente>InfoCert S.p.A.</gestore-emittente>
+        <data zona="+0100">
+            <giorno>16/01/2026</giorno>
+            <ora>19:15:25</ora>
+        </data>
+        <identificativo>C11AC739.0014ED8A.C804EFC1.C89106DB.posta-certificata@legalmail.it</identificativo>
+        <msgid>9084124056715799.1768587324798@pec.fatturapa.it</msgid>
+        <ricevuta tipo="breve" />
+    </dati>
+</postacert>
+
