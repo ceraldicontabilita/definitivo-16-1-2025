@@ -1098,16 +1098,16 @@ export default function GestioneAssegni() {
                             </div>
                           ) : (
                             <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-                              {/* Pulsante per visualizzare fattura se collegata */}
-                              {assegno.fattura_collegata && (
+                              {/* Pulsante per visualizzare fattura - usa fattura_collegata o prima di fatture_collegate */}
+                              {(assegno.fattura_collegata || assegno.fatture_collegate?.[0]?.fattura_id) && (
                                 <a
-                                  href={`/api/fatture-ricevute/fattura/${assegno.fattura_collegata}/view-assoinvoice`}
+                                  href={`/api/fatture-ricevute/fattura/${assegno.fattura_collegata || assegno.fatture_collegate?.[0]?.fattura_id}/view-assoinvoice`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
                                   style={{
                                     padding: '3px 8px',
-                                    background: '#2196f3',
+                                    background: '#4caf50',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: 4,
@@ -1119,7 +1119,7 @@ export default function GestioneAssegni() {
                                     gap: 3,
                                     textDecoration: 'none'
                                   }}
-                                  title="Visualizza Fattura in formato AssoInvoice"
+                                  title="Visualizza Fattura"
                                   data-testid={`view-fattura-${assegno.id}`}
                                 >
                                   📄 Vedi
