@@ -279,7 +279,7 @@ async def upload_payslip_pdf(file: UploadFile = File(...)) -> Dict[str, Any]:
                     "periodo": periodo,
                     "ore_lavorate": float(payslip.get("ore_ordinarie", 0) or 0),
                     "lordo": float(payslip.get("retribuzione_lorda", 0) or 0),
-                    # Compatibilite0: molti punti UI/API usano "netto"
+                    # Compatibilità: molti punti UI/API usano "netto"
                     "netto": importo_busta,
                     "netto_mese": importo_busta,
                     "acconto": float(payslip.get("acconto", 0) or 0),
