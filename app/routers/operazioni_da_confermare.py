@@ -463,24 +463,50 @@ async def conferma_operazioni_batch(request: ConfermaBatchRequest) -> Dict[str, 
             operazione_id = op.get("operazione_id")
             metodo = op.get("metodo_pagamento", "bonifico")
             numero_assegno = op.get("numero_assegno")
+            tipo_operazione = op.get("tipo", "fattura")  # fattura, f24, stipendio
             
             # Prima cerca nella collection operazioni_da_confermare
             operazione = await db["operazioni_da_confermare"].find_one({"id": operazione_id})
             
-            # Se non trovata, cerca direttamente nelle fatture (la lista viene generata da invoices)
+            # Se non trovata, cerca in base al tipo
             if not operazione:
-                fattura = await db["invoices"].find_one({"id": operazione_id})
-                if fattura:
-                    # Converti fattura nel formato operazione
-                    operazione = {
-                        "id": fattura.get("id"),
-                        "fornitore": fattura.get("supplier_name") or fattura.get("cedente_denominazione", ""),
-                        "fornitore_piva": fattura.get("supplier_vat") or fattura.get("cedente_piva", ""),
-                        "importo": float(fattura.get("total_amount", 0) or fattura.get("importo_totale", 0) or 0),
-                        "numero_fattura": fattura.get("invoice_number") or fattura.get("numero_fattura", ""),
-                        "data_documento": fattura.get("invoice_date") or fattura.get("data_fattura", ""),
-                        "stato": "da_confermare"
-                    }
+                if tipo_operazione == "f24":
+                    # Cerca negli F24
+                    f24_doc = await db["f24_models"].find_one({"id": operazione_id})
+                    if f24_doc:
+                        # Calcola importo totale
+                        tributi_erario = f24_doc.get("tributi_erario", [])
+                        tributi_inps = f24_doc.get("tributi_inps", [])
+                        tributi_regioni = f24_doc.get("tributi_regioni", [])
+                        importo_totale = (
+                            sum(t.get("importo_debito", 0) or t.get("importo", 0) for t in tributi_erario) +
+                            sum(t.get("importo_debito", 0) or t.get("importo", 0) for t in tributi_inps) +
+                            sum(t.get("importo_debito", 0) or t.get("importo", 0) for t in tributi_regioni)
+                        )
+                        codici = [t.get("codice_tributo", "") for t in tributi_erario[:3]]
+                        operazione = {
+                            "id": f24_doc.get("id"),
+                            "fornitore": f24_doc.get("contribuente", "F24"),
+                            "importo": importo_totale,
+                            "numero_fattura": f"F24-{'-'.join(filter(None, codici))}",
+                            "data_documento": f24_doc.get("data_scadenza", ""),
+                            "stato": "da_confermare",
+                            "tipo": "f24",
+                            "_source_doc": f24_doc
+                        }
+                else:
+                    # Cerca nelle fatture
+                    fattura = await db["invoices"].find_one({"id": operazione_id})
+                    if fattura:
+                        operazione = {
+                            "id": fattura.get("id"),
+                            "fornitore": fattura.get("supplier_name") or fattura.get("cedente_denominazione", ""),
+                            "fornitore_piva": fattura.get("supplier_vat") or fattura.get("cedente_piva", ""),
+                            "importo": float(fattura.get("total_amount", 0) or fattura.get("importo_totale", 0) or 0),
+                            "numero_fattura": fattura.get("invoice_number") or fattura.get("numero_fattura", ""),
+                            "data_documento": fattura.get("invoice_date") or fattura.get("data_fattura", ""),
+                            "stato": "da_confermare"
+                        }
             
             if not operazione:
                 risultati["errori"] += 1
