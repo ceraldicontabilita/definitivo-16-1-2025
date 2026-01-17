@@ -25,30 +25,31 @@ Applicazione contabile avanzata per la gestione completa del ciclo passivo, atti
 
 #### ✅ P0 - BUG FIX: Conferma Multipla Fatture Aruba (COMPLETATO)
 - **Problema**: Errore 400 durante la conferma multipla delle fatture con metodo "Cassa"
-- **Causa**: Due endpoint `/conferma-batch` duplicati con formati diversi. Il primo endpoint (vecchio) usava `operazione_ids`, il secondo (corretto) usava `operazioni`. FastAPI eseguiva il primo che non corrispondeva al formato del frontend.
-- **Causa 2**: L'endpoint cercava nella collection `operazioni_da_confermare` mentre la lista veniva generata direttamente da `invoices`
-- **Soluzione**: 
-  1. Rimosso l'endpoint duplicato
-  2. Modificato l'endpoint corretto per cercare prima in `operazioni_da_confermare`, poi fallback in `invoices`
-  3. Aggiunto aggiornamento della fattura originale dopo la conferma
-- **File modificati**: `/app/app/routers/operazioni_da_confermare.py`
-- **Test eseguiti**: Conferma batch 2 fatture → successo
+- **Soluzione**: Rimosso endpoint duplicato, aggiunto fallback per cercare in `invoices`
 
 #### ✅ FEATURE: Assegnazione Automatica Metodi Pagamento (COMPLETATO)
-- **Nuova logica implementata**:
-  - Se la fattura è NELL'estratto conto → assegna "bonifico" o "assegno"
-  - Se la fattura NON è nell'estratto E l'estratto è recente (< 7 giorni) → assegna "cassa"
-  - Se l'estratto è vecchio rispetto alla fattura → lascia "sospesa" (da ricontrollare)
-- **Rispetta sempre** il metodo pagamento del fornitore se configurato
-- **Endpoint**: `POST /api/riconciliazione-automatica/assegna-metodi-aruba`
-- **Endpoint stato**: `GET /api/riconciliazione-automatica/stato-riconciliazione-aruba`
-- **File modificati**: `/app/app/routers/accounting/riconciliazione_automatica.py`
+- Se fattura in estratto conto → Bonifico/Assegno
+- Se NON in estratto (recente) → Cassa
+- Se estratto vecchio → Sospesa
+- Pulsante "🔄 Assegna Metodi Auto" nella pagina Aruba
 
-#### ✅ FEATURE: Auto-Refresh Riconciliazione (COMPLETATO)
-- La pagina `/riconciliazione` si aggiorna automaticamente ogni 30 minuti
-- Toggle ON/OFF per l'auto-refresh
-- Pulsante "🔄 Assegna Metodi Auto" nella sezione Fatture Aruba
-- **File modificati**: `/app/frontend/src/pages/RiconciliazioneUnificata.jsx`
+#### ✅ FEATURE: Auto-Refresh Riconciliazione ogni 30 minuti (COMPLETATO)
+
+#### ✅ P0 - FIX: Pagina F24 Pendenti (COMPLETATO)
+- **Problema**: F24 mostravano singoli codici tributo con €0.00, nessuna azione possibile
+- **Soluzione**: 
+  - Riscritto componente `F24Tab` per mostrare importo totale F24
+  - Filtrati F24 con importo €0.00
+  - Aggiunti pulsanti azione: 🏦 Banca | 📝 Assegno | 💰 Cassa
+  - Selezione multipla e conferma batch
+  - Backend supporta ora conferma F24 con aggiornamento `f24_models`
+
+#### ✅ FIX: Import Corrispettivi XML (COMPLETATO)
+- **Problema**: I corrispettivi XML venivano salvati solo in `corrispettivi`, non in `prima_nota_cassa`
+- **Soluzione**: Aggiunto inserimento automatico in `prima_nota_cassa` durante l'import XML
+
+#### 🧹 Pulizia: Rimossi PDF di test (COMPLETATO)
+- Rimossi PDF nelle cartelle `/app/docs/estratti_*`, `/app/tmp/import_debug/`
 
 ### Session 2026-01-17 (Fork 3)
 
