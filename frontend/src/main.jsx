@@ -96,7 +96,8 @@ const DashboardAnalytics = lazy(() => import("./pages/DashboardAnalytics.jsx"));
 const ArchivioFattureRicevute = lazy(() => import("./pages/ArchivioFattureRicevute.jsx"));
 const DettaglioFattura = lazy(() => import("./pages/DettaglioFattura.jsx"));
 const Corrispettivi = lazy(() => import("./pages/Corrispettivi.jsx"));
-const CicloPassivoIntegrato = lazy(() => import("./pages/CicloPassivoIntegrato.jsx"));
+// CicloPassivoIntegrato è stato unificato in ArchivioFattureRicevute
+// const CicloPassivoIntegrato = lazy(() => import("./pages/CicloPassivoIntegrato.jsx"));
 const Fornitori = lazy(() => import("./pages/Fornitori.jsx"));
 const OrdiniFornitori = lazy(() => import("./pages/OrdiniFornitori.jsx"));
 const PrevisioniAcquisti = lazy(() => import("./pages/PrevisioniAcquisti.jsx"));
