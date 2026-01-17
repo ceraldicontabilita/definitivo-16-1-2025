@@ -883,16 +883,23 @@ async def import_fattura_integrato(file: UploadFile = File(...)):
     partita_iva = parsed.get("supplier_vat", "")
     numero_doc = parsed.get("invoice_number", "")
     
-    # Check duplicato
+    # Check duplicato - Se esiste, aggiorna invece di bloccare
     existing = await db[COL_FATTURE].find_one({
         "fornitore_partita_iva": partita_iva.upper(),
         "numero_documento": {"$regex": f"^{numero_doc}$", "$options": "i"}
     })
     if existing:
-        raise HTTPException(status_code=409, detail={
-            "error": "FATTURA_DUPLICATA",
-            "message": f"Fattura {numero_doc} già presente"
-        })
+        # Aggiorna fattura esistente
+        await db[COL_FATTURE].update_one(
+            {"id": existing["id"]},
+            {"$set": {"updated_at": datetime.utcnow().isoformat(), "reimportata": True}}
+        )
+        return {
+            "success": True,
+            "message": f"Fattura {numero_doc} già presente - dati aggiornati",
+            "fattura_id": existing["id"],
+            "azione": "aggiornato"
+        }
     
     # 2. Get/Create Fornitore
     fornitore = await get_or_create_fornitore(db, parsed)
