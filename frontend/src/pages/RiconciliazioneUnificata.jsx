@@ -347,6 +347,34 @@ export default function RiconciliazioneUnificata() {
     }
   };
 
+  // Assegna automaticamente metodi pagamento basandosi su estratto conto
+  const handleAssegnaMetodiAuto = async () => {
+    if (!window.confirm('Assegnare automaticamente i metodi di pagamento?\n\n' +
+        '• Se trovato in estratto conto → Bonifico/Assegno\n' +
+        '• Se NON trovato (estratto recente) → Cassa\n' +
+        '• Se estratto vecchio → Sospesa (da ricontrollare)')) return;
+    
+    setProcessing('assegna-metodi');
+    try {
+      const res = await api.post('/api/riconciliazione-automatica/assegna-metodi-aruba');
+      const data = res.data;
+      
+      alert(`✅ Assegnazione completata!\n\n` +
+        `📊 Risultati:\n` +
+        `• Bonifico: ${data.assegnate_bonifico || 0}\n` +
+        `• Assegno: ${data.assegnate_assegno || 0}\n` +
+        `• Cassa: ${data.assegnate_cassa || 0}\n` +
+        `• Sospese: ${data.lasciate_sospese || 0}\n` +
+        `\n📅 Ultimo estratto conto: ${data.data_ultimo_estratto_conto || 'N/D'}`);
+      
+      loadAllData();
+    } catch (e) {
+      alert('Errore: ' + (e.response?.data?.detail || e.message));
+    } finally {
+      setProcessing(null);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>
