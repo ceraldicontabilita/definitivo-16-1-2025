@@ -1035,24 +1035,42 @@ async def get_dashboard_riconciliazione(
     # Filtro date
     query_fatture = {"tipo": "passiva"}
     query_bank = {}
+    query_scadenze = {}
     
     if anno:
         query_fatture["data_documento"] = {"$regex": f"^{anno}"}
         query_bank["data"] = {"$regex": f"^{anno}"}
+        # Filtro scadenze per anno (data_scadenza o data_fattura)
+        query_scadenze["$or"] = [
+            {"data_scadenza": {"$regex": f"^{anno}"}},
+            {"data_fattura": {"$regex": f"^{anno}"}}
+        ]
         if mese:
             mese_str = str(mese).zfill(2)
             query_fatture["data_documento"] = {"$regex": f"^{anno}-{mese_str}"}
             query_bank["data"] = {"$regex": f"^{anno}-{mese_str}"}
+            query_scadenze["$or"] = [
+                {"data_scadenza": {"$regex": f"^{anno}-{mese_str}"}},
+                {"data_fattura": {"$regex": f"^{anno}-{mese_str}"}}
+            ]
     
-    # Scadenze aperte
+    # Scadenze aperte - con filtro anno
+    scadenze_query = {"stato": "aperto", "pagato": False}
+    if query_scadenze:
+        scadenze_query.update(query_scadenze)
+    
     scadenze_aperte = await db[COL_SCADENZIARIO].find(
-        {"stato": "aperto", "pagato": False},
+        scadenze_query,
         {"_id": 0}
     ).sort("data_scadenza", 1).to_list(100)
     
-    # Scadenze saldate
+    # Scadenze saldate - con filtro anno
+    saldate_query = {"stato": "saldato", "pagato": True}
+    if query_scadenze:
+        saldate_query.update(query_scadenze)
+        
     scadenze_saldate = await db[COL_SCADENZIARIO].find(
-        {"stato": "saldato", "pagato": True},
+        saldate_query,
         {"_id": 0}
     ).sort("data_pagamento", -1).limit(50).to_list(50)
     
