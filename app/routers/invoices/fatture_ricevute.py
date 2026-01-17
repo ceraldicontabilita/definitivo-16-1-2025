@@ -79,6 +79,7 @@ async def get_or_create_fornitore(db, parsed_data: Dict) -> Dict[str, Any]:
             "fornitore_id": existing.get("id"),
             "partita_iva": partita_iva,
             "ragione_sociale": existing.get("ragione_sociale"),
+            "metodo_pagamento": existing.get("metodo_pagamento"),  # PRD: validatore P0
             "nuovo": False
         }
     
