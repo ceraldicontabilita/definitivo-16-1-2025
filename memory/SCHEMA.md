@@ -959,3 +959,71 @@ DELETE /api/admin/reset/{collection} → Reset collection (PERICOLOSO)
 ├── SCHEMA.md                              → Questo file (mappa completa)
 └── CHANGELOG.md                           → Storico modifiche
 ```
+
+---
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PARTE 10: NUOVI ENDPOINT - GENNAIO 2026
+# ═══════════════════════════════════════════════════════════════════════════════
+
+## Gestione Fornitori (Nuovi)
+
+### POST /api/suppliers/update-all-incomplete
+**Descrizione**: Aggiorna in massa tutti i fornitori con dati incompleti
+**Router**: `/app/app/routers/suppliers.py`
+**Risposta**:
+```json
+{
+  "aggiornati": 45,
+  "falliti": 12,
+  "dettaglio_falliti": [...]
+}
+```
+
+### GET /api/suppliers/validazione-p0
+**Descrizione**: Verifica stato conformità P0 di tutti i fornitori
+**Router**: `/app/app/routers/suppliers.py`
+**Risposta**:
+```json
+{
+  "fornitori_senza_metodo": 45,
+  "fornitori_bancari_senza_iban": 231,
+  "fornitori_conformi": 850,
+  "totale_fornitori": 1126
+}
+```
+
+### POST /api/suppliers/sync-iban
+**Descrizione**: Sincronizza IBAN dai dati delle fatture XML importate
+**Router**: `/app/app/routers/suppliers.py`
+**Risposta**:
+```json
+{
+  "aggiornati": 17,
+  "gia_con_iban": 850,
+  "senza_iban_in_fatture": 214
+}
+```
+
+## Prima Nota (Nuovi/Modificati)
+
+### Pagine Frontend Ridisegnate
+- `/app/frontend/src/pages/PrimaNota.jsx` - Nuova UI con logica DARE/AVERE personalizzata
+- `/app/frontend/src/pages/PrimaNotaSalari.jsx` - Nuova pagina per gestione salari
+
+### Store Zustand
+- `/app/frontend/src/stores/primaNotaStore.js` - State management per Prima Nota
+
+## Validatori P0
+
+### POST /api/invoices/import-xml (Modificato)
+**Validazioni aggiunte**:
+1. Verifica metodo pagamento fornitore
+2. Verifica IBAN se metodo bancario
+**HTTP 400** se validazione fallisce
+
+### POST /api/cedolini-riconciliazione/{id}/registra-pagamento (Modificato)
+**Validazione aggiunta**:
+- Blocco pagamento contanti post 06/2018
+**HTTP 400** se data > 2018-06-30 e metodo = "contanti"
+
