@@ -1,11 +1,13 @@
 # Architettura Tecnica - Azienda in Cloud ERP
 
+**Ultimo aggiornamento:** 17 Gennaio 2026
+
 ## Overview Sistema
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         FRONTEND                                 │
-│                     React + Vite                                 │
+│                     React + Vite + Zustand                       │
 │                   (porta 3000)                                   │
 ├─────────────────────────────────────────────────────────────────┤
 │  App.jsx          │  pages/           │  components/            │
@@ -13,6 +15,9 @@
 │  - Navigation     │  - Ricettario     │  - GlobalSearch         │
 │  - AnnoSelector   │  - HACCP*         │  - NotificationBell     │
 │                   │  - Contabilità    │  - InvoiceXMLViewer     │
+│                   │  - PrimaNota ⭐   │  - prima-nota/ ⭐       │
+│                   │  - PrimaNotaSalari│                         │
+│                   │  - Fornitori      │                         │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               │ HTTP/REST
@@ -32,7 +37,11 @@
 │  │   │   ├── ricettario_dinamico.py                             │
 │  │   │   ├── libro_allergeni.py                                 │
 │  │   │   └── ...                                                │
-│  │   ├── operazioni_da_confermare.py                            │
+│  │   ├── invoices/                                              │
+│  │   │   └── fatture_ricevute.py            ← P0 Validators ⭐  │
+│  │   ├── suppliers.py                       ← Bulk Update ⭐    │
+│  │   ├── cedolini_riconciliazione.py        ← P0 Validator ⭐   │
+│  │   ├── operazioni_da_confermare.py        ← Batch Confirm ⭐  │
 │  │   ├── settings.py                        ← Logo endpoint     │
 │  │   └── ...                                                    │
 │  └── services/                                                  │
@@ -48,13 +57,15 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  Collections:                                                   │
 │  - invoices              (fatture XML)                          │
-│  - suppliers             (fornitori)                            │
+│  - suppliers             (fornitori) ⭐ fonte verità            │
 │  - ricette               (158 ricette normalizzate)             │
 │  - estratto_conto_movimenti                                     │
 │  - operazioni_da_confermare                                     │
 │  - settings_assets       (logo, config)                         │
-│  - cash_movements, bank_movements                               │
+│  - prima_nota_cassa, prima_nota_banca ⭐                        │
 │  - prima_nota_salari                                            │
+│  - cedolini                                                     │
+│  - f24_main                                                     │
 │  - lotti_materie_prime                                          │
 └─────────────────────────────────────────────────────────────────┘
                               │
