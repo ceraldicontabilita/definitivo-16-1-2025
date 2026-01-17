@@ -148,6 +148,7 @@ const ControlloMensile = lazy(() => import("./pages/ControlloMensile.jsx"));
 const PianoDeiConti = lazy(() => import("./pages/PianoDeiConti.jsx"));
 const GestioneCespiti = lazy(() => import("./pages/GestioneCespiti.jsx"));
 const Finanziaria = lazy(() => import("./pages/Finanziaria.jsx"));
+const ChiusuraEsercizio = lazy(() => import("./pages/ChiusuraEsercizio.jsx"));
 
 // === STRUMENTI ===
 const Documenti = lazy(() => import("./pages/Documenti.jsx"));
