@@ -933,42 +933,214 @@ function MovimentoCard({ movimento, onConferma, onIgnora, processing, showFattur
   );
 }
 
-function F24Tab({ f24 }) {
-  if (f24.length === 0) {
+function F24Tab({ f24, onConfermaF24, processing }) {
+  const [selezionati, setSelezionati] = useState(new Set());
+  const [metodoBatch, setMetodoBatch] = useState('banca');
+  const [salvandoBatch, setSalvandoBatch] = useState(false);
+  
+  // Filtra F24 con importo > 0
+  const f24Validi = f24.filter(f => (f.importo_totale || f.importo || 0) > 0);
+  
+  if (f24Validi.length === 0) {
     return (
       <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8' }}>
         <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>📄</div>
-        <div>Nessun F24 pendente</div>
+        <div>Nessun F24 pendente da pagare</div>
       </div>
     );
   }
 
-  const totale = f24.reduce((sum, f) => sum + (f.importo_totale || f.importo || 0), 0);
+  const totale = f24Validi.reduce((sum, f) => sum + (f.importo_totale || f.importo || 0), 0);
+  const totaleSelezionati = f24Validi
+    .filter(f => selezionati.has(f.id))
+    .reduce((sum, f) => sum + (f.importo_totale || f.importo || 0), 0);
+
+  const toggleSelezione = (id) => {
+    setSelezionati(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleTutti = () => {
+    if (selezionati.size === f24Validi.length) {
+      setSelezionati(new Set());
+    } else {
+      setSelezionati(new Set(f24Validi.map(f => f.id)));
+    }
+  };
+
+  const confermaBatch = async () => {
+    if (selezionati.size === 0) {
+      alert('Seleziona almeno un F24');
+      return;
+    }
+    
+    if (!window.confirm(`Confermare ${selezionati.size} F24 come ${metodoBatch.toUpperCase()}?`)) return;
+    
+    setSalvandoBatch(true);
+    try {
+      const operazioni = f24Validi
+        .filter(f => selezionati.has(f.id))
+        .map(f => ({
+          operazione_id: f.id,
+          metodo_pagamento: metodoBatch,
+          tipo: 'f24'
+        }));
+      
+      await api.post('/api/operazioni-da-confermare/conferma-batch', { operazioni });
+      alert(`✅ Confermati ${selezionati.size} F24`);
+      setSelezionati(new Set());
+      // Ricarica dati
+      window.location.reload();
+    } catch (e) {
+      alert('Errore: ' + (e.response?.data?.detail || e.message));
+    } finally {
+      setSalvandoBatch(false);
+    }
+  };
+
+  const confermaF24Singolo = async (f24Item, metodo) => {
+    try {
+      await api.post('/api/operazioni-da-confermare/conferma-batch', {
+        operazioni: [{
+          operazione_id: f24Item.id,
+          metodo_pagamento: metodo,
+          tipo: 'f24'
+        }]
+      });
+      window.location.reload();
+    } catch (e) {
+      alert('Errore: ' + (e.response?.data?.detail || e.message));
+    }
+  };
 
   return (
     <div>
       <div style={{ padding: 16, background: '#fef2f2', borderBottom: '1px solid #fecaca' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: 16, color: '#991b1b' }}>📄 F24 Pendenti ({f24.length})</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 16, color: '#991b1b' }}>📄 F24 Pendenti ({f24Validi.length})</h3>
           <div style={{ fontWeight: 700, color: '#dc2626' }}>Totale: {formatEuro(totale)}</div>
         </div>
+        
+        {/* Azioni batch */}
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={toggleTutti}
+            style={{ padding: '8px 12px', background: '#e5e7eb', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}
+          >
+            {selezionati.size === f24Validi.length ? '☐ Deseleziona' : '☑ Seleziona tutti'}
+          </button>
+          
+          {selezionati.size > 0 && (
+            <>
+              <select 
+                value={metodoBatch}
+                onChange={e => setMetodoBatch(e.target.value)}
+                style={{ padding: '8px 12px', border: '1px solid #dc2626', borderRadius: 6, fontSize: 13, background: '#fee2e2' }}
+              >
+                <option value="banca">🏦 Banca (Bonifico)</option>
+                <option value="assegno">📝 Assegno</option>
+                <option value="cassa">💰 Cassa</option>
+              </select>
+              
+              <button 
+                onClick={confermaBatch}
+                disabled={salvandoBatch}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: '#dc2626', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: 6, 
+                  cursor: 'pointer', 
+                  fontWeight: 600,
+                  fontSize: 13
+                }}
+              >
+                {salvandoBatch ? '⏳' : '✅'} Conferma {selezionati.size} ({formatEuro(totaleSelezionati)})
+              </button>
+            </>
+          )}
+        </div>
       </div>
+      
       <div style={{ maxHeight: 500, overflow: 'auto' }}>
-        {f24.map((f, idx) => (
-          <div key={f.id || idx} style={{ padding: 16, borderBottom: '1px solid #f1f5f9' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <div style={{ fontWeight: 600 }}>{f.descrizione || f.contribuente || 'F24'}</div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>
-                  Periodo: {f.periodo || '-'} • Scadenza: {f.data_scadenza ? new Date(f.data_scadenza).toLocaleDateString('it-IT') : '-'}
+        {f24Validi.map((f, idx) => {
+          const importo = f.importo_totale || f.importo || 0;
+          const scadenza = f.data_scadenza ? new Date(f.data_scadenza) : null;
+          const scadenzaStr = scadenza && !isNaN(scadenza.getTime()) 
+            ? scadenza.toLocaleDateString('it-IT') 
+            : '-';
+          
+          return (
+            <div key={f.id || idx} style={{ 
+              padding: 16, 
+              borderBottom: '1px solid #f1f5f9',
+              background: selezionati.has(f.id) ? '#fef2f2' : 'white'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                {/* Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={selezionati.has(f.id)}
+                  onChange={() => toggleSelezione(f.id)}
+                  style={{ marginTop: 4, width: 18, height: 18, cursor: 'pointer' }}
+                />
+                
+                {/* Info F24 */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>
+                    {f.contribuente || 'F24'}
+                    {f.codici_tributo?.length > 0 && (
+                      <span style={{ fontSize: 12, color: '#64748b', marginLeft: 8 }}>
+                        Tributi: {f.codici_tributo.join(', ')}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                    Periodo: {f.periodo || '-'} • Scadenza: {scadenzaStr}
+                  </div>
+                </div>
+                
+                {/* Importo e azioni */}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: '#dc2626' }}>
+                    {formatEuro(importo)}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, marginTop: 8, justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => confermaF24Singolo(f, 'banca')}
+                      style={{ padding: '4px 8px', background: '#10b981', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}
+                      title="Conferma come Bonifico Bancario"
+                    >
+                      🏦 Banca
+                    </button>
+                    <button
+                      onClick={() => confermaF24Singolo(f, 'assegno')}
+                      style={{ padding: '4px 8px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}
+                      title="Conferma come Assegno"
+                    >
+                      📝 Assegno
+                    </button>
+                    <button
+                      onClick={() => confermaF24Singolo(f, 'cassa')}
+                      style={{ padding: '4px 8px', background: '#6366f1', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 11 }}
+                      title="Conferma come Cassa"
+                    >
+                      💰 Cassa
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div style={{ fontWeight: 700, fontSize: 18, color: '#dc2626' }}>
-                {formatEuro(f.importo_totale || f.importo || 0)}
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
