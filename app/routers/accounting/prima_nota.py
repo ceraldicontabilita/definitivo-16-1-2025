@@ -89,6 +89,38 @@ async def get_anni_disponibili() -> Dict[str, Any]:
     return {"anni": sorted(list(anni), reverse=True)}
 
 
+# ============== HELPER: CALCOLO SALDO ANNO PRECEDENTE ==============
+
+async def calcola_saldo_anni_precedenti(db, collection: str, anno: int) -> float:
+    """
+    Calcola il saldo cumulativo di tutti gli anni precedenti all'anno specificato.
+    Questo è il "riporto" o "saldo iniziale" dell'anno.
+    """
+    if not anno:
+        return 0.0
+    
+    # Query per tutti i movimenti PRIMA dell'anno specificato
+    query = {
+        "data": {"$lt": f"{anno}-01-01"},
+        "status": {"$nin": ["deleted", "archived"]}
+    }
+    
+    pipeline = [
+        {"$match": query},
+        {"$group": {
+            "_id": None,
+            "entrate": {"$sum": {"$cond": [{"$eq": ["$tipo", "entrata"]}, "$importo", 0]}},
+            "uscite": {"$sum": {"$cond": [{"$eq": ["$tipo", "uscita"]}, "$importo", 0]}}
+        }}
+    ]
+    
+    totals = await db[collection].aggregate(pipeline).to_list(1)
+    
+    if totals:
+        return totals[0].get("entrate", 0) - totals[0].get("uscite", 0)
+    return 0.0
+
+
 # ============== PRIMA NOTA CASSA ==============
 
 @router.get("/cassa")
@@ -101,7 +133,7 @@ async def list_prima_nota_cassa(
     tipo: Optional[str] = Query(None, description="entrata o uscita"),
     categoria: Optional[str] = Query(None)
 ) -> Dict[str, Any]:
-    """Lista movimenti prima nota cassa."""
+    """Lista movimenti prima nota cassa con saldo separato per anno."""
     db = Database.get_db()
     
     # Categorie da escludere (duplicati o errori noti)
@@ -143,15 +175,25 @@ async def list_prima_nota_cassa(
     ]
     totals = await db[COLLECTION_PRIMA_NOTA_CASSA].aggregate(pipeline).to_list(1)
     
-    saldo = 0
-    if totals:
-        saldo = totals[0].get("entrate", 0) - totals[0].get("uscite", 0)
+    entrate_anno = totals[0].get("entrate", 0) if totals else 0
+    uscite_anno = totals[0].get("uscite", 0) if totals else 0
+    saldo_anno = entrate_anno - uscite_anno
+    
+    # Calcola saldo riportato dagli anni precedenti
+    saldo_precedente = 0.0
+    if anno:
+        saldo_precedente = await calcola_saldo_anni_precedenti(db, COLLECTION_PRIMA_NOTA_CASSA, anno)
+    
+    # Saldo finale = riporto + saldo anno corrente
+    saldo_finale = saldo_precedente + saldo_anno
     
     return {
         "movimenti": movimenti,
-        "saldo": saldo,
-        "totale_entrate": totals[0].get("entrate", 0) if totals else 0,
-        "totale_uscite": totals[0].get("uscite", 0) if totals else 0,
+        "saldo": round(saldo_finale, 2),
+        "saldo_anno": round(saldo_anno, 2),
+        "saldo_precedente": round(saldo_precedente, 2),
+        "totale_entrate": round(entrate_anno, 2),
+        "totale_uscite": round(uscite_anno, 2),
         "count": len(movimenti),
         "anno": anno
     }
