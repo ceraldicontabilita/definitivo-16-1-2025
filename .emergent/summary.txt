@@ -1,166 +1,170 @@
 <analysis>**original_problem_statement:**
-L'utente ha segnalato una serie di bug critici e ha espresso forte frustrazione. Le richieste originali includevano il crash della pagina , fallimenti nell'importazione di file, e numerosi errori di logica contabile.
-
-Durante la sessione, le priorità si sono evolute per concentrarsi su:
-1.  **Correzione e Refactoring della Prima Nota (P0):** L'utente ha richiesto una revisione completa della logica contabile con regole non standard:
-    *   Separare completamente i conti CASSA (Contanti) e BANCA (Banca).
-    *   Logica DARE/AVERE invertita: i corrispettivi (incassi) vanno in **AVERE**, e tutte le uscite (pagamenti) in **DARE**.
-    *   Ogni conto deve avere un saldo progressivo che tenga conto del riporto degli anni precedenti.
-2.  **Importazione e Riconciliazione Cedolini Paga (P0):** L'utente ha richiesto una nuova architettura per la gestione dei cedolini, che includesse l'estrazione di dati da PDF, l'importazione da Excel per i dati storici, e un'interfaccia per la riconciliazione manuale dei pagamenti (contanti, bonifico, assegno).
-3.  **Anagrafica Fornitori (P1):** L'utente ha richiesto di correggere i fornitori senza nome importando i dati da un file Excel e di garantire che il metodo di pagamento venga sempre letto dall'anagrafica del fornitore, ignorando quanto specificato nel file XML della fattura.
-4.  **Import Corrispettivi (P1):** L'utente ha segnalato che l'importazione dei file XML dei corrispettivi falliva, segnalando erroneamente i file come duplicati.
-
-**PRODUCT REQUIREMENTS:**
--   La logica contabile deve seguire le precise, anche se non convenzionali, direttive dell'utente.
--   Le funzionalità di importazione dati (cedolini, fornitori, corrispettivi) devono essere affidabili e robuste.
--   I dati devono essere coerenti tra le varie sezioni (es. il metodo di pagamento di un fornitore deve essere lo stesso ovunque).
--   L'interfaccia utente deve essere chiara, eliminando sezioni duplicate o confuse (es. Pagina Corrispettivi vs. Prima Nota).
+L'utente ha segnalato una serie di bug critici e richiesto numerose funzionalità per migliorare l'applicazione di contabilità. Le richieste principali includono:
+-   **Logica Contabile (P0):** Refactoring completo della Prima Nota per separare CASSA e BANCA, con una logica DARE/AVERE non convenzionale.
+-   **Gestione Buste Paga (P0):** Implementazione di un sistema per importare dati storici da file Excel (, ) e futuri da PDF, con una pagina di riconciliazione.
+-   **Validatori Bloccanti (P0):** Introdurre validatori durante l'import delle fatture per bloccare le operazioni se un fornitore non ha un metodo di pagamento o un IBAN (se necessario). Inoltre, bloccare i pagamenti di stipendi in contanti a partire da luglio 2018.
+-   **Gestione Fornitori:** Risolvere errori 404, problemi di modifica e ricerca. Implementare una funzione di aggiornamento di massa per arricchire i dati dei fornitori (IBAN, anagrafiche) da fonti esterne.
+-   **Correzione Bug:** Risolvere un errore 400 sulla conferma multipla di fatture, problemi nella visualizzazione degli F24 pendenti e l'importazione di file XML dei corrispettivi (mancata estrazione del pagamento elettronico).
+-   **Refactoring UI/UX:** Replicare il design delle pagine Prima Nota Cassa/Banca e creare una nuova pagina Prima Nota Salari basandosi su un progetto di riferimento fornito dall'utente.
+-   **Automatizzazione:** Creare un processo automatico che, ogni 30 minuti, tenti di riconciliare le fatture non pagate con gli estratti conto bancari.
 
 **User's preferred language**: Italiano
 
 **what currently exists?**
-L'agente ha completato con successo diverse richieste chiave:
-1.  **Prima Nota**: È stata implementata la logica di separazione tra CASSA e BANCA. È stato aggiunto il calcolo del saldo che include il riporto dall'anno precedente.
-2.  **Cedolini & Riconciliazione**: È stata creata una nuova pagina dedicata () che mostra lo stato di ogni cedolino (Da Pagare, Pagato). È stato creato un endpoint per migrare i pagamenti storici degli stipendi dalla vecchia Prima Nota Salari alla nuova struttura, e la migrazione è stata eseguita con successo (156 cedolini aggiornati).
-3.  **Anagrafica Fornitori**: È stato creato un endpoint per importare/aggiornare i fornitori da un file Excel fornito dall'utente, risolvendo il problema dei fornitori senza nome. La logica di pagamento delle fatture è stata modificata per usare **esclusivamente** il metodo di pagamento definito nell'anagrafica del fornitore.
-4.  **Import Corrispettivi**: Il bug dei duplicati è stato risolto. L'agente ha scoperto che i corrispettivi venivano importati correttamente nella , ma una pagina separata e obsoleta (Corrispettivi) puntava a una collection vuota, creando confusione.
+L'applicazione ora dispone di una logica contabile personalizzata con registri di Cassa e Banca separati. Le pagine Prima Nota e Prima Nota Salari sono state completamente ridisegnate per corrispondere alle specifiche dell'utente, utilizzando componenti React modulari e uno store Zustand. Sono stati implementati validatori P0 bloccanti durante l'import delle fatture e il pagamento dei salari per garantire l'integrità dei dati secondo le regole aziendali.
+
+Sono state corrette numerose problematiche, tra cui il bug sulla conferma multipla delle fatture, la visualizzazione degli F24, e l'importazione di corrispettivi e cedolini da file Excel. È stata implementata una funzione di riconciliazione automatica con auto-refresh e un endpoint per l'aggiornamento di massa dei dati dei fornitori. La gestione dei fornitori è stata migliorata correggendo bug nella UI e aggiungendo una funzione per sincronizzare gli IBAN dalle fatture esistenti.
 
 **Last working item**:
--   **Last item agent was working**: L'utente ha identificato un nuovo bug critico: nella **Prima Nota Cassa** sono presenti fatture che risultano pagate tramite **Banca**. L'agente aveva appena iniziato a investigare questo problema.
+-   **Last item agent was working**: L'agente stava implementando la richiesta dell'utente di un pulsante per l'aggiornamento in blocco di tutti i fornitori. L'agente ha creato con successo l'endpoint backend , ma è stato interrotto prima di poter aggiungere il pulsante e la relativa logica nel frontend ().
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: backend testing agent (il problema risiede nella logica di registrazione dei pagamenti che non indirizza correttamente il movimento al giusto registro contabile).
--   **User Testing Done**: Y (L'utente ha rilevato l'incongruenza).
+-   **Which testing method agent to use?**: both
+-   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: (P0) Le fatture pagate tramite Banca vengono registrate erroneamente nella Prima Nota Cassa.
--   **Issue 2**: (P1) Errore generico  durante l'import di altri tipi di file (es. estratto conto), menzionato nella sessione precedente ma non affrontato.
--   **Issue 3**: (P1) Logica di estrazione dei costi per la flotta auto non funzionante.
--   **Issue 4**: (P1) Perdita dei dati relativi agli IBAN multipli per i dipendenti.
--   **Issue 5**: (P2) Mancano i pulsanti Modifica ed Elimina per la gestione degli acconti dei dipendenti.
+-   **Issue 1: (P0) Completare l'implementazione dell'aggiornamento in blocco dei fornitori.**
+-   **Issue 2: (P0) 231 fornitori con metodo di pagamento bancario sono privi di IBAN.**
+-   **Issue 3: (P1) L'utente segnala ancora errori 404 generici durante l'uso dell'applicazione.**
+-   **Issue 4: (P2) Svuotare file PDF residui dal repository per liberare spazio.**
 
 **Issues Detail**:
--   **Issue 1: Pagamenti Banca in Prima Nota Cassa**
-    -   **Attempted fixes**: Nessuno. L'agente ha appena riconosciuto il problema.
+-   **Issue 1: Completare l'aggiornamento in blocco dei fornitori**
+    -   **Attempted fixes**: È stato creato l'endpoint backend .
     -   **Next debug checklist**:
-        1.  Rivedere l'endpoint che gestisce il pagamento delle fatture (probabilmente  in ).
-        2.  Verificare la funzione  per assicurarsi che, quando il metodo di pagamento è banca o bonifico, il movimento venga salvato **esclusivamente** nella collection .
-        3.  Controllare che non ci siano flussi di codice alternativi (es. da ) che registrino pagamenti in cassa per errore.
-    -   **Why fix this issue and what will be achieved with the fix?**: È un errore contabile critico che vanifica la separazione tra Cassa e Banca, una delle richieste fondamentali dell'utente.
+        1.  Modificare .
+        2.  Aggiungere un pulsante Aggiorna Tutti i Dati.
+        3.  Collegare il pulsante all'endpoint .
+        4.  Implementare un indicatore di caricamento durante l'operazione e una notifica (toast) per comunicare il risultato (es. X fornitori aggiornati, Y falliti).
+    -   **Why fix this issue and what will be achieved with the fix?**: Fornirà una soluzione rapida per arricchire i dati anagrafici dei fornitori, risolvendo i problemi di IBAN mancanti e riducendo gli errori manuali.
     -   **Status**: IN PROGRESS
     -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: No
+
+-   **Issue 2: 231 fornitori con metodo di pagamento bancario sono privi di IBAN**
+    -   **Attempted fixes**: È stato eseguito un endpoint () che ha corretto 17 fornitori trovando l'IBAN nelle fatture XML importate.
+    -   **Next debug checklist**:
+        1.  Completare l'Issue 1 (strumento di aggiornamento bulk).
+        2.  Eseguire l'aggiornamento bulk e verificare quanti IBAN vengono trovati da fonti esterne.
+        3.  Eseguire nuovamente il check P0 ().
+        4.  Presentare all'utente una lista dei fornitori rimanenti che necessitano di un inserimento manuale dell'IBAN.
+    -   **Why fix this issue and what will be achieved with the fix?**: Risolve un blocco P0 che impedisce l'importazione di fatture per un gran numero di fornitori, garantendo la conformità dei dati.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: Backend
+    -   **Blocked on other issue**: Issue 1: Completare l'aggiornamento in blocco dei fornitori
 
 **In progress Task List**:
--   **Task 1: Riorganizzare la pagina Corrispettivi (Opzione 2)**
-    -   **Where to resume**: L'utente ha scelto l'opzione 2: trasformare la pagina Corrispettivi in una vista filtrata della Prima Nota Cassa. Bisogna modificare il componente frontend della pagina Corrispettivi affinché carichi i dati dall'endpoint , applicando un filtro per .
-    -   **What will be achieved with this?**: Eliminerà la confusione attuale e renderà la pagina Corrispettivi un utile strumento di analisi dettagliata (es. con totali IVA, grafici, etc.), invece di una pagina vuota e inutile.
-    -   **Status**: NOT STARTED
-    -   **Should Test frontend/backend/both after fix?**: Frontend
+-   **Task 1: Implementare UI per l'aggiornamento in blocco dei fornitori (P0)**
+    -   **Where to resume**: . Aggiungere un pulsante e la logica di chiamata API come descritto nell'Issue 1.
+    -   **What will be achieved with this?**: Completerà la funzionalità richiesta dall'utente per la gestione massiva dei fornitori.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: both
     -   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   (P1) Correggere la logica di estrazione dei costi accessori per la **Flotta Auto** ().
-    -   (P1) Ripristinare la funzionalità e i dati persi per gli **IBAN multipli** dei dipendenti ().
-    -   (P2) Implementare i pulsanti Modifica ed Elimina per gli acconti dei dipendenti.
+    -   (P1) **Verifica Funzionamento Validatori P0**: Chiedere all'utente di testare l'importazione di una fattura per un fornitore con dati volutamente errati (es. senza IBAN) per confermare che il blocco funzioni.
+    -   (P2) **Svuotamento PDF**: Eseguire un comando più approfondito per rimuovere tutti i file PDF non necessari dalle varie cartelle (, , ecc.).
 -   **Future Tasks**:
-    -   Finalizzare l'importazione completa dei cedolini (upload PDF con salvataggio file).
-    -   Unificare le anagrafiche  e .
-    -   Integrazione Google Calendar.
-    -   Dashboard Analytics.
-    -   Report PDF via email.
+    -   (P1) Finalizzare l'importazione dei cedolini da PDF (estrazione OCR dei dati).
+    -   (P2) Unificare le anagrafiche  e .
+    -   (P2) Sviluppare una Dashboard Analytics.
+    -   (P2) Implementare l'integrazione con Google Calendar.
+    -   (P2) Generare e inviare report in PDF via email.
 
 **Completed work in this session**
--   **Refactoring Prima Nota**: Completata la separazione Cassa/Banca e implementato il saldo con riporto dall'anno precedente.
--   **Creazione Pagina Riconciliazione Cedolini**: Creata la nuova pagina  con stati di pagamento e modale per l'inserimento manuale.
--   **Migrazione Dati Stipendi**: I pagamenti storici degli stipendi sono stati migrati con successo nella nuova struttura dei cedolini.
--   **Fix Anagrafica Fornitori**: Corretti i fornitori senza nome tramite import da Excel e imposto l'uso del metodo di pagamento solo dall'anagrafica.
--   **Fix Import Corrispettivi**: Risolto il problema dei duplicati, chiarendo che i dati venivano importati correttamente ma visualizzati nel posto sbagliato.
--   **Fix Errore Pagamento Fatture (405)**: Aggiunto l'endpoint  mancante per registrare il pagamento di una fattura dalla dashboard.
-
-**Earlier issues found/mentioned but not fixed**
--   Sincronizzazione ID Fattura su Assegni.
--   Inconsistenza nella visualizzazione delle fatture ().
-
-**Known issue recurrence from previous fork**
--   Nessuna.
+-   **UI Refactoring (Prima Nota e Salari)**: Le pagine  e  sono state create/sostituite copiando il codice da un progetto di riferimento, implementando il design richiesto.
+-   **Implementazione Validatori P0**: Aggiunti validatori bloccanti per fatture (mancanza metodo di pagamento/IBAN) e salari (pagamento in contanti post 06/2018).
+-   **Fix Gestione Fornitori**: Risolto un bug che nascondeva il pulsante Cerca P.IVA e implementato un endpoint per sincronizzare gli IBAN dalle fatture.
+-   **Fix Bug Conferma Multipla**: Risolto errore 400 durante la conferma in batch di fatture.
+-   **Fix e Refactoring Sezione F24**: La UI è stata corretta per mostrare gli importi totali e permettere la conferma.
+-   **Fix Import Dati**: Corrette le procedure di importazione per Corrispettivi XML e Cedolini da Excel.
+-   **Automatizzazione Riconciliazione**: Implementata una logica di auto-assegnazione dei metodi di pagamento con refresh automatico.
+-   **Endpoint Bulk Update**: Creato un endpoint backend per l'aggiornamento massivo dei fornitori.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Refactoring Logica di Business**: Modifiche profonde e non standard alla logica contabile su richiesta esplicita dell'utente.
--   **Migrazione Dati**: Creazione di endpoint una tantum per spostare dati da una struttura obsoleta a una nuova (es.  -> ).
--   **Risoluzione Conflitti Dati**: La fonte di verità per il metodo di pagamento è stata fissata all'anagrafica fornitore, risolvendo conflitti con i dati presenti nei file XML.
--   **Codebase Inconsistente**: Il codice è ancora diviso tra  e . I file corrotti con Null Byte sono apparsi più volte.
+-   **Backend**: FastAPI, Pydantic, MongoDB.
+-   **Frontend**: React, Zustand (per state management).
+-   **Logica di Business**: Implementazione di regole contabili complesse e non standard, validatori P0 bloccanti.
+-   **Debito Tecnico**: La coesistenza di  e  crea confusione e problemi di hot-reloading.
 
 **key DB schema**
--   ** / **: Collection separate per i due registri.
--   ****: Collection centrale per la gestione delle buste paga, ora arricchita con stato, importo pagato, e metodo di pagamento.
--   ****: Anagrafica fornitori, fonte di verità per il metodo di pagamento.
--   ****: Collection obsoleta. I nuovi dati vengono inseriti in .
+-   ****: Anagrafica fornitori. Fonte di verità per  e .
+-   ****: Fatture ricevute.
+-   ** / **: Registri contabili separati.
+-   ****: Dati delle buste paga.
+-   ****: Dati per i pagamenti F24.
 
 **changes in tech stack**
-- Nessuna.
+-   È stata introdotta la libreria  nel frontend per la gestione dello stato della nuova UI della Prima Nota.
 
 **All files of reference**
 -   
 -   
 -   
 -   
--    (File fornito dall'utente per l'importazione dei fornitori).
+-   
+-   
+-   
+-   
 
-**Areas that need refactoring**
--   **Struttura del Progetto**: È necessario finalizzare la migrazione da  a  per migliorare la manutenibilità.
--   **Collection **: Dovrebbe essere rimossa o archiviata per evitare confusione, dato che i dati ora risiedono in .
+**Areas that need refactoring**:
+-   **Struttura del Progetto**: È cruciale completare la migrazione da  a  per risolvere i problemi di hot-reloading e migliorare la manutenibilità.
+-   **Unificazione Collection**: Le collection  e  dovrebbero essere unificate.
 
 **key api endpoints**
--   : Endpoint (già eseguito) per la migrazione dati.
--   : Per importare/aggiornare fornitori da file Excel.
--   : Nuovo endpoint per segnare una fattura come pagata.
--   : Endpoint che importa i corrispettivi direttamente nella prima nota cassa.
+-    (POST): Nuovo endpoint per aggiornare in massa i fornitori con dati incompleti.
+-    (GET): Endpoint per verificare lo stato dei fornitori rispetto ai validatori P0.
+-    (POST): Endpoint di importazione fatture dove sono stati aggiunti i validatori P0.
+-    (POST): Endpoint di pagamento salari dove è stato aggiunto il validatore P0.
 
 **Critical Info for New Agent**
--   **L'utente ha ragione**: L'ultima segnalazione dell'utente (pagamenti banca in cassa) è corretta. È un bug critico da risolvere con priorità P0.
--   **Stick to the Plan**: L'agente precedente si è perso più volte, frustrando l'utente. Segui il piano, affronta un problema alla volta e comunica in modo chiaro.
--   **Fonte di Verità**: Il metodo di pagamento di un fornitore DEVE venire solo dall'anagrafica. I dati XML della fattura vanno ignorati per questa informazione.
--   **Architettura Corrispettivi**: I corrispettivi vengono importati in . La pagina  deve essere modificata per mostrare questi dati, non deve puntare a una collection separata.
+-   **Hot Reload Inaffidabile**: A causa della doppia struttura  e , le modifiche ai file in  non vengono rilevate dall'hot reload. È necessario riavviare manualmente il backend (backend: stopped
+backend: started) dopo ogni modifica in quella directory.
+-   **Priorità Utente**: L'utente è molto sensibile ai problemi bloccanti (P0) e alla reattività della UI. L'aggiornamento in blocco dei fornitori e la risoluzione degli IBAN mancanti sono le massime priorità.
+-   **Fonte di Verità**: Qualsiasi logica riguardante i fornitori deve usare la collection  come unica fonte di verità.
 
 **documents and test reports created in this job**
--    è stato aggiornato più volte.
+-    (aggiornato più volte)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. L'agente chiede se va bene unificare le viste dei corrispettivi.
-9.  **Utente**: opzione 2 ma in prima nota cassa ci sono le fatture pagate per banca non stai filtrando il metodo pagamento associato ai dipendenti - **Segnalazione del bug critico.**
-8.  **Agente**: Riconosce il bug e promette di correggerlo.
-7.  **Utente**: Chiede perché la pagina corrispettivi esiste.
-6.  **Agente**: Spiega che i dati sono in Prima Nota e propone di rimuovere la pagina o trasformarla in una vista filtrata.
-5.  **Utente**: corrispettivi non importa ancora duplicati - **Segnalazione (errata) di un bug.**
-4.  **Agente**: Spiega che la tech stack attuale è adeguata e chiede se l'utente ha riprovato a caricare i file.
-3.  **Utente**: Chiede un confronto tra C++, Java e Python per il progetto.
-2.  **Agente**: Chiede all'utente di riprovare a caricare i file XML dopo aver eliminato i vecchi record dal DB.
-1.  **Utente**: Chiede di eliminare e ricaricare, ma sottolinea che il sistema dovrebbe gestire i duplicati correttamente.
+1.  **Utente**: Richiesta di correggere la logica dei salari (contanti permessi solo prima di luglio 2018), risolvere i 240 fornitori senza IBAN e investigare errori 404 e problemi di modifica dei fornitori. (Stato: In corso)
+2.  **Agente**: Inizia l'investigazione.
+3.  **Agente**: Conferma che la ricerca P.IVA e la modifica funzionano, suggerendo che il 404 sia altrove.
+4.  **Agente**: Implementa la logica di sync IBAN dalle fatture, riducendo i problemi da 240 a 231.
+5.  **Agente**: Scopre e corregge il bug nella UI che nascondeva il pulsante Cerca P.IVA.
+6.  **Agente**: Corregge i messaggi e i commenti nel validatore dei salari per riflettere correttamente la legge.
+7.  **Utente**: Richiede un pulsante per aggiornare tutti i fornitori contemporaneamente e di usare una fonte dati alternativa a VIES, lamentando ancora errori 404. (Stato: In corso)
+8.  **Agente**: Crea l'endpoint backend per l'aggiornamento in blocco.
+9.  **Utente**: Invia un'immagine con file .md e chiede di aggiornarli. (Stato: Completato)
+10. **Agente**: Esegue l'aggiornamento dei file .md.
 
 **Project Health Check:**
 -   **Broken**:
-    -   La logica di registrazione dei pagamenti è parzialmente rotta, mescolando movimenti di cassa e banca.
+    -   La funzionalità di aggiornamento in blocco dei fornitori è incompleta (manca la parte frontend).
+    -   L'importazione delle fatture è bloccata per 231 fornitori a causa della mancanza di IBAN.
+-   **Mocked**: Nessuno.
 -   **Technical Debt**:
-    -   **High**: La struttura incoerente delle directory ( vs ).
-    -   **Medium**: La coesistenza di una collection  inutilizzata crea confusione.
+    -   **High**: Struttura del backend duplicata ( e ) che causa problemi di sviluppo e manutenzione.
 
 **3rd Party Integrations**
--   Nessuna nuova integrazione in questa sessione.
+-   **VIES (tramite )**: Utilizzato per la validazione delle partite IVA. L'agente ha aggiunto altre fonti nel codice ma non sono state specificate.
 
 **Testing status**
 -   **Testing agent used after significant changes**: NO
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: Nessuno.
--   **Known regressions**: Un nuovo bug critico è stato introdotto o scoperto: i pagamenti bancari vengono registrati in cassa.
+-   **Known regressions**: Nessuna.
 
 **Credentials to test flow:**
 Nessuna credenziale specifica necessaria.
 
 **What agent forgot to execute**
--   L'agente non ha ancora affrontato le problematiche pendenti dalla sessione precedente, come la **Flotta Auto** e gli **IBAN multipli**, a causa delle nuove e urgenti richieste dell'utente.
--   Non ha completato il flusso end-to-end dell'importazione dei cedolini (manca il salvataggio del file PDF).</analysis>
+-   L'agente non ha completato l'implementazione della funzionalità di aggiornamento in blocco dei fornitori. L'endpoint backend è stato creato, ma il pulsante e la logica frontend in  non sono stati aggiunti prima che l'utente richiedesse la generazione del sommario.</analysis>
