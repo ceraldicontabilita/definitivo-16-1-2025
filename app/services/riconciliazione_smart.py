@@ -185,6 +185,17 @@ def get_fornitore_leasing(descrizione: str) -> Optional[Tuple[str, str]]:
     return None
 
 
+def is_azienda_esclusa(nome: str) -> bool:
+    """Verifica se il nome è l'azienda stessa (non può essere fornitore)."""
+    if not nome:
+        return False
+    nome_upper = nome.upper().strip()
+    for azienda in AZIENDA_ESCLUSIONE:
+        if azienda.upper() in nome_upper:
+            return True
+    return False
+
+
 def is_sdd_addebito(descrizione: str) -> bool:
     """Verifica se è un addebito diretto SDD."""
     return bool(re.search(r"ADDEBITO\s*DIRETTO\s*SDD", descrizione, re.IGNORECASE))
