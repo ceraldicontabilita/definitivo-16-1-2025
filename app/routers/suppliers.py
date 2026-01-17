@@ -63,6 +63,52 @@ async def get_payment_methods() -> List[Dict[str, Any]]:
     ]
 
 
+@router.get("/validazione-p0")
+async def get_fornitori_con_problemi_p0() -> Dict[str, Any]:
+    """
+    PRD Validatori P0 - Ritorna i fornitori con problemi bloccanti:
+    1. Senza metodo di pagamento
+    2. Metodo bancario senza IBAN
+    """
+    db = Database.get_db()
+    
+    metodi_bancari = ["bonifico", "banca", "sepa", "rid", "sdd", "assegno", "riba", "mav", "rav", "f24", "carta", "misto"]
+    
+    # P0: Senza metodo pagamento
+    senza_metodo = await db[Collections.SUPPLIERS].find({
+        "$or": [
+            {"metodo_pagamento": None},
+            {"metodo_pagamento": ""},
+            {"metodo_pagamento": "da_configurare"},
+            {"metodo_pagamento": {"$exists": False}}
+        ]
+    }, {"_id": 0, "id": 1, "partita_iva": 1, "ragione_sociale": 1}).to_list(500)
+    
+    # P0: Metodo bancario senza IBAN
+    senza_iban = await db[Collections.SUPPLIERS].find({
+        "metodo_pagamento": {"$in": metodi_bancari},
+        "$or": [
+            {"iban": None},
+            {"iban": ""},
+            {"iban": {"$exists": False}}
+        ]
+    }, {"_id": 0, "id": 1, "partita_iva": 1, "ragione_sociale": 1, "metodo_pagamento": 1}).to_list(500)
+    
+    return {
+        "totale_problemi": len(senza_metodo) + len(senza_iban),
+        "senza_metodo_pagamento": {
+            "count": len(senza_metodo),
+            "fornitori": senza_metodo[:20],  # Max 20 per risposta
+            "messaggio": "Configurare metodo di pagamento in anagrafica"
+        },
+        "metodo_bancario_senza_iban": {
+            "count": len(senza_iban),
+            "fornitori": senza_iban[:20],
+            "messaggio": "Configurare IBAN in anagrafica"
+        }
+    }
+
+
 @router.get("/search-piva/{partita_iva}")
 async def search_by_piva(partita_iva: str) -> Dict[str, Any]:
     """
