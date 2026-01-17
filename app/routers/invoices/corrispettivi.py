@@ -377,6 +377,28 @@ async def upload_corrispettivi_xml_bulk(
             }
             
             await db["corrispettivi"].insert_one(corr.copy())
+            
+            # Inserisci anche in prima_nota_cassa per visualizzazione
+            movimento_cassa = {
+                "id": f"corr_{corr['id']}",
+                "data": parsed.get("data", ""),
+                "tipo": "entrata",
+                "importo": float(parsed.get("totale", 0) or 0),
+                "descrizione": f"Corrispettivo {parsed.get('data', '')} - RT {parsed.get('matricola_rt', '')}",
+                "categoria": "Corrispettivi",
+                "dettaglio": {
+                    "matricola_rt": parsed.get("matricola_rt", ""),
+                    "contanti": float(parsed.get("pagato_contanti", 0) or 0),
+                    "elettronico": float(parsed.get("pagato_elettronico", 0) or 0),
+                    "totale_iva": float(parsed.get("totale_iva", 0) or 0),
+                    "numero_documenti": int(parsed.get("numero_documenti", 0) or 0)
+                },
+                "corrispettivo_id": corr["id"],
+                "fonte": "xml_import",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            await db["prima_nota_cassa"].insert_one(movimento_cassa.copy())
+            
             results["success"].append({"filename": file.filename, "data": parsed.get("data")})
             results["imported"] += 1
             
