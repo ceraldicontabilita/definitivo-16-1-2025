@@ -144,6 +144,115 @@ def calculate_file_hash(content: bytes) -> str:
     return hashlib.md5(content).hexdigest()
 
 
+def extract_document_period(content: bytes, category: str, filename: str) -> Optional[Dict[str, Any]]:
+    """
+    Estrae il periodo di riferimento da un documento PDF.
+    Questo permette di identificare documenti con stesso nome ma periodi diversi.
+    
+    Returns:
+        Dict con mese, anno e identificatore univoco del periodo
+        None se non riesce a estrarre
+    """
+    import re
+    
+    period_info = {
+        "mese": None,
+        "anno": None,
+        "periodo_raw": None,
+        "identificatore_periodo": None
+    }
+    
+    try:
+        # Prova a estrarre testo dal PDF
+        import pdfplumber
+        import io
+        
+        text = ""
+        with pdfplumber.open(io.BytesIO(content)) as pdf:
+            for page in pdf.pages[:3]:  # Solo prime 3 pagine per velocità
+                page_text = page.extract_text() or ""
+                text += page_text + "\n"
+        
+        text_lower = text.lower()
+        
+        # Pattern comuni per periodi
+        # Formato: "GENNAIO 2026", "01/2026", "2026-01", "Mese: 01 Anno: 2026"
+        
+        mesi_it = {
+            'gennaio': 1, 'febbraio': 2, 'marzo': 3, 'aprile': 4,
+            'maggio': 5, 'giugno': 6, 'luglio': 7, 'agosto': 8,
+            'settembre': 9, 'ottobre': 10, 'novembre': 11, 'dicembre': 12
+        }
+        
+        # Pattern 1: "GENNAIO 2026" o "gennaio 2026"
+        for mese_nome, mese_num in mesi_it.items():
+            pattern = rf'{mese_nome}\s+(\d{{4}})'
+            match = re.search(pattern, text_lower)
+            if match:
+                period_info["mese"] = mese_num
+                period_info["anno"] = int(match.group(1))
+                period_info["periodo_raw"] = f"{mese_nome} {match.group(1)}"
+                break
+        
+        # Pattern 2: "01/2026" o "1/2026" (mese/anno)
+        if not period_info["mese"]:
+            match = re.search(r'\b(\d{1,2})/(\d{4})\b', text)
+            if match:
+                mese = int(match.group(1))
+                anno = int(match.group(2))
+                if 1 <= mese <= 12 and 2020 <= anno <= 2030:
+                    period_info["mese"] = mese
+                    period_info["anno"] = anno
+                    period_info["periodo_raw"] = f"{mese:02d}/{anno}"
+        
+        # Pattern 3: Per F24 cerca "Scadenza DD/MM/YYYY"
+        if category == "f24" and not period_info["mese"]:
+            match = re.search(r'scadenza\s+(\d{2})/(\d{2})/(\d{4})', text_lower)
+            if match:
+                period_info["mese"] = int(match.group(2))
+                period_info["anno"] = int(match.group(3))
+                period_info["periodo_raw"] = f"scadenza_{match.group(1)}/{match.group(2)}/{match.group(3)}"
+        
+        # Pattern 4: Per estratti conto cerca "DAL DD/MM/YYYY AL DD/MM/YYYY"
+        if category == "estratto_conto" and not period_info["mese"]:
+            match = re.search(r'dal\s+\d{2}/(\d{2})/(\d{4})\s+al\s+\d{2}/(\d{2})/(\d{4})', text_lower)
+            if match:
+                # Usa il mese finale come riferimento
+                period_info["mese"] = int(match.group(3))
+                period_info["anno"] = int(match.group(4))
+                period_info["periodo_raw"] = f"{match.group(3)}/{match.group(4)}"
+        
+        # Pattern 5: Per Nexi cerca date nel formato "DD MMM YYYY"
+        if category == "estratto_conto" and not period_info["mese"]:
+            mesi_short = {'gen': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'mag': 5, 'giu': 6,
+                         'lug': 7, 'ago': 8, 'set': 9, 'ott': 10, 'nov': 11, 'dic': 12}
+            for mese_short, mese_num in mesi_short.items():
+                pattern = rf'\d{{2}}\s+{mese_short}\w*\s+(\d{{4}})'
+                match = re.search(pattern, text_lower)
+                if match:
+                    period_info["mese"] = mese_num
+                    period_info["anno"] = int(match.group(1))
+                    period_info["periodo_raw"] = f"{mese_short}_{match.group(1)}"
+                    break
+        
+        # Pattern 6: Cerca anno nel filename se non trovato
+        if not period_info["anno"]:
+            match = re.search(r'20(\d{2})', filename)
+            if match:
+                period_info["anno"] = int(f"20{match.group(1)}")
+        
+        # Crea identificatore univoco del periodo
+        if period_info["mese"] and period_info["anno"]:
+            period_info["identificatore_periodo"] = f"{period_info['anno']:04d}_{period_info['mese']:02d}"
+        elif period_info["anno"]:
+            period_info["identificatore_periodo"] = f"{period_info['anno']:04d}_00"
+        
+    except Exception as e:
+        logger.debug(f"Impossibile estrarre periodo da {filename}: {e}")
+    
+    return period_info if period_info["identificatore_periodo"] else None
+
+
 class EmailDocumentDownloader:
     """Classe per scaricare documenti dalle email via IMAP."""
     
