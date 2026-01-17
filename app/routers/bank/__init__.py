@@ -5,6 +5,7 @@ from . import bank_statement_import
 from . import bank_statement_parser
 from . import estratto_conto
 from . import archivio_bonifici
+from . import bonifici_import_unificato
 from . import assegni
 from . import pos_accredito
 
