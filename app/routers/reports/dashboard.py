@@ -19,47 +19,84 @@ router = APIRouter()
 async def get_summary(
     anno: int = Query(None, description="Anno di riferimento")
 ) -> Dict[str, Any]:
-    """Get summary data for dashboard - public endpoint."""
+    """Get summary data for dashboard - public endpoint. OTTIMIZZATO con cache."""
+    from app.middleware.performance import cache
+    
     db = Database.get_db()
     
     if not anno:
         anno = datetime.now().year
     
+    # Prova cache
+    cache_key = f"dashboard_summary_{anno}"
+    cached = await cache.get(cache_key)
+    if cached:
+        return cached
+    
     data_inizio = f"{anno}-01-01"
     data_fine = f"{anno}-12-31"
     
     try:
-        # Get counts from various collections with year filter where applicable
+        # Get counts in parallelo per velocità
         invoices_filter = {
             "$or": [
                 {"invoice_date": {"$gte": data_inizio, "$lte": data_fine}},
                 {"data": {"$gte": data_inizio, "$lte": data_fine}}
             ]
         }
-        invoices_count = await db[Collections.INVOICES].count_documents(invoices_filter)
-        suppliers_count = await db[Collections.SUPPLIERS].count_documents({})
-        products_count = await db[Collections.WAREHOUSE_PRODUCTS].count_documents({})
-        haccp_count = await db[Collections.HACCP_TEMPERATURES].count_documents({})
-        employees_count = await db[Collections.EMPLOYEES].count_documents({})
         
-        # Calcola totale fatture per l'anno
-        pipeline = [
-            {"$match": invoices_filter},
-            {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
-        ]
-        result = await db[Collections.INVOICES].aggregate(pipeline).to_list(1)
-        total_invoices_amount = result[0]["total"] if result else 0
+        # Esegui tutte le query in parallelo
+        import asyncio
         
-        return {
+        async def get_invoices_count():
+            return await db[Collections.INVOICES].count_documents(invoices_filter)
+        
+        async def get_invoices_amount():
+            pipeline = [
+                {"$match": invoices_filter},
+                {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
+            ]
+            result = await db[Collections.INVOICES].aggregate(pipeline).to_list(1)
+            return result[0]["total"] if result else 0
+        
+        async def get_suppliers_count():
+            return await db[Collections.SUPPLIERS].count_documents({})
+        
+        async def get_products_count():
+            return await db[Collections.WAREHOUSE_PRODUCTS].count_documents({})
+        
+        async def get_haccp_count():
+            return await db[Collections.HACCP_TEMPERATURES].count_documents({})
+        
+        async def get_employees_count():
+            return await db[Collections.EMPLOYEES].count_documents({})
+        
+        # Esegui in parallelo
+        results = await asyncio.gather(
+            get_invoices_count(),
+            get_invoices_amount(),
+            get_suppliers_count(),
+            get_products_count(),
+            get_haccp_count(),
+            get_employees_count()
+        )
+        
+        response = {
             "anno": anno,
-            "invoices_total": invoices_count,
-            "invoices_amount": round(total_invoices_amount, 2),
-            "reconciled": 0,  # TODO: calculate actual reconciled movements
-            "products": products_count,
-            "haccp_items": haccp_count,
-            "suppliers": suppliers_count,
-            "employees": employees_count
+            "invoices_total": results[0],
+            "invoices_amount": round(results[1] or 0, 2),
+            "reconciled": 0,
+            "products": results[3],
+            "haccp_items": results[4],
+            "suppliers": results[2],
+            "employees": results[5]
         }
+        
+        # Salva in cache per 60 secondi
+        await cache.set(cache_key, response, 60)
+        
+        return response
+        
     except Exception as e:
         logger.error(f"Error getting dashboard summary: {e}")
         return {
