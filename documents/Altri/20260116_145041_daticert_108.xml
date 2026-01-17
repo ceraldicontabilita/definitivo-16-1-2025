@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<postacert tipo="posta-certificata" errore="nessuno">
+    <intestazione>
+        <mittente>amex.esercenti.creditodimposta@legalmail.it</mittente>
+        <destinatari tipo="certificato">ceraldigroupsrl@legalmail.it</destinatari>
+        <risposte>amex.esercenti.creditodimposta@legalmail.it</risposte>
+        <oggetto>Prospetto riepilogativo ai fini del riconoscimento del credito d'imposta (d.l. 124/2019, convertito in l. 157/2019)</oggetto>
+    </intestazione>
+    <dati>
+        <gestore-emittente>InfoCert S.p.A.</gestore-emittente>
+        <data zona="+0100">
+            <giorno>16/01/2026</giorno>
+            <ora>14:50:41</ora>
+        </data>
+        <identificativo>C11ADA22.0011FE96.C71290A0.B9C5C397.posta-certificata@legalmail.it</identificativo>
+        <msgid>&lt;20260116145039_b8a05ca9-eb91-4033-8724-66486cf0fac4@MAILDOCPRO&gt;</msgid>
+        <ricevuta tipo="completa" />
+    </dati>
+</postacert>
+
