@@ -24,15 +24,26 @@ Pagina `/chiusura-esercizio` con wizard guidato:
 
 ### Riconoscimento Intelligente Documenti Email (NUOVO - 17 Gen)
 Migliorato il sistema di download email per gestire:
-- **File con stesso nome ma periodi diversi** (es. "estratto_conto.pdf" ogni mese)
-- **Estrazione automatica del periodo** da PDF (cedolini, F24, estratti conto)
+- **File con stesso nome ma periodi diversi** (es. "estratto_conto.pdf", "iva.pdf" ogni mese)
+- **Estrazione automatica del periodo** da TUTTI i PDF (cedolini, F24, estratti conto, IVA, bonifici)
 - **Identificatore univoco periodo** (YYYY_MM) per evitare falsi duplicati
 - Pattern supportati:
   - "GENNAIO 2026" (mese italiano)
   - "02/2026" (formato MM/AAAA)
-  - "Dal 01/01/2026 al 31/01/2026" (range date)
+  - "Dal 01/01/2026 al 31/01/2026" (range date estratti)
   - "Scadenza 16/02/2026" (F24)
   - "15 gen 2026" (data abbreviata)
+  - "Liquidazione IVA gennaio 2026" (IVA mensile)
+  - "1° trimestre 2026" (IVA trimestrale)
+  - "Data esecuzione: 15/02/2026" (bonifici)
+  - Date generiche DD/MM/YYYY (qualsiasi documento)
+
+### Unificazione Collection Cedolini/Payslips (NUOVO - 17 Gen)
+- Migrati 474 record da `payslips` a `cedolini`
+- Collection `cedolini` è ora la fonte unica per buste paga
+- Endpoint `/api/dipendenti/payslips` ora legge da `cedolini`
+- Endpoint `/api/dipendenti` mostra `ultimo_periodo`, `netto`, `lordo` dai cedolini
+- Script migrazione: `/app/app/scripts/migrate_payslips_to_cedolini.py`
 
 ### CORREZIONE MASSIVA Backend (16 Gennaio)
 
