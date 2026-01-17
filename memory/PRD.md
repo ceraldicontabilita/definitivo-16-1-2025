@@ -117,7 +117,7 @@ Tutte le pagine principali testate e funzionanti:
 
 ### P1 - Alta Priorità
 - [x] ~~Pagina Chiusura Esercizio~~ ✅ COMPLETATO 17 Gen
-- [ ] Unificare collection `cedolini`/`payslips` (debito tecnico - 3+2 records)
+- [x] ~~Unificare collection cedolini/payslips~~ ✅ COMPLETATO 17 Gen (474 record unificati)
 - [ ] Pagina Tracciabilità standalone
 
 ### P2 - Media Priorità
