@@ -1029,3 +1029,153 @@ async def import_suppliers_excel(file: UploadFile = File(...)) -> Dict[str, Any]
     except Exception as e:
         logger.error(f"Import fornitori fallito: {e}")
         raise HTTPException(status_code=500, detail=f"Errore import: {str(e)}")
+
+
+
+@router.post("/sync-iban")
+async def sync_iban_from_invoices() -> Dict[str, Any]:
+    """
+    Sincronizza gli IBAN dalle fatture ai fornitori.
+    Per ogni fornitore, estrae tutti gli IBAN unici presenti nelle sue fatture
+    e li aggiunge alla lista iban_lista.
+    """
+    db = Database.get_db()
+    
+    # Pipeline per estrarre IBAN unici per fornitore dalle fatture
+    pipeline = [
+        {
+            "$match": {
+                "pagamento.iban": {"$exists": True, "$ne": "", "$ne": None}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$cedente_piva",
+                "iban_set": {"$addToSet": "$pagamento.iban"},
+                "fornitore_nome": {"$first": "$cedente_denominazione"}
+            }
+        }
+    ]
+    
+    results = await db[Collections.INVOICES].aggregate(pipeline).to_list(1000)
+    
+    updated = 0
+    fornitori_aggiornati = []
+    
+    for item in results:
+        piva = item.get("_id")
+        ibans = item.get("iban_set", [])
+        
+        if not piva or not ibans:
+            continue
+        
+        # Trova il fornitore
+        supplier = await db[Collections.SUPPLIERS].find_one({"partita_iva": piva})
+        
+        if not supplier:
+            # Prova nella collection "fornitori"
+            supplier = await db["fornitori"].find_one({"partita_iva": piva})
+            if supplier:
+                # Migra al suppliers principale se trovato
+                supplier["source"] = "fornitori"
+        
+        if supplier:
+            # Combina IBAN esistenti con quelli nuovi
+            existing_iban = supplier.get("iban", "")
+            existing_list = supplier.get("iban_lista", [])
+            
+            # Crea set di tutti gli IBAN
+            all_ibans = set(existing_list)
+            all_ibans.update(ibans)
+            
+            # Se c'è un IBAN principale, rimuovilo dalla lista aggiuntiva
+            if existing_iban:
+                all_ibans.discard(existing_iban)
+            
+            # Se non c'è IBAN principale ma ce ne sono dalla fatture, imposta il primo
+            if not existing_iban and all_ibans:
+                existing_iban = list(all_ibans)[0]
+                all_ibans.discard(existing_iban)
+            
+            # Aggiorna il fornitore
+            update_data = {
+                "iban_lista": list(all_ibans),
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            if not supplier.get("iban") and existing_iban:
+                update_data["iban"] = existing_iban
+            
+            result = await db[Collections.SUPPLIERS].update_one(
+                {"partita_iva": piva},
+                {"$set": update_data}
+            )
+            
+            if result.modified_count > 0:
+                updated += 1
+                fornitori_aggiornati.append({
+                    "partita_iva": piva,
+                    "nome": item.get("fornitore_nome", ""),
+                    "iban_count": len(all_ibans) + (1 if existing_iban else 0)
+                })
+    
+    # Invalida cache
+    await cache.clear_pattern(SUPPLIERS_CACHE_KEY)
+    
+    return {
+        "success": True,
+        "fornitori_aggiornati": updated,
+        "dettaglio": fornitori_aggiornati[:30]  # Primi 30 per debug
+    }
+
+
+@router.get("/{supplier_id}/iban-from-invoices")
+async def get_supplier_iban_from_invoices(supplier_id: str) -> Dict[str, Any]:
+    """
+    Ritorna tutti gli IBAN trovati nelle fatture di un fornitore specifico.
+    """
+    db = Database.get_db()
+    
+    # Trova il fornitore
+    supplier = await db[Collections.SUPPLIERS].find_one(
+        {"$or": [{"id": supplier_id}, {"partita_iva": supplier_id}]},
+        {"_id": 0, "partita_iva": 1, "denominazione": 1, "ragione_sociale": 1, "iban": 1, "iban_lista": 1}
+    )
+    
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Fornitore non trovato")
+    
+    piva = supplier.get("partita_iva")
+    
+    # Estrai IBAN dalle fatture
+    pipeline = [
+        {
+            "$match": {
+                "cedente_piva": piva,
+                "pagamento.iban": {"$exists": True, "$ne": "", "$ne": None}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "iban": "$pagamento.iban",
+                "data_fattura": 1,
+                "numero_fattura": 1,
+                "importo_totale": 1
+            }
+        },
+        {"$sort": {"data_fattura": -1}}
+    ]
+    
+    fatture_con_iban = await db[Collections.INVOICES].aggregate(pipeline).to_list(100)
+    
+    # Estrai IBAN unici
+    iban_unici = list(set([f.get("iban") for f in fatture_con_iban if f.get("iban")]))
+    
+    return {
+        "fornitore": supplier.get("denominazione") or supplier.get("ragione_sociale", ""),
+        "partita_iva": piva,
+        "iban_principale": supplier.get("iban", ""),
+        "iban_lista_salvata": supplier.get("iban_lista", []),
+        "iban_da_fatture": iban_unici,
+        "fatture_con_iban": fatture_con_iban[:20]  # Prime 20
+    }
